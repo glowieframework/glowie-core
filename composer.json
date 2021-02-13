@@ -1,0 +1,13 @@
+{
+    "name": "glowieframework/glowie-core",
+    "description": "Glowie core modules",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Glowie",
+            "email": "dev@glowie.tk"
+        }
+    ],
+    "require": {}
+}
