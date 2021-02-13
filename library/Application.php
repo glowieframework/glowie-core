@@ -40,15 +40,15 @@
             
             // Include configuration file
             require_once('../config/Config.php');
-
-            // Set config variables
-            $GLOBALS['glowieConfig'] = $glowieConfig;
             
             // Check configuration environment
-            if (empty($GLOBALS['glowieConfig'][getenv('GLOWIE_ENV')])) {
+            if (empty($glowieConfig[getenv('GLOWIE_ENV')])) {
                 die('<strong>Invalid configuration environment!</strong><br>
                 Please check your application settings.');
             }
+
+            // Setup configuration environment
+            $GLOBALS['glowieConfig'] = $glowieConfig[getenv('GLOWIE_ENV')];
 
             // Error handling
             $this->handler = new Error();
@@ -68,9 +68,6 @@
 
             // Include controllers
             foreach (glob('../controllers/*.php') as $filename) require_once($filename);
-
-            // Setup configuration environment
-            $GLOBALS['glowieConfig'] = $GLOBALS['glowieConfig'][getenv('GLOWIE_ENV')];
 
             // Initialize router
             $router = new \Rails();
