@@ -23,7 +23,8 @@
             "library/Kraken.php",
             "library/Validator.php",
             "library/Uploader.php",
-            "library/Babel.php"
+            "library/Babel.php",
+            "library/Application.php"
         ]
     }
 }

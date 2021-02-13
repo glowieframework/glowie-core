@@ -1,0 +1,79 @@
+<?php
+    namespace Glowie;
+
+    /**
+     * Glowie application bootstrapper.
+     * @category Bootstrapper
+     * @package glowie
+     * @author Glowie
+     * @copyright Copyright (c) 2021
+     * @license MIT
+     * @link https://glowie.tk
+     * @version 0.2-alpha
+     */
+    class Application{
+
+         /**
+         * Error handler.
+         * @var Error
+         */
+        private $handler;
+        
+        /**
+         * Bootstrap Glowie application.
+         */
+        public function run(){
+            // Error handling
+            $this->handler = new Error();
+
+            // Store application starting time
+            $GLOBALS['glowieTimer'] = microtime(true);
+
+            // Check minimum PHP version
+            if (version_compare(phpversion(), '7.4.9', '<')) {
+                die('<strong>Unsupported PHP version!</strong><br>
+                Glowie requires PHP version 7.4.9 or higher, you are using ' . phpversion() . '.');
+            }
+
+            // Check configuration file
+            if (!file_exists('../config/Config.php')) {
+                die('<strong>Configuration file not found!</strong><br>
+                Please rename "app/config/Config.example.php" to "app/config/Config.php".');
+            }
+
+            // Include configuration file
+            require_once('../config/Config.php');
+
+            // Check configuration environment
+            if (empty($GLOBALS['glowieConfig'][getenv('GLOWIE_ENV')])) {
+                die('<strong>Invalid configuration environment!</strong><br>
+                Please check your application settings.');
+            }
+
+            // Store application routing configuration
+            $GLOBALS['glowieRoutes']['routes'] = [];
+            $GLOBALS['glowieRoutes']['auto_routing'] = true;
+
+            // Include application routes
+            require_once('../config/Routes.php');
+
+            // Include languages
+            foreach (glob('../languages/*.php') as $filename) require_once($filename);
+
+            // Inlude models
+            foreach (glob('../models/*.php') as $filename) require_once($filename);
+
+            // Include controllers
+            foreach (glob('../controllers/*.php') as $filename) require_once($filename);
+
+            // Setup configuration environment
+            $GLOBALS['glowieConfig'] = $GLOBALS['glowieConfig'][getenv('GLOWIE_ENV')];
+
+            // Initialize router
+            $router = new Rails();
+            $router->init();
+        }
+
+    }
+
+?>
