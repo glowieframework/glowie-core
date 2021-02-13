@@ -4,12 +4,9 @@
         --------------------------------
         Glowie bootstrapper
         --------------------------------
-        This file is responsible for loading all Glowie modules and application files.
+        This file is responsible for loading Glowie application files.
         It also starts the application router.
 
-        ---------------------------------------------
-        We do not recommend editing below this line.
-        ---------------------------------------------
     */
 
     // Store application starting time
@@ -38,20 +35,6 @@
         die('<strong>Invalid configuration environment!</strong><br>
             Please check your application settings.');
     }
-
-    // Include Glowie core modules
-    require_once('core/Error.php');
-    require_once('core/Util.php');
-    require_once('core/Objectify.php');
-    require_once('core/Rails.php');
-    require_once('core/Skeltch.php');
-    require_once('core/Controller.php');
-    require_once('core/Session.php');
-    require_once('core/Crawler.php');
-    require_once('core/Kraken.php');
-    require_once('core/Validator.php');
-    require_once('core/Uploader.php');
-    require_once('core/Babel.php');
     
     // Include application routes
     require_once('config/Routes.php');

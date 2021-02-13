@@ -1,13 +1,29 @@
 {
     "name": "glowieframework/glowie-core",
-    "description": "Glowie core modules",
-    "type": "library",
+    "description": "Glowie core modules and application bootstrapper",
     "license": "MIT",
     "authors": [
         {
             "name": "Glowie",
-            "email": "dev@glowie.tk"
+            "email": "dev@glowie.tk",
+            "homepage": "https://glowie.tk"
         }
     ],
-    "require": {}
+    "require": {},
+    "autoload": {
+        "files": [
+            "library/Error.php",
+            "library/Util.php",
+            "library/Objectify.php",
+            "library/Rails.php",
+            "library/Skeltch.php",
+            "library/Controller.php",
+            "library/Session.php",
+            "library/Crawler.php",
+            "library/Kraken.php",
+            "library/Validator.php",
+            "library/Uploader.php",
+            "library/Babel.php"
+        ]
+    }
 }
