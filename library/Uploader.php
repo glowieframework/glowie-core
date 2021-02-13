@@ -1,4 +1,5 @@
 <?php
+    namespace Glowie;
 
     /**
      * File upload helper for Glowie application.
@@ -54,8 +55,8 @@
             if(!is_array($extensions)) trigger_error('Uploader: $extensions must be an array of extensions');
             
             // Clean trailing slashes
-            if(Util::startsWith($directory, '/')) $directory = substr($directory, 1);
-            if(Util::endsWith($directory, '/')) $directory = substr($directory, 0, -1);
+            if(\Util::startsWith($directory, '/')) $directory = substr($directory, 1);
+            if(\Util::endsWith($directory, '/')) $directory = substr($directory, 0, -1);
             $this->directory = $directory;
             
             // Store properties
@@ -124,7 +125,7 @@
                     $target = $this->directory . '/' . $filename;
                     if (is_uploaded_file($file['tmp_name']) && move_uploaded_file($file['tmp_name'], $target)) {
                         $this->errors = '';
-                        return Util::baseUrl($target);
+                        return \Util::baseUrl($target);
                     } else {
                         $this->errors = 'UPLOAD_ERROR';
                         return false;

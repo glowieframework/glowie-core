@@ -1,4 +1,5 @@
 <?php
+    namespace Glowie;
 
     /**
      * HTTP client for Glowie application.

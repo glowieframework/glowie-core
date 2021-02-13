@@ -1,4 +1,5 @@
 <?php
+    namespace Glowie;
 
     /**
      * Data validator for Glowie application.
@@ -269,12 +270,12 @@
 
                     // [ENDSWITH] - Check if variable ends with string
                     case 'endswith':
-                        if (Util::endsWith($data, $rule[1])) $result['endswith'] = 'INVALID';
+                        if (\Util::endsWith($data, $rule[1])) $result['endswith'] = 'INVALID';
                         break;
 
                     // [STARTSWITH] - Check if variable starts with string
                     case 'startswith':
-                        if (Util::startsWith($data, $rule[1])) $result['startswith'] = 'INVALID';
+                        if (\Util::startsWith($data, $rule[1])) $result['startswith'] = 'INVALID';
                         break;
                 }
 

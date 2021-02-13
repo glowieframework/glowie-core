@@ -22,34 +22,37 @@
         /**
          * Bootstrap Glowie application.
          */
-        public function run(){
-            // Error handling
-            $this->handler = new Error();
-
+        public function run(){       
             // Store application starting time
             $GLOBALS['glowieTimer'] = microtime(true);
-
+            
             // Check minimum PHP version
             if (version_compare(phpversion(), '7.4.9', '<')) {
                 die('<strong>Unsupported PHP version!</strong><br>
                 Glowie requires PHP version 7.4.9 or higher, you are using ' . phpversion() . '.');
             }
-
+            
             // Check configuration file
             if (!file_exists('../config/Config.php')) {
                 die('<strong>Configuration file not found!</strong><br>
                 Please rename "app/config/Config.example.php" to "app/config/Config.php".');
             }
-
+            
             // Include configuration file
             require_once('../config/Config.php');
 
+            // Set config variables
+            $GLOBALS['glowieConfig'] = $glowieConfig;
+            
             // Check configuration environment
             if (empty($GLOBALS['glowieConfig'][getenv('GLOWIE_ENV')])) {
                 die('<strong>Invalid configuration environment!</strong><br>
                 Please check your application settings.');
             }
 
+            // Error handling
+            $this->handler = new Error();
+            
             // Store application routing configuration
             $GLOBALS['glowieRoutes']['routes'] = [];
             $GLOBALS['glowieRoutes']['auto_routing'] = true;
@@ -70,7 +73,7 @@
             $GLOBALS['glowieConfig'] = $GLOBALS['glowieConfig'][getenv('GLOWIE_ENV')];
 
             // Initialize router
-            $router = new Rails();
+            $router = new \Rails();
             $router->init();
         }
 

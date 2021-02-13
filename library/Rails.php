@@ -1,5 +1,4 @@
 <?php
-    namespace Glowie;
 
     /**
      * Router and starting point for Glowie application.
@@ -20,7 +19,7 @@
 
         /**
          * Current controller.
-         * @var Controller
+         * @var Glowie\Controller
          */
         private $controller;
 
@@ -66,8 +65,8 @@
         public function init(){
             // Clean request URI
             $appFolder = $GLOBALS['glowieConfig']['app_folder'];
-            if(!\Util::startsWith($appFolder, '/')) $appFolder = '/' . $appFolder;
-            if(!\Util::endsWith($appFolder, '/')) $appFolder = $appFolder . '/';
+            if(!Util::startsWith($appFolder, '/')) $appFolder = '/' . $appFolder;
+            if(!Util::endsWith($appFolder, '/')) $appFolder = $appFolder . '/';
             $cleanRoute = substr(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), strlen($appFolder));
             
             // Get current route
@@ -135,7 +134,7 @@
                     // If action does not exists, trigger an error
                     if (method_exists($this->controller, $action  . 'Action')) {
                         // Parses URI parameters, if available
-                        if (!empty($result)) $this->controller->params = new \Objectify($result);
+                        if (!empty($result)) $this->controller->params = new Objectify($result);
 
                         // Calls action
                         if (method_exists($this->controller, 'init')) call_user_func([$this->controller, 'init']);
@@ -145,7 +144,7 @@
                     }
                 }else{
                     // Redirects to the target URL
-                    \Util::redirect($config['redirect']);
+                    Util::redirect($config['redirect']);
                 }
             } else {
                 // Check if auto routing is enabled
@@ -249,7 +248,7 @@
                             $params['segment' . ($key + 1)] = $value;
                             unset($params[$key]);
                         }
-                        $this->controller->params = new \Objectify($params);
+                        $this->controller->params = new Objectify($params);
                     }
                     if (method_exists($this->controller, 'init')) call_user_func([$this->controller, 'init']);
                     call_user_func([$this->controller, $action]);
