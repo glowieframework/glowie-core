@@ -3,7 +3,7 @@
     /**
      * Array to object data parser for Glowie application.
      * @category Data parser
-     * @package glowie
+     * @package glowieframework/glowie-core
      * @author Glowie
      * @copyright Copyright (c) 2021
      * @license MIT

@@ -4,7 +4,7 @@
     /**
      * Data validator for Glowie application.
      * @category Data validation
-     * @package glowie
+     * @package glowieframework/glowie-core
      * @author Glowie
      * @copyright Copyright (c) 2021
      * @license MIT

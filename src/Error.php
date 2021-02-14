@@ -4,7 +4,7 @@
     /**
      * Error handler for Glowie application.
      * @category Error handler
-     * @package glowie
+     * @package glowieframework/glowie-core
      * @author Glowie
      * @copyright Copyright (c) 2021
      * @license MIT
