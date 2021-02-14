@@ -44,11 +44,14 @@
             // Check configuration environment
             if (empty($glowieConfig[getenv('GLOWIE_ENV')])) {
                 die('<strong>Invalid configuration environment!</strong><br>
-                Please check your application settings.');
+                Please check your application settings and .htaccess.');
             }
 
             // Setup configuration environment
             $GLOBALS['glowieConfig'] = $glowieConfig[getenv('GLOWIE_ENV')];
+
+            // Timezone configuration
+            date_default_timezone_set($GLOBALS['glowieConfig']['timezone']);
 
             // Error handling
             $this->handler = new Error();
@@ -61,6 +64,8 @@
             require_once('../config/Routes.php');
 
             // Include languages
+            $GLOBALS['glowieLang']['languages'] = [];
+            $GLOBALS['glowieLang']['active'] = 'en';
             foreach (glob('../languages/*.php') as $filename) require_once($filename);
 
             // Inlude models

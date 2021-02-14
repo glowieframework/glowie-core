@@ -12,34 +12,10 @@
      */
     class Rails{
         /**
-         * Auto routing feature.
-         * @var bool
-         */
-        private $auto_routing;
-
-        /**
          * Current controller.
          * @var Glowie\Controller
          */
         private $controller;
-
-        /**
-         * User configured routes.
-         * @var array
-         */
-        private $routes;
-
-        /**
-         * Instantiates a new routed application.
-         */
-        public function __construct(){
-            // Get routing configuration
-            $this->routes = $GLOBALS['glowieRoutes']['routes'];
-            $this->auto_routing = $GLOBALS['glowieRoutes']['auto_routing'];
-
-            // Timezone configuration
-            date_default_timezone_set($GLOBALS['glowieConfig']['timezone']);
-        }
 
         /**
          * Setup a new route for the application.
@@ -80,7 +56,7 @@
             $config = null;
 
             // Loops through routes configuration to find a valid route pattern
-            foreach ($this->routes as $key => $item) {
+            foreach ($GLOBALS['glowieRoutes']['routes'] as $key => $item) {
                 $regex = str_replace('/', '\/', preg_replace('(:[^\/]+)', '([^/]+)', ltrim($key, '/')));
                 if (preg_match_all('/^' . $regex . '$/i', rtrim($route, '/'), $params)) {
                     // Fetch route parameters
@@ -104,7 +80,7 @@
                 // Check if there is a request method configuration
                 if(!empty($config['methods'])){
                     if(!is_array($config['methods'])) return trigger_error('Route methods setting must be an array of allowed methods');
-                    if(!in_array(strtolower($_SERVER['REQUEST_METHOD']), $config['methods'])) return $this->callForbidden();
+                    if(!in_array(strtolower($_SERVER['REQUEST_METHOD']), $config['methods'])) return $this->callForbidden($route);
                 }
 
                 // Check if there is a redirect configuration
@@ -126,15 +102,15 @@
 
                     // Instantiates new controller
                     $this->controller = new $controller;
-                    $this->controller->self->controller = $selfController;
-                    $this->controller->self->action = $action;
-                    $this->controller->self->route = $route;
-                    $this->controller->self->method = strtolower($_SERVER['REQUEST_METHOD']);
+                    $this->controller->self->controller = trim(strtolower($selfController));
+                    $this->controller->self->action = trim(strtolower($action));
+                    $this->controller->self->route = trim(strtolower($route));
+                    $this->controller->self->method = trim(strtolower($_SERVER['REQUEST_METHOD']));
 
                     // If action does not exists, trigger an error
                     if (method_exists($this->controller, $action  . 'Action')) {
                         // Parses URI parameters, if available
-                        if (!empty($result)) $this->controller->params = new Objectify($result);
+                        if (!empty($result)) $this->controller->params = new Glowie\Objectify($result);
 
                         // Calls action
                         if (method_exists($this->controller, 'init')) call_user_func([$this->controller, 'init']);
@@ -148,7 +124,7 @@
                 }
             } else {
                 // Check if auto routing is enabled
-                if($this->auto_routing){
+                if($GLOBALS['glowieRoutes']['auto_routing']){
 
                     // Get URI parameters
                     $autoroute = explode('/', $route);
@@ -162,30 +138,46 @@
                     if($route == '/'){
                         $controller = 'MainController';
                         $action = 'indexAction';
-                        $this->callAutoRoute($controller, $action);
+                        $this->callAutoRoute($controller, $action, [
+                            'controller' => 'main', 
+                            'action' => 'index', 
+                            'route' => '/'
+                        ]);
 
                     // If only the controller was specified
                     }else if(count($autoroute) == 1){
                         $controller = $this->parseName($autoroute[0], true) . 'Controller';
                         $action = 'indexAction';
-                        $this->callAutoRoute($controller, $action);
+                        $this->callAutoRoute($controller, $action , [
+                            'controller' => $autoroute[0],
+                            'action' => 'index',
+                            'route' => $route
+                        ]);
 
                     // Controller and action were specified
                     }else if(count($autoroute) == 2){
                         $controller = $this->parseName($autoroute[0], true) . 'Controller';
                         $action = $this->parseName($autoroute[1]) . 'Action';
-                        $this->callAutoRoute($controller, $action);
+                        $this->callAutoRoute($controller, $action, [
+                            'controller' => $autoroute[0],
+                            'action' => $autoroute[1],
+                            'route' => $route
+                        ]);
                     
                     // Controller, action and parameters were specified
                     }else{
                         $controller = $this->parseName($autoroute[0], true) . 'Controller';
                         $action = $this->parseName($autoroute[1]) . 'Action';
                         $params = array_slice($autoroute, 2);
-                        $this->callAutoRoute($controller, $action, $params);
+                        $this->callAutoRoute($controller, $action, [
+                            'controller' => $autoroute[0],
+                            'action' => $autoroute[1],
+                            'route' => $route
+                        ], $params);
                     }
                 }else{
                     // Route was not found
-                    $this->callNotFound();
+                    $this->callNotFound($route);
                 }
             }
         }
@@ -209,12 +201,17 @@
 
         /**
          * Calls notFoundAction() in ErrorController.
+         * @param string $route Current triggered route.
          */
-        private function callNotFound(){
+        private function callNotFound(string $route){
             http_response_code(404);
             $controller = 'ErrorController';
             if (class_exists($controller)) {
                 $this->controller = new $controller;
+                $this->controller->self->controller = 'error';
+                $this->controller->self->action = 'not-found';
+                $this->controller->self->route = trim(strtolower($route));
+                $this->controller->self->method = strtolower($_SERVER['REQUEST_METHOD']);
                 if (method_exists($this->controller, 'init')) call_user_func([$this->controller, 'init']);
                 if (method_exists($this->controller, 'notFoundAction')) call_user_func([$this->controller, 'notFoundAction']);
             }
@@ -222,12 +219,17 @@
 
         /**
          * Calls forbiddenAction() in ErrorController.
+         * @param string $route Current triggered route.
          */
-        private function callForbidden(){
+        private function callForbidden(string $route){
             http_response_code(403);
             $controller = 'ErrorController';
             if (class_exists($controller)) {
                 $this->controller = new $controller;
+                $this->controller->self->controller = 'error';
+                $this->controller->self->action = 'forbidden';
+                $this->controller->self->route = trim(strtolower($route));
+                $this->controller->self->method = strtolower($_SERVER['REQUEST_METHOD']);
                 if (method_exists($this->controller, 'init')) call_user_func([$this->controller, 'init']);
                 if (method_exists($this->controller, 'forbiddenAction')) call_user_func([$this->controller, 'forbiddenAction']);
             }
@@ -239,24 +241,28 @@
          * @param string $action Action name.
          * @param array $params (Optional) Optional URI parameters.
          */
-        private function callAutoRoute(string $controller, string $action, array $params = []){
+        private function callAutoRoute(string $controller, string $action, array $selfData, array $params = []){
             if (class_exists($controller)) {
                 $this->controller = new $controller;
+                $this->controller->self->controller = trim(strtolower($selfData['controller']));
+                $this->controller->self->action = trim(strtolower($selfData['action']));
+                $this->controller->self->route = trim(strtolower($selfData['route']));
+                $this->controller->self->method = trim(strtolower($_SERVER['REQUEST_METHOD']));
                 if (method_exists($this->controller, $action)) {
                     if (!empty($params)){
                         foreach($params as $key => $value){
                             $params['segment' . ($key + 1)] = $value;
                             unset($params[$key]);
                         }
-                        $this->controller->params = new Objectify($params);
+                        $this->controller->params = new Glowie\Objectify($params);
                     }
                     if (method_exists($this->controller, 'init')) call_user_func([$this->controller, 'init']);
                     call_user_func([$this->controller, $action]);
                 } else {
-                    $this->callNotFound();
+                    $this->callNotFound($selfData['route']);
                 };
             } else {
-                $this->callNotFound();
+                $this->callNotFound($selfData['route']);
             }
         }
     }

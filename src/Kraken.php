@@ -27,10 +27,10 @@
 
         /**
          * Connects to a database table.
-         * @param array $database (Optional) Connection settings. Use an empty array to connect to the globally defined database (in **Config.php**).
          * @param string $table (Optional) Table name.
+         * @param array $database (Optional) Connection settings. Use an empty array to connect to the globally defined database (in **Config.php**).
          */
-        public function __construct(array $database = [], string $table = 'app'){
+        public function __construct(string $table = 'app', array $database = []){
             $this->setDatabase($database);
             $this->setTable($table);
         }
@@ -140,18 +140,18 @@
                 $this->db->pageLimit = $itemsPerPage;
                 $data = $this->db->arraybuilder()->paginate($this->table, $currentPage);
                 $result = ['data' => [], 'pages' => $this->db->totalPages];
-                if(!empty($data)) foreach($data as $value) $result['data'][] = new \Objectify($value);
-                return new \Objectify($result);
+                if(!empty($data)) foreach($data as $value) $result['data'][] = new Objectify($value);
+                return new Objectify($result);
             }else{
                 if($limit == 1){
                     $data = $this->db->getOne($this->table);
                     $result = null;
-                    if(!empty($data)) $result = new \Objectify($data);
+                    if(!empty($data)) $result = new Objectify($data);
                     return $result;
                 }else{
                     $data = $this->db->get($this->table, $limit == 0 ? null : $limit);
                     $result = [];
-                    if(!empty($data)) foreach ($data as $value) $result[] = new \Objectify($value);
+                    if(!empty($data)) foreach ($data as $value) $result[] = new Objectify($value);
                     return $result;
                 }
             }

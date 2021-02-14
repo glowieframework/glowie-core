@@ -42,7 +42,7 @@
             $code = self::compileEchos($code);
             $code = self::compileLoops($code);
             $code = self::compileIfs($code);
-            $code = self::compileRenders($code);
+            $code = self::compileFunctions($code);
             $code = self::compilePHP($code);
             $code = self::compileComments($code);
             $handle = fopen($target, "w");
@@ -67,13 +67,15 @@
         }
 
         /**
-         * Compiles render statements.
+         * Compiles Glowie functions.
          * @param string $code Code to compile.
          * @return string Returns the compiled code.
          */
-        private static function compileRenders(string $code){
+        private static function compileFunctions(string $code){
             $code = preg_replace('~{\s*@view\s*\((.+?)\)\s*}~is', '<?php $this->renderView($1); ?>', $code);
             $code = preg_replace('~{\s*@template\s*\((.+?)\)\s*}~is', '<?php $this->renderTemplate($1); ?>', $code);
+            $code = preg_replace('~{\s*@babel\s*\((.+?)\)\s*}~is', '<?php Babel::get($1); ?>', $code);
+            $code = preg_replace('~{\s*@base\s*\((.+?)\)\s*}~is', '<?php Util::baseUrl($1); ?>', $code);
             return $code;
         }
 

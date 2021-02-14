@@ -1,4 +1,5 @@
 <?php
+    namespace Glowie;
 
     /**
      * Array to object data parser for Glowie application.
@@ -15,12 +16,11 @@
         /**
          * Instantiates a new object.
          * @param array $data (Optional) Initial data to parse.
-         * @param bool $toLower (Optional) Convert keys to lowercase.
          */
-        public function __construct(array $data = [], bool $toLower = false){
+        public function __construct(array $data = []){
             if(!empty($data)){
                 foreach($data as $key => $value){
-                    $key = $this->parseKey($key, $toLower);
+                    $key = $this->parseKey($key);
                     $this->$key = $value;
                 }
             }
@@ -40,6 +40,20 @@
         }
 
         /**
+         * Gets the value associated to a key in the data. If no key is specified, return\
+         * an object with all data.
+         * @param string $key (Optional) Key to get value.
+         * @return mixed Returns the value if exists or null if there is none.
+         */
+        public function get(string $key = null){
+            if(!empty($key)){
+                return $this->__get($key);
+            }else{
+                return $this;
+            }
+        }
+
+        /**
          * Sets the value for a key in the data.
          * @param string $key Key to set value.
          * @param mixed $value Value to set.
@@ -49,7 +63,16 @@
         }
 
         /**
-         * Deletes the associated key value in the data.
+         * Sets the value for a key in the data.
+         * @param string $key Key to set value.
+         * @param mixed $value Value to set.
+         */
+        public function set(string $key, $value){
+            $this->__set($key, $value);
+        }
+
+        /**
+         * Removes the associated key value in the data.
          * @param string $key Key to delete value.
          */
         public function __unset(string $key){
@@ -59,12 +82,29 @@
         }
 
         /**
+         * Removes the associated key value in the session.
+         * @param string $key Key to delete value.
+         */
+        public function remove(string $key){
+            $this->__unset($key);
+        }
+
+        /**
          * Checks if any value has been associated to a key in the data.
          * @param string $key Key to check.
          * @return bool Returns true or false.
          */
         public function __isset(string $key){
             return isset($this->$key);
+        }
+
+        /**
+         * Checks if any value has been associated to a key in the data.
+         * @param string $key Key to check.
+         * @return bool Returns true or false.
+         */
+        public function has(string $key){
+            return $this->__isset($key);
         }
 
         /**
@@ -79,10 +119,9 @@
          * Removes from key all accents and characters that are not valid letters, numbers or underscores.\
          * It also replaces dashes or spaces for underscores and places an underscore before the first character if it is a number.
          * @param string $string Key to be encoded.
-         * @param bool $lowercase (Optional) Determines if all characters must be lowercased.
          * @return string Encoded key.
          */
-        private function parseKey(string $string, bool $lowercase = false){
+        private function parseKey(string $string){
             // Remove accents
             $string = strtr(utf8_decode($string), utf8_decode('àáâãäçèéêëìíîïñòóôõöùúûüýÿÀÁÂÃÄÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝ'), 'aaaaaceeeeiiiinooooouuuuyyAAAAACEEEEIIIINOOOOOUUUUY');
            
@@ -95,12 +134,8 @@
             // Checks if the first character is a number and add an underscore before it
             $string = preg_replace('/^([0-9])/', '_$1', $string, 1);
 
-            // Returns the encoded key lowercased or not
-            if ($lowercase) {
-                return strtolower($string);
-            } else {
-                return $string;
-            }
+            // Returns the encoded key
+            return $string;
         }
 
     }

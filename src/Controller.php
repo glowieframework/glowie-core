@@ -20,37 +20,37 @@
 
         /**
          * Request GET parameters.
-         * @var \Objectify
+         * @var Objectify
          */
         public $get;
 
         /**
          * URI parameters.
-         * @var \Objectify
+         * @var Objectify
          */
         public $params;
 
         /**
          * Request POST parameters.
-         * @var \Objectify
+         * @var Objectify
          */
         public $post;
 
         /**
          * Request parameters.
-         * @var \Objectify
+         * @var Objectify
          */
         public $request;
 
         /**
          * Current controller properties.
-         * @var \Objectify
+         * @var Objectify
          */
         public $self;
 
         /**
          * Web server parameters.
-         * @var \Objectify
+         * @var Objectify
          */
         public $server;
 
@@ -62,7 +62,7 @@
 
         /**
          * Data bridge between controller and view.
-         * @var \Objectify
+         * @var Objectify
          */
         public $view;
 
@@ -72,20 +72,20 @@
         public function __construct(){
             // Common properties
             $this->version = '0.2-alpha';
-            $this->self = new \Objectify();
+            $this->self = new Objectify();
 
             // View and template properties
             $this->content = '';
-            $this->view = new \Objectify();
+            $this->view = new Objectify();
 
             // Request parameters
-            $this->get = new \Objectify($_GET, true);
-            $this->post = new \Objectify($_POST, true);
-            $this->request = new \Objectify($_REQUEST, true);
-            $this->server = new \Objectify($_SERVER, true);
+            $this->get = new Objectify($_GET);
+            $this->post = new Objectify($_POST);
+            $this->request = new Objectify($_REQUEST);
+            $this->server = new Objectify($_SERVER);
 
             // URI parameters
-            $this->params = new \Objectify();
+            $this->params = new Objectify();
         }
 
         /**
