@@ -74,8 +74,8 @@
         private static function compileFunctions(string $code){
             $code = preg_replace('~{\s*@view\s*\((.+?)\)\s*}~is', '<?php $this->renderView($1); ?>', $code);
             $code = preg_replace('~{\s*@template\s*\((.+?)\)\s*}~is', '<?php $this->renderTemplate($1); ?>', $code);
-            $code = preg_replace('~{\s*@babel\s*\((.+?)\)\s*}~is', '<?php Babel::get($1); ?>', $code);
-            $code = preg_replace('~{\s*@base\s*\((.+?)\)\s*}~is', '<?php Util::baseUrl($1); ?>', $code);
+            $code = preg_replace('~{\s*@babel\s*\((.+?)\)\s*}~is', '<?php echo Babel::get($1); ?>', $code);
+            $code = preg_replace('~{\s*@base\s*\((.+?)\)\s*}~is', '<?php echo Util::baseUrl($1); ?>', $code);
             return $code;
         }
 

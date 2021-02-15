@@ -15,7 +15,9 @@
             "homepage": "https://glowie.tk"
         }
     ],
-    "require": {},
+    "require": {
+        "thingengineer/mysqli-database-class": "2.9.3"
+    },
     "autoload": {
         "files": [
             "src/Error.php",

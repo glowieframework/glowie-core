@@ -22,7 +22,10 @@
         /**
          * Bootstrap Glowie application.
          */
-        public function run(){       
+        public function run(){
+            // Require Composer dependencies
+            require_once('../vendor/autoload.php');
+            
             // Store application starting time
             $GLOBALS['glowieTimer'] = microtime(true);
             

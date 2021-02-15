@@ -36,7 +36,7 @@
          * @param string $key String key to set.
          * @param string $string Internationalization string to set.
          */
-        public static function setLine(string $lang, string $key, string $string){
+        public static function setString(string $lang, string $key, string $string){
             if(empty($GLOBALS['glowieLang']['languages'][$lang])) $GLOBALS['glowieLang']['languages'][$lang] = [];
             $GLOBALS['glowieLang']['languages'][$lang][$key] = $string;
         }
