@@ -40,6 +40,14 @@
         }
 
         /**
+         * Returns current Glowie core version.
+         * @return string Current Glowie core version.
+         */
+        public static function getVersion(){
+            return '0.2-alpha';
+        }
+
+        /**
          * Redirects to a relative or full URL.
          * @param string $destination Target URL to redirect to.
          * @param bool $js (Optional) Redirect using JavaScript (when inside modals or iframes).

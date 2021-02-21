@@ -74,9 +74,6 @@
 
             // Check if route was found
             if ($config) {
-                // Check configuration
-                if(!is_array($config)) return trigger_error('Route configuration must be an array');
-
                 // Check if there is a request method configuration
                 if(!empty($config['methods'])){
                     if(!is_array($config['methods'])) return trigger_error('Route methods setting must be an array of allowed methods');
@@ -88,24 +85,27 @@
                     // If controller was not specified, calls the MainController
                     if(!empty($config['controller'])){
                         $controller = $this->parseName($config['controller'], true) . 'Controller';
-                        $selfController = $config['controller'];
+                        $flowController = $config['controller'];
                     }else{
                         $controller = 'MainController';
-                        $selfController = 'main';
+                        $flowController = 'main';
                     }
 
                     // If controller class does not exists, trigger an error
-                    if (!class_exists($controller)) return trigger_error('Controller "' . $controller . '" not found');
+                    if (!class_exists($controller)){
+                        trigger_error('Controller "' . $controller . '" not found');
+                        exit;
+                    }
 
                     // If action was not specified, calls the indexAction
                     !empty($config['action']) ? $action = $this->parseName($config['action']) : $action = 'index';
 
                     // Instantiates new controller
                     $this->controller = new $controller;
-                    $this->controller->self->controller = trim(strtolower($selfController));
-                    $this->controller->self->action = trim(strtolower($action));
-                    $this->controller->self->route = trim(strtolower($route));
-                    $this->controller->self->method = trim(strtolower($_SERVER['REQUEST_METHOD']));
+                    $this->controller->flow->controller = trim(strtolower($flowController));
+                    $this->controller->flow->action = trim(strtolower($action));
+                    $this->controller->flow->route = trim(strtolower($route));
+                    $this->controller->flow->method = trim(strtolower($_SERVER['REQUEST_METHOD']));
 
                     // If action does not exists, trigger an error
                     if (method_exists($this->controller, $action  . 'Action')) {
@@ -116,7 +116,8 @@
                         if (method_exists($this->controller, 'init')) call_user_func([$this->controller, 'init']);
                         call_user_func([$this->controller, $action  . 'Action']);
                     } else {
-                        return trigger_error('Action "' . $action . 'Action()" not found in ' . $controller);
+                        trigger_error('Action "' . $action . 'Action()" not found in ' . $controller);
+                        exit;
                     }
                 }else{
                     // Redirects to the target URL
@@ -208,10 +209,10 @@
             $controller = 'ErrorController';
             if (class_exists($controller)) {
                 $this->controller = new $controller;
-                $this->controller->self->controller = 'error';
-                $this->controller->self->action = 'not-found';
-                $this->controller->self->route = trim(strtolower($route));
-                $this->controller->self->method = strtolower($_SERVER['REQUEST_METHOD']);
+                $this->controller->flow->controller = 'error';
+                $this->controller->flow->action = 'not-found';
+                $this->controller->flow->route = trim(strtolower($route));
+                $this->controller->flow->method = strtolower($_SERVER['REQUEST_METHOD']);
                 if (method_exists($this->controller, 'init')) call_user_func([$this->controller, 'init']);
                 if (method_exists($this->controller, 'notFoundAction')) call_user_func([$this->controller, 'notFoundAction']);
             }
@@ -226,10 +227,10 @@
             $controller = 'ErrorController';
             if (class_exists($controller)) {
                 $this->controller = new $controller;
-                $this->controller->self->controller = 'error';
-                $this->controller->self->action = 'forbidden';
-                $this->controller->self->route = trim(strtolower($route));
-                $this->controller->self->method = strtolower($_SERVER['REQUEST_METHOD']);
+                $this->controller->flow->controller = 'error';
+                $this->controller->flow->action = 'forbidden';
+                $this->controller->flow->route = trim(strtolower($route));
+                $this->controller->flow->method = strtolower($_SERVER['REQUEST_METHOD']);
                 if (method_exists($this->controller, 'init')) call_user_func([$this->controller, 'init']);
                 if (method_exists($this->controller, 'forbiddenAction')) call_user_func([$this->controller, 'forbiddenAction']);
             }
@@ -239,15 +240,16 @@
          * Performs checking and calls the auto routing parameters.
          * @param string $controller Controller class.
          * @param string $action Action name.
+         * @param array $flowData Current flow parameters.
          * @param array $params (Optional) Optional URI parameters.
          */
-        private function callAutoRoute(string $controller, string $action, array $selfData, array $params = []){
+        private function callAutoRoute(string $controller, string $action, array $flowData, array $params = []){
             if (class_exists($controller)) {
                 $this->controller = new $controller;
-                $this->controller->self->controller = trim(strtolower($selfData['controller']));
-                $this->controller->self->action = trim(strtolower($selfData['action']));
-                $this->controller->self->route = trim(strtolower($selfData['route']));
-                $this->controller->self->method = trim(strtolower($_SERVER['REQUEST_METHOD']));
+                $this->controller->flow->controller = trim(strtolower($flowData['controller']));
+                $this->controller->flow->action = trim(strtolower($flowData['action']));
+                $this->controller->flow->route = trim(strtolower($flowData['route']));
+                $this->controller->flow->method = trim(strtolower($_SERVER['REQUEST_METHOD']));
                 if (method_exists($this->controller, $action)) {
                     if (!empty($params)){
                         foreach($params as $key => $value){
@@ -259,10 +261,10 @@
                     if (method_exists($this->controller, 'init')) call_user_func([$this->controller, 'init']);
                     call_user_func([$this->controller, $action]);
                 } else {
-                    $this->callNotFound($selfData['route']);
+                    $this->callNotFound($flowData['route']);
                 };
             } else {
-                $this->callNotFound($selfData['route']);
+                $this->callNotFound($flowData['route']);
             }
         }
     }

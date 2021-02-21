@@ -26,12 +26,6 @@
             // Store application starting time
             $GLOBALS['glowieTimer'] = microtime(true);
             
-            // Check minimum PHP version
-            if (version_compare(phpversion(), '7.4.9', '<')) {
-                die('<strong>Unsupported PHP version!</strong><br>
-                Glowie requires PHP version 7.4.9 or higher, you are using ' . phpversion() . '.');
-            }
-            
             // Check configuration file
             if (!file_exists('../config/Config.php')) {
                 die('<strong>Configuration file not found!</strong><br>

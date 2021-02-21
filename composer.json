@@ -26,6 +26,8 @@
             "src/Rails.php",
             "src/Skeltch.php",
             "src/Controller.php",
+            "src/View.php",
+            "src/Template.php",
             "src/Session.php",
             "src/Crawler.php",
             "src/Kraken.php",

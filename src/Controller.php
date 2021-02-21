@@ -12,12 +12,12 @@
      * @version 0.2-alpha
      */
     class Controller{
-        /**
-         * Content handler for templates.
-         * @var string
+        /** 
+         * Application flow properties.
+         * @var Objectify
          */
-        public $content;
-
+        public $flow;
+        
         /**
          * Request GET parameters.
          * @var Objectify
@@ -43,22 +43,10 @@
         public $request;
 
         /**
-         * Current controller properties.
-         * @var Objectify
-         */
-        public $self;
-
-        /**
          * Web server parameters.
          * @var Objectify
          */
         public $server;
-
-        /**
-         * Current Glowie version.
-         * @var string
-         */
-        public $version;
 
         /**
          * Data bridge between controller and view.
@@ -70,22 +58,14 @@
          * Instantiates a new instance of the controller.
          */
         public function __construct(){
-            // Common properties
-            $this->version = '0.2-alpha';
-            $this->self = new Objectify();
-
-            // View and template properties
-            $this->content = '';
-            $this->view = new Objectify();
-
-            // Request parameters
+            // Set properties
+            $this->flow = new Objectify();
             $this->get = new Objectify($_GET);
+            $this->params = new Objectify();
             $this->post = new Objectify($_POST);
             $this->request = new Objectify($_REQUEST);
             $this->server = new Objectify($_SERVER);
-
-            // URI parameters
-            $this->params = new Objectify();
+            $this->view = new Objectify();
         }
 
         /**
@@ -99,11 +79,7 @@
             if(!is_array($params)) trigger_error('renderView: $params must be an array');
             $view = '../views/' . $view . '.phtml';
             if(file_exists($view)){
-                if(!empty($params)) extract($params);
-                if($skeltch) $view = Skeltch::run($view);
-                ob_start();
-                require($view);
-                echo ob_get_clean();
+                return new View($view, $params, $skeltch, true, $this);
             }else{
                 trigger_error('renderView: File "' . $view . '" not found');
                 exit;
@@ -126,18 +102,7 @@
                 $view = '../views/' . $view . '.phtml';
                 if (file_exists($template)) {
                     if(file_exists($view)){
-                        // View
-                        if (!empty($params)) extract($params);
-                        if($skeltch) $view = Skeltch::run($view);
-                        ob_start();
-                        require($view);
-                        $this->content = ob_get_clean();
-
-                        // Template
-                        if($skeltch) $template = Skeltch::run($template);
-                        ob_start();
-                        require($template);
-                        echo ob_get_clean();
+                        return new Template($template, $view, $params, $skeltch, $this);
                     }else{
                         trigger_error('renderTemplate: File "' . $view . '" not found');
                         exit;
@@ -148,25 +113,12 @@
                 }
             }else{
                 if (file_exists($template)) {
-                    if (!empty($params)) extract($params);
-                    if($skeltch) $template = Skeltch::run($template);
-                    $this->content = '';
-                    ob_start();
-                    require($template);
-                    echo ob_get_clean();
+                    return new Template($template, '', $params, $skeltch, $this);
                 } else {
                     trigger_error('renderTemplate: File "' . $template . '" not found');
                     exit;
                 }
             }
-        }
-
-        /**
-         * Returns the page rendering time.
-         * @return float Page rendering time.
-         */
-        public function getRenderTime(){
-            return round((microtime(true) - $GLOBALS['glowieTimer']), 5);
         }
 
     }

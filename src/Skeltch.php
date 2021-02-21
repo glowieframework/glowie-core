@@ -21,8 +21,14 @@
         public static function run(string $filename){
             // Checks for file and cache folder permissions
             $tmpdir = '../cache/';
-            if(!is_readable($filename)) trigger_error('Skeltch: File "' . $filename . '" is not readable');
-            if(!is_writable($tmpdir)) trigger_error('Skeltch: Application cache directory is not writable, please check your chmod settings');
+            if(!is_readable($filename)){
+                trigger_error('Skeltch: File "' . $filename . '" is not readable');
+                exit;
+            }
+            if(!is_writable($tmpdir)){
+                trigger_error('Skeltch: Application cache directory is not writable, please check your chmod settings');
+                exit;
+            }
 
             // Checks cache
             $tmpfile = $tmpdir . 'sk_' . str_replace(['../views/', '/', '.phtml'], ['', '_', ''], $filename) . '.tmp';
@@ -45,6 +51,7 @@
             $code = self::compileFunctions($code);
             $code = self::compilePHP($code);
             $code = self::compileComments($code);
+            $code = self::compileIgnores($code);
             $handle = fopen($target, "w");
             fwrite($handle, $code);
             fclose($handle);
@@ -94,12 +101,12 @@
          * @return string Returns the compiled code.
          */
         private static function compileLoops(string $code){
-            $code = preg_replace('~{\s*@foreach\s*\((.+?)\)\s*}~is', '<?php foreach($1): ?>', $code);
-            $code = preg_replace('~{\s*@for\s*\((.+?)\)\s*}~is', '<?php for($1): ?>', $code);
-            $code = preg_replace('~{\s*@endforeach\s*}~is', '<?php endforeach; ?>', $code);
-            $code = preg_replace('~{\s*@endfor\s*}~is', '<?php endfor; ?>', $code);
-            $code = preg_replace('~{\s*@break\s*}~is', '<?php break; ?>', $code);
-            $code = preg_replace('~{\s*@continue\s*}~is', '<?php continue; ?>', $code);
+            $code = preg_replace('~(?<!@){\s*@foreach\s*\((.+?)\)\s*}~is', '<?php foreach($1): ?>', $code);
+            $code = preg_replace('~(?<!@){\s*@for\s*\((.+?)\)\s*}~is', '<?php for($1): ?>', $code);
+            $code = preg_replace('~(?<!@){\s*@endforeach\s*}~is', '<?php endforeach; ?>', $code);
+            $code = preg_replace('~(?<!@){\s*@endfor\s*}~is', '<?php endfor; ?>', $code);
+            $code = preg_replace('~(?<!@){\s*@break\s*}~is', '<?php break; ?>', $code);
+            $code = preg_replace('~(?<!@){\s*@continue\s*}~is', '<?php continue; ?>', $code);
             return $code;
         }
 
@@ -109,18 +116,27 @@
          * @return string Returns the compiled code.
          */
         private static function compileEchos(string $code){
-            $code = preg_replace('~{{\s*!!\s*(.+?)\s*}}~is', '<?php echo $1; ?>', $code);
-            $code = preg_replace('~{{\s*(.+?)\s*}}~is', '<?php echo htmlspecialchars($1); ?>', $code);
+            $code = preg_replace('~(?<!@){{\s*!!\s*(.+?)\s*}}~is', '<?php echo $1; ?>', $code);
+            $code = preg_replace('~(?<!@){{\s*(.+?)\s*}}~is', '<?php echo htmlspecialchars($1); ?>', $code);
             return $code;
         }
 
         /**
-         * Compile comments.
+         * Compiles comments.
          * @param string $code Code to compile.
          * @return string Returns the compiled code.
          */
         private static function compileComments(string $code){
-            return preg_replace('~{\s*#\s*(.+?)\s*}~is', '<?php // $1 ?>', $code);
+            return preg_replace('~(?<!@){\s*#\s*(.+?)\s*}~is', '<?php // $1 ?>', $code);
+        }
+
+        /**
+         * Compiles ignored statements.
+         * @param string $code Code to compile.
+         * @return string Returns the compiled code.
+         */
+        private static function compileIgnores(string $code){
+            return preg_replace('~@{~is', '{', $code);
         }
 
     }
