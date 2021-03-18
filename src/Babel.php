@@ -8,7 +8,7 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 0.2-alpha
+     * @version 0.3-alpha
      */
     class Babel{
 
@@ -63,7 +63,7 @@
                         return null;
                     }
                 }else{
-                    trigger_error('Babel: Language "'.$lang.'" not found');
+                    trigger_error('Babel: Language "'.$lang.'" does not exist');
                 }
             }else{
                 trigger_error('Babel: Language configuration not found');

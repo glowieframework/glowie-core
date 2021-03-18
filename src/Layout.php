@@ -3,9 +3,9 @@
 
     use Glowie\Helpers\Helpers;
 
-/**
-     * View core for Glowie application.
-     * @category View
+    /**
+     * Layout core for Glowie application.
+     * @category Layout
      * @package glowieframework/glowie-core
      * @author Glowie
      * @copyright Copyright (c) 2021
@@ -13,15 +13,15 @@
      * @link https://glowie.tk
      * @version 0.3-alpha
      */
-    class View extends Objectify{
+    class Layout extends Objectify{
         /**
-         * View content.
+         * Layout view content.
          * @var string
          */
         public $_content;
-
+        
         /**
-         * Controller that instantiated this view.
+         * Controller that instantiated this layout.
          * @var Controller
          */
         public $_controller;
@@ -33,31 +33,37 @@
         public $_helpers;
 
         /**
-         * View file path.
+         * Layout file path.
          * @var string
          */
         public $_path;
-        
+
         /**
-         * Instantiates a new View object.
-         * @param string $view View filename to instantiate.
+         * Instantiates a new Layout object.
+         * @param string $layout Layout filename to instantiate.
+         * @param string $view View filename to parse inside the layout.
          * @param array $params View parameters to parse.
-         * @param bool $skeltch Preprocess view using Skeltch.
+         * @param bool $skeltch Preprocess layout or view using Skeltch.
          * @param Controller $controller Current controller.
          */
-        public function __construct(string $view, array $params, bool $skeltch, bool $parse, Controller $controller){
+        public function __construct(string $layout, string $view, array $params, bool $skeltch, Controller $controller){
             // Parse parameters
             $this->_controller = $controller;
             $this->_helpers = new Helpers();
-            $this->_path = $view;
+            $this->_path = $layout;
             $controller = get_object_vars($this->_controller->view);
             if(!empty($controller)) foreach ($controller as $key => $value) $this->$key = $value;
             if(!empty($params)) foreach($params as $key => $value) $this->$key = $value;
-            
-            // Render view
+
+            // Parse view
+            if(!empty($view)){
+                $view = new View($view, $params, $skeltch, false, $this->_controller);
+                $this->_content = $view->content;
+            }
+
+            // Render layout
             if($skeltch) $this->_path = Skeltch::run($this->_path);
-            $this->_content = $this->getBuffer();
-            if($parse) echo $this->_content;
+            echo $this->getBuffer();
         }
 
         /**
@@ -69,12 +75,12 @@
             if(method_exists($this->_helpers, $method)){
                 call_user_func_array([$this->_helpers, $method], $args);
             }else{
-                trigger_error('View: Method "' . $method . '" does not exist in Helpers');
+                trigger_error('Layout: Method "' . $method . '" does not exist in Helpers');
             }
         }
 
         /**
-         * Gets a view buffer.
+         * Gets a layout buffer.
          * @return string The buffer contents as string.
          */
         private function getBuffer(){

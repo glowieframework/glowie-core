@@ -1,5 +1,7 @@
 <?php
-    namespace Glowie;
+    namespace Glowie\Core;
+    
+    use ErrorException;
 
     /**
      * Error handler for Glowie application.
@@ -9,7 +11,7 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 0.2-alpha
+     * @version 0.3-alpha
      */
     class Error{
 
@@ -42,7 +44,7 @@
          */
         public function errorHandler(int $level, string $str, string $file = '', int $line = 0){
             if(error_reporting() & $level){
-                $this->exceptionHandler(new \ErrorException($str, 0, $level, $file, $line));
+                $this->exceptionHandler(new ErrorException($str, 0, $level, $file, $line));
                 exit();
             }
         }

@@ -1,5 +1,5 @@
 <?php
-    namespace Glowie;
+    namespace Glowie\Core;
 
     /**
      * Glowie application bootstrapper.
@@ -9,15 +9,9 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 0.2-alpha
+     * @version 0.3-alpha
      */
     class Application{
-
-         /**
-         * Error handler.
-         * @var Error
-         */
-        private $handler;
         
         /**
          * Bootstrap Glowie application.
@@ -48,7 +42,7 @@
             date_default_timezone_set($GLOBALS['glowieConfig']['timezone']);
 
             // Error handling
-            $this->handler = new Error();
+            new Error();
             
             // Store application routing configuration
             $GLOBALS['glowieRoutes']['routes'] = [];
@@ -64,12 +58,15 @@
 
             // Inlude models
             foreach (glob('../models/*.php') as $filename) require_once($filename);
-
+            
             // Include controllers
             foreach (glob('../controllers/*.php') as $filename) require_once($filename);
+            
+            // Include view helpers
+            require_once('../views/helpers/Helpers.php');
 
             // Initialize router
-            $router = new \Rails();
+            $router = new Rails();
             $router->init();
         }
 

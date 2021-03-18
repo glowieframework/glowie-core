@@ -1,15 +1,15 @@
 <?php
-    namespace Glowie;
+    namespace Glowie\Core;
 
     /**
-     * PHP preprocessor for Glowie application.
-     * @category PHP preprocessor
+     * Templating engine for Glowie application.
+     * @category Templating engine
      * @package glowieframework/glowie-core
      * @author Glowie
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 0.2-alpha
+     * @version 0.3-alpha
      */
     class Skeltch{
 
@@ -80,7 +80,7 @@
          */
         private static function compileFunctions(string $code){
             $code = preg_replace('~{\s*@view\s*\((.+?)\)\s*}~is', '<?php $this->renderView($1); ?>', $code);
-            $code = preg_replace('~{\s*@template\s*\((.+?)\)\s*}~is', '<?php $this->renderTemplate($1); ?>', $code);
+            $code = preg_replace('~{\s*@layout\s*\((.+?)\)\s*}~is', '<?php $this->renderLayout($1); ?>', $code);
             $code = preg_replace('~{\s*@babel\s*\((.+?)\)\s*}~is', '<?php echo Babel::get($1); ?>', $code);
             $code = preg_replace('~{\s*@base\s*\((.+?)\)\s*}~is', '<?php echo Util::baseUrl($1); ?>', $code);
             return $code;

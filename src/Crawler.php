@@ -1,5 +1,5 @@
 <?php
-    namespace Glowie;
+    namespace Glowie\Core;
 
     /**
      * HTTP client for Glowie application.
@@ -9,7 +9,7 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 0.2-alpha
+     * @version 0.3-alpha
      */
     class Crawler{
 

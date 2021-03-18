@@ -1,5 +1,5 @@
 <?php
-    namespace Glowie;
+    namespace Glowie\Core;
 
     /**
      * Controller core for Glowie application.
@@ -9,7 +9,7 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 0.2-alpha
+     * @version 0.3-alpha
      */
     class Controller{
         /** 
@@ -73,7 +73,7 @@
          * @param string $view View filename without extension. Must be a **.phtml** file inside **views** folder.
          * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with\
          * each variable name and value.
-         * @param bool $skeltch (Optional) Use Skeltch preprocessor to compile the view.
+         * @param bool $skeltch (Optional) Use Skeltch templating engine to compile the view.
          */
         public function renderView(string $view, array $params = [], bool $skeltch = false){
             if(!is_array($params)) trigger_error('renderView: $params must be an array');
@@ -87,35 +87,35 @@
         }
 
         /**
-         * Renders a template file.
-         * @param string $template Template filename without extension. Must be a **.phtml** file inside **views/templates** folder.
-         * @param string $view (Optional) View filename to render within template. You can place this view by using **$this->content**\
-         * in the template file. Must be a **.phtml** file inside **views** folder.
-         * @param array $params (Optional) Parameters to pass into the rendered view or template. Should be an associative array with\
+         * Renders a layout file.
+         * @param string $layout Layout filename without extension. Must be a **.phtml** file inside **views/layouts** folder.
+         * @param string $view (Optional) View filename to render within layout. You can place this view by using **$this->content**\
+         * in the layout file. Must be a **.phtml** file inside **views** folder.
+         * @param array $params (Optional) Parameters to pass into the rendered view or layout. Should be an associative array with\
          * each variable name and value.
-         * @param bool $skeltch (Optional) Use Skeltch preprocessor to compile the template and view.
+         * @param bool $skeltch (Optional) Use Skeltch templating engine to compile the layout and view.
          */
-        public function renderTemplate(string $template, string $view = '', array $params = [], bool $skeltch = false){
-            if (!is_array($params)) trigger_error('renderTemplate: $params must be an array');
-            $template = '../views/templates/' . $template . '.phtml';
+        public function renderLayout(string $layout, string $view = '', array $params = [], bool $skeltch = false){
+            if (!is_array($params)) trigger_error('renderLayout: $params must be an array');
+            $layout = '../views/layouts/' . $layout . '.phtml';
             if(!empty($view)){
                 $view = '../views/' . $view . '.phtml';
-                if (file_exists($template)) {
+                if (file_exists($layout)) {
                     if(file_exists($view)){
-                        return new Template($template, $view, $params, $skeltch, $this);
+                        return new Layout($layout, $view, $params, $skeltch, $this);
                     }else{
-                        trigger_error('renderTemplate: File "' . $view . '" not found');
+                        trigger_error('renderLayout: File "' . $view . '" not found');
                         exit;
                     }
                 } else {
-                    trigger_error('renderTemplate: File "' . $template . '" not found');
+                    trigger_error('renderLayout: File "' . $layout . '" not found');
                     exit;
                 }
             }else{
-                if (file_exists($template)) {
-                    return new Template($template, '', $params, $skeltch, $this);
+                if (file_exists($layout)) {
+                    return new Layout($layout, '', $params, $skeltch, $this);
                 } else {
-                    trigger_error('renderTemplate: File "' . $template . '" not found');
+                    trigger_error('renderLayout: File "' . $layout . '" not found');
                     exit;
                 }
             }

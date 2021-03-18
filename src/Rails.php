@@ -1,4 +1,7 @@
 <?php
+    namespace Glowie\Core;
+
+    use Util;
 
     /**
      * Router and starting point for Glowie application.
@@ -8,12 +11,12 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 0.2-alpha
+     * @version 0.3-alpha
      */
     class Rails{
         /**
          * Current controller.
-         * @var Glowie\Controller
+         * @var Controller
          */
         private $controller;
 
@@ -76,7 +79,7 @@
             if ($config) {
                 // Check if there is a request method configuration
                 if(!empty($config['methods'])){
-                    if(!is_array($config['methods'])) return trigger_error('Route methods setting must be an array of allowed methods');
+                    if(!is_array($config['methods'])) return trigger_error('Rails: Route methods setting must be an array of allowed methods');
                     if(!in_array(strtolower($_SERVER['REQUEST_METHOD']), $config['methods'])) return $this->callForbidden($route);
                 }
 
@@ -93,7 +96,7 @@
 
                     // If controller class does not exists, trigger an error
                     if (!class_exists($controller)){
-                        trigger_error('Controller "' . $controller . '" not found');
+                        trigger_error('Rails: Controller "' . $controller . '" not found');
                         exit;
                     }
 
@@ -110,13 +113,13 @@
                     // If action does not exists, trigger an error
                     if (method_exists($this->controller, $action  . 'Action')) {
                         // Parses URI parameters, if available
-                        if (!empty($result)) $this->controller->params = new Glowie\Objectify($result);
+                        if (!empty($result)) $this->controller->params = new Objectify($result);
 
                         // Calls action
                         if (method_exists($this->controller, 'init')) call_user_func([$this->controller, 'init']);
                         call_user_func([$this->controller, $action  . 'Action']);
                     } else {
-                        trigger_error('Action "' . $action . 'Action()" not found in ' . $controller);
+                        trigger_error('Rails: Action "' . $action . 'Action()" not found in ' . $controller);
                         exit;
                     }
                 }else{
@@ -256,7 +259,7 @@
                             $params['segment' . ($key + 1)] = $value;
                             unset($params[$key]);
                         }
-                        $this->controller->params = new Glowie\Objectify($params);
+                        $this->controller->params = new Objectify($params);
                     }
                     if (method_exists($this->controller, 'init')) call_user_func([$this->controller, 'init']);
                     call_user_func([$this->controller, $action]);
