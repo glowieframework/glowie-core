@@ -13,7 +13,7 @@
      * @link https://glowie.tk
      * @version 0.3-alpha
      */
-    class Layout extends Objectify{
+    class Layout extends Element{
         /**
          * Layout view content.
          * @var string
@@ -30,13 +30,13 @@
          * View helpers instance.
          * @var Helpers
          */
-        public $_helpers;
+        private $_helpers;
 
         /**
          * Layout file path.
          * @var string
          */
-        public $_path;
+        private $_path;
 
         /**
          * Instantiates a new Layout object.
@@ -58,7 +58,7 @@
             // Parse view
             if(!empty($view)){
                 $view = new View($view, $params, $skeltch, false, $this->_controller);
-                $this->_content = $view->content;
+                $this->_content = $view->_content;
             }
 
             // Render layout
@@ -73,9 +73,9 @@
          */
         public function __call($method, $args){
             if(method_exists($this->_helpers, $method)){
-                call_user_func_array([$this->_helpers, $method], $args);
+                return call_user_func_array([$this->_helpers, $method], $args);
             }else{
-                trigger_error('Layout: Method "' . $method . '" does not exist in Helpers');
+                trigger_error('Layout: Method "' . $method . '" does not exist in "app/views/helpers/Helpers.php"');
             }
         }
 
@@ -111,14 +111,6 @@
          */
         public function renderLayout(string $layout, string $view = '', array $params = [], bool $skeltch = false){
             $this->_controller->renderLayout($layout, $view, $params, $skeltch);
-        }
-
-        /**
-         * Returns the page rendering time.
-         * @return float Page rendering time.
-         */
-        public function getRenderTime(){
-            return round((microtime(true) - $GLOBALS['glowieTimer']), 5);
         }
 
     }

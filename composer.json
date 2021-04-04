@@ -19,7 +19,7 @@
         "files": [
             "src/Error.php",
             "src/Util.php",
-            "src/Objectify.php",
+            "src/Element.php",
             "src/Rails.php",
             "src/Skeltch.php",
             "src/Controller.php",
@@ -28,6 +28,7 @@
             "src/Session.php",
             "src/Crawler.php",
             "src/Kraken.php",
+            "src/Model.php",
             "src/Validator.php",
             "src/Uploader.php",
             "src/Babel.php",

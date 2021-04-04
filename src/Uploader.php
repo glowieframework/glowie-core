@@ -55,11 +55,7 @@
             if(empty($directory) || trim($directory) == '') trigger_error('Uploader: $directory should not be empty');
             if(!is_dir($directory) || !is_writable($directory)) trigger_error('Uploader: Target directory is invalid or not writable');
             if(!is_array($extensions)) trigger_error('Uploader: $extensions must be an array of extensions');
-            
-            // Clean trailing slashes
-            if(Util::startsWith($directory, '/')) $directory = substr($directory, 1);
-            if(Util::endsWith($directory, '/')) $directory = substr($directory, 0, -1);
-            $this->directory = $directory;
+            $this->directory = trim($directory, '/');
             
             // Store properties
             $this->extensions = $extensions;

@@ -3,7 +3,7 @@
 
     use Glowie\Helpers\Helpers;
 
-/**
+    /**
      * View core for Glowie application.
      * @category View
      * @package glowieframework/glowie-core
@@ -13,7 +13,8 @@
      * @link https://glowie.tk
      * @version 0.3-alpha
      */
-    class View extends Objectify{
+    class View extends Element{
+
         /**
          * View content.
          * @var string
@@ -30,13 +31,13 @@
          * View helpers instance.
          * @var Helpers
          */
-        public $_helpers;
+        private $_helpers;
 
         /**
          * View file path.
          * @var string
          */
-        public $_path;
+        private $_path;
         
         /**
          * Instantiates a new View object.
@@ -67,9 +68,9 @@
          */
         public function __call($method, $args){
             if(method_exists($this->_helpers, $method)){
-                call_user_func_array([$this->_helpers, $method], $args);
+                return call_user_func_array([$this->_helpers, $method], $args);
             }else{
-                trigger_error('View: Method "' . $method . '" does not exist in Helpers');
+                trigger_error('View: Method "' . $method . '" does not exist in "app/views/helpers/Helpers.php"');
             }
         }
 
@@ -105,14 +106,6 @@
          */
         public function renderLayout(string $layout, string $view = '', array $params = [], bool $skeltch = false){
             $this->_controller->renderLayout($layout, $view, $params, $skeltch);
-        }
-
-        /**
-         * Returns the page rendering time.
-         * @return float Page rendering time.
-         */
-        public function getRenderTime(){
-            return round((microtime(true) - $GLOBALS['glowieTimer']), 5);
         }
 
     }

@@ -45,7 +45,7 @@
             if(!empty($key)){
                 return $this->__get($key);
             }else{
-                return new Objectify($_SESSION);
+                return new Element($_SESSION);
             }
         }
 

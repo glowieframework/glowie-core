@@ -2,8 +2,8 @@
     namespace Glowie\Core;
 
     /**
-     * Array to object data parser for Glowie application.
-     * @category Data parser
+     * Generic safe object instance for Glowie application.
+     * @category Object
      * @package glowieframework/glowie-core
      * @author Glowie
      * @copyright Copyright (c) 2021
@@ -11,19 +11,20 @@
      * @link https://glowie.tk
      * @version 0.3-alpha
      */
-    class Objectify{
+    class Element{
 
         /**
-         * Instantiates a new object.
+         * Element data.
+         * @var array
+         */
+        protected $_data = [];
+
+        /**
+         * Instantiates a new Element.
          * @param array $data (Optional) Initial data to parse.
          */
         public function __construct(array $data = []){
-            if(!empty($data)){
-                foreach($data as $key => $value){
-                    $key = $this->parseKey($key);
-                    $this->$key = $value;
-                }
-            }
+            if(!empty($data)) $this->_data = $data;
         }
 
         /**
@@ -32,25 +33,20 @@
          * @return mixed Returns the value if exists or null if there is none.
          */
         public function __get(string $key){
-            if(isset($this->$key)){
-                return $this->$key;
+            if(isset($this->_data[$key])){
+                return $this->_data[$key];
             }else{
                 return null;
             }
         }
 
         /**
-         * Gets the value associated to a key in the data. If no key is specified, return\
-         * an object with all data.
+         * Gets the value associated to a key in the data.
          * @param string $key (Optional) Key to get value.
          * @return mixed Returns the value if exists or null if there is none.
          */
-        public function get(string $key = null){
-            if(!empty($key)){
-                return $this->__get($key);
-            }else{
-                return $this;
-            }
+        public function get(string $key){
+            return $this->__get($key);
         }
 
         /**
@@ -59,7 +55,7 @@
          * @param mixed $value Value to set.
          */
         public function __set(string $key, $value){
-            $this->$key = $value;
+            $this->_data[$key] = $value;
         }
 
         /**
@@ -76,8 +72,8 @@
          * @param string $key Key to delete value.
          */
         public function __unset(string $key){
-            if (isset($this->$key)) {
-                unset($this->$key);
+            if (isset($this->_data[$key])) {
+                unset($this->_data[$key]);
             }
         }
 
@@ -95,7 +91,7 @@
          * @return bool Returns true or false.
          */
         public function __isset(string $key){
-            return isset($this->$key);
+            return isset($this->_data[$key]);
         }
 
         /**
@@ -108,34 +104,11 @@
         }
 
         /**
-         * Converts the current object to an associative array.
+         * Gets the Element data as an associative array.
          * @return array The resulting array.
          */
         public function toArray(){
-            return get_object_vars($this);
-        }
-
-        /**
-         * Removes from key all accents and characters that are not valid letters, numbers or underscores.\
-         * It also replaces dashes or spaces for underscores and places an underscore before the first character if it is a number.
-         * @param string $string Key to be encoded.
-         * @return string Encoded key.
-         */
-        private function parseKey(string $string){
-            // Remove accents
-            $string = strtr(utf8_decode($string), utf8_decode('àáâãäçèéêëìíîïñòóôõöùúûüýÿÀÁÂÃÄÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝ'), 'aaaaaceeeeiiiinooooouuuuyyAAAAACEEEEIIIINOOOOOUUUUY');
-           
-            // Converts spaces and dashes to underscores
-            $string = preg_replace('/\s|-/', '_', $string);
-
-            // Removes invalid characters
-            $string = preg_replace('/[^a-zA-Z0-9_]/', '', $string);
-
-            // Checks if the first character is a number and add an underscore before it
-            $string = preg_replace('/^([0-9])/', '_$1', $string, 1);
-
-            // Returns the encoded key
-            return $string;
+            return $this->_data;
         }
 
     }

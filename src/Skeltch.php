@@ -22,11 +22,11 @@
             // Checks for file and cache folder permissions
             $tmpdir = '../cache/';
             if(!is_readable($filename)){
-                trigger_error('Skeltch: File "' . $filename . '" is not readable');
+                trigger_error('Skeltch: File "' . str_replace('../', 'app/', $filename) . '" is not readable');
                 exit;
             }
             if(!is_writable($tmpdir)){
-                trigger_error('Skeltch: Application cache directory is not writable, please check your chmod settings');
+                trigger_error('Skeltch: Directory "app/cache" is not writable, please check your chmod settings');
                 exit;
             }
 

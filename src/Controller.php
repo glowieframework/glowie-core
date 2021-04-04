@@ -11,46 +11,46 @@
      * @link https://glowie.tk
      * @version 0.3-alpha
      */
-    class Controller{
+    class Controller extends Element{
         /** 
          * Application flow properties.
-         * @var Objectify
+         * @var Element
          */
         public $flow;
         
         /**
          * Request GET parameters.
-         * @var Objectify
+         * @var Element
          */
         public $get;
 
         /**
          * URI parameters.
-         * @var Objectify
+         * @var Element
          */
         public $params;
 
         /**
          * Request POST parameters.
-         * @var Objectify
+         * @var Element
          */
         public $post;
 
         /**
          * Request parameters.
-         * @var Objectify
+         * @var Element
          */
         public $request;
 
         /**
          * Web server parameters.
-         * @var Objectify
+         * @var Element
          */
         public $server;
 
         /**
          * Data bridge between controller and view.
-         * @var Objectify
+         * @var Element
          */
         public $view;
 
@@ -59,13 +59,13 @@
          */
         public function __construct(){
             // Set properties
-            $this->flow = new Objectify();
-            $this->get = new Objectify($_GET);
-            $this->params = new Objectify();
-            $this->post = new Objectify($_POST);
-            $this->request = new Objectify($_REQUEST);
-            $this->server = new Objectify($_SERVER);
-            $this->view = new Objectify();
+            $this->flow = new Element();
+            $this->get = new Element($_GET);
+            $this->params = new Element();
+            $this->post = new Element($_POST);
+            $this->request = new Element($_REQUEST);
+            $this->server = new Element($_SERVER);
+            $this->view = new Element();
         }
 
         /**
@@ -81,7 +81,7 @@
             if(file_exists($view)){
                 return new View($view, $params, $skeltch, true, $this);
             }else{
-                trigger_error('renderView: File "' . $view . '" not found');
+                trigger_error('renderView: View file "' . str_replace('../', 'app/', $view) . '" not found');
                 exit;
             }
         }
@@ -104,18 +104,18 @@
                     if(file_exists($view)){
                         return new Layout($layout, $view, $params, $skeltch, $this);
                     }else{
-                        trigger_error('renderLayout: File "' . $view . '" not found');
+                        trigger_error('renderLayout: View file "' . str_replace('../', 'app/', $view) . '" not found');
                         exit;
                     }
                 } else {
-                    trigger_error('renderLayout: File "' . $layout . '" not found');
+                    trigger_error('renderLayout: Layout file "' . str_replace('../', 'app/', $layout) . '" not found');
                     exit;
                 }
             }else{
                 if (file_exists($layout)) {
                     return new Layout($layout, '', $params, $skeltch, $this);
                 } else {
-                    trigger_error('renderLayout: File "' . $layout . '" not found');
+                    trigger_error('renderLayout: Layout file "' . str_replace('../', 'app/', $layout) . '" not found');
                     exit;
                 }
             }

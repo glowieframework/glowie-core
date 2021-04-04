@@ -24,7 +24,7 @@
          * Sets an array of internationalization strings to a language configuration.\
          * **Warning:** This replaces all current language defined strings.
          * @param string $lang Language to set strings.
-         * @param array $strings Associative array of strings with key and value.
+         * @param string[] $strings Associative array of strings with key and value.
          */
         public static function set(string $lang, array $strings){
             $GLOBALS['glowieLang']['languages'][$lang] = $strings;
@@ -63,10 +63,10 @@
                         return null;
                     }
                 }else{
-                    trigger_error('Babel: Language "'.$lang.'" does not exist');
+                    trigger_error('Babel: Language "'.$lang.'" does not exist in "app/languages"');
                 }
             }else{
-                trigger_error('Babel: Language configuration not found');
+                trigger_error('Babel: Language configuration not found in "app/languages"');
             }
         }
 

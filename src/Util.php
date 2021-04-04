@@ -30,13 +30,7 @@
          * @return string Full base URL.
          */
         public static function baseUrl(string $path = ''){
-            !empty($_SERVER['HTTPS']) ? $protocol = 'https://' : $protocol = 'http://';
-            $appFolder = $GLOBALS['glowieConfig']['app_folder'];
-            if(!self::startsWith($appFolder, '/')) $appFolder = '/' . $appFolder;
-            if(!self::endsWith($appFolder, '/')) $appFolder = $appFolder . '/';
-            if(self::startsWith($path, '/')) $path = substr($path, 1);
-            if(self::endsWith($path, '/')) $path = substr($path, 0, -1);
-            return $protocol . $_SERVER['HTTP_HOST'] . $appFolder . $path;
+            return GLOWIE_BASE_URL . trim($path, '/');
         }
 
         /**
@@ -44,7 +38,7 @@
          * @return string Current Glowie core version.
          */
         public static function getVersion(){
-            return '0.2-alpha';
+            return '0.3-alpha';
         }
 
         /**

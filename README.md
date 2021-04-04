@@ -1,16 +1,17 @@
 <a href="https://glowie.tk" target="_blank"><img src="https://i.imgur.com/5tsmOE4.png" alt="drawing" width="200"/></a>
 
 > **Note:** This repository is suited only for Glowie core modules. For creating projects using Glowie, please refer to <a href="https://github.com/glowieframework/glowie">this repo</a>.
-
+---
+### **Important:** This is a work in progress branch, intended only to follow Glowie development state for future releases. Do not use this branch on projects, as it may have lots of bugs and unfinished/untested features.
+---
 ## Powerful and lightweight PHP framework
 Glowie is a PHP framework designed to be as light, fast and powerful as possible for developing applications and dynamic websites the easiest way.
 
 ## Features
-- Complete MVC structure with simple organization
-- Powerful database model with ready to use data handling functions
+- MVC structure with simple organization
+- Powerful database modeling and query builder
 - Large set of tools for validating forms and data the safest way
-- Fast but powerful template engine for designing websites
-- Built-in PHP view preprocessor
+- Built-in templating engine
 - Easy routing engine, with custom parameters and auto routing
 - Safe and fast session management
 - Easy to use HTTP request engine
