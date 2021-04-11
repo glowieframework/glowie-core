@@ -14,6 +14,7 @@
      * @version 0.3-alpha
      */
     class Uploader{
+        
         /**
          * Target directory.
          * @var string

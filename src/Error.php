@@ -44,9 +44,9 @@
          * @param int $line (Optional) Line number where the error was thrown.
          */
         public static function errorHandler(int $level, string $str, string $file = '', int $line = 0){
+            http_response_code(500);
             if(error_reporting() & $level){
                 self::exceptionHandler(new ErrorException($str, 0, $level, $file, $line));
-                http_response_code(500);
                 exit();
             }
         }
@@ -57,7 +57,6 @@
         public static function fatalHandler(){
             $error = error_get_last();
             if ($error && $error["type"] == E_ERROR) self::errorHandler($error["type"], $error["message"], $error["file"], $error["line"]);
-            http_response_code(500);
             exit();
         }
 
@@ -72,7 +71,7 @@
                         <strong>Oops! An error has ocurred:</strong> ' . $e->getMessage() . '
                     </div>
                     <div style="padding: 20px;">
-                        <i style="color: dimgray; display: block; font-size: 16px;">File: <b style="color: #ed578b;">' . $e->getFile() . '</b> at line <b style="color: #ed578b;">' . $e->getLine() . '</b>.</i>
+                        <i style="word-wrap: break-word; color: dimgray; display: block; font-size: 16px;">File: <b style="color: #ed578b;">' . $e->getFile() . '</b> at line <b style="color: #ed578b;">' . $e->getLine() . '</b>.</i>
                         <span style="font-size: 14px; color: gray; display: block;">Exception thrown in ' . self::getExceptionTime() . ' seconds.</span>' .
                         self::highlight($e->getFile(), $e->getLine()) .
                         self::parseTrace($e->getTrace()) .
@@ -108,16 +107,22 @@
         private static function parseTrace($trace){
             $isTraceable = false;
             $result =    '<strong style="color: #ed578b;">Stack trace:</strong>
-                        <table cellspacing="0" cellpadding="0" style="width: 100%; margin-top: 10px;"><tbody>';
-            foreach(array_reverse($trace) as $key => $item){
-                if($item['class'] == 'Glowie\Core\Error') continue;
+                        <table cellspacing="0" cellpadding="0" style="width: 100%; table-layout: fixed; margin-top: 10px;"><tbody>';
+            foreach($trace as $key => $item){
+                if(!empty($item['class']) && $item['class'] == 'Glowie\Core\Error') continue;
                 $isTraceable = true;
-                $result .=   '<tr>
-                                <td style="border: 1px solid lightgray; padding: 10px; vertical-align: top; text-align: center; font-weight: bold; color: #ed578b; width: 40px;">#' . ($key + 1) .'</td>
-                                <td style="border: 1px solid lightgray; padding: 10px;"> 
-                                    <i style="color: dimgray; display: block; font-size: 14px;">' . $item['file'] . ':' . $item['line'] . '</i>
-                                    <span style="color: #d2024a; font-weight: 600;">'. $item['class'] . '</span>-><span style="color: #ed578b">' . $item['function'] . '()</span>
-                                    ' . (!empty($item['args']) ? '<i style="font-size: 14px; font-weight: 600; display: block; margin: 10px 0;">Args:</i><pre style="white-space: wrap; word-wrap: break-word; background-color: #f5f5f5; border: 1px solid gainsboro; padding: 15px; margin: 0;">' . print_r($item['args'], true) . '</pre>' : '') . '
+                $result .=   '<tr>' .
+                                // Index
+                                '<td style="border: 1px solid lightgray; padding: 10px; vertical-align: top; text-align: center; font-weight: bold; color: #ed578b; width: 40px;">#' . ($key + 1) .'</td>' .
+                                '<td style="border: 1px solid lightgray; padding: 10px; word-break: break-all;">' .
+                                    // File/line
+                                    (!empty($item['file']) && !empty($item['line']) ? '<i style="color: dimgray; display: block; font-size: 14px;">' . $item['file'] . ':' . $item['line'] . '</i>' : '') .
+                                    
+                                    // Class
+                                    (!empty($item['class']) ? '<span style="color: #d2024a; font-weight: 600;">' . $item['class'] . '</span>-><span style="color: #ed578b">' . $item['function'] . '()</span>' : '') . 
+                                    
+                                    // Args
+                                    (!empty($item['args']) ? '<i style="font-size: 14px; font-weight: 600; display: block; margin: 10px 0;">Args:</i><pre style="white-space: pre-wrap; word-wrap: break-all; background-color: #f5f5f5; border: 1px solid gainsboro; padding: 15px; margin: 0;">' . print_r($item['args'], true) . '</pre>' : '') . '
                                 </td>
                             </tr>';
             }

@@ -75,8 +75,7 @@
             require_once('../views/helpers/Helpers.php');
 
             // Initialize router
-            $router = new Rails();
-            $router->init();
+            Rails::init();
         }
 
         /**

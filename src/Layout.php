@@ -14,17 +14,18 @@
      * @version 0.3-alpha
      */
     class Layout extends Element{
+
         /**
          * Layout view content.
          * @var string
          */
-        public $_content;
+        private $_content;
         
         /**
          * Controller that instantiated this layout.
          * @var Controller
          */
-        public $_controller;
+        private $_controller;
 
         /**
          * View helpers instance.
@@ -58,7 +59,7 @@
             // Parse view
             if(!empty($view)){
                 $view = new View($view, $params, $skeltch, false, $this->_controller);
-                $this->_content = $view->_content;
+                $this->_content = $view->getContent();
             }
 
             // Render layout
@@ -111,6 +112,22 @@
          */
         public function renderLayout(string $layout, string $view = '', array $params = [], bool $skeltch = false){
             $this->_controller->renderLayout($layout, $view, $params, $skeltch);
+        }
+
+        /**
+         * Returns the controller that instantiated this layout.
+         * @return Controller The controller instance.
+         */
+        public function getController(){
+            return $this->_controller;
+        }
+
+        /**
+         * Returns the layout view content as string.
+         * @return string View content.
+         */
+        public function getContent(){
+            return $this->_content;
         }
 
     }

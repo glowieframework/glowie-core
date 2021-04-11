@@ -2,7 +2,11 @@
     "name": "glowieframework/glowie-core",
     "description": "Glowie core modules and application bootstrapper",
     "license": "MIT",
-    "keywords": ["framework", "glowie", "mvc"],
+    "keywords": [
+        "framework",
+        "glowie",
+        "mvc"
+    ],
     "homepage": "https://glowie.tk",
     "support": {
         "issues": "https://github.com/glowieframework/glowie-core/issues",
@@ -16,23 +20,12 @@
         }
     ],
     "autoload": {
+        "psr-4": {
+            "Glowie\\Core\\": "src/"
+        },
         "files": [
-            "src/Error.php",
-            "src/Util.php",
-            "src/Element.php",
-            "src/Rails.php",
-            "src/Skeltch.php",
-            "src/Controller.php",
-            "src/View.php",
-            "src/Layout.php",
-            "src/Session.php",
-            "src/Crawler.php",
-            "src/Kraken.php",
-            "src/Model.php",
-            "src/Validator.php",
-            "src/Uploader.php",
             "src/Babel.php",
-            "src/Application.php"
+            "src/Util.php"
         ]
     },
     "minimum-stability": "dev",

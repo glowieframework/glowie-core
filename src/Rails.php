@@ -14,11 +14,12 @@
      * @version 0.3-alpha
      */
     class Rails{
+        
         /**
          * Current controller.
          * @var Controller
          */
-        private $controller;
+        public static $controller;
 
         /**
          * Setup a new route for the application.
@@ -27,7 +28,7 @@
          * @param string $action (Optional) The action name from the controller that this route will instantiate.
          * @param string[] $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
          */
-        public static function addRoute(string $route, string $controller = 'main', string $action = 'index', array $methods = []){
+        public static function addRoute(string $route, string $controller = 'main-controller', string $action = 'index', array $methods = []){
             $GLOBALS['glowieRoutes']['routes'][$route] = [
                 'controller' => $controller,
                 'action' => $action,
@@ -59,7 +60,7 @@
         /**
          * Initializes application routing.
          */
-        public function init(){
+        public static function init(){
             // Clean request URI
             $cleanRoute = substr(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), !empty(GLOWIE_APP_FOLDER) ? strlen(GLOWIE_APP_FOLDER) + 2 : strlen(GLOWIE_APP_FOLDER) + 1);
             
@@ -94,13 +95,13 @@
             if ($config) {
                 // Check if there is a request method configuration
                 if(!empty($config['methods'])){
-                    if(!in_array(strtolower($_SERVER['REQUEST_METHOD']), $config['methods'])) return $this->callForbidden($route);
+                    if(!in_array(strtolower($_SERVER['REQUEST_METHOD']), $config['methods'])) return self::callForbidden($route);
                 }
 
                 // Check if there is a redirect configuration
                 if(empty($config['redirect'])){
                     // Gets the controller
-                    $controller = 'Glowie\Controllers\\' . $this->parseName($config['controller'], true);
+                    $controller = 'Glowie\Controllers\\' . self::parseName($config['controller'], true);
                     $flowController = $config['controller'];
 
                     // If controller class does not exists, trigger an error
@@ -110,23 +111,23 @@
                     }
 
                     // Gets the action
-                    $action = $this->parseName($config['action']);
+                    $action = self::parseName($config['action']);
 
                     // Instantiates new controller
-                    $this->controller = new $controller;
-                    $this->controller->flow->controller = trim(strtolower($flowController));
-                    $this->controller->flow->action = trim(strtolower($action));
-                    $this->controller->flow->route = trim(strtolower($route));
-                    $this->controller->flow->method = trim(strtolower($_SERVER['REQUEST_METHOD']));
+                    self::$controller = new $controller;
+                    self::$controller->flow->controller = trim(strtolower($flowController));
+                    self::$controller->flow->action = trim(strtolower($action));
+                    self::$controller->flow->route = trim(strtolower($route));
+                    self::$controller->flow->method = trim(strtolower($_SERVER['REQUEST_METHOD']));
 
                     // If action does not exists, trigger an error
-                    if (method_exists($this->controller, $action)) {
+                    if (method_exists(self::$controller, $action)) {
                         // Parses URI parameters, if available
-                        if (!empty($result)) $this->controller->params = new Element($result);
+                        if (!empty($result)) self::$controller->params = new Element($result);
 
                         // Calls action
-                        if (method_exists($this->controller, 'init')) call_user_func([$this->controller, 'init']);
-                        call_user_func([$this->controller, $action]);
+                        if (method_exists(self::$controller, 'init')) call_user_func([self::$controller, 'init']);
+                        call_user_func([self::$controller, $action]);
                     } else {
                         trigger_error('Rails: Action "' . $action . '()" not found in ' . str_replace('Glowie\Controllers\\', '', $controller));
                         exit;
@@ -151,7 +152,7 @@
                     if($route == '/'){
                         $controller = 'Glowie\Controllers\Main';
                         $action = 'index';
-                        $this->callAutoRoute($controller, $action, [
+                        self::callAutoRoute($controller, $action, [
                             'controller' => 'main', 
                             'action' => 'index', 
                             'route' => '/'
@@ -159,9 +160,9 @@
 
                     // If only the controller was specified
                     }else if(count($autoroute) == 1){
-                        $controller = 'Glowie\Controllers\\' . $this->parseName($autoroute[0], true);
+                        $controller = 'Glowie\Controllers\\' . self::parseName($autoroute[0], true);
                         $action = 'index';
-                        $this->callAutoRoute($controller, $action , [
+                        self::callAutoRoute($controller, $action , [
                             'controller' => $autoroute[0],
                             'action' => 'index',
                             'route' => $route
@@ -169,9 +170,9 @@
 
                     // Controller and action were specified
                     }else if(count($autoroute) == 2){
-                        $controller = 'Glowie\Controllers\\' . $this->parseName($autoroute[0], true);
-                        $action = $this->parseName($autoroute[1]);
-                        $this->callAutoRoute($controller, $action, [
+                        $controller = 'Glowie\Controllers\\' . self::parseName($autoroute[0], true);
+                        $action = self::parseName($autoroute[1]);
+                        self::callAutoRoute($controller, $action, [
                             'controller' => $autoroute[0],
                             'action' => $autoroute[1],
                             'route' => $route
@@ -179,10 +180,10 @@
                     
                     // Controller, action and parameters were specified
                     }else{
-                        $controller = 'Glowie\Controllers\\' . $this->parseName($autoroute[0], true);
-                        $action = $this->parseName($autoroute[1]);
+                        $controller = 'Glowie\Controllers\\' . self::parseName($autoroute[0], true);
+                        $action = self::parseName($autoroute[1]);
                         $params = array_slice($autoroute, 2);
-                        $this->callAutoRoute($controller, $action, [
+                        self::callAutoRoute($controller, $action, [
                             'controller' => $autoroute[0],
                             'action' => $autoroute[1],
                             'route' => $route
@@ -190,7 +191,7 @@
                     }
                 }else{
                     // Route was not found
-                    $this->callNotFound($route);
+                    self::callNotFound($route);
                 }
             }
         }
@@ -202,7 +203,7 @@
          * @param bool $firstUpper (Optional) Determines if the first character should be uppercase.
          * @return string Parsed name.
          */
-        private function parseName(string $string, bool $firstUpper = false){
+        private static function parseName(string $string, bool $firstUpper = false){
             $string = strtr(utf8_decode(strtolower($string)), utf8_decode('àáâãäçèéêëìíîïñòóôõöùúûüýÿÀÁÂÃÄÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝ'), 'aaaaaceeeeiiiinooooouuuuyyAAAAACEEEEIIIINOOOOOUUUUY');
             $string = preg_replace('/[^a-zA-Z0-9_]/', ' ', $string);
             if($firstUpper){
@@ -216,17 +217,17 @@
          * Calls notFound() in ErrorController.
          * @param string $route Current triggered route.
          */
-        private function callNotFound(string $route){
+        private static function callNotFound(string $route){
             http_response_code(404);
-            $controller = 'Glowie\Controllers\Error';
+            $controller = 'Glowie\Controllers\ErrorController';
             if (class_exists($controller)) {
-                $this->controller = new $controller;
-                $this->controller->flow->controller = 'error';
-                $this->controller->flow->action = 'not-found';
-                $this->controller->flow->route = trim(strtolower($route));
-                $this->controller->flow->method = strtolower($_SERVER['REQUEST_METHOD']);
-                if (method_exists($this->controller, 'init')) call_user_func([$this->controller, 'init']);
-                if (method_exists($this->controller, 'notFound')) call_user_func([$this->controller, 'notFound']);
+                self::$controller = new $controller;
+                self::$controller->flow->controller = 'error-controller';
+                self::$controller->flow->action = 'not-found';
+                self::$controller->flow->route = trim(strtolower($route));
+                self::$controller->flow->method = strtolower($_SERVER['REQUEST_METHOD']);
+                if (method_exists(self::$controller, 'init')) call_user_func([self::$controller, 'init']);
+                if (method_exists(self::$controller, 'notFound')) call_user_func([self::$controller, 'notFound']);
             }
         }
 
@@ -234,17 +235,17 @@
          * Calls forbidden() in ErrorController.
          * @param string $route Current triggered route.
          */
-        private function callForbidden(string $route){
+        private static function callForbidden(string $route){
             http_response_code(403);
-            $controller = 'Glowie\Controllers\Error';
+            $controller = 'Glowie\Controllers\ErrorController';
             if (class_exists($controller)) {
-                $this->controller = new $controller;
-                $this->controller->flow->controller = 'error';
-                $this->controller->flow->action = 'forbidden';
-                $this->controller->flow->route = trim(strtolower($route));
-                $this->controller->flow->method = strtolower($_SERVER['REQUEST_METHOD']);
-                if (method_exists($this->controller, 'init')) call_user_func([$this->controller, 'init']);
-                if (method_exists($this->controller, 'forbidden')) call_user_func([$this->controller, 'forbidden']);
+                self::$controller = new $controller;
+                self::$controller->flow->controller = 'error-controller';
+                self::$controller->flow->action = 'forbidden';
+                self::$controller->flow->route = trim(strtolower($route));
+                self::$controller->flow->method = strtolower($_SERVER['REQUEST_METHOD']);
+                if (method_exists(self::$controller, 'init')) call_user_func([self::$controller, 'init']);
+                if (method_exists(self::$controller, 'forbidden')) call_user_func([self::$controller, 'forbidden']);
             }
         }
 
@@ -255,28 +256,28 @@
          * @param array $flowData Current flow parameters.
          * @param array $params (Optional) Optional URI parameters.
          */
-        private function callAutoRoute(string $controller, string $action, array $flowData, array $params = []){
+        private static function callAutoRoute(string $controller, string $action, array $flowData, array $params = []){
             if (class_exists($controller)) {
-                $this->controller = new $controller;
-                $this->controller->flow->controller = trim(strtolower($flowData['controller']));
-                $this->controller->flow->action = trim(strtolower($flowData['action']));
-                $this->controller->flow->route = trim(strtolower($flowData['route']));
-                $this->controller->flow->method = trim(strtolower($_SERVER['REQUEST_METHOD']));
-                if (method_exists($this->controller, $action)) {
+                self::$controller = new $controller;
+                self::$controller->flow->controller = trim(strtolower($flowData['controller']));
+                self::$controller->flow->action = trim(strtolower($flowData['action']));
+                self::$controller->flow->route = trim(strtolower($flowData['route']));
+                self::$controller->flow->method = trim(strtolower($_SERVER['REQUEST_METHOD']));
+                if (method_exists(self::$controller, $action)) {
                     if (!empty($params)){
                         foreach($params as $key => $value){
                             $params['param' . ($key + 1)] = $value;
                             unset($params[$key]);
                         }
-                        $this->controller->params = new Element($params);
+                        self::$controller->params = new Element($params);
                     }
-                    if (method_exists($this->controller, 'init')) call_user_func([$this->controller, 'init']);
-                    call_user_func([$this->controller, $action]);
+                    if (method_exists(self::$controller, 'init')) call_user_func([self::$controller, 'init']);
+                    call_user_func([self::$controller, $action]);
                 } else {
-                    $this->callNotFound($flowData['route']);
+                    self::callNotFound($flowData['route']);
                 };
             } else {
-                $this->callNotFound($flowData['route']);
+                self::callNotFound($flowData['route']);
             }
         }
     }

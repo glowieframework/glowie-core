@@ -14,6 +14,7 @@
      * @version 0.3-alpha
      */
     class Validator{
+        
          /**
          * Validation errors.
          * @var array

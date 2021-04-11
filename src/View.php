@@ -19,13 +19,13 @@
          * View content.
          * @var string
          */
-        public $_content;
+        private $_content;
 
         /**
          * Controller that instantiated this view.
          * @var Controller
          */
-        public $_controller;
+        private $_controller;
 
         /**
          * View helpers instance.
@@ -106,6 +106,22 @@
          */
         public function renderLayout(string $layout, string $view = '', array $params = [], bool $skeltch = false){
             $this->_controller->renderLayout($layout, $view, $params, $skeltch);
+        }
+
+        /**
+         * Returns the controller that instantiated this view.
+         * @return Controller The controller instance.
+         */
+        public function getController(){
+            return $this->_controller;
+        }
+
+        /**
+         * Returns the view content as string.
+         * @return string View content.
+         */
+        public function getContent(){
+            return $this->_content;
         }
 
     }

@@ -17,6 +17,7 @@
      * @version 0.3-alpha
      */
     class Kraken extends Element{
+        
         /**
          * Current connection settings.
          * @var array
@@ -651,9 +652,9 @@
 
         /**
          * Inserts data into the table.
-         * @param mixed $param1 If `$param2` isset, the table to insert data. Otherwise, an associative array\
-         * relating fields and values to insert.
-         * @param mixed $param2 (Optional) Array with data to insert if `$param1` is the table.
+         * @param string|array $param1 If `$param2` isset, the table to insert data. Otherwise, an associative array\
+         * relating fields and values to insert. Also accepts an array of multiple inserts.
+         * @param array $param2 (Optional) Array with data to insert if `$param1` is the table.
          * @param bool $ignore (Optional) Ignore failing rows while inserting data (INSERT IGNORE).
          * @return bool Returns true on success or false on errors.
          */
@@ -716,9 +717,9 @@
 
         /**
          * Inserts data into the table ignoring failing rows.
-         * @param mixed $param1 If `$param2` isset, the table to insert data. Otherwise, an associative array\
-         * relating fields and values to insert.
-         * @param mixed $param2 (Optional) Array with data to insert if `$param1` is the table.
+         * @param string|array $param1 If `$param2` isset, the table to insert data. Otherwise, an associative array\
+         * relating fields and values to insert. Also accepts an array of multiple inserts.
+         * @param array $param2 (Optional) Array with data to insert if `$param1` is the table.
          * @return bool Returns true on success or false on errors.
          */
         public function insertIgnore($param1, $param2 = null){
@@ -726,10 +727,11 @@
         }
 
         /**
-         * Updates data in the table. **Use WHERE filters before calling this function.**
-         * @param mixed $param1 If `$param2` isset, the table to update data. Otherwise, an associative array\
+         * Updates data in the table. **Do not forget to use WHERE statements\
+         * before calling this function.**
+         * @param string|array $param1 If `$param2` isset, the table to update data. Otherwise, an associative array\
          * relating fields and values to update.
-         * @param mixed $param2 (Optional) Array with data to update if `$param1` is the table.
+         * @param array $param2 (Optional) Array with data to update if `$param1` is the table.
          * @return bool Returns true on success or false on errors.
          */
         public function update($param1, $param2 = null){
@@ -758,7 +760,8 @@
         }
 
         /**
-         * Deletes data from the table. **Use WHERE filters before calling this function.**
+         * Deletes data from the table. **Do not forget to use WHERE statements\
+         * before calling this function.**
          * @param string $table (Optional) Table name to delete from.
          * @return bool Returns true on success or false on errors.
          */
@@ -769,9 +772,9 @@
         }
 
         /**
-         * Counts the number of resulting rows from a query.
-         * @param string $column (Optional) Column to use as the counting base. Using * will count all rows including NULL values.\
-         * Setting a column name will count all rows excluding NULL values from that column.
+         * Counts the number of resulting rows from a SELECT query.
+         * @param string $column (Optional) Column to use as the counting base. Using * will count all rows including `NULL` values.\
+         * Setting a column name will count all rows excluding `NULL` values from that column.
          * @return int|bool Returns the number of rows on success or false on errors.
          */
         public function count(string $column = '*'){
@@ -790,6 +793,19 @@
                 return (int)$result->count;
             }else{
                 return $result;
+            }
+        }
+
+        /**
+         * Checks if there are any records that matches a SELECT query.
+         * @return bool Returns true if exists or false if not.
+         */
+        public function exists(){
+            $result = $this->count();
+            if(is_int($result) && $result >= 1){
+                return true;
+            }else{
+                return false;
             }
         }
 
@@ -820,10 +836,26 @@
         }
 
         /**
+         * Returns the last inserted `AUTO_INCREMENT` number from an INSERT query.
+         * @return int Last insert id.
+         */
+        public function lastInsertId(){
+            return $this->_connection->insert_id;
+        }
+
+        /**
+         * Returns the number of affected rows from an UPDATE or INSERT query.
+         * @return int Number of affected rows.
+         */
+        public function affectedRows(){
+            return $this->_connection->affected_rows;
+        }
+
+        /**
          * Runs a raw SQL query.
          * @param string $query Full raw query to run.
          * @param bool $return (Optional) Set to **true** if the query should return any results.
-         * @return mixed If the query is successful and should return results, will return an array with\
+         * @return array|bool If the query is successful and should return results, will return an array with\
          * the results. Otherwise returns true on success or false on errors.
          */
         public function query(string $query, bool $return = false){
@@ -832,10 +864,31 @@
         }
 
         /**
+         * Clears the current built query entirely.
+         */
+        public function clearQuery(){
+            $this->_instruction = '';
+            $this->_select = '';
+            $this->_from = '';
+            $this->_into = '';
+            $this->_join = [];
+            $this->_where = [];
+            $this->_group = '';
+            $this->_order = [];
+            $this->_limit = '';
+            $this->_insert = '';
+            $this->_into = '';
+            $this->_values = '';
+            $this->_update = '';
+            $this->_set = '';
+            $this->_raw = '';
+        }
+
+        /**
          * Returns the current built query.
          * @return string Current built query.
          */
-        public function getQuery(){
+        private function getQuery(){
             // Checks for raw query
             if(!empty($this->_raw)) return $this->_raw;
 
@@ -907,27 +960,6 @@
 
             // Returns the result
             return $query;
-        }
-
-        /**
-         * Clears the current built query entirely.
-         */
-        public function clearQuery(){
-            $this->_instruction = '';
-            $this->_select = '';
-            $this->_from = '';
-            $this->_into = '';
-            $this->_join = [];
-            $this->_where = [];
-            $this->_group = '';
-            $this->_order = [];
-            $this->_limit = '';
-            $this->_insert = '';
-            $this->_into = '';
-            $this->_values = '';
-            $this->_update = '';
-            $this->_set = '';
-            $this->_raw = '';
         }
 
         /**
