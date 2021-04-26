@@ -46,7 +46,7 @@
          * @param bool $skeltch Preprocess view using Skeltch.
          * @param Controller $controller Current controller.
          */
-        public function __construct(string $view, array $params, bool $skeltch, bool $parse, Controller $controller){
+        public function __construct(string $view, array $params, bool $skeltch, bool $parse, Controller &$controller){
             // Parse parameters
             $this->_controller = $controller;
             $this->_helpers = new Helpers();

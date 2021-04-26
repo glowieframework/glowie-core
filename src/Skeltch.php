@@ -25,13 +25,14 @@
                 trigger_error('Skeltch: File "' . str_replace('../', 'app/', $filename) . '" is not readable');
                 exit;
             }
+
             if(!is_writable($tmpdir)){
                 trigger_error('Skeltch: Directory "app/cache" is not writable, please check your chmod settings');
                 exit;
             }
 
-            // Checks cache
-            $tmpfile = $tmpdir . 'sk_' . str_replace(['../views/', '/', '.phtml'], ['', '_', ''], $filename) . '.tmp';
+            // Checks if cache is enabled or should be recompiled
+            $tmpfile = $tmpdir . md5($filename) . '.tmp';
             if(!$GLOBALS['glowieConfig']['cache'] || !file_exists($tmpfile) || filemtime($tmpfile) < filemtime($filename)) self::compile($filename, $tmpfile);
 
             // Returns the processed file location

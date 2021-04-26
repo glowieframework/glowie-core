@@ -7,7 +7,7 @@
     use stdClass;
 
     /**
-     * Database toolkit for Glowie application.
+     * Database ORM toolkit for Glowie application.
      * @category Database
      * @package glowieframework/glowie-core
      * @author Glowie
@@ -352,7 +352,7 @@
             }
 
             // Checks for grouped wheres
-            if(is_object($column) && ($column instanceof Closure)){
+            if($column instanceof Closure){
                 if(!empty($this->_where) && end($this->_where) != '('){
                     $this->_where[] = "{$type} ";
                     $this->_where[] = "(";
@@ -378,7 +378,7 @@
 
                 // Escaping values
                 foreach($param2 as $value){
-                    if(is_object($value) && ($value instanceof stdClass)){
+                    if($value instanceof stdClass){
                         $values[] = $value->value;
                     }else{
                         $values[] = "\"{$this->escape($value)}\"";
@@ -391,7 +391,7 @@
 
                 // Escaping values
                 foreach($param2 as $value){
-                    if(is_object($value) && ($value instanceof stdClass)){
+                    if($value instanceof stdClass){
                         $values[] = $value->value;
                     }else{
                         $values[] = "\"{$this->escape($value)}\"";
@@ -406,7 +406,7 @@
                 $query .= "{$column} {$param1} NULL";
             }else{
                 // Escaping values
-                if(is_object($param2) && ($param2 instanceof stdClass)){
+                if($param2 instanceof stdClass){
                     $param2 = $param2->value;
                 }else{
                     $param2 = "\"{$this->escape($param2)}\"";
@@ -685,7 +685,7 @@
 
                     // Escape values
                     foreach($row as $value){
-                        if(is_object($value) && ($value instanceof stdClass)){
+                        if($value instanceof stdClass){
                             $result[] = $value->value;
                         }else{
                             $result[] = "\"{$this->escape($value)}\"";
@@ -699,7 +699,7 @@
                   $fields[] = $field;
                   
                   // Escape values
-                  if(is_object($value) && ($value instanceof stdClass)){
+                  if($value instanceof stdClass){
                     $values[] = $value->value;
                   }else{
                     $values[] = "\"{$this->escape($value)}\"";
@@ -748,8 +748,8 @@
 
             // Escape values
             foreach($param2 as $key => $value){
-                if(is_object($value) && ($value instanceof stdClass)){
-                    $set[] = "{$key} = {$value}";
+                if($value instanceof stdClass){
+                    $set[] = "{$key} = {$value->value}";
                 }else{
                     $set[] = "{$key} = \"{$this->escape($value)}\"";
                 }

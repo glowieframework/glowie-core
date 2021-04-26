@@ -63,32 +63,10 @@
             // Include languages
             $GLOBALS['glowieLang']['languages'] = [];
             $GLOBALS['glowieLang']['active'] = 'en';
-            foreach ($this->rglob('../languages/*.php') as $filename) require_once($filename);
-
-            // Inlude models
-            foreach ($this->rglob('../models/*.php') as $filename) require_once($filename);
-            
-            // Include controllers
-            foreach ($this->rglob('../controllers/*.php') as $filename) require_once($filename);
-            
-            // Include view helpers
-            require_once('../views/helpers/Helpers.php');
+            foreach (glob('../languages/*.php') as $filename) require_once($filename);
 
             // Initialize router
             Rails::init();
-        }
-
-        /**
-         * Find pathnames from a directory matching a pattern recursively.
-         * @param string $pattern Valid pathname pattern.
-         * @return string[] Array with pathnames.
-         */
-        private function rglob(string $pattern){
-            $files = glob($pattern);
-            foreach (glob(dirname($pattern) . '/*', GLOB_ONLYDIR | GLOB_NOSORT) as $dir) {
-                $files = array_merge($files, $this->rglob($dir . '/' . basename($pattern)));
-            }
-            return $files;
         }
 
     }

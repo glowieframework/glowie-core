@@ -19,50 +19,79 @@
          * Target directory.
          * @var string
          */
-        private $directory;
+        private $_directory;
 
         /**
          * Upload errors.
          * @var string|array
          */
-        private $errors;
+        private $_errors = '';
 
         /**
          * Allowed extensions.
          * @var array
          */
-        private $extensions;
+        private $_extensions;
 
         /**
          * Maximum allowed file size.
          * @var float
          */
-        private $maxFileSize;
+        private $_maxFileSize;
 
         /**
          * Overwrite existing files.
          * @var bool
          */
-        private $overwrite;
+        private $_overwrite;
 
         /**
-         * Creates an instance of a file uploader.
+         * Creates an instance of the uploader.
          * @param string $directory (Optional) Target directory to store the uploaded files. Must be an existing directory with write permissions.
          * @param array $extensions (Optional) Array of allowed file extensions. Use an empty array to allow any extension.
          * @param float $maxFileSize (Optional) Maximum allowed file size **in megabytes**. Use 0 for unlimited (not recommended).
          * @param bool $overwrite (Optional) Overwrite existing files. If false, uploaded files will append a number to its name.
          */
         public function __construct(string $directory = 'public/uploads', array $extensions = [], float $maxFileSize = 0, bool $overwrite = false){
+            $this->setDirectory($directory);
+            $this->setExtensions($extensions);
+            $this->setMaxFileSize($maxFileSize);
+            $this->setOverwrite($overwrite);
+        }
+        
+        /**
+         * Sets the target directory to store the uploaded files. Must be an existing directory with write permissions.
+         * @param string $directory Directory location to store files (relative to the **app** folder).
+         */
+        public function setDirectory(string $directory){
             if(empty($directory) || trim($directory) == '') trigger_error('Uploader: $directory should not be empty');
             if(!is_dir($directory) || !is_writable($directory)) trigger_error('Uploader: Target directory is invalid or not writable');
+            $this->_directory = trim($directory, '/');
+        }
+        
+        /**
+         * Sets the allowed extensions that the uploader will accept.
+         * @param array $extensions Array of allowed file extensions. Use an empty array to allow any extension.
+         */
+        public function setExtensions(array $extensions){
             if(!is_array($extensions)) trigger_error('Uploader: $extensions must be an array of extensions');
-            $this->directory = trim($directory, '/');
-            
-            // Store properties
-            $this->extensions = $extensions;
-            $this->errors = '';
-            $this->maxFileSize = $maxFileSize;
-            $this->overwrite = $overwrite;
+            $this->_extensions = $extensions;
+        }
+        
+        /**
+         * Sets the maximum file size that the uploader will accept.
+         * @param float $maxFileSize Maximum allowed file size **in megabytes**. Use 0 for unlimited (not recommended).
+         */
+        public function setMaxFileSize(float $maxFileSize){
+            $this->_maxFileSize = $maxFileSize;
+        }
+
+        /**
+         * Sets if the uploader should overwrite existing files.
+         * @param bool $overwrite If true, uploaded files will be overwritten. Otherwise, it will append a number to its name.
+         */
+        public function setOverwrite(bool $overwrite){
+            $this->_overwrite = $overwrite;
         }
 
         /**
@@ -70,13 +99,13 @@
          * @return string|array Upload errors.
          */
         public function getErrors(){
-            return $this->errors;
+            return $this->_errors;
         }
 
         /**
          * Performs one or multiple file uploads.
          * @param string $input Valid file input field name.
-         * @return mixed Returns the uploaded file URL (or an array of URLs if multiple files) on success or false on error.
+         * @return mixed Returns the uploaded file URL (or an array of URLs if multiple files) on success or false on errors.
          */
         public function upload(string $input){
             if(!empty($_FILES[$input])){
@@ -95,11 +124,11 @@
                         if($process !== false){
                             $result[] = $process;
                         }else{
-                            $errors[$file['name']] = $this->errors;
+                            $errors[$file['name']] = $this->_errors;
                         }
                     }
-                    $this->errors = $errors;
-                    if(empty($this->errors)){
+                    $this->_errors = $errors;
+                    if(empty($this->_errors)){
                         return $result;
                     }else{
                         foreach($result as $file) if (is_file($file)) unlink($file);
@@ -107,7 +136,7 @@
                     }
                 }
             }else{
-                $this->errors = 'FILE_NOT_SELECTED';
+                $this->_errors = 'FILE_NOT_SELECTED';
                 return false;
             }
         }
@@ -121,20 +150,20 @@
             if ($this->checkFileSize($file['size'])) {
                 if ($this->checkExtension($file['name'])) {
                     $filename = $this->generateFilename($file['name']);
-                    $target = $this->directory . '/' . $filename;
+                    $target = $this->_directory . '/' . $filename;
                     if (is_uploaded_file($file['tmp_name']) && move_uploaded_file($file['tmp_name'], $target)) {
-                        $this->errors = '';
+                        $this->_errors = '';
                         return Util::baseUrl($target);
                     } else {
-                        $this->errors = 'UPLOAD_ERROR';
+                        $this->_errors = 'UPLOAD_ERROR';
                         return false;
                     }
                 } else {
-                    $this->errors = 'INVALID_EXTENSION';
+                    $this->_errors = 'INVALID_EXTENSION';
                     return false;
                 }
             } else {
-                $this->errors = 'INVALID_SIZE';
+                $this->_errors = 'INVALID_SIZE';
                 return false;
             }
         }
@@ -145,8 +174,8 @@
          * @return bool Returns true if the file extension is allowed.
          */
         private function checkExtension(string $filename){
-            if(!empty($this->extensions)){
-                return in_array($this->getExtension($filename), $this->extensions);
+            if(!empty($this->_extensions)){
+                return in_array($this->getExtension($filename), $this->_extensions);
             }else{
                 return true;
             }
@@ -158,8 +187,8 @@
          * @return bool Returns true if the file size is below maximum allowed size.
          */
         private function checkFileSize(float $size){
-            if($this->maxFileSize != 0){
-                $max = $this->maxFileSize * 1024 * 1024;
+            if($this->_maxFileSize != 0){
+                $max = $this->_maxFileSize * 1024 * 1024;
                 return $size <= $max ? true : false;
             }else{
                 return true;
@@ -173,8 +202,7 @@
          */
         private function getExtension(string $filename){
             $parts = explode('.', $filename);
-            if(count($parts) == 0) return '';
-            return strtolower($parts[count($parts) - 1]);
+            return count($parts) != 0 ? strtolower(end($parts)) : '';
         }
 
         /**
@@ -183,12 +211,12 @@
          * @return string Returns the new filename.
          */
         private function generateFilename(string $filename){
-            if(!$this->overwrite){
+            if(!$this->_overwrite){
                 $ext = $this->getExtension($filename);
                 $name = ($ext == '') ? $name = $filename : $name = substr($filename, 0, strlen($filename) - strlen($ext) - 1);
                 $i = 1;
                 $result = $filename;
-                while (is_file($this->directory . '/' . $filename)) {
+                while (is_file($this->_directory . '/' . $filename)) {
                     $result = $name . '_' . $i . '.' . $ext;
                     $filename = $result;
                     $i++;

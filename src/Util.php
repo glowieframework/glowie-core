@@ -17,7 +17,7 @@
          * @param mixed $var Variable to be printed.
          * @param bool $exit (Optional) Stop code execution after logging.
          */
-        public static function log($var, $exit = false){
+        public static function log($var, bool $exit = false){
             echo '<pre>';
             print_r($var);
             echo '</pre>';
@@ -91,7 +91,7 @@
             return $newarray;
         }
 
-        public static function searchArray($array, $key, $value){
+        public static function searchArray(array $array, string $key, $value){
             $result = null;
             if (is_array($array) && count($array) > 0) {
                 $index = array_search($value, array_column($array, $key));
@@ -106,7 +106,7 @@
          * @param string $needle The substring to search for in the haystack.
          * @return bool Returns **true** if haystack begins with needle, **false** otherwise.
          */
-        public static function startsWith($haystack, $needle){
+        public static function startsWith(string $haystack, string $needle){
             $length = strlen($needle);
             return substr($haystack, 0, $length) == $needle;
         }
@@ -117,7 +117,7 @@
          * @param string $needle The substring to search for in the haystack.
          * @return bool Returns **true** if haystack ends with needle, **false** otherwise.
          */
-        public static function endsWith($haystack, $needle){
+        public static function endsWith(string $haystack, string $needle){
             $length = strlen($needle);
             if (!$length) {
                 return true;

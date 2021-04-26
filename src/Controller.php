@@ -13,12 +13,6 @@
      */
     class Controller{
         
-        /** 
-         * Application flow properties.
-         * @var Element
-         */
-        public $flow;
-        
         /**
          * Request GET parameters.
          * @var Element
@@ -44,6 +38,12 @@
         public $request;
 
         /**
+         * Current instantiated route.
+         * @var string
+         */
+        public $route;
+
+        /**
          * Web server parameters.
          * @var Element
          */
@@ -59,8 +59,6 @@
          * Instantiates a new instance of the controller.
          */
         public function __construct(){
-            // Set properties
-            $this->flow = new Element();
             $this->get = new Element($_GET);
             $this->params = new Element();
             $this->post = new Element($_POST);
@@ -74,7 +72,6 @@
          * @param string $view View filename without extension. Must be a **.phtml** file inside **app/views** folder.
          * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
          * @param bool $skeltch (Optional) Use Skeltch templating engine to compile the view.
-         * @return void
          */
         public function renderView(string $view, array $params = [], bool $skeltch = false){
             if(!is_array($params)) trigger_error('renderView: $params must be an array');
@@ -94,7 +91,6 @@
          * inside the layout file. Must be a **.phtml** file inside **app/views** folder.
          * @param array $params (Optional) Parameters to pass into the rendered view and layout. Should be an associative array with each variable name and value.
          * @param bool $skeltch (Optional) Use Skeltch templating engine to compile the layout and view.
-         * @return void
          */
         public function renderLayout(string $layout, string $view = '', array $params = [], bool $skeltch = false){
             if (!is_array($params)) trigger_error('renderLayout: $params must be an array');
