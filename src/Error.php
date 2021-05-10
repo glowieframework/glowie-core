@@ -11,7 +11,7 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 0.3-alpha
+     * @version 1.0
      */
     class Error{
 
@@ -20,11 +20,11 @@
          */
         public static function init(){
             // Registers error handling functions
-            error_reporting($GLOBALS['glowieConfig']['error_reporting']);
+            error_reporting(GLOWIE_CONFIG['error_reporting']);
             if(error_reporting()) mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-            set_exception_handler(['Glowie\Core\Error', 'exceptionHandler']);
-            register_shutdown_function(['Glowie\Core\Error', 'fatalHandler']);
-            set_error_handler(['Glowie\Core\Error', 'errorHandler']);
+            set_exception_handler([self::class, 'exceptionHandler']);
+            register_shutdown_function([self::class, 'fatalHandler']);
+            set_error_handler([self::class, 'errorHandler']);
             ini_set('display_errors', 'Off');
             ini_set('display_startup_errors', 'Off');
 
@@ -86,16 +86,26 @@
          * @return string Highlighted result in HTML.
          */
         private static function highlight(string $file, int $line){
+            // Checks for the line
             if(!is_readable($file)) return '';
-            $content = file_get_contents($file);
-            if($content === false) return '';
-            $content = str_replace(["\r\n", "\r"], "\n", $content);
-            $content = explode("\n", highlight_string($content, true));
-            $content = str_replace('<br />', "\n", $content[1]);
-            $content = explode("\n", str_replace("\r\n", "\n", $content));
-            if(empty($content[$line - 1])) return '';
+            $text = file($file, FILE_IGNORE_NEW_LINES);
+            if($text === false) return '';
+            if(empty($text[$line - 1])) return '';
+
+            // Parses the code
+            $text = trim($text[$line - 1]);
+            $text = highlight_string("<?php " . $text, true);
+            $text = trim($text);
+            $text = preg_replace("|^\\<code\\>\\<span style\\=\"color\\: #[a-fA-F0-9]{0,6}\"\\>|", "", $text, 1);
+            $text = preg_replace("|\\</code\\>\$|", "", $text, 1);
+            $text = trim($text);
+            $text = preg_replace("|\\</span\\>\$|", "", $text, 1);
+            $text = trim($text);
+            $text = preg_replace("|^(\\<span style\\=\"color\\: #[a-fA-F0-9]{0,6}\"\\>)(&lt;\\?php&nbsp;)(.*?)(\\</span\\>)|", "\$1\$3\$4", $text);
+
+            // Returns resulting block
             return '<code style="white-space: wrap; word-wrap: break-word; font-size: 16px; display: block; border: 1px solid gainsboro; margin: 20px 0; background-color: #f5f5f5; padding: 15px;">
-                        <span style="color: #75715E;">' . $line . '</span>' . $content[$line - 1] . '</span>
+                        <span style="color: #75715E;">' . $line . '</span> ' . $text . '</span>
                     </code>';
         }
 
@@ -109,7 +119,7 @@
             $result =    '<strong style="color: #ed578b;">Stack trace:</strong>
                         <table cellspacing="0" cellpadding="0" style="width: 100%; table-layout: fixed; margin-top: 10px;"><tbody>';
             foreach($trace as $key => $item){
-                if(!empty($item['class']) && $item['class'] == 'Glowie\Core\Error') continue;
+                if(!empty($item['class']) && $item['class'] == self::class) continue;
                 $isTraceable = true;
                 $result .=   '<tr>' .
                                 // Index

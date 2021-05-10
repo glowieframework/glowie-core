@@ -9,7 +9,7 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 0.3-alpha
+     * @version 1.0
      */
     class Controller{
         
@@ -17,37 +17,37 @@
          * Request GET parameters.
          * @var Element
          */
-        public $get;
+        protected $get;
 
         /**
          * URI parameters.
          * @var Element
          */
-        public $params;
+        protected $params;
 
         /**
          * Request POST parameters.
          * @var Element
          */
-        public $post;
+        protected $post;
 
         /**
          * Request parameters.
          * @var Element
          */
-        public $request;
+        protected $request;
 
         /**
          * Current instantiated route.
          * @var string
          */
-        public $route;
+        protected $route;
 
         /**
          * Web server parameters.
          * @var Element
          */
-        public $server;
+        protected $server;
 
         /**
          * Data bridge between controller and view.
@@ -57,12 +57,15 @@
 
         /**
          * Instantiates a new instance of the controller.
+         * @param string $route (Optional) Request route.
+         * @param array $params (Optional) Route parameters.
          */
-        public function __construct(){
+        public function __construct(string $route = '', array $params = []){
             $this->get = new Element($_GET);
-            $this->params = new Element();
+            $this->params = new Element($params);
             $this->post = new Element($_POST);
             $this->request = new Element($_REQUEST);
+            $this->route = $route;
             $this->server = new Element($_SERVER);
             $this->view = new Element();
         }
@@ -72,6 +75,7 @@
          * @param string $view View filename without extension. Must be a **.phtml** file inside **app/views** folder.
          * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
          * @param bool $skeltch (Optional) Use Skeltch templating engine to compile the view.
+         * @return void
          */
         public function renderView(string $view, array $params = [], bool $skeltch = false){
             if(!is_array($params)) trigger_error('renderView: $params must be an array');
@@ -91,6 +95,7 @@
          * inside the layout file. Must be a **.phtml** file inside **app/views** folder.
          * @param array $params (Optional) Parameters to pass into the rendered view and layout. Should be an associative array with each variable name and value.
          * @param bool $skeltch (Optional) Use Skeltch templating engine to compile the layout and view.
+         * @return void
          */
         public function renderLayout(string $layout, string $view = '', array $params = [], bool $skeltch = false){
             if (!is_array($params)) trigger_error('renderLayout: $params must be an array');

@@ -1,4 +1,5 @@
 <?php
+    use Glowie\Core\Rails;
 
     /**
      * Miscellaneous utilities for Glowie application.
@@ -8,14 +9,14 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 0.3-alpha
+     * @version 1.0
      */
     class Util{
 
         /**
-         * Logs a variable in human-readable way.
+         * Prints a variable in an human-readable way.
          * @param mixed $var Variable to be printed.
-         * @param bool $exit (Optional) Stop code execution after logging.
+         * @param bool $exit (Optional) Stop code execution after printing.
          */
         public static function log($var, bool $exit = false){
             echo '<pre>';
@@ -34,11 +35,27 @@
         }
 
         /**
+         * Returns the base URL from an specific route.
+         * @param string $route Route internal name/identifier.
+         * @param array $params (Optional) Route parameters to bind into the URL.
+         * @return string Full URL relative to the application path.
+         */
+        public static function route(string $route, array $params = []){
+            $route = Rails::getRoute($route);
+            if(empty($route)) return '';
+            $uri = explode('/:', $route['uri']);
+            if(!empty($params)){
+                foreach($uri as $key => $value) if (isset($params[$value])) $uri[$key] = $params[$value];
+            }
+            return self::baseUrl(implode('/', $uri));
+        }
+
+        /**
          * Returns current Glowie core version.
          * @return string Current Glowie core version.
          */
         public static function getVersion(){
-            return '0.3-alpha';
+            return '1.0';
         }
 
         /**
@@ -55,11 +72,11 @@
         }
 
         /**
-         * Reorders a multidimensional array by a specific key value.
+         * Reorders an associative array by a specific key value.
          * @param array $array Array to reorder.
-         * @param string $key Key to use while ordering.
-         * @param int $order (Optional) Ordering type, can be **SORT_ASC** (ascending) or **SORT_DESC** (descending).
-         * @return array Returns a new sorted array.
+         * @param string $key Column to use as reordering base.
+         * @param int $order (Optional) Ordering direction, can be **SORT_ASC** (ascending) or **SORT_DESC** (descending).
+         * @return array Returns the new ordered array.
          */
         public static function orderArray(array $array, string $key, int $order = SORT_ASC){
             if ((!empty($array)) && (!empty($key))) {
@@ -74,11 +91,11 @@
         }
 
         /**
-         * Filters a multidimensional array by a specific key value.
-         * @param array $array Array to filder.
-         * @param string $key Key to use while filtering.
+         * Filters an associative array by a specific key value.
+         * @param array $array Array to filter.
+         * @param string $key Column to use as filtering base.
          * @param mixed $value Value to filter.
-         * @return array Returns a new filtered array.
+         * @return array Returns the new filtered array.
          */
         public static function filterArray(array $array, string $key, $value){
             $newarray = array();
@@ -91,6 +108,13 @@
             return $newarray;
         }
 
+        /**
+         * Searches an assosciative array for the first item that matches a specific key value.
+         * @param array $array Array to search.
+         * @param string $key Column to search.
+         * @param mixed $value Value to search.
+         * @return mixed Returns the first item found.
+         */
         public static function searchArray(array $array, string $key, $value){
             $result = null;
             if (is_array($array) && count($array) > 0) {
@@ -131,8 +155,8 @@
          * @return string Returns the encrypted string.
          */
         public static function encryptString(string $string){
-            $key = hash('sha256', $GLOBALS['glowieConfig']['api_key']);
-            $iv = substr(hash('sha256', $GLOBALS['glowieConfig']['api_token']), 0, 16);
+            $key = hash('sha256', GLOWIE_CONFIG['api_key']);
+            $iv = substr(hash('sha256', GLOWIE_CONFIG['api_token']), 0, 16);
             $string = base64_encode(openssl_encrypt($string, "AES-256-CBC", $key, 0, $iv));
             return $string;
         }
@@ -143,8 +167,8 @@
          * @return string Returns the decrypted string.
          */
         public static function decryptString(string $string){
-            $key = hash('sha256', $GLOBALS['glowieConfig']['api_key']);
-            $iv = substr(hash('sha256', $GLOBALS['glowieConfig']['api_token']), 0, 16);
+            $key = hash('sha256', GLOWIE_CONFIG['api_key']);
+            $iv = substr(hash('sha256', GLOWIE_CONFIG['api_token']), 0, 16);
             $string = openssl_decrypt(base64_decode($string), "AES-256-CBC", $key, 0, $iv);
             return $string;
         }

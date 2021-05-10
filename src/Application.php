@@ -9,7 +9,7 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 0.3-alpha
+     * @version 1.0
      */
     class Application{
         
@@ -36,37 +36,44 @@
             if(getenv('GLOWIE_ENVIRONMENT') !== false){
                 define('GLOWIE_ENVIRONMENT', getenv('GLOWIE_ENVIRONMENT'));
             }else{
-                define('GLOWIE_ENVIRONMENT', 'development');
+                define('GLOWIE_ENVIRONMENT', 'production');
             }
             
             // Setup configuration environment
-            if (!empty($glowieConfig[GLOWIE_ENVIRONMENT])) {
-                $GLOBALS['glowieConfig'] = $glowieConfig[GLOWIE_ENVIRONMENT];
+            if (!empty($config[GLOWIE_ENVIRONMENT])) {
+                define('GLOWIE_CONFIG', $config[GLOWIE_ENVIRONMENT]);
             }else{
                 die('<strong>Invalid configuration environment!</strong><br>
                 Please check your application settings and "app/public/.htaccess".');
             }
 
             // Timezone configuration
-            date_default_timezone_set($GLOBALS['glowieConfig']['timezone']);
+            date_default_timezone_set(GLOWIE_CONFIG['timezone']);
 
             // Start error handling
             Error::init();
-            
-            // Store application routing configuration
-            $GLOBALS['glowieRoutes']['routes'] = [];
-            $GLOBALS['glowieRoutes']['auto_routing'] = false;
 
             // Include application routes
             require_once('../config/Routes.php');
 
             // Include languages
-            $GLOBALS['glowieLang']['languages'] = [];
-            $GLOBALS['glowieLang']['active'] = 'en';
-            foreach (glob('../languages/*.php') as $filename) require_once($filename);
+            foreach ($this->rglob('../languages/*.php') as $filename) require_once($filename);
 
             // Initialize router
             Rails::init();
+        }
+
+        /**
+         * Find pathnames from a directory matching a pattern recursively.
+         * @param string $pattern Valid pathname pattern.
+         * @return string[] Array with pathnames.
+         */
+        private function rglob(string $pattern){
+            $files = glob($pattern);
+            foreach (glob(dirname($pattern) . '/*', GLOB_ONLYDIR | GLOB_NOSORT) as $dir) {
+                $files = array_merge($files, $this->rglob($dir . '/' . basename($pattern)));
+            }
+            return $files;
         }
 
     }

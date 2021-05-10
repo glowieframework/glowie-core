@@ -9,7 +9,7 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 0.3-alpha
+     * @version 1.0
      */
     class Model extends Kraken{
         
@@ -66,6 +66,16 @@
         }
 
         /**
+         * Deletes the first row that matches the model primary key value.
+         * @param mixed $primary Primary key value to search for.
+         * @return bool Returns true on success or false on errors.
+         */
+        public function drop($primary){
+            $this->clearQuery();
+            return $this->where($this->primaryKey, $primary)->limit(1)->delete();
+        }
+
+        /**
          * Inserts a new row in the model table.
          * @param array $data An associative array relating fields and values to insert.
          * @return bool Returns true on success or false on errors.
@@ -117,6 +127,10 @@
             $this->_data = $row->toArray();
         }
 
+        /**
+         * Saves the model entity data to a row using `updateOrCreate()` method.
+         * @return bool Returns true on success or false on errors.
+         */
         public function save(){
             return $this->updateOrCreate($this->toArray());
         }

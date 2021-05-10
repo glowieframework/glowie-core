@@ -8,16 +8,28 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 0.3-alpha
+     * @version 1.0
      */
     class Babel{
+
+        /**
+         * Active language configuration.
+         * @var string
+         */
+        private static $active_language = 'en';
+
+        /**
+         * Language configurations.
+         * @var array
+         */
+        private static $languages = [];
 
         /**
          * Sets the current active language configuration.
          * @param string $lang Language identificator to set as active.
          */
         public static function setActiveLanguage(string $lang){
-            $GLOBALS['glowieLang']['active'] = $lang;
+            self::$active_language = $lang;
         }
 
         /**
@@ -25,7 +37,7 @@
          * @return string Active language identificator.
          */
         public static function getActiveLanguage(){
-            return $GLOBALS['glowieLang']['active'];
+            return self::$active_language;
         }
 
         /**
@@ -35,7 +47,7 @@
          * @param string[] $strings Associative array of strings with key and value.
          */
         public static function set(string $lang, array $strings){
-            $GLOBALS['glowieLang']['languages'][$lang] = $strings;
+            self::$languages[$lang] = $strings;
         }
 
         /**
@@ -45,8 +57,8 @@
          * @param string $string Internationalization string to set.
          */
         public static function setString(string $lang, string $key, string $string){
-            if(empty($GLOBALS['glowieLang']['languages'][$lang])) $GLOBALS['glowieLang']['languages'][$lang] = [];
-            $GLOBALS['glowieLang']['languages'][$lang][$key] = $string;
+            if(empty(self::$languages[$lang])) self::$languages[$lang] = [];
+            self::$languages[$lang][$key] = $string;
         }
 
         /**
@@ -57,16 +69,16 @@
          */
         public static function get(string $key, string $lang = ''){
             // Checks if languages were defined
-            if(!empty($GLOBALS['glowieLang']['languages'])){
+            if(!empty(self::$languages)){
                 // Parses active language
-                if(empty($lang)) $lang = $GLOBALS['glowieLang']['active'];
+                if(empty($lang)) $lang = self::$active_language;
 
                 // Checks if specified language was defined
-                if(!empty($GLOBALS['glowieLang']['languages'][$lang])){
+                if(!empty(self::$languages[$lang])){
                     // Checks if key exists
-                    if(empty($key)) return $GLOBALS['glowieLang']['languages'][$lang];
-                    if(!empty($GLOBALS['glowieLang']['languages'][$lang][$key])){
-                        return $GLOBALS['glowieLang']['languages'][$lang][$key];
+                    if(empty($key)) return self::$languages[$lang];
+                    if(!empty(self::$languages[$lang][$key])){
+                        return self::$languages[$lang][$key];
                     }else{
                         return null;
                     }

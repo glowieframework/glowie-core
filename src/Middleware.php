@@ -9,7 +9,7 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 0.3-alpha
+     * @version 1.0
      */
     class Middleware{
 
@@ -17,54 +17,57 @@
          * Controller that this middleware is handling.
          * @var Controller
          */
-        public $controller;
+        protected $controller;
 
         /**
          * Request GET parameters.
          * @var Element
          */
-        public $get;
+        protected $get;
 
         /**
          * URI parameters.
          * @var Element
          */
-        public $params;
+        protected $params;
 
         /**
          * Request POST parameters.
          * @var Element
          */
-        public $post;
+        protected $post;
 
         /**
          * Request parameters.
          * @var Element
          */
-        public $request;
+        protected $request;
 
         /**
          * Current instantiated route.
          * @var string
          */
-        public $route;
+        protected $route;
 
         /**
          * Web server parameters.
          * @var Element
          */
-        public $server;
+        protected $server;
 
          /**
          * Instantiates a new instance of the middleware.
          * @param Controller $controller Referenced controller that this middleware is handling.
+         * @param string $route (Optional) Request route.
+         * @param array $params (Optional) Route parameters.
          */
-        public function __construct(Controller &$controller){
+        public function __construct(Controller &$controller, string $route = '', array $params = []){
             $this->controller = $controller;
             $this->get = new Element($_GET);
-            $this->params = new Element();
+            $this->params = new Element($params);
             $this->post = new Element($_POST);
             $this->request = new Element($_REQUEST);
+            $this->route = $route;
             $this->server = new Element($_SERVER);
         }
         

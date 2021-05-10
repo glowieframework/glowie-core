@@ -11,21 +11,33 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 0.3-alpha
+     * @version 1.0
      */
     class Rails{
         
         /**
+         * Auto routing setting.
+         * @var bool
+         */
+        private static $auto_routing = false;
+
+        /**
          * Current controller.
          * @var Controller
          */
-        public static $controller;
+        private static $controller;
 
         /**
          * Current middleware.
          * @var Middleware
          */
-        public static $middleware;
+        private static $middleware;
+
+        /**
+         * Application routes.
+         * @var array
+         */
+        private static $routes = [];
 
         /**
          * Setup a new route for the application.
@@ -33,15 +45,18 @@
          * @param string $controller (Optional) The **namespaced** controller name that this route will instantiate.
          * @param string $action (Optional) The action name from the controller that this route will instantiate.
          * @param string[] $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
+         * @param string $name (Optional) Route internal name/identifier.
          */
-        public static function addRoute(string $route, string $controller = 'Glowie\Controllers\Main', string $action = 'index', array $methods = []){
-            $GLOBALS['glowieRoutes']['routes'][$route] = [
+        public static function addRoute(string $route, string $controller = 'Glowie\Controllers\Main', string $action = 'index', array $methods = [], string $name = ''){
+            if(empty($name)) $name = $route;
+            self::$routes[$name] = [
+                'uri' => $route,
                 'controller' => $controller,
                 'action' => $action,
                 'methods' => $methods
             ];
         }
-
+        
         /**
          * Setup a new protected route for the application.
          * @param string $route The route URI to setup.
@@ -49,24 +64,30 @@
          * @param string $controller (Optional) The **namespaced** controller name that this route will instantiate.
          * @param string $action (Optional) The action name from the controller that this route will instantiate.
          * @param string[] $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
+         * @param string $name (Optional) Route internal name/identifier.
          */
-        public static function addProtectedRoute(string $route, string $middleware = 'Glowie\Middlewares\Main', string $controller = 'Glowie\Controllers\Main', string $action = 'index', array $methods = []){
-            $GLOBALS['glowieRoutes']['routes'][$route] = [
+        public static function addProtectedRoute(string $route, string $middleware = 'Glowie\Middlewares\Main', string $controller = 'Glowie\Controllers\Main', string $action = 'index', array $methods = [], string $name = ''){
+            if(empty($name)) $name = $route;
+            self::$routes[$name] = [
+                'uri' => $route,
                 'controller' => $controller,
                 'action' => $action,
                 'middleware' => $middleware,
                 'methods' => $methods
             ];
         }
-
+        
         /**
          * Setup a new redirect route for the application.
          * @param string $route The route URI to redirect.
          * @param string $target The target URl to redirect this route to.
          * @param string[] $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
+         * @param string $name (Optional) Route internal name/identifier.
          */
-        public static function addRedirect(string $route, string $target, array $methods = []){
-            $GLOBALS['glowieRoutes']['routes'][$route] = [
+        public static function addRedirect(string $route, string $target, array $methods = [], string $name = ''){
+            if(empty($name)) $name = $route;
+            self::$routes[$name] = [
+                'uri' => $route,
                 'redirect' => $target,
                 'methods' => $methods
             ];
@@ -77,7 +98,20 @@
          * @param bool $option (Optional) **True** for turning on auto routing or **false** for turning it off.
          */
         public static function setAutoRouting(bool $option = true){
-            $GLOBALS['glowieRoutes']['auto_routing'] = $option;
+            self::$auto_routing = $option;
+        }
+
+        /**
+         * Gets an specific route configuration.
+         * @param string $route Route internal name/identifier to get.
+         * @return array|null Returns the route setting as an array if valid or null if not.
+         */
+        public static function getRoute(string $route){
+            if(isset(self::$routes[$route])){
+                return self::$routes[$route];
+            }else{
+                return null;
+            }
         }
 
         /**
@@ -96,13 +130,14 @@
 
             // Stores current route configuration
             $config = null;
+            $routeName = $route;
 
             // Loops through routes configuration to find a valid route pattern
-            foreach ($GLOBALS['glowieRoutes']['routes'] as $key => $item) {
-                $regex = str_replace('/', '\/', preg_replace('(:[^\/]+)', '([^/]+)', ltrim($key, '/')));
+            foreach (self::$routes as $key => $item) {
+                $regex = str_replace('/', '\/', preg_replace('(:[^\/]+)', '([^/]+)', ltrim($item['uri'], '/')));
                 if (preg_match_all('/^' . $regex . '$/i', rtrim($route, '/'), $params)) {
                     // Fetch route parameters
-                    $keys = explode('/:', $key);
+                    $keys = explode('/:', $item['uri']);
                     $result = [];
                     if (count($keys) > 1) {
                         unset($params[0]);
@@ -110,6 +145,7 @@
                         foreach ($keys as $i => $value) $result[$value] = $params[$i][0];
                     }
                     $config = $item;
+                    $routeName = $key;
                     break;
                 }
             }
@@ -118,41 +154,39 @@
             if ($config) {
                 // Check if there is a request method configuration
                 if(!empty($config['methods'])){
-                    if(!in_array(strtolower($_SERVER['REQUEST_METHOD']), $config['methods'])) return self::callForbidden($route);
+                    if(!in_array(strtolower($_SERVER['REQUEST_METHOD']), $config['methods'])) return self::callForbidden($route, $result);
                 }
 
                 // Check if there is a redirect configuration
                 if(empty($config['redirect'])){
                     // Gets the controller
                     $controller = $config['controller'];
-                    $friendlyName = str_replace('Glowie\Controllers\\', '', $controller);
 
                     // If controller class does not exists, trigger an error
                     if (!class_exists($controller)){
-                        trigger_error("Rails: Controller \"{$friendlyName}\" not found");
+                        trigger_error("Rails: Controller \"{$controller}\" not found");
                         exit;
                     }
 
                     // Instantiates new controller
-                    self::$controller = new $controller;
-                    self::$controller->route = $route;
+                    self::$controller = new $controller($routeName, $result);
+                    if (method_exists(self::$controller, 'init')) call_user_func([self::$controller, 'init']);
 
                     // Runs the middleware
                     if(!empty($config['middleware'])){
                         // Gets the middleware
                         $middleware = $config['middleware'];
-                        $friendlyMiddleware = str_replace('Glowie\Middlewares\\', '', $middleware);
 
                         // If middleware class does not exists, trigger an error
                         if (!class_exists($middleware)){
-                            trigger_error("Rails: Middleware \"{$friendlyMiddleware}\" not found");
+                            trigger_error("Rails: Middleware \"{$middleware}\" not found");
                             exit;
                         }
 
                         // Instantiates new middleware
-                        self::$middleware = new $middleware(self::$controller);
-                        self::$middleware->route = $route;
-
+                        self::$middleware = new $middleware(self::$controller, $routeName, $result);
+                        if (method_exists(self::$middleware, 'init')) call_user_func([self::$middleware, 'init']);
+                        
                         // Calls middleware handle() method
                         if(method_exists(self::$middleware, 'handle')){
                             $response = call_user_func([self::$middleware, 'handle']);
@@ -164,11 +198,11 @@
                                 if (method_exists(self::$middleware, 'fail')){
                                     return call_user_func([self::$middleware, 'fail']);
                                 }else{
-                                    return self::callForbidden($route);
+                                    return self::callForbidden($routeName, $result);
                                 };
                             }
                         }else{
-                            trigger_error("Rails: Middleware \"{$friendlyMiddleware}()\" does not have a handle() function");
+                            trigger_error("Rails: Middleware \"{$middleware}\" does not have a handle() function");
                             exit;
                         }
                     }
@@ -178,14 +212,10 @@
 
                     // If action does not exists, trigger an error
                     if (method_exists(self::$controller, $action)) {
-                        // Parses URI parameters, if available
-                        if (!empty($result)) self::$controller->params = new Element($result);
-
                         // Calls action
-                        if (method_exists(self::$controller, 'init')) call_user_func([self::$controller, 'init']);
                         return call_user_func([self::$controller, $action]);
                     } else {
-                        trigger_error("Rails: Action \"{$action}()\" not found in {$friendlyName} controller");
+                        trigger_error("Rails: Action \"{$action}()\" not found in {$controller} controller");
                         exit;
                     }
                 }else{
@@ -194,7 +224,7 @@
                 }
             } else {
                 // Check if auto routing is enabled
-                if($GLOBALS['glowieRoutes']['auto_routing']){
+                if(self::$auto_routing){
 
                     // Get URI parameters
                     $autoroute = explode('/', $route);
@@ -208,30 +238,30 @@
                     if($route == '/'){
                         $controller = 'Glowie\Controllers\Main';
                         $action = 'index';
-                        return self::callAutoRoute($controller, $action, $route);
+                        return self::callAutoRoute($controller, $action, $routeName);
 
                     // If only the controller was specified
                     }else if(count($autoroute) == 1){
                         $controller = 'Glowie\Controllers\\' . self::parseName($autoroute[0], true);
                         $action = 'index';
-                        return self::callAutoRoute($controller, $action, $route);
+                        return self::callAutoRoute($controller, $action, $routeName);
 
                     // Controller and action were specified
                     }else if(count($autoroute) == 2){
                         $controller = 'Glowie\Controllers\\' . self::parseName($autoroute[0], true);
                         $action = self::parseName($autoroute[1]);
-                        return self::callAutoRoute($controller, $action, $route);
+                        return self::callAutoRoute($controller, $action, $routeName);
                     
                     // Controller, action and parameters were specified
                     }else{
                         $controller = 'Glowie\Controllers\\' . self::parseName($autoroute[0], true);
                         $action = self::parseName($autoroute[1]);
                         $params = array_slice($autoroute, 2);
-                        return self::callAutoRoute($controller, $action, $route, $params);
+                        return self::callAutoRoute($controller, $action, $routeName, $params);
                     }
                 }else{
                     // Route was not found
-                    return self::callNotFound($route);
+                    return self::callNotFound($routeName);
                 }
             }
         }
@@ -261,8 +291,7 @@
             http_response_code(404);
             $controller = 'Glowie\Controllers\Error';
             if (class_exists($controller)) {
-                self::$controller = new $controller;
-                self::$controller->route = $route;
+                self::$controller = new $controller($route);
                 if (method_exists(self::$controller, 'init')) call_user_func([self::$controller, 'init']);
                 if (method_exists(self::$controller, 'notFound')) call_user_func([self::$controller, 'notFound']);
             }
@@ -271,13 +300,13 @@
         /**
          * Calls `forbidden()` action in Error controller.
          * @param string $route Request route.
+         * @param array $params (Optional) Route parameters.
          */
-        private static function callForbidden(string $route){
+        private static function callForbidden(string $route, array $params = []){
             http_response_code(403);
             $controller = 'Glowie\Controllers\Error';
             if (class_exists($controller)) {
-                self::$controller = new $controller;
-                self::$controller->route = $route;
+                self::$controller = new $controller($route, $params);
                 if (method_exists(self::$controller, 'init')) call_user_func([self::$controller, 'init']);
                 if (method_exists(self::$controller, 'forbidden')) call_user_func([self::$controller, 'forbidden']);
             }
@@ -288,21 +317,19 @@
          * @param string $controller Controller name.
          * @param string $action Action name.
          * @param string $route Request route.
-         * @param array $params (Optional) Optional URI parameters.
+         * @param array $params (Optional) Route parameters.
          */
         private static function callAutoRoute(string $controller, string $action, string $route, array $params = []){
             if (class_exists($controller)) {
-                self::$controller = new $controller;
-                self::$controller->route = $route;
-                if (method_exists(self::$controller, $action)) {
-                    if (!empty($params)){
-                        foreach($params as $key => $value){
-                            $params['param' . ($key + 1)] = $value;
-                            unset($params[$key]);
-                        }
-                        self::$controller->params = new Element($params);
+                if (!empty($params)){
+                    foreach($params as $key => $value){
+                        $params['param' . ($key + 1)] = $value;
+                        unset($params[$key]);
                     }
-                    if (method_exists(self::$controller, 'init')) call_user_func([self::$controller, 'init']);
+                }
+                self::$controller = new $controller($route, $params);
+                if (method_exists(self::$controller, 'init')) call_user_func([self::$controller, 'init']);
+                if (method_exists(self::$controller, $action)) {
                     call_user_func([self::$controller, $action]);
                 } else {
                     self::callNotFound($route);

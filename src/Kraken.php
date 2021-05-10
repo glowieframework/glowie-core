@@ -14,7 +14,7 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 0.3-alpha
+     * @version 1.0
      */
     class Kraken extends Element{
         
@@ -35,6 +35,12 @@
          * @var mysqli
          */
         private $_connection;
+
+        /**
+         * Enable transactions.
+         * @var bool
+         */
+        private $_transactions;
 
         /**
          * Query instruction.
@@ -125,10 +131,12 @@
          * @param string $table (Optional) Table name to set as default.
          * @param string[] $database (Optional) Associative array with the connection settings.\
          * Use an empty array to connect to the globally defined database (in **app/config/Config.php**).
+         * @param bool $transactions Enable or disable database transactions.
          */
-        public function __construct(string $table = 'glowie', array $database = []){
+        public function __construct(string $table = 'glowie', array $database = [], bool $transactions = true){
             $this->setDatabase($database);
             $this->setTable($table);
+            $this->setTransactions($transactions);
         }
 
         /**
@@ -138,7 +146,7 @@
          * @return Kraken Current Kraken instance for nested calls.
          */
         public function setDatabase(array $database){
-            if (empty($database)) $database = $GLOBALS['glowieConfig']['database'];
+            if (empty($database)) $database = GLOWIE_CONFIG['database'];
             if (!is_array($database)) trigger_error('setDatabase: Database connection settings must be an array');
             if (empty($database['host'])) trigger_error('setDatabase:  Database host not defined');
             if (empty($database['username'])) trigger_error('setDatabase:  Database username not defined');
@@ -183,6 +191,14 @@
          */
         public function getConnection(){
             return $this->_connection;
+        }
+
+        /**
+         * Enables or disables database transactions.
+         * @param bool $option True or false.
+         */
+        public function setTransactions(bool $option){
+            $this->_transactions = $option;
         }
 
         /**
@@ -608,6 +624,15 @@
             $this->_order[] = "{$column} {$direction}";
             return $this;
         }
+
+        /**
+         * Adds a random ORDER BY statement to the query.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function orderByRandom(){
+            $this->_order[] = "RAND()";
+            return $this;
+        }
         
         /**
          * Adds a raw ORDER BY statement to the query.
@@ -971,6 +996,7 @@
             unset($params['_database']);
             unset($params['_table']);
             unset($params['_connection']);
+            unset($params['_transactions']);
             return $params;
         }
 
@@ -990,10 +1016,13 @@
          * results. Otherwise returns true on success or false on errors.
          */
         private function execute(bool $return = false, bool $returnFirst = false){
-            $this->_connection->begin_transaction();
+            // Initializes the transaction (if enabled)
+            if($this->_transactions) $this->_connection->begin_transaction();
+            
             try {
                 // Run query and clear its data
                 $query = $this->_connection->query($this->getQuery());
+                $this->clearQuery();
 
                 // Checks for query result
                 if ($query !== false) {
@@ -1020,16 +1049,17 @@
                         }
                     }
 
-                    // Commits the transaction and return the result
-                    $this->_connection->commit();
+                    // Commits the transaction (if enabled) and return the result
+                    if ($this->_transactions) $this->_connection->commit();
                     return $result;
                 }else{
                     // Query failed
                     return false;
                 }
             } catch (mysqli_sql_exception $exception) {
-                $this->_connection->rollback();
+                if($this->_transactions) $this->_connection->rollback();
                 throw $exception;
+                return false;
             }
         }
         
