@@ -11,7 +11,7 @@
      * @link https://glowie.tk
      * @version 1.0
      */
-    class Middleware{
+    abstract class Middleware{
 
         /**
          * Controller that this middleware is handling.
@@ -70,6 +70,12 @@
             $this->route = $route;
             $this->server = new Element($_SERVER);
         }
+
+        /**
+         * The middleware handler.
+         * @return bool Should return true on success or false on fail.
+         */
+        abstract public function handle();
         
     }
 

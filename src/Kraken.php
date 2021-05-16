@@ -37,6 +37,12 @@
         private $_connection;
 
         /**
+         * Global connection handler.
+         * @var mysqli
+         */
+        private static $_global;
+
+        /**
          * Enable transactions.
          * @var bool
          */
@@ -129,7 +135,7 @@
         /**
          * Creates a new database connection.
          * @param string $table (Optional) Table name to set as default.
-         * @param string[] $database (Optional) Associative array with the connection settings.\
+         * @param array $database (Optional) Associative array with the connection settings.\
          * Use an empty array to connect to the globally defined database (in **app/config/Config.php**).
          * @param bool $transactions Enable or disable database transactions.
          */
@@ -141,20 +147,36 @@
 
         /**
          * Sets the database connection settings.
-         * @param string[] $database Associative array with the connection settings.\
+         * @param array $database Associative array with the connection settings.\
          * Use an empty array to connect to the globally defined database (in **app/Config.php**).
          * @return Kraken Current Kraken instance for nested calls.
          */
         public function setDatabase(array $database){
-            if (empty($database)) $database = GLOWIE_CONFIG['database'];
+            // Checks for the global database setting
+            $global = empty($database);
+            if ($global) $database = GLOWIE_CONFIG['database'];
+
+            // Validate settings
             if (!is_array($database)) trigger_error('setDatabase: Database connection settings must be an array');
             if (empty($database['host'])) trigger_error('setDatabase:  Database host not defined');
             if (empty($database['username'])) trigger_error('setDatabase:  Database username not defined');
-            if (empty($database['password'])) $database['password'] = '';
-            if (empty($database['port'])) $database['port'] = 3306;
             if (empty($database['db'])) trigger_error('setDatabase: Database name not defined');
+            if (empty($database['port'])) $database['port'] = 3306;
+            
+            // Saves the database connection
             $this->_database = $database;
-            $this->_connection = new mysqli($database['host'], $database['username'], $database['password'], $database['db'], $database['port']);
+            if($global){
+                // Checks if the global database is already connected
+                if(!empty(self::$_global)){
+                    $connection = self::$_global;
+                }else{
+                    $connection = new mysqli($database['host'], $database['username'], $database['password'], $database['db'], $database['port']);
+                    self::$_global = $connection;
+                }
+            }else{
+                $connection = new mysqli($database['host'], $database['username'], $database['password'], $database['db'], $database['port']);
+            }
+            $this->_connection = $connection;
             return $this;
         }
         
@@ -164,7 +186,7 @@
          * @return Kraken Current Kraken instance for nested calls.
          */
         public function setTable(string $table){
-            if (empty($table) || trim($table) == '') trigger_error('setTable: Table name should not be empty');
+            if (empty($table)) trigger_error('setTable: Table name should not be empty');
             $this->_table = $table;
             return $this;
         }
@@ -213,7 +235,7 @@
         /**
          * Returns a value that will not be escaped or quoted into the query.
          * @param string $value Value to be returned.
-         * @return object Value representation as an object.
+         * @return stdClass Value representation as an object.
          */
         public static function raw(string $value){
             $obj = new stdClass();
@@ -661,7 +683,7 @@
 
         /**
          * Fetches the first result from a SELECT query.
-         * @return Element Returns the first resulting row on success or false on errors.
+         * @return Element|bool Returns the first resulting row on success or false on errors.
          */
         public function fetchRow(){
             return $this->execute(true, true);
@@ -669,7 +691,7 @@
         
         /**
          * Fetches all results from a SELECT query.
-         * @return Element[] Returns an array with all resulting rows on success or false on errors.
+         * @return array|bool Returns an array with all resulting rows on success or false on errors.
          */
         public function fetchAll(){
             return $this->execute(true);
@@ -827,11 +849,7 @@
          */
         public function exists(){
             $result = $this->count();
-            if(is_int($result) && $result >= 1){
-                return true;
-            }else{
-                return false;
-            }
+            return (is_int($result) && $result >= 1);
         }
 
         /**
@@ -861,8 +879,8 @@
         }
 
         /**
-         * Returns the last inserted `AUTO_INCREMENT` number from an INSERT query.
-         * @return int Last insert id.
+         * Returns the last inserted `AUTO_INCREMENT` value from an INSERT query.
+         * @return mixed Last insert id.
          */
         public function lastInsertId(){
             return $this->_connection->insert_id;

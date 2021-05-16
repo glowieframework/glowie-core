@@ -22,7 +22,7 @@
             echo '<pre>';
             print_r($var);
             echo '</pre>';
-            if($exit) exit();
+            if($exit) exit;
         }
 
         /**
@@ -35,12 +35,14 @@
         }
 
         /**
-         * Returns the base URL from an specific route.
+         * Returns the base URL from a named route.
          * @param string $route Route internal name/identifier.
          * @param array $params (Optional) Route parameters to bind into the URL.
          * @return string Full URL relative to the application path.
          */
         public static function route(string $route, array $params = []){
+            if(empty($route)) trigger_error('route: Route name cannot be empty');
+            if (!is_array($params)) trigger_error('route: $params must be an array');
             $route = Rails::getRoute($route);
             if(empty($route)) return '';
             $uri = explode('/:', $route['uri']);
@@ -61,14 +63,9 @@
         /**
          * Redirects to a relative or full URL.
          * @param string $destination Target URL to redirect to.
-         * @param bool $js (Optional) Redirect using JavaScript (when inside modals or iframes).
          */
-        public static function redirect(string $destination, bool $js = false){
-            if ($js) {
-                echo '<script>window.location = "' . $destination . '"</script>';
-            } else {
-                header('Location: ' . $destination);
-            }
+        public static function redirect(string $destination){
+            header('Location: ' . $destination);
         }
 
         /**

@@ -29,7 +29,7 @@
 
         /**
          * Allowed extensions.
-         * @var array
+         * @var string[]
          */
         private $_extensions;
 
@@ -48,7 +48,7 @@
         /**
          * Creates an instance of the uploader.
          * @param string $directory (Optional) Target directory to store the uploaded files. Must be an existing directory with write permissions.
-         * @param array $extensions (Optional) Array of allowed file extensions. Use an empty array to allow any extension.
+         * @param string[] $extensions (Optional) Array of allowed file extensions. Use an empty array to allow any extension.
          * @param float $maxFileSize (Optional) Maximum allowed file size **in megabytes**. Use 0 for unlimited (not recommended).
          * @param bool $overwrite (Optional) Overwrite existing files. If false, uploaded files will append a number to its name.
          */
@@ -71,7 +71,7 @@
         
         /**
          * Sets the allowed extensions that the uploader will accept.
-         * @param array $extensions Array of allowed file extensions. Use an empty array to allow any extension.
+         * @param string[] $extensions Array of allowed file extensions. Use an empty array to allow any extension.
          */
         public function setExtensions(array $extensions){
             if(!is_array($extensions)) trigger_error('Uploader: $extensions must be an array of extensions');

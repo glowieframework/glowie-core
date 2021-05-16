@@ -84,7 +84,6 @@
                 return new View($view, $params, $skeltch, true, $this);
             }else{
                 trigger_error('renderView: View file "' . str_replace('../', 'app/', $view) . '" not found');
-                exit;
             }
         }
 
@@ -107,18 +106,15 @@
                         return new Layout($layout, $view, $params, $skeltch, $this);
                     }else{
                         trigger_error('renderLayout: View file "' . str_replace('../', 'app/', $view) . '" not found');
-                        exit;
                     }
                 } else {
                     trigger_error('renderLayout: Layout file "' . str_replace('../', 'app/', $layout) . '" not found');
-                    exit;
                 }
             }else{
                 if (file_exists($layout)) {
                     return new Layout($layout, '', $params, $skeltch, $this);
                 } else {
                     trigger_error('renderLayout: Layout file "' . str_replace('../', 'app/', $layout) . '" not found');
-                    exit;
                 }
             }
         }

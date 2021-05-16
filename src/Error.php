@@ -45,10 +45,8 @@
          */
         public static function errorHandler(int $level, string $str, string $file = '', int $line = 0){
             http_response_code(500);
-            if(error_reporting() & $level){
-                self::exceptionHandler(new ErrorException($str, 0, $level, $file, $line));
-                exit();
-            }
+            if(error_reporting() & $level) self::exceptionHandler(new ErrorException($str, 0, $level, $file, $line));
+            exit;
         }
         
         /**
@@ -57,7 +55,7 @@
         public static function fatalHandler(){
             $error = error_get_last();
             if ($error && $error["type"] == E_ERROR) self::errorHandler($error["type"], $error["message"], $error["file"], $error["line"]);
-            exit();
+            exit;
         }
 
         /**

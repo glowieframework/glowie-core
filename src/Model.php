@@ -47,7 +47,7 @@
         /**
          * Gets the first row that matches the model primary key value.
          * @param mixed $primary Primary key value to search for.
-         * @return Element Returns the row on success or false on errors.
+         * @return Element|bool Returns the row on success or false on errors.
          */
         public function find($primary){
             $this->clearQuery();
@@ -57,7 +57,7 @@
         
         /**
          * Gets all rows from the model table.
-         * @return Element[] Returns an array with all rows on success or false on errors.
+         * @return array|bool Returns an array with all rows on success or false on errors.
          */
         public function all(){
             $this->clearQuery();

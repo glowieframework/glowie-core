@@ -21,15 +21,8 @@
         public static function run(string $filename){
             // Checks for file and cache folder permissions
             $tmpdir = '../cache/';
-            if(!is_readable($filename)){
-                trigger_error('Skeltch: File "' . str_replace('../', 'app/', $filename) . '" is not readable');
-                exit;
-            }
-
-            if(!is_writable($tmpdir)){
-                trigger_error('Skeltch: Directory "app/cache" is not writable, please check your chmod settings');
-                exit;
-            }
+            if(!is_readable($filename)) trigger_error('Skeltch: File "' . str_replace('../', 'app/', $filename) . '" is not readable');
+            if(!is_writable($tmpdir)) trigger_error('Skeltch: Directory "app/cache" is not writable, please check your chmod settings');
 
             // Checks if cache is enabled or should be recompiled
             $tmpfile = $tmpdir . md5($filename) . '.tmp';

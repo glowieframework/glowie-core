@@ -163,10 +163,7 @@
                     $controller = $config['controller'];
 
                     // If controller class does not exists, trigger an error
-                    if (!class_exists($controller)){
-                        trigger_error("Rails: Controller \"{$controller}\" not found");
-                        exit;
-                    }
+                    if (!class_exists($controller)) trigger_error("Rails: Controller \"{$controller}\" not found");
 
                     // Instantiates new controller
                     self::$controller = new $controller($routeName, $result);
@@ -178,32 +175,24 @@
                         $middleware = $config['middleware'];
 
                         // If middleware class does not exists, trigger an error
-                        if (!class_exists($middleware)){
-                            trigger_error("Rails: Middleware \"{$middleware}\" not found");
-                            exit;
-                        }
+                        if (!class_exists($middleware)) trigger_error("Rails: Middleware \"{$middleware}\" not found");
 
                         // Instantiates new middleware
                         self::$middleware = new $middleware(self::$controller, $routeName, $result);
                         if (method_exists(self::$middleware, 'init')) call_user_func([self::$middleware, 'init']);
                         
                         // Calls middleware handle() method
-                        if(method_exists(self::$middleware, 'handle')){
-                            $response = call_user_func([self::$middleware, 'handle']);
-                            if($response){
-                                // Middleware passed
-                                if (method_exists(self::$middleware, 'success')) call_user_func([self::$middleware, 'success']);
-                            }else{
-                                // Middleware blocked
-                                if (method_exists(self::$middleware, 'fail')){
-                                    return call_user_func([self::$middleware, 'fail']);
-                                }else{
-                                    return self::callForbidden($routeName, $result);
-                                };
-                            }
+                        $response = call_user_func([self::$middleware, 'handle']);
+                        if($response){
+                            // Middleware passed
+                            if (method_exists(self::$middleware, 'success')) call_user_func([self::$middleware, 'success']);
                         }else{
-                            trigger_error("Rails: Middleware \"{$middleware}\" does not have a handle() function");
-                            exit;
+                            // Middleware blocked
+                            if (method_exists(self::$middleware, 'fail')){
+                                return call_user_func([self::$middleware, 'fail']);
+                            }else{
+                                return self::callForbidden($routeName, $result);
+                            };
                         }
                     }
 
@@ -216,7 +205,6 @@
                         return call_user_func([self::$controller, $action]);
                     } else {
                         trigger_error("Rails: Action \"{$action}()\" not found in {$controller} controller");
-                        exit;
                     }
                 }else{
                     // Redirects to the target URL
