@@ -14,19 +14,21 @@
     class Session{
 
         /**
-         * Instantiates a new session or resumes the existing one.
+         * Starts a new session or resumes the existing one.
+         * @param array $data (Optional) Initial data to store in the session.
          */
-        public function __construct(){
+        public function __construct(array $data = []){
             if(!isset($_SESSION)) session_start();
+            if(!empty($data)) $_SESSION = $data;
         }
 
         /**
          * Gets the value associated to a key in the session.
-         * @param string $key Key to get value.
+         * @param mixed $key Key to get value.
          * @return mixed Returns the value if exists or null if there is none.
          */
-        public function __get(string $key){
-            if(!isset($_SESSION)) trigger_error('Session: session was not started properly');
+        public function __get($key){
+            if(!isset($_SESSION)) session_start();
             if(isset($_SESSION[$key])){
                 return $_SESSION[$key];
             }else{
@@ -35,45 +37,45 @@
         }
 
         /**
-         * Gets the value associated to a key in the session. If no key is specified, return\
+         * Gets the value associated to a key in the session. If no key is specified, returns\
          * an object with all the session data.
-         * @param string $key (Optional) Key to get value.
+         * @param mixed $key (Optional) Key to get value.
          * @return mixed Returns the value if exists or null if there is none.
          */
-        public function get(string $key = null){
-            if(!isset($_SESSION)) trigger_error('Session: session was not started properly');
-            if(!empty($key)){
+        public function get($key = null){
+            if(!is_null($key)){
                 return $this->__get($key);
             }else{
+                if(!isset($_SESSION)) session_start();
                 return new Element($_SESSION);
             }
         }
 
         /**
          * Sets the value for a key in the session.
-         * @param string $key Key to set value.
+         * @param mixed $key Key to set value.
          * @param mixed $value Value to set.
          */
-        public function __set(string $key, $value){
-            if(!isset($_SESSION)) trigger_error('Session: session was not started properly');
+        public function __set($key, $value){
+            if(!isset($_SESSION)) session_start();
             $_SESSION[$key] = $value;
         }
 
         /**
          * Sets the value for a key in the session.
-         * @param string $key Key to set value.
+         * @param mixed $key Key to set value.
          * @param mixed $value Value to set.
          */
-        public function set(string $key, $value){
+        public function set($key, $value){
             $this->__set($key, $value);
         }
 
         /**
          * Removes the associated key value in the session.
-         * @param string $key Key to delete value.
+         * @param mixed $key Key to delete value.
          */
-        public function __unset(string $key){
-            if(!isset($_SESSION)) trigger_error('Session: session was not started properly');
+        public function __unset($key){
+            if(!isset($_SESSION)) session_start();
             if (isset($_SESSION[$key])) {
                 unset($_SESSION[$key]);
             }
@@ -81,37 +83,37 @@
 
          /**
          * Removes the associated key value in the session.
-         * @param string $key Key to delete value.
+         * @param mixed $key Key to delete value.
          */
-        public function remove(string $key){
+        public function remove($key){
             $this->__unset($key);
         }
 
         /**
          * Checks if any value has been associated to a key in the session.
-         * @param string $key Key to check.
+         * @param mixed $key Key to check.
          * @return bool Returns true or false.
          */
-        public function __isset(string $key){
-            if(!isset($_SESSION)) trigger_error('Session: session was not started properly');
+        public function __isset($key){
+            if(!isset($_SESSION)) session_start();
             return isset($_SESSION[$key]);
         }
 
         /**
          * Checks if any value has been associated to a key in the session.
-         * @param string $key Key to check.
+         * @param mixed $key Key to check.
          * @return bool Returns true or false.
          */
-        public function has(string $key){
+        public function has($key){
             return $this->__isset($key);
         }
 
         /**
-         * Destroys the current session. You must start a new one\
-         * if you want to use session data again.
+         * Deletes all data in the current session.
          */
-        public function destroy(){
-            if(isset($_SESSION)) session_destroy();
+        public function flush(){
+            if(!isset($_SESSION)) session_start();
+            $_SESSION = [];
         }
 
     }

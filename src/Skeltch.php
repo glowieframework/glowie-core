@@ -20,9 +20,9 @@
          */
         public static function run(string $filename){
             // Checks for file and cache folder permissions
-            $tmpdir = '../cache/';
-            if(!is_readable($filename)) trigger_error('Skeltch: File "' . str_replace('../', 'app/', $filename) . '" is not readable');
-            if(!is_writable($tmpdir)) trigger_error('Skeltch: Directory "app/cache" is not writable, please check your chmod settings');
+            $tmpdir = '../storage/cache/';
+            if(!is_readable($filename)) trigger_error('Skeltch: File "' . str_replace('../', 'app/', $filename) .'" is not readable', E_USER_ERROR);
+            if(!is_writable($tmpdir)) trigger_error('Skeltch: Directory "app/storage/cache" is not writable, please check your chmod settings', E_USER_ERROR);
 
             // Checks if cache is enabled or should be recompiled
             $tmpfile = $tmpdir . md5($filename) . '.tmp';
@@ -46,9 +46,7 @@
             $code = self::compilePHP($code);
             $code = self::compileComments($code);
             $code = self::compileIgnores($code);
-            $handle = fopen($target, "w");
-            fwrite($handle, $code);
-            fclose($handle);
+            file_put_contents($target, $code);
         }
 
         /**

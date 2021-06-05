@@ -78,12 +78,12 @@
          * @return void
          */
         public function renderView(string $view, array $params = [], bool $skeltch = false){
-            if(!is_array($params)) trigger_error('renderView: $params must be an array');
+            if(!is_array($params)) trigger_error('renderView: $params must be an array', E_USER_ERROR);
             $view = '../views/' . $view . '.phtml';
             if(file_exists($view)){
                 return new View($view, $params, $skeltch, true, $this);
             }else{
-                trigger_error('renderView: View file "' . str_replace('../', 'app/', $view) . '" not found');
+                trigger_error('renderView: View file "' . str_replace('../', 'app/', $view) .'" not found', E_USER_ERROR);
             }
         }
 
@@ -97,7 +97,7 @@
          * @return void
          */
         public function renderLayout(string $layout, string $view = '', array $params = [], bool $skeltch = false){
-            if (!is_array($params)) trigger_error('renderLayout: $params must be an array');
+            if (!is_array($params)) trigger_error('renderLayout: $params must be an array', E_USER_ERROR);
             $layout = '../views/layouts/' . $layout . '.phtml';
             if(!empty($view)){
                 $view = '../views/' . $view . '.phtml';
@@ -105,16 +105,16 @@
                     if(file_exists($view)){
                         return new Layout($layout, $view, $params, $skeltch, $this);
                     }else{
-                        trigger_error('renderLayout: View file "' . str_replace('../', 'app/', $view) . '" not found');
+                        trigger_error('renderLayout: View file "' . str_replace('../', 'app/', $view) .'" not found', E_USER_ERROR);
                     }
                 } else {
-                    trigger_error('renderLayout: Layout file "' . str_replace('../', 'app/', $layout) . '" not found');
+                    trigger_error('renderLayout: Layout file "' . str_replace('../', 'app/', $layout) .'" not found', E_USER_ERROR);
                 }
             }else{
                 if (file_exists($layout)) {
                     return new Layout($layout, '', $params, $skeltch, $this);
                 } else {
-                    trigger_error('renderLayout: Layout file "' . str_replace('../', 'app/', $layout) . '" not found');
+                    trigger_error('renderLayout: Layout file "' . str_replace('../', 'app/', $layout) .'" not found', E_USER_ERROR);
                 }
             }
         }

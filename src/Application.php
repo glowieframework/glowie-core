@@ -1,6 +1,8 @@
 <?php
     namespace Glowie\Core;
 
+    use Util;
+
     /**
      * Glowie application bootstrapper.
      * @category Bootstrapper
@@ -22,7 +24,7 @@
 
             // Store application folder and base URL
             define('GLOWIE_APP_FOLDER', trim(substr($_SERVER['PHP_SELF'], 0, strpos($_SERVER['PHP_SELF'], '/app/public/index.php')), '/'));
-            define('GLOWIE_BASE_URL', (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/' . GLOWIE_APP_FOLDER . '/');     
+            define('GLOWIE_BASE_URL', (isset($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/' . GLOWIE_APP_FOLDER . '/');     
             
             // Include configuration file
             if (!file_exists('../config/Config.php')) {
@@ -50,30 +52,17 @@
             // Timezone configuration
             date_default_timezone_set(GLOWIE_CONFIG['timezone']);
 
-            // Start error handling
-            Error::init();
+            // Register error handling
+            Error::register();
 
             // Include application routes
             require_once('../config/Routes.php');
 
             // Include languages
-            foreach ($this->rglob('../languages/*.php') as $filename) require_once($filename);
+            foreach (Util::getFiles('../languages/*.php') as $filename) require_once($filename);
 
             // Initialize router
             Rails::init();
-        }
-
-        /**
-         * Find pathnames from a directory matching a pattern recursively.
-         * @param string $pattern Valid pathname pattern.
-         * @return string[] Array with pathnames.
-         */
-        private function rglob(string $pattern){
-            $files = glob($pattern);
-            foreach (glob(dirname($pattern) . '/*', GLOB_ONLYDIR | GLOB_NOSORT) as $dir) {
-                $files = array_merge($files, $this->rglob($dir . '/' . basename($pattern)));
-            }
-            return $files;
         }
 
     }

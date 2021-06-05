@@ -42,7 +42,8 @@
         /**
          * Setup a new route for the application.
          * @param string $route The route URI to setup.
-         * @param string $controller (Optional) The **namespaced** controller name that this route will instantiate.
+         * @param string $controller (Optional) The namespaced controller name that this route will instantiate.\
+         * You can use `ControllerName::class` to get this property the correct way.
          * @param string $action (Optional) The action name from the controller that this route will instantiate.
          * @param string[] $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
          * @param string $name (Optional) Route internal name/identifier.
@@ -60,8 +61,10 @@
         /**
          * Setup a new protected route for the application.
          * @param string $route The route URI to setup.
-         * @param string $middleware (Optional) The **namespaced** middleware name that this route will use to protect itself.
-         * @param string $controller (Optional) The **namespaced** controller name that this route will instantiate.
+         * @param string $middleware (Optional) The namespaced middleware name that this route will use to protect itself.\
+         * You can use `MiddlewareName::class` to get this property the correct way.
+         * @param string $controller (Optional) The namespaced controller name that this route will instantiate.\
+         * You can use `ControllerName::class` to get this property the correct way.
          * @param string $action (Optional) The action name from the controller that this route will instantiate.
          * @param string[] $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
          * @param string $name (Optional) Route internal name/identifier.
@@ -163,7 +166,7 @@
                     $controller = $config['controller'];
 
                     // If controller class does not exists, trigger an error
-                    if (!class_exists($controller)) trigger_error("Rails: Controller \"{$controller}\" not found");
+                    if (!class_exists($controller)) trigger_error("Rails: Controller \"{$controller}\" not found", E_USER_ERROR);
 
                     // Instantiates new controller
                     self::$controller = new $controller($routeName, $result);
@@ -175,7 +178,7 @@
                         $middleware = $config['middleware'];
 
                         // If middleware class does not exists, trigger an error
-                        if (!class_exists($middleware)) trigger_error("Rails: Middleware \"{$middleware}\" not found");
+                        if (!class_exists($middleware)) trigger_error("Rails: Middleware \"{$middleware}\" not found", E_USER_ERROR);
 
                         // Instantiates new middleware
                         self::$middleware = new $middleware(self::$controller, $routeName, $result);
@@ -204,7 +207,7 @@
                         // Calls action
                         return call_user_func([self::$controller, $action]);
                     } else {
-                        trigger_error("Rails: Action \"{$action}()\" not found in {$controller} controller");
+                        trigger_error("Rails: Action \"{$action}()\" not found in {$controller} controller", E_USER_ERROR);
                     }
                 }else{
                     // Redirects to the target URL

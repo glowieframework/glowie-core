@@ -17,68 +17,74 @@
          * Model table name.
          * @var string
          */
-        protected $table = 'glowie';
+        protected $_table = 'glowie';
 
         /**
          * Table primary key name.
          * @var string
          */
-        protected $primaryKey = 'id';
+        protected $_primaryKey = 'id';
 
         /**
          * Table manageable fields.
          * @var string[]
          */
-        protected $fields = [];
+        protected $_fields = [];
 
         /**
          * Handle timestamp fields.
          * @var bool
          */
-        protected $timestamps = false;
+        protected $_timestamps = false;
+
+        /**
+         * The initial data from a filled row.
+         * @var Element
+         */
+        private $_initialData = null;
 
         /**
          * Creates a new instance of the model.
          */
         public function __construct(){
-            Kraken::__construct($this->table);
+            Kraken::__construct($this->_table);
         }
 
         /**
          * Gets the first row that matches the model primary key value.
          * @param mixed $primary Primary key value to search for.
-         * @return Element|bool Returns the row on success or false on errors.
+         * @return Element|null Returns the row on success or null if not found.
          */
         public function find($primary){
             $this->clearQuery();
-            $fields = !empty($this->fields) ? $this->fields : '*';
-            return $this->select($fields)->where($this->primaryKey, $primary)->limit(1)->fetchRow();
+            $fields = !empty($this->_fields) ? $this->_fields : '*';
+            return $this->select($fields)->where($this->_primaryKey, $primary)->limit(1)->fetchRow();
         }
         
         /**
          * Gets all rows from the model table.
-         * @return array|bool Returns an array with all rows on success or false on errors.
+         * @return array Returns an array with all rows.
          */
         public function all(){
             $this->clearQuery();
-            $fields = !empty($this->fields) ? $this->fields : '*';
+            $fields = !empty($this->_fields) ? $this->_fields : '*';
             return $this->select($fields)->fetchAll();
         }
 
         /**
          * Deletes the first row that matches the model primary key value.
          * @param mixed $primary Primary key value to search for.
-         * @return bool Returns true on success or false on errors.
+         * @return bool Returns true on success.
          */
         public function drop($primary){
             $this->clearQuery();
-            return $this->where($this->primaryKey, $primary)->limit(1)->delete();
+            return $this->where($this->_primaryKey, $primary)->limit(1)->delete();
         }
 
         /**
          * Inserts a new row in the model table.
          * @param array $data An associative array relating fields and values to insert.
-         * @return bool Returns true on success or false on errors.
+         * @return bool Returns true on success.
          */
         public function create(array $data){
             // Clears the current built query
@@ -86,7 +92,7 @@
 
             // Parse data and timestamps
             $data = $this->filterData($data);
-            if($this->timestamps){
+            if($this->_timestamps){
                 $data['created_at'] = Kraken::raw('NOW()');
                 $data['updated_at'] = Kraken::raw('NOW()');
             }
@@ -99,20 +105,20 @@
          * Checks if a row matches the primary key value in the data. If so, updates the row. Otherwise,\
          * inserts a new record in the model table.
          * @param array $data An associative array relating fields and values to upsert. **Must include the primary key field.**
-         * @return bool Returns true on success or false on errors.
+         * @return bool Returns true on success.
          */
         public function updateOrCreate(array $data){
             // Clears the current built query
             $this->clearQuery();
             
             // Checks if the primary key was passed and matches an existing row
-            if(isset($data[$this->primaryKey]) && $this->where($this->primaryKey, $data[$this->primaryKey])->exists()){
+            if(isset($data[$this->_primaryKey]) && $this->where($this->_primaryKey, $data[$this->_primaryKey])->exists()){
                 // Parse data and timestamps
                 $updatedData = $this->filterData($data);
-                if($this->timestamps) $updatedData['updated_at'] = Kraken::raw('NOW()');
+                if($this->_timestamps) $updatedData['updated_at'] = Kraken::raw('NOW()');
                 
                 // Updates the element
-                return $this->where($this->primaryKey, $data[$this->primaryKey])->update($updatedData);
+                return $this->where($this->_primaryKey, $data[$this->_primaryKey])->update($updatedData);
             }else{
                 // Inserts the element
                 return $this->create($data);
@@ -124,27 +130,52 @@
          * @param Element $row Row object to retrieve data.
          */
         public function fill(Element $row){
-            $this->_data = $row->toArray();
+            $this->_initialData = $row;
+            Element::__construct($row->toArray());
+        }
+
+        /**
+         * Checks if the row data has been modified in the model entity.
+         * @param mixed $field (Optional) Field to check. Leave empty to compare everything.
+         * @return bool Returns true if the row data has been modified.
+         */
+        public function isDirty($field = ''){
+            if(!$this->_initialData instanceof Element) trigger_error('isDirty: Model entity was not filled with a row data', E_USER_ERROR);
+            if(!empty($field)){
+                return ($this->_initialData->get($field) !== $this->get($field));
+            }else{
+                return ($this->_initialData->toArray() !== $this->toArray());
+            }
+        }
+
+        /**
+         * Checks if the row data has not been modified in the model entity.
+         * @param mixed $field (Optional) Field to check. Leave empty to compare everything.
+         * @return bool Returns true if the row data has not been modified.
+         */
+        public function isPristine($field = ''){
+            if(!$this->_initialData instanceof Element) trigger_error('isPristine: Model entity was not filled with a row data', E_USER_ERROR);
+            return !$this->isDirty($field);
         }
 
         /**
          * Saves the model entity data to a row using `updateOrCreate()` method.
-         * @return bool Returns true on success or false on errors.
+         * @return bool Returns true on success.
          */
         public function save(){
             return $this->updateOrCreate($this->toArray());
         }
 
         /**
-         * Filters a data array returning only the specified fields in `$this->fields` property.
+         * Filters a data array returning only the specified fields in `$this->_fields` property.
          * @param array $data An associative array of fields and values to filter.
          * @return array Returns the filtered array.
          */
         private function filterData(array $data){
-            if(empty($this->fields)) return $data;
+            if(empty($this->_fields)) return $data;
             $result = [];
             foreach($data as $key => $value){
-                if(in_array($key, $this->fields)) $result[$key] = $value;
+                if(in_array($key, $this->_fields)) $result[$key] = $value;
             }
             return $result;
         }

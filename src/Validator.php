@@ -27,7 +27,7 @@
          * @return array Array with the fetched errors.
          */
         public function getErrors($key = null){
-            if($key !== null){
+            if(!is_null($key)){
                 return !empty($this->errors[$key]) ? $this->errors[$key] : [];
             }else{
                 return $this->errors;
@@ -44,10 +44,10 @@
          */
         public function validateFields(array $data, array $rules, bool $bail = false, bool $bailAll = false){
             // Check data
-            if (!is_array($data)) trigger_error('validateFields: $data must be an array of fields');
+            if (!is_array($data)) trigger_error('validateFields: $data must be an array of fields', E_USER_ERROR);
 
             // Check ruleset
-            if (!is_array($rules)) trigger_error('validateFields: $rules must be an array of rules');
+            if (!is_array($rules)) trigger_error('validateFields: $rules must be an array of rules', E_USER_ERROR);
 
             // Loops throug field list
             $result = true;
@@ -55,7 +55,7 @@
             foreach($data as $key => $item){
                 // Searches for field rule
                 if(isset($rules[$key])){
-                    if(!is_array($rules[$key])) trigger_error('validateFields: [' . $key . '] must be an array of rules');
+                    if(!is_array($rules[$key])) trigger_error('validateFields: [' . $key .'] must be an array of rules', E_USER_ERROR);
 
                     // Validate item
                     $this->validate($item, $rules[$key], $bail);
@@ -84,10 +84,10 @@
          */
         public function validateMultiple(array $data, array $rules, bool $bail = false, bool $bailAll = false){
             // Check data
-            if(!is_array($data)) trigger_error('validateMultiple: $data must be an array of elements');
+            if(!is_array($data)) trigger_error('validateMultiple: $data must be an array of elements', E_USER_ERROR);
 
             // Check ruleset
-            if (!is_array($rules)) trigger_error('validateMultiple: $rules must be an array of rules');
+            if (!is_array($rules)) trigger_error('validateMultiple: $rules must be an array of rules', E_USER_ERROR);
 
             // Loops through data array
             $errors = [];
@@ -118,7 +118,7 @@
          */
         public function validate($data, array $rules, bool $bail = false){
             // Check ruleset
-            if (!is_array($rules)) trigger_error('validate: $rules must be an array of rules');
+            if (!is_array($rules)) trigger_error('validate: $rules must be an array of rules', E_USER_ERROR);
             
             $result = [];
 

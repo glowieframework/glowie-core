@@ -17,7 +17,7 @@
          * Element data.
          * @var array
          */
-        protected $_data = [];
+        private $_data = [];
 
         /**
          * Instantiates a new Element.
@@ -29,10 +29,10 @@
 
         /**
          * Gets the value associated to a key in the data.
-         * @param string $key Key to get value.
+         * @param mixed $key Key to get value.
          * @return mixed Returns the value if exists or null if there is none.
          */
-        public function __get(string $key){
+        public function __get($key){
             if(isset($this->_data[$key])){
                 return $this->_data[$key];
             }else{
@@ -42,36 +42,36 @@
 
         /**
          * Gets the value associated to a key in the data.
-         * @param string $key (Optional) Key to get value.
+         * @param mixed $key Key to get value.
          * @return mixed Returns the value if exists or null if there is none.
          */
-        public function get(string $key){
+        public function get($key){
             return $this->__get($key);
         }
 
         /**
          * Sets the value for a key in the data.
-         * @param string $key Key to set value.
+         * @param mixed $key Key to set value.
          * @param mixed $value Value to set.
          */
-        public function __set(string $key, $value){
+        public function __set($key, $value){
             $this->_data[$key] = $value;
         }
 
         /**
          * Sets the value for a key in the data.
-         * @param string $key Key to set value.
+         * @param mixed $key Key to set value.
          * @param mixed $value Value to set.
          */
-        public function set(string $key, $value){
+        public function set($key, $value){
             $this->__set($key, $value);
         }
 
         /**
          * Removes the associated key value in the data.
-         * @param string $key Key to delete value.
+         * @param mixed $key Key to delete value.
          */
-        public function __unset(string $key){
+        public function __unset($key){
             if (isset($this->_data[$key])) {
                 unset($this->_data[$key]);
             }
@@ -79,28 +79,35 @@
 
         /**
          * Removes the associated key value in the session.
-         * @param string $key Key to delete value.
+         * @param mixed $key Key to delete value.
          */
-        public function remove(string $key){
+        public function remove($key){
             $this->__unset($key);
         }
 
         /**
          * Checks if any value has been associated to a key in the data.
-         * @param string $key Key to check.
+         * @param mixed $key Key to check.
          * @return bool Returns true or false.
          */
-        public function __isset(string $key){
+        public function __isset($key){
             return isset($this->_data[$key]);
         }
 
         /**
          * Checks if any value has been associated to a key in the data.
-         * @param string $key Key to check.
+         * @param mixed $key Key to check.
          * @return bool Returns true or false.
          */
-        public function has(string $key){
+        public function has($key){
             return $this->__isset($key);
+        }
+
+        /**
+         * Deletes all data in the current Element.
+         */
+        public function flush(){
+            $this->_data = [];
         }
 
         /**

@@ -2,8 +2,9 @@
     namespace Glowie\Core;
     
     use mysqli;
-    use Closure;
+    use mysqli_result;
     use mysqli_sql_exception;
+    use Closure;
     use stdClass;
 
     /**
@@ -68,13 +69,13 @@
 
         /**
          * JOIN statements.
-         * @var string[]
+         * @var array
          */
         private $_join;
 
         /**
          * WHERE statements.
-         * @var string[]
+         * @var array
          */
         private $_where;
 
@@ -86,7 +87,7 @@
 
         /**
          * ORDER BY statements.
-         * @var string[]
+         * @var array
          */
         private $_order;
 
@@ -140,27 +141,25 @@
          * @param bool $transactions Enable or disable database transactions.
          */
         public function __construct(string $table = 'glowie', array $database = [], bool $transactions = true){
-            $this->setDatabase($database);
-            $this->setTable($table);
-            $this->setTransactions($transactions);
+            $this->database($database)->table($table)->transactions($transactions);
         }
 
         /**
          * Sets the database connection settings.
          * @param array $database Associative array with the connection settings.\
-         * Use an empty array to connect to the globally defined database (in **app/Config.php**).
+         * Use an empty array to connect to the globally defined database (in **app/config/Config.php**).
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function setDatabase(array $database){
+        public function database(array $database){
             // Checks for the global database setting
             $global = empty($database);
             if ($global) $database = GLOWIE_CONFIG['database'];
 
             // Validate settings
-            if (!is_array($database)) trigger_error('setDatabase: Database connection settings must be an array');
-            if (empty($database['host'])) trigger_error('setDatabase:  Database host not defined');
-            if (empty($database['username'])) trigger_error('setDatabase:  Database username not defined');
-            if (empty($database['db'])) trigger_error('setDatabase: Database name not defined');
+            if (!is_array($database)) trigger_error('Kraken: Database connection settings must be an array', E_USER_ERROR);
+            if (empty($database['host'])) trigger_error('Kraken:  Database host not defined', E_USER_ERROR);
+            if (empty($database['username'])) trigger_error('Kraken:  Database username not defined', E_USER_ERROR);
+            if (empty($database['db'])) trigger_error('Kraken: Database name not defined', E_USER_ERROR);
             if (empty($database['port'])) $database['port'] = 3306;
             
             // Saves the database connection
@@ -185,8 +184,8 @@
          * @param string $table Table name to set as default.
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function setTable(string $table){
-            if (empty($table)) trigger_error('setTable: Table name should not be empty');
+        public function table(string $table){
+            if (empty($table)) trigger_error('Kraken: Table name should not be empty', E_USER_ERROR);
             $this->_table = $table;
             return $this;
         }
@@ -218,9 +217,11 @@
         /**
          * Enables or disables database transactions.
          * @param bool $option True or false.
+         * @return Kraken Current Kraken instance for nested calls.
          */
-        public function setTransactions(bool $option){
+        public function transactions(bool $option){
             $this->_transactions = $option;
+            return $this;
         }
 
         /**
@@ -234,10 +235,10 @@
 
         /**
          * Returns a value that will not be escaped or quoted into the query.
-         * @param string $value Value to be returned.
+         * @param mixed $value Value to be returned.
          * @return stdClass Value representation as an object.
          */
-        public static function raw(string $value){
+        public static function raw($value){
             $obj = new stdClass();
             $obj->value = $value;
             return $obj;
@@ -245,13 +246,12 @@
 
         /**
          * Prepares a SELECT query.
-         * @param string|string[] $columns (Optional) Columns to select in the query. Can be a single field name or an array of columns.\
+         * @param string|array $columns (Optional) Columns to select in the query. Can be a single column name or an array of columns.\
          * You can also use a raw SELECT query.
-         * @param bool $distinct (Optional) Sets the SELECT query as DISTINCT.
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function select($columns = '*', $distinct = false){
-            $this->_instruction = $distinct ? 'SELECT DISTINCT' : 'SELECT';
+        public function select($columns = '*'){
+            $this->_instruction = 'SELECT';
             if(is_array($columns)){
                 $this->_select = implode(', ', $columns);
             }else{
@@ -261,18 +261,17 @@
         }
 
         /**
-         * Prepares a SELECT DISTINCT query.
-         * @param string|string[] $columns (Optional) Columns to select in the query. Can be a single field name or an array of columns.\
-         * You can also use a raw SELECT query.
+         * Sets the current SELECT query as DISTINCT.
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function selectDistinct($columns = '*'){
-            return $this->select($columns, true);
+        public function distinct(){
+            $this->_instruction = 'SELECT DISTINCT';
+            return $this;
         }
 
         /**
          * Sets the query FROM statement.
-         * @param string|string[] $table Table name or an array of tables. You can also use a raw FROM query.
+         * @param string|array $table Table name or an array of tables. You can also use a raw FROM query.
          * @return Kraken Current Kraken instance for nested calls.
          */
         public function from($table){
@@ -290,13 +289,13 @@
          * @param string $param1 First condition parameter.
          * @param string $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second\
          * condition parameter.
-         * @param mixed $param3 (Optional) Second condition parameter if `$param2` is the operator.
+         * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
          * @param string $type (Optional) JOIN type (INNER, LEFT, RIGHT or FULL).
          * @return Kraken Current Kraken instance for nested calls.
          */
         public function join(string $table, string $param1, string $param2, $param3 = null, string $type = 'INNER'){
             // Checks if the operator was passed
-            if($param3 === null){
+            if(is_null($param3)){
                 $param3 = $param2;
                 $param2 = '=';
             }
@@ -321,7 +320,7 @@
          * @param string $param1 First condition parameter.
          * @param string $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second\
          * condition parameter.
-         * @param mixed $param3 (Optional) Second condition parameter if `$param2` is the operator.
+         * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
          * @return Kraken Current Kraken instance for nested calls.
          */
         public function innerJoin(string $table, string $param1, string $param2, $param3 = null){
@@ -334,7 +333,7 @@
          * @param string $param1 First condition parameter.
          * @param string $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second\
          * condition parameter.
-         * @param mixed $param3 (Optional) Second condition parameter if `$param2` is the operator.
+         * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
          * @return Kraken Current Kraken instance for nested calls.
          */
         public function leftJoin(string $table, string $param1, string $param2, $param3 = null){
@@ -347,7 +346,7 @@
          * @param string $param1 First condition parameter.
          * @param string $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second\
          * condition parameter.
-         * @param mixed $param3 (Optional) Second condition parameter if `$param2` is the operator.
+         * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
          * @return Kraken Current Kraken instance for nested calls.
          */
         public function rightJoin(string $table, string $param1, string $param2, $param3 = null){
@@ -360,7 +359,7 @@
          * @param string $param1 First condition parameter.
          * @param string $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second\
          * condition parameter.
-         * @param mixed $param3 (Optional) Second condition parameter if `$param2` is the operator.
+         * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
          * @return Kraken Current Kraken instance for nested calls.
          */
         public function fullJoin(string $table, string $param1, string $param2, $param3 = null){
@@ -369,14 +368,14 @@
 
         /**
          * Adds a WHERE condition to the query.
-         * @param mixed $column Column name or grouped WHERE closure.
-         * @param mixed $param1 (Optional) If `$param2` isset, the operator used in the condition. Otherwise,\
+         * @param string|array|Closure $param1 Column name, array of WHERE conditions or a grouped WHERE closure.
+         * @param mixed $param2 (Optional) If `$param3` isset, the operator used in the condition. Otherwise,\
          * the value to check to.
-         * @param mixed $param2 (Optional) Value if `$param1` is the operator.
+         * @param mixed $param3 (Optional) Value if `$param2` is the operator.
          * @param string $type (Optional) Chaining type (AND or OR).
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function where($column, $param1 = null, $param2 = null, string $type = 'AND'){
+        public function where($param1, $param2 = null, $param3 = null, string $type = 'AND'){
             // Checks for the condition type
             $type = strtoupper($type);
             if(!empty($this->_where)){
@@ -390,7 +389,7 @@
             }
 
             // Checks for grouped wheres
-            if($column instanceof Closure){
+            if($param1 instanceof Closure){
                 if(!empty($this->_where) && end($this->_where) != '('){
                     $this->_where[] = "{$type} ";
                     $this->_where[] = "(";
@@ -398,24 +397,30 @@
                     $this->_where[] = "(";
                 }
 
-                call_user_func_array($column, array(&$this));
+                call_user_func_array($param1, array(&$this));
                 $this->_where[] = ')';
+                return $this;
+            }else if(is_array($param1)){
+                foreach($param1 as $condition){
+                    if(!is_array($condition) || count($condition) < 2) trigger_error('Multiple WHERE conditions must be an array with at least two parameters', E_USER_ERROR);
+                    $this->where($condition[0], $condition[1], $condition[2] ?? null);
+                }
                 return $this;
             }
 
             // Checks if the operator was passed
-            if($param2 === null){
-                $param2 = $param1;
-                $param1 = '=';
+            if(is_null($param3)){
+                $param3 = $param2;
+                $param2 = '=';
             }
             
             // Checks operation types
-            $param1 = strtoupper($param1);
-            if(($param1 == 'BETWEEN' || $param1 == 'NOT BETWEEN') && is_array($param2)){
+            $param2 = strtoupper($param2);
+            if(($param2 == 'BETWEEN' || $param2 == 'NOT BETWEEN') && is_array($param3)){
                 $values = [];
 
                 // Escaping values
-                foreach($param2 as $value){
+                foreach($param3 as $value){
                     if($value instanceof stdClass){
                         $values[] = $value->value;
                     }else{
@@ -423,12 +428,12 @@
                     }
                 }
 
-                $query .= "{$column} {$param1} {$values[0]} AND {$values[1]}";
-            }else if(is_array($param2)){
+                $query .= "{$param1} {$param2} {$values[0]} AND {$values[1]}";
+            }else if(is_array($param3)){
                 $values = [];
 
                 // Escaping values
-                foreach($param2 as $value){
+                foreach($param3 as $value){
                     if($value instanceof stdClass){
                         $values[] = $value->value;
                     }else{
@@ -436,21 +441,21 @@
                     }
                 }
                 
-                if($param1 == '=') $param1 = 'IN';
+                if($param2 == '=') $param2 = 'IN';
                 $values = implode(', ', $values);
-                $query .= "{$column} {$param1} ($values)";
-            }else if($param2 === 'NULL'){
-                if($param1 == '=') $param1 = 'IS';
-                $query .= "{$column} {$param1} NULL";
+                $query .= "{$param1} {$param2} ($values)";
+            }else if($param3 === 'NULL'){
+                if($param2 == '=') $param2 = 'IS';
+                $query .= "{$param1} {$param2} NULL";
             }else{
                 // Escaping values
-                if($param2 instanceof stdClass){
-                    $param2 = $param2->value;
+                if($param3 instanceof stdClass){
+                    $param3 = $param3->value;
                 }else{
-                    $param2 = "\"{$this->escape($param2)}\"";
+                    $param3 = "\"{$this->escape($param3)}\"";
                 }
 
-                $query .= "{$column} {$param1} {$param2}";
+                $query .= "{$param1} {$param2} {$param3}";
             }
 
             $this->_where[] = $query;
@@ -459,19 +464,19 @@
 
         /**
          * Adds an OR WHERE condition to the query.
-         * @param string|Closure $column Column name or grouped WHERE closure.
-         * @param mixed $param1 (Optional) If `$param2` isset, the operator used in the condition. Otherwise,\
+         * @param string|array|Closure $param1 Column name, array of WHERE conditions or a grouped WHERE closure.
+         * @param mixed $param2 (Optional) If `$param3` isset, the operator used in the condition. Otherwise,\
          * the value to check to.
-         * @param mixed $param2 (Optional) Value if `$param1` is the operator.
+         * @param mixed $param3 (Optional) Value if `$param2` is the operator.
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function orWhere($column, $param1 = null, $param2 = null){
-            return $this->where($column, $param1, $param2, 'OR');
+        public function orWhere($param1, $param2 = null, $param3 = null){
+            return $this->where($param1, $param2, $param3, 'OR');
         }
 
         /**
          * Adds a raw WHERE condition to the query.\
-         * **Note:** This does not prevent SQL injection attacks.
+         * **Note: This does not prevent SQL injection attacks.**
          * @param string $condition Full WHERE condition.
          * @param string $type (Optional) Chaining type (AND or OR).
          * @return Kraken Current Kraken instance for nested calls.
@@ -483,7 +488,7 @@
 
         /**
          * Adds a raw OR WHERE condition to the query.\
-         * **Note:** This does not prevent SQL injection attacks.
+         * **Note: This does not prevent SQL injection attacks.**
          * @param string $condition Full WHERE condition.
          * @return Kraken Current Kraken instance for nested calls.
          */
@@ -612,8 +617,110 @@
         }
 
         /**
+         * Adds a WHERE condition to the query comparing a day value in a date column.
+         * @param string $column Column name **(must be a DATE or DATETIME column)**.
+         * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise,\
+         * the day value to check to.
+         * @param mixed $param2 (Optional) Value if `$param1` is the operator.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function whereDay(string $column, $param1, $param2 = null){
+            return $this->where("DAY({$column})", $param1, $param2);
+        }
+
+        /**
+         * Adds an OR WHERE condition to the query comparing a day value in a date column.
+         * @param string $column Column name **(must be a DATE or DATETIME column)**.
+         * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise,\
+         * the day value to check to.
+         * @param mixed $param2 (Optional) Value if `$param1` is the operator.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function orWhereDay(string $column, $param1, $param2 = null){
+            return $this->where("DAY({$column})", $param1, $param2, 'OR');
+        }
+
+        /**
+         * Adds a WHERE condition to the query comparing a month value in a date column.
+         * @param string $column Column name **(must be a DATE or DATETIME column)**.
+         * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise,\
+         * the month value to check to.
+         * @param mixed $param2 (Optional) Value if `$param1` is the operator.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function whereMonth(string $column, $param1, $param2 = null){
+            return $this->where("MONTH({$column})", $param1, $param2);
+        }
+
+        /**
+         * Adds an OR WHERE condition to the query comparing a month value in a date column.
+         * @param string $column Column name **(must be a DATE or DATETIME column)**.
+         * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise,\
+         * the month value to check to.
+         * @param mixed $param2 (Optional) Value if `$param1` is the operator.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function orWhereMonth(string $column, $param1, $param2 = null){
+            return $this->where("MONTH({$column})", $param1, $param2, 'OR');
+        }
+
+        /**
+         * Adds a WHERE condition to the query comparing an year value in a date column.
+         * @param string $column Column name **(must be a DATE or DATETIME column)**.
+         * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise,\
+         * the year value to check to.
+         * @param mixed $param2 (Optional) Value if `$param1` is the operator.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function whereYear(string $column, $param1, $param2 = null){
+            return $this->where("YEAR({$column})", $param1, $param2);
+        }
+
+        /**
+         * Adds an OR WHERE condition to the query comparing an year value in a date column.
+         * @param string $column Column name **(must be a DATE or DATETIME column)**.
+         * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise,\
+         * the year value to check to.
+         * @param mixed $param2 (Optional) Value if `$param1` is the operator.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function orWhereYear(string $column, $param1, $param2 = null){
+            return $this->where("YEAR({$column})", $param1, $param2, 'OR');
+        }
+
+        /**
+         * Adds a WHERE condition to the query comparing the value of two columns.
+         * @param string $column First column name to compare.
+         * @param string $param1 If `$param2` isset, the operator used in the condition. Otherwise,\
+         * the second column name to compare.
+         * @param string|null $param2 (Optional) Second column name if `$param1` is the operator.
+         */
+        public function whereColumn(string $column, string $param1, $param2 = null){
+            if(is_null($param2)){
+                $param2 = $param1;
+                $param1 = '=';
+            }
+            return $this->where($column, $param1, self::raw($param2));
+        }
+
+        /**
+         * Adds an OR WHERE condition to the query comparing the value of two columns.
+         * @param string $column First column name to compare.
+         * @param string $param1 If `$param2` isset, the operator used in the condition. Otherwise,\
+         * the second column name to compare.
+         * @param string|null $param2 (Optional) Second column name if `$param1` is the operator.
+         */
+        public function orWhereColumn(string $column, string $param1, $param2 = null){
+            if(is_null($param2)){
+                $param2 = $param1;
+                $param1 = '=';
+            }
+            return $this->where($column, $param1, self::raw($param2), 'OR');
+        }
+
+        /**
          * Sets the query GROUP BY statement.
-         * @param string|string[] $column Column name or an array of columns.
+         * @param string|array $column Column name or an array of columns.
          * @return Kraken Current Kraken instance for nested calls.
          */
         public function groupBy($column){
@@ -638,7 +745,7 @@
         /**
          * Adds an ORDER BY statement to the query.
          * @param string $column Column name.
-         * @param string $direction (Optional) Sorting direction (ASC or DESC).
+         * @param string $direction (Optional) Sorting direction **(ASC or DESC)**.
          * @return Kraken Current Kraken instance for nested calls.
          */
         public function orderBy($column, string $direction = 'asc'){
@@ -669,11 +776,11 @@
         /**
          * Sets the query LIMIT statement.
          * @param int $param1 If `$param2` isset, the offset setting. Otherwise, the limit setting.
-         * @param int $param2 (Optional) Limit setting if `$param1` is the offset.
+         * @param int|null $param2 (Optional) Limit setting if `$param1` is the offset.
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function limit(int $param1, int $param2 = null){
-            if($param2 === null){
+        public function limit(int $param1, $param2 = null){
+            if(is_null($param2)){
                 $this->_limit = "0, {$param1}";
             }else{
                 $this->_limit = "{$param1}, {$param2}";
@@ -683,7 +790,7 @@
 
         /**
          * Fetches the first result from a SELECT query.
-         * @return Element|bool Returns the first resulting row on success or false on errors.
+         * @return Element|null Returns the first resulting row on success or null if not found.
          */
         public function fetchRow(){
             return $this->execute(true, true);
@@ -691,7 +798,7 @@
         
         /**
          * Fetches all results from a SELECT query.
-         * @return array|bool Returns an array with all resulting rows on success or false on errors.
+         * @return array Returns an array with all resulting rows.
          */
         public function fetchAll(){
             return $this->execute(true);
@@ -701,20 +808,26 @@
          * Inserts data into the table.
          * @param string|array $param1 If `$param2` isset, the table to insert data. Otherwise, an associative array\
          * relating fields and values to insert. Also accepts an array of multiple inserts.
-         * @param array $param2 (Optional) Array with data to insert if `$param1` is the table.
-         * @param bool $ignore (Optional) Ignore failing rows while inserting data (INSERT IGNORE).
-         * @return bool Returns true on success or false on errors.
+         * @param array|null $param2 (Optional) Array with data to insert if `$param1` is the table.
+         * @param bool $ignore (Optional) Ignore failing or existing rows while inserting data (INSERT IGNORE).
+         * @param bool $replace (Optional) Replace existing rows matching the primary key or unique indexes (REPLACE).
+         * @return bool Returns true on success.
          */
-        public function insert($param1, $param2 = null, $ignore = false){
+        public function insert($param1, $param2 = null, bool $ignore = false, bool $replace = false){
             // Checks if the table was passed
-            if($param2 === null){
+            if(is_null($param2)){
                 $param2 = $param1;
                 $param1 = $this->_table;
             }
 
             // Prepares instruction
-            $type = $ignore ? ' IGNORE' : '';
-            $this->_instruction = "INSERT{$type}";
+            if($replace){
+                $this->_instruction = "REPLACE";
+            }else{
+                $type = $ignore ? ' IGNORE' : '';
+                $this->_instruction = "INSERT{$type}";
+            }
+
             $this->_into = $param1;
             $fields = [];
             $values = [];
@@ -763,14 +876,25 @@
         }
 
         /**
-         * Inserts data into the table ignoring failing rows.
+         * Inserts data into the table ignoring failing or existing rows.
          * @param string|array $param1 If `$param2` isset, the table to insert data. Otherwise, an associative array\
          * relating fields and values to insert. Also accepts an array of multiple inserts.
-         * @param array $param2 (Optional) Array with data to insert if `$param1` is the table.
-         * @return bool Returns true on success or false on errors.
+         * @param array|null $param2 (Optional) Array with data to insert if `$param1` is the table.
+         * @return bool Returns true on success.
          */
         public function insertIgnore($param1, $param2 = null){
             return $this->insert($param1, $param2, true);
+        }
+
+        /**
+         * Inserts data into the table replacing existing rows matching the primary key or unique indexes.
+         * @param string|array $param1 If `$param2` isset, the table to insert data. Otherwise, an associative array\
+         * relating fields and values to insert. Also accepts an array of multiple inserts.
+         * @param array|null $param2 (Optional) Array with data to insert if `$param1` is the table.
+         * @return bool Returns true on success.
+         */
+        public function replace($param1, $param2 = null){
+            return $this->insert($param1, $param2, false, true);
         }
 
         /**
@@ -778,12 +902,12 @@
          * before calling this function.**
          * @param string|array $param1 If `$param2` isset, the table to update data. Otherwise, an associative array\
          * relating fields and values to update.
-         * @param array $param2 (Optional) Array with data to update if `$param1` is the table.
-         * @return bool Returns true on success or false on errors.
+         * @param array|null $param2 (Optional) Array with data to update if `$param1` is the table.
+         * @return bool Returns true on success.
          */
         public function update($param1, $param2 = null){
             // Checks if the table was passed
-            if($param2 === null){
+            if(is_null($param2)){
                 $param2 = $param1;
                 $param1 = $this->_table;
             }
@@ -809,10 +933,10 @@
         /**
          * Deletes data from the table. **Do not forget to use WHERE statements\
          * before calling this function.**
-         * @param string $table (Optional) Table name to delete from.
-         * @return bool Returns true on success or false on errors.
+         * @param string|null $table (Optional) Table name to delete from.
+         * @return bool Returns true on success.
          */
-        public function delete(string $table = null){
+        public function delete($table = null){
             $this->_instruction = 'DELETE';
             if(!empty($table)) $this->_from = $table;
             return $this->execute();
@@ -820,9 +944,9 @@
 
         /**
          * Counts the number of resulting rows from a SELECT query.
-         * @param string $column (Optional) Column to use as the counting base. Using * will count all rows including `NULL` values.\
-         * Setting a column name will count all rows excluding `NULL` values from that column.
-         * @return int|bool Returns the number of rows on success or false on errors.
+         * @param string $column (Optional) Column to use as the counting base. Using `*` will count all rows including NULL values.\
+         * Setting a column name will count all rows excluding NULL values from that column.
+         * @return int Returns the number of rows on success.
          */
         public function count(string $column = '*'){
             // Saves current query state
@@ -844,12 +968,20 @@
         }
 
         /**
-         * Checks if there are any records that matches a SELECT query.
+         * Checks if there are any records that match a SELECT query.
          * @return bool Returns true if exists or false if not.
          */
         public function exists(){
             $result = $this->count();
             return (is_int($result) && $result >= 1);
+        }
+
+        /**
+         * Checks if there are not any records that match a SELECT query.
+         * @return bool Returns true if does not exist or false if it does.
+         */
+        public function doesntExist(){
+            return !$this->exists();
         }
 
         /**
@@ -870,11 +1002,11 @@
 
             // Parse results
             return new Element([
-                'current_page' => $currentPage,
+                'page' => $currentPage,
+                'data' => $results,
                 'total_pages' => $totalPages,
                 'results_per_page' => $resultsPerPage,
-                'total_results' => $totalResults,
-                'results' => $results
+                'total_results' => $totalResults
             ]);
         }
 
@@ -899,7 +1031,7 @@
          * @param string $query Full raw query to run.
          * @param bool $return (Optional) Set to **true** if the query should return any results.
          * @return array|bool If the query is successful and should return results, will return an array with\
-         * the results. Otherwise returns true on success or false on errors.
+         * the results. Otherwise returns true on success.
          */
         public function query(string $query, bool $return = false){
             $this->_raw = $query;
@@ -931,7 +1063,7 @@
          * Returns the current built query.
          * @return string Current built query.
          */
-        private function getQuery(){
+        public function getQuery(){
             // Checks for raw query
             if(!empty($this->_raw)) return $this->_raw;
 
@@ -970,7 +1102,7 @@
             }
 
             // Gets INSERT statements
-            if($this->_instruction == 'INSERT' || $this->_instruction == 'INSERT IGNORE'){
+            if($this->_instruction == 'INSERT' || $this->_instruction == 'INSERT IGNORE' || $this->_instruction == 'REPLACE'){
                 if(!empty($this->_insert) && !empty($this->_values)){
                     $query .= " INTO {$this->_into} ({$this->_insert}) VALUES $this->_values";
                 }
@@ -1028,12 +1160,12 @@
 
         /**
          * Run the current built query.
-         * @param bool $return (Optional) If the query should return a result.
-         * @param bool $returnFirst (Optional) If the query should return a single result.
+         * @param bool $returns (Optional) If the query should return a result.
+         * @param bool $returnsFirst (Optional) If the query should return a single result.
          * @return mixed If the query is successful and should return any results, will return an object with the first result or an array of\
-         * results. Otherwise returns true on success or false on errors.
+         * results. Otherwise returns true on success.
          */
-        private function execute(bool $return = false, bool $returnFirst = false){
+        private function execute(bool $returns = false, bool $returnsFirst = false){
             // Initializes the transaction (if enabled)
             if($this->_transactions) $this->_connection->begin_transaction();
             
@@ -1047,9 +1179,9 @@
                     $result = true;
 
                     // Checks for return type
-                    if($return){
-                        if($returnFirst){
-                            // Return first row
+                    if($returns && $query instanceof mysqli_result){
+                        if($returnsFirst){
+                            // Returns only first row
                             $result = null;
                             if ($query->num_rows > 0) {
                                 $row = $query->fetch_assoc();
@@ -1057,7 +1189,7 @@
                                 $result = new Element($row);
                             }
                         }else{
-                            // Return all rows
+                            // Returns all rows
                             $result = [];
                             if ($query->num_rows > 0) {
                                 $rows = $query->fetch_all(MYSQLI_ASSOC);
@@ -1072,12 +1204,13 @@
                     return $result;
                 }else{
                     // Query failed
+                    if($this->_transactions) $this->_connection->rollback();
                     return false;
                 }
             } catch (mysqli_sql_exception $exception) {
+                // Query failed with error
                 if($this->_transactions) $this->_connection->rollback();
                 throw $exception;
-                return false;
             }
         }
         

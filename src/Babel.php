@@ -83,10 +83,10 @@
                         return null;
                     }
                 }else{
-                    trigger_error('Babel: Language "'.$lang.'" does not exist in "app/languages"');
+                    trigger_error('Babel: Language "'.$lang.'" does not exist in "app/languages"', E_USER_ERROR);
                 }
             }else{
-                trigger_error('Babel: Language configuration not found in "app/languages"');
+                trigger_error('Babel: Language configuration not found in "app/languages"', E_USER_ERROR);
             }
         }
 

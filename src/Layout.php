@@ -49,8 +49,9 @@
          */
         public function __construct(string $layout, string $view, array $params, bool $skeltch, Controller &$controller){
             // Parse parameters
+            $helpers = 'Glowie\Helpers\Helpers';
             $this->_controller = $controller;
-            $this->_helpers = new Helpers();
+            $this->_helpers = new $helpers;
             $this->_path = $layout;
             $controller = get_object_vars($this->_controller->view);
             if(!empty($controller)) foreach ($controller as $key => $value) $this->$key = $value;
@@ -76,7 +77,7 @@
             if(method_exists($this->_helpers, $method)){
                 return call_user_func_array([$this->_helpers, $method], $args);
             }else{
-                trigger_error('Layout: Method "' . $method . '" does not exist in "app/views/helpers/Helpers.php"');
+                trigger_error('Layout: Method "' . $method .'" does not exist in "app/views/helpers/Helpers.php"', E_USER_ERROR);
             }
         }
 
@@ -92,9 +93,8 @@
 
         /**
          * Renders a view file.
-         * @param string $view View filename without extension. Must be a **.phtml** file inside **views** folder.
-         * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with\
-         * each variable name and value.
+         * @param string $view View filename without extension. Must be a **.phtml** file inside **app/views** folder.
+         * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
          * @param bool $skeltch (Optional) Use Skeltch templating engine to compile the view.
          * @return void
          */
@@ -104,11 +104,10 @@
 
         /**
          * Renders a layout file.
-         * @param string $layout Layout filename without extension. Must be a **.phtml** file inside **views/layouts** folder.
-         * @param string $view (Optional) View filename to render within layout. You can place this view by using **$this->_content**\
-         * in the layout file. Must be a **.phtml** file inside **views** folder.
-         * @param array $params (Optional) Parameters to pass into the rendered view or layout. Should be an associative array with\
-         * each variable name and value.
+         * @param string $layout Layout filename without extension. Must be a **.phtml** file inside **app/views/layouts** folder.
+         * @param string $view (Optional) View filename to render within layout. You can place its content by using `$this->getContent()`\
+         * inside the layout file. Must be a **.phtml** file inside **app/views** folder.
+         * @param array $params (Optional) Parameters to pass into the rendered view and layout. Should be an associative array with each variable name and value.
          * @param bool $skeltch (Optional) Use Skeltch templating engine to compile the layout and view.
          * @return void
          */

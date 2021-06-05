@@ -16,14 +16,13 @@
     class Error{
 
         /**
-         * Initializes the error handler.
+         * Registers the error handler.
          */
-        public static function init(){
+        public static function register(){
             // Registers error handling functions
             error_reporting(GLOWIE_CONFIG['error_reporting']);
-            if(error_reporting()) mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+            mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_ALL);
             set_exception_handler([self::class, 'exceptionHandler']);
-            register_shutdown_function([self::class, 'fatalHandler']);
             set_error_handler([self::class, 'errorHandler']);
             ini_set('display_errors', 'Off');
             ini_set('display_startup_errors', 'Off');
@@ -37,25 +36,15 @@
         }
 
         /**
-         * Default error handler. Throws an exception based in a given error.
+         * Default error handler. Emulates an exception based in a given error.
          * @param int $level Error level code.
          * @param string $str Error message.
          * @param string $file (Optional) Filename where the error was thrown.
          * @param int $line (Optional) Line number where the error was thrown.
          */
         public static function errorHandler(int $level, string $str, string $file = '', int $line = 0){
-            http_response_code(500);
-            if(error_reporting() & $level) self::exceptionHandler(new ErrorException($str, 0, $level, $file, $line));
-            exit;
-        }
-        
-        /**
-         * Fatal error handler.
-         */
-        public static function fatalHandler(){
-            $error = error_get_last();
-            if ($error && $error["type"] == E_ERROR) self::errorHandler($error["type"], $error["message"], $error["file"], $error["line"]);
-            exit;
+            self::exceptionHandler(new ErrorException($str, 0, $level, $file, $line));
+            return false;
         }
 
         /**
@@ -63,7 +52,14 @@
          * @param Exception $e Thrown exception.
          */
         public static function exceptionHandler($e){
-            echo '
+            // Error logging
+            $date = date('Y-m-d H:i:s');
+            self::log("[{$date}] {$e->getMessage()} at file {$e->getFile()}:{$e->getLine()}\n{$e->getTraceAsString()}\n\n");
+
+            // Display the error
+            http_response_code(500);
+            if(error_reporting()){
+                echo '
                 <div style="clear: both; font-family: Segoe UI, sans-serif; font-size: 18px; background-color: white; color: black; margin: 10px; border: 1px solid #d04978;">
                     <div style="background-color: #e25787; color: white; padding: 10px 20px;">
                         <strong>Oops! An error has ocurred:</strong> ' . $e->getMessage() . '
@@ -75,6 +71,7 @@
                         self::parseTrace($e->getTrace()) .
                     '</div>
                 </div>';
+            }
         }
 
         /**
@@ -118,7 +115,7 @@
                         <table cellspacing="0" cellpadding="0" style="width: 100%; table-layout: fixed; margin-top: 10px;"><tbody>';
             foreach($trace as $key => $item){
                 if(!empty($item['class']) && $item['class'] == self::class) continue;
-                $isTraceable = true;
+                if(!$isTraceable) $isTraceable = true;
                 $result .=   '<tr>' .
                                 // Index
                                 '<td style="border: 1px solid lightgray; padding: 10px; vertical-align: top; text-align: center; font-weight: bold; color: #ed578b; width: 40px;">#' . ($key + 1) .'</td>' .
@@ -136,6 +133,16 @@
             }
             $result .= '</tbody></table>';
             return $isTraceable ? $result : '';
+        }
+
+        /**
+         * Logs the error to the error.log file.
+         * @param string $content Content to append to the file.
+         */
+        private static function log(string $content){
+            if(!GLOWIE_CONFIG['error_log']) return;
+            if(!is_writable('../storage')) die('Error: Directory "app/storage" is not writable, please check your chmod settings');
+            file_put_contents('../storage/error.log', $content, FILE_APPEND);
         }
 
         /**

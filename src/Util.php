@@ -14,6 +14,14 @@
     class Util{
 
         /**
+         * Returns current Glowie core version.
+         * @return string Current Glowie core version.
+         */
+        public static function getVersion(){
+            return '1.0';
+        }
+
+        /**
          * Prints a variable in an human-readable way.
          * @param mixed $var Variable to be printed.
          * @param bool $exit (Optional) Stop code execution after printing.
@@ -35,47 +43,88 @@
         }
 
         /**
+         * Returns the current URL.
+         * @param $query (Optional) Include query string parameters.
+         * @return string Current URL.
+         */
+        public static function currentUrl($query = true){
+            return (isset($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . ($query ? $_SERVER['REQUEST_URI'] : parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+        }
+
+        /**
+         * Returns the previous URL where the user was.\
+         * **Note:** This information relies in the `HTTP_REFERER` header. This header cannot be sent\
+         * from some browsers or be unavailable when using different HTTP protocols.
+         */
+        public static function previousUrl(){
+            return $_SERVER['HTTP_REFERER'] ?? '';
+        }
+
+        /**
          * Returns the base URL from a named route.
          * @param string $route Route internal name/identifier.
          * @param array $params (Optional) Route parameters to bind into the URL.
          * @return string Full URL relative to the application path.
          */
         public static function route(string $route, array $params = []){
-            if(empty($route)) trigger_error('route: Route name cannot be empty');
-            if (!is_array($params)) trigger_error('route: $params must be an array');
-            $route = Rails::getRoute($route);
-            if(empty($route)) return '';
-            $uri = explode('/:', $route['uri']);
-            if(!empty($params)){
-                foreach($uri as $key => $value) if (isset($params[$value])) $uri[$key] = $params[$value];
-            }
-            return self::baseUrl(implode('/', $uri));
-        }
+            // Validate arguments
+            if(empty($route)) trigger_error('route: Route name cannot be empty', E_USER_ERROR);
+            if (!is_array($params)) trigger_error('route: $params must be an array', E_USER_ERROR);
 
-        /**
-         * Returns current Glowie core version.
-         * @return string Current Glowie core version.
-         */
-        public static function getVersion(){
-            return '1.0';
+            // Gets the named route
+            $routeData = Rails::getRoute($route);
+            if(empty($routeData)) trigger_error('route: Route name "' . $route .'" does not match any existing route', E_USER_ERROR);
+
+            // Gets the route parameters
+            $uri = explode('/:', $routeData['uri']);
+
+            // Checks if the route has any parameters
+            if(count($uri) > 1){
+                unset($uri[0]);
+                $uri = array_flip($uri);
+
+                // Validates route parameters
+                $missing = array_diff_key($uri, $params);
+                if (!empty($missing)) trigger_error('route: Missing parameter "' . implode('", "', array_keys($missing)) . '" for route "' . $route . '"', E_USER_ERROR);
+
+                // Parses remaining parameters
+                $remaining = array_diff_key($params, $uri);
+
+                // Returns result
+                if (!empty($remaining)) {
+                    return self::baseUrl(implode('/', array_intersect_key($params, $uri)) . '?' . http_build_query($remaining));
+                } else {
+                    return self::baseUrl(implode('/', array_intersect_key($params, $uri)));
+                }
+            }else{
+                // Returns result
+                if(!empty($params)){
+                    return self::baseUrl(implode('/', $uri) . '?' . http_build_query($params));
+                }else{
+                    return self::baseUrl(implode('/', $uri));
+                }
+            }
         }
 
         /**
          * Redirects to a relative or full URL.
          * @param string $destination Target URL to redirect to.
+         * @param int $code (Optional) HTTP response code to pass with the redirect.
+         * @return void
          */
-        public static function redirect(string $destination){
-            header('Location: ' . $destination);
+        public static function redirect(string $destination, int $code = 302){
+            header('Location: ' . $destination, true, $code);
+            die();
         }
 
         /**
          * Reorders an associative array by a specific key value.
          * @param array $array Array to reorder.
-         * @param string $key Column to use as reordering base.
-         * @param int $order (Optional) Ordering direction, can be **SORT_ASC** (ascending) or **SORT_DESC** (descending).
-         * @return array Returns the new ordered array.
+         * @param mixed $key Key to use as reordering base.
+         * @param int $order (Optional) Ordering direction, can be `SORT_ASC` (ascending) or `SORT_DESC` (descending).
+         * @return array Returns the reordered array.
          */
-        public static function orderArray(array $array, string $key, int $order = SORT_ASC){
+        public static function orderArray(array $array, $key, int $order = SORT_ASC){
             if ((!empty($array)) && (!empty($key))) {
                 if (is_array($array)) {
                     foreach ($array as $col => $row) {
@@ -88,14 +137,14 @@
         }
 
         /**
-         * Filters an associative array by a specific key value.
+         * Filters an associative array with elements that matches a specific key value.
          * @param array $array Array to filter.
-         * @param string $key Column to use as filtering base.
+         * @param mixed $key Key to use as filtering base.
          * @param mixed $value Value to filter.
-         * @return array Returns the new filtered array.
+         * @return array Returns the filtered array.
          */
-        public static function filterArray(array $array, string $key, $value){
-            $newarray = array();
+        public static function filterArray(array $array, $key, $value){
+            $newarray = [];
             if (is_array($array) && count($array) > 0) {
                 foreach (array_keys($array) as $col) {
                     $temp[$col] = $array[$col][$key];
@@ -106,14 +155,14 @@
         }
 
         /**
-         * Searches an assosciative array for the first item that matches a specific key value.
+         * Searches an array of associative arrays for the first item that matches a specific key value.
          * @param array $array Array to search.
-         * @param string $key Column to search.
+         * @param mixed $key Key to match value.
          * @param mixed $value Value to search.
-         * @return mixed Returns the first item found.
+         * @return array Returns the first array found.
          */
-        public static function searchArray(array $array, string $key, $value){
-            $result = null;
+        public static function searchArray(array $array, $key, $value){
+            $result = [];
             if (is_array($array) && count($array) > 0) {
                 $index = array_search($value, array_column($array, $key));
                 if ($index !== false) $result = $array[$index];
@@ -168,6 +217,35 @@
             $iv = substr(hash('sha256', GLOWIE_CONFIG['api_token']), 0, 16);
             $string = openssl_decrypt(base64_decode($string), "AES-256-CBC", $key, 0, $iv);
             return $string;
+        }
+
+        /**
+         * Generates a random string with a specified length.
+         * @param int $length Length of the string to generate.
+         * @param bool $letters (Optional) Include lower and uppercase letters in the string.
+         * @param bool $numbers (Optional) Include numbers in the string.
+         * @param bool $specialchars (Optional) Include special characters in the string.
+         * @return string Returns the random string.
+         */
+        public static function randomString(int $length, bool $letters = true, bool $numbers = false, bool $specialchars = false){
+            $data = '';
+            if($letters) $data .= 'abcdefghijklmnopqABCDEFGHIJKLMNOPQ';
+            if($numbers) $data .= '0123456789';
+            if($specialchars) $data .= '!@#$%&*(){}[]-+=/.,;:?\\|_';
+            return substr(str_shuffle($data), 0, $length);
+        }
+
+        /**
+         * Returns a list of all files in a directory and its subdirectories matching a pattern.
+         * @param string $pattern Valid pathname pattern, same as used in `glob()`.
+         * @return array Array with the filenames.
+         */
+        public static function getFiles(string $pattern){
+            $files = glob($pattern);
+            foreach (glob(dirname($pattern) . '/*', GLOB_ONLYDIR | GLOB_NOSORT) as $dir) {
+                $files = array_merge($files, self::getFiles($dir . '/' . basename($pattern)));
+            }
+            return $files;
         }
 
     }

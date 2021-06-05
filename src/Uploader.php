@@ -1,8 +1,6 @@
 <?php
     namespace Glowie\Core;
 
-    use Util;
-
     /**
      * File upload helper for Glowie application.
      * @category File uploads
@@ -19,36 +17,36 @@
          * Target directory.
          * @var string
          */
-        private $_directory;
+        private $directory;
 
         /**
          * Upload errors.
          * @var string|array
          */
-        private $_errors = '';
+        private $errors = '';
 
         /**
          * Allowed extensions.
-         * @var string[]
+         * @var array
          */
-        private $_extensions;
+        private $extensions;
 
         /**
          * Maximum allowed file size.
          * @var float
          */
-        private $_maxFileSize;
+        private $maxFileSize;
 
         /**
          * Overwrite existing files.
          * @var bool
          */
-        private $_overwrite;
+        private $overwrite;
 
         /**
          * Creates an instance of the uploader.
          * @param string $directory (Optional) Target directory to store the uploaded files. Must be an existing directory with write permissions.
-         * @param string[] $extensions (Optional) Array of allowed file extensions. Use an empty array to allow any extension.
+         * @param array $extensions (Optional) Array of allowed file extensions. Use an empty array to allow any extension.
          * @param float $maxFileSize (Optional) Maximum allowed file size **in megabytes**. Use 0 for unlimited (not recommended).
          * @param bool $overwrite (Optional) Overwrite existing files. If false, uploaded files will append a number to its name.
          */
@@ -64,18 +62,18 @@
          * @param string $directory Directory location to store files (relative to the **app** folder).
          */
         public function setDirectory(string $directory){
-            if(empty($directory) || trim($directory) == '') trigger_error('Uploader: $directory should not be empty');
-            if(!is_dir($directory) || !is_writable($directory)) trigger_error('Uploader: Target directory is invalid or not writable');
-            $this->_directory = trim($directory, '/');
+            if(empty($directory) || trim($directory) == '') trigger_error('Uploader: $directory should not be empty', E_USER_ERROR);
+            if(!is_dir($directory) || !is_writable($directory)) trigger_error('Uploader: Target directory is invalid or not writable', E_USER_ERROR);
+            $this->directory = trim($directory, '/');
         }
         
         /**
          * Sets the allowed extensions that the uploader will accept.
-         * @param string[] $extensions Array of allowed file extensions. Use an empty array to allow any extension.
+         * @param array $extensions Array of allowed file extensions. Use an empty array to allow any extension.
          */
         public function setExtensions(array $extensions){
-            if(!is_array($extensions)) trigger_error('Uploader: $extensions must be an array of extensions');
-            $this->_extensions = $extensions;
+            if(!is_array($extensions)) trigger_error('Uploader: $extensions must be an array of extensions', E_USER_ERROR);
+            $this->extensions = $extensions;
         }
         
         /**
@@ -83,7 +81,7 @@
          * @param float $maxFileSize Maximum allowed file size **in megabytes**. Use 0 for unlimited (not recommended).
          */
         public function setMaxFileSize(float $maxFileSize){
-            $this->_maxFileSize = $maxFileSize;
+            $this->maxFileSize = $maxFileSize;
         }
 
         /**
@@ -91,7 +89,7 @@
          * @param bool $overwrite If true, uploaded files will be overwritten. Otherwise, it will append a number to its name.
          */
         public function setOverwrite(bool $overwrite){
-            $this->_overwrite = $overwrite;
+            $this->overwrite = $overwrite;
         }
 
         /**
@@ -99,7 +97,7 @@
          * @return string|array Upload errors.
          */
         public function getErrors(){
-            return $this->_errors;
+            return $this->errors;
         }
 
         /**
@@ -124,11 +122,11 @@
                         if($process !== false){
                             $result[] = $process;
                         }else{
-                            $errors[$file['name']] = $this->_errors;
+                            $errors[$file['name']] = $this->errors;
                         }
                     }
-                    $this->_errors = $errors;
-                    if(empty($this->_errors)){
+                    $this->errors = $errors;
+                    if(empty($this->errors)){
                         return $result;
                     }else{
                         foreach($result as $file) if (is_file($file)) unlink($file);
@@ -136,7 +134,7 @@
                     }
                 }
             }else{
-                $this->_errors = 'FILE_NOT_SELECTED';
+                $this->errors = 'FILE_NOT_SELECTED';
                 return false;
             }
         }
@@ -144,26 +142,26 @@
         /**
          * Fetches a file upload.
          * @param array $file Uploaded file array.
-         * @return string|bool Returns the uploaded file URL on success or false on error.
+         * @return string|bool Returns the uploaded file relative URL on success or false on error.
          */
         private function processFile(array $file){
             if ($this->checkFileSize($file['size'])) {
                 if ($this->checkExtension($file['name'])) {
                     $filename = $this->generateFilename($file['name']);
-                    $target = $this->_directory . '/' . $filename;
+                    $target = $this->directory . '/' . $filename;
                     if (is_uploaded_file($file['tmp_name']) && move_uploaded_file($file['tmp_name'], $target)) {
-                        $this->_errors = '';
-                        return Util::baseUrl($target);
+                        $this->errors = '';
+                        return $target;
                     } else {
-                        $this->_errors = 'UPLOAD_ERROR';
+                        $this->errors = 'UPLOAD_ERROR';
                         return false;
                     }
                 } else {
-                    $this->_errors = 'INVALID_EXTENSION';
+                    $this->errors = 'INVALID_EXTENSION';
                     return false;
                 }
             } else {
-                $this->_errors = 'INVALID_SIZE';
+                $this->errors = 'INVALID_SIZE';
                 return false;
             }
         }
@@ -174,8 +172,8 @@
          * @return bool Returns true if the file extension is allowed.
          */
         private function checkExtension(string $filename){
-            if(!empty($this->_extensions)){
-                return in_array($this->getExtension($filename), $this->_extensions);
+            if(!empty($this->extensions)){
+                return in_array($this->getExtension($filename), $this->extensions);
             }else{
                 return true;
             }
@@ -187,8 +185,8 @@
          * @return bool Returns true if the file size is below maximum allowed size.
          */
         private function checkFileSize(float $size){
-            if($this->_maxFileSize != 0){
-                $max = $this->_maxFileSize * 1024 * 1024;
+            if($this->maxFileSize != 0){
+                $max = $this->maxFileSize * 1024 * 1024;
                 return $size <= $max ? true : false;
             }else{
                 return true;
@@ -211,12 +209,12 @@
          * @return string Returns the new filename.
          */
         private function generateFilename(string $filename){
-            if(!$this->_overwrite){
+            if(!$this->overwrite){
                 $ext = $this->getExtension($filename);
                 $name = ($ext == '') ? $name = $filename : $name = substr($filename, 0, strlen($filename) - strlen($ext) - 1);
                 $i = 1;
                 $result = $filename;
-                while (is_file($this->_directory . '/' . $filename)) {
+                while (is_file($this->directory . '/' . $filename)) {
                     $result = $name . '_' . $i . '.' . $ext;
                     $filename = $result;
                     $i++;

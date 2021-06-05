@@ -102,7 +102,7 @@
 
             // Sets headers
             if (!empty($headers)) {
-                if(!is_array($headers)) trigger_error('Crawler: $headers must be an array');
+                if(!is_array($headers)) trigger_error('Crawler: $headers must be an array', E_USER_ERROR);
                 $parsed = [];
                 foreach ($headers as $key => $value) {
                     if(is_array($value)){
