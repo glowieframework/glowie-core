@@ -55,6 +55,12 @@
          */
         protected $server;
 
+        /**
+         * Session parameters.
+         * @var Session
+         */
+        protected $session;
+
          /**
          * Instantiates a new instance of the middleware.
          * @param Controller $controller Referenced controller that this middleware is handling.
@@ -69,6 +75,7 @@
             $this->request = new Element($_REQUEST);
             $this->route = $route;
             $this->server = new Element($_SERVER);
+            $this->session = new Session();
         }
 
         /**

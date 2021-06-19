@@ -138,19 +138,22 @@
          * @param string $table (Optional) Table name to set as default.
          * @param array $database (Optional) Associative array with the connection settings.\
          * Use an empty array to connect to the globally defined database (in **app/config/Config.php**).
-         * @param bool $transactions Enable or disable database transactions.
+         * @param string $charset (Optional) Database default character set encoding to use.
+         * @param bool $transactions (Optional) Enable or disable database transactions.
          */
-        public function __construct(string $table = 'glowie', array $database = [], bool $transactions = true){
-            $this->database($database)->table($table)->transactions($transactions);
+        public function __construct(string $table = 'glowie', array $database = [], string $charset = 'utf8', bool $transactions = true){
+            $this->setDatabase($database);
+            $this->setTable($table);
+            $this->setCharset($charset);
+            $this->setTransactions($transactions);
         }
 
         /**
          * Sets the database connection settings.
          * @param array $database Associative array with the connection settings.\
          * Use an empty array to connect to the globally defined database (in **app/config/Config.php**).
-         * @return Kraken Current Kraken instance for nested calls.
          */
-        public function database(array $database){
+        public function setDatabase(array $database){
             // Checks for the global database setting
             $global = empty($database);
             if ($global) $database = GLOWIE_CONFIG['database'];
@@ -176,18 +179,15 @@
                 $connection = new mysqli($database['host'], $database['username'], $database['password'], $database['db'], $database['port']);
             }
             $this->_connection = $connection;
-            return $this;
         }
         
         /**
          * Sets the default table.
          * @param string $table Table name to set as default.
-         * @return Kraken Current Kraken instance for nested calls.
          */
-        public function table(string $table){
+        public function setTable(string $table){
             if (empty($table)) trigger_error('Kraken: Table name should not be empty', E_USER_ERROR);
             $this->_table = $table;
-            return $this;
         }
 
         /**
@@ -215,13 +215,36 @@
         }
 
         /**
+         * Sets the database default character set encoding.
+         * @param string $charset Character set name to set as default.
+         */
+        public function setCharset(string $charset){
+            $this->_connection->set_charset($charset);
+        }
+
+        /**
+         * Returns the current database default character set encoding.
+         * @return string Charset name.
+         */
+        public function getCharset(){
+            return $this->_connection->character_set_name();
+        }
+
+        /**
          * Enables or disables database transactions.
          * @param bool $option True or false.
-         * @return Kraken Current Kraken instance for nested calls.
          */
-        public function transactions(bool $option){
+        public function setTransactions(bool $option){
             $this->_transactions = $option;
             return $this;
+        }
+
+        /**
+         * Returns if transactions are enabled.
+         * @return bool True if enabled or false if not.
+         */
+        public function getTransactions(){
+            return $this->_transactions;
         }
 
         /**
@@ -933,10 +956,10 @@
         /**
          * Deletes data from the table. **Do not forget to use WHERE statements\
          * before calling this function.**
-         * @param string|null $table (Optional) Table name to delete from.
+         * @param string $table (Optional) Table name to delete from.
          * @return bool Returns true on success.
          */
-        public function delete($table = null){
+        public function delete(string $table = ''){
             $this->_instruction = 'DELETE';
             if(!empty($table)) $this->_from = $table;
             return $this->execute();

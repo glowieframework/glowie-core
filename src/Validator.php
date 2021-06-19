@@ -133,140 +133,165 @@
 
                     // [REQUIRED] - Checks if variable is not empty or null
                     case 'required':
-                        if(!isset($data) || empty($data)){
-                            $result['required'] = 'INVALID';
+                        if(!isset($data) || $data == []){
+                            $result['required'] = true;
                         }else{
-                            if(is_string($data) && trim($data) == '') $result['required'] = 'INVALID';
+                            if(is_string($data) && trim($data) == '') $result['required'] = true;
                         }
                         break;
                     
                     // [MIN] - Checks if variable is bigger or equal than min
                     case 'min':
                         if(is_array($data)){
-                            if(count($data) < $rule[1]) $result['min'] = 'INVALID';
+                            if(count($data) < $rule[1]) $result['min'] = true;
                         }else if(is_string($data)){
-                            if(strlen($data) < $rule[1]) $result['min'] = 'INVALID';
+                            if(strlen($data) < $rule[1]) $result['min'] = true;
                         }else{
-                            if($data < $rule[1]) $result['min'] = 'INVALID';
+                            if($data < $rule[1]) $result['min'] = true;
                         }
                         break;
 
                     // [MAX] - Checks if variable is lower or equal than max
                     case 'max':
                         if (is_array($data)) {
-                            if (count($data) > $rule[1]) $result['max'] = 'INVALID';
+                            if (count($data) > $rule[1]) $result['max'] = true;
                         } else if (is_string($data)) {
-                            if (strlen($data) > $rule[1]) $result['max'] = 'INVALID';
+                            if (strlen($data) > $rule[1]) $result['max'] = true;
                         } else {
-                            if ($data > $rule[1]) $result['max'] = 'INVALID';
+                            if ($data > $rule[1]) $result['max'] = true;
                         }
                         break;
                     
                     // [SIZE] - Checks if variable size equals to size
                     case 'size':
                         if (is_array($data)) {
-                            if (count($data) != $rule[1]) $result['size'] = 'INVALID';
+                            if (count($data) != $rule[1]) $result['size'] = true;
                         } else if (is_string($data)) {
-                            if (strlen($data) != $rule[1]) $result['size'] = 'INVALID';
+                            if (strlen($data) != $rule[1]) $result['size'] = true;
                         } else {
-                            if ($data != $rule[1]) $result['size'] = 'INVALID';
+                            if ($data != $rule[1]) $result['size'] = true;
                         }
                         break;
                     
                     // [EMAIL] - Checks if variable is a valid email
                     case 'email':
-                        if(!filter_var($data, FILTER_VALIDATE_EMAIL)) $result['email'] = 'INVALID';
+                        if(!filter_var($data, FILTER_VALIDATE_EMAIL)) $result['email'] = true;
                         break;
 
                     // [URL] - Checks if variable is a valid URL
                     case 'url':
-                        if (!filter_var($data, FILTER_VALIDATE_URL)) $result['url'] = 'INVALID';
+                        if (!filter_var($data, FILTER_VALIDATE_URL)) $result['url'] = true;
                         break;
 
                     // [ALPHA] - Checks if variable is alphabetic
                     case 'alpha':
-                        if(!preg_match('/^[a-z]+$/i', $data)) $result['alpha'] = 'INVALID';
+                        if(!preg_match('/^[a-z]+$/i', $data)) $result['alpha'] = true;
                         break;
 
                     // [NUMERIC] - Checks if variable is a number
                     case 'numeric':
-                        if(!is_numeric($data)) $result['numeric'] = 'INVALID';
+                        if(!is_numeric($data)) $result['numeric'] = true;
                         break;
                     
                     // [ALPHANUMERIC] - Checks if variable is alphanumeric
                     case 'alphanumeric':
-                        if (!preg_match('/^[a-z0-9]+$/i', $data)) $result['alphanumeric'] = 'INVALID';
+                        if (!preg_match('/^[a-z0-9]+$/i', $data)) $result['alphanumeric'] = true;
                         break;
 
                     // [ALPHADASH] - Checks if variable is alphanumeric or has dashes/underscores
                     case 'alphadash':
-                        if (!preg_match('/^[a-z0-9-_]+$/i', $data)) $result['alphadash'] = 'INVALID';
+                        if (!preg_match('/^[a-z0-9-_]+$/i', $data)) $result['alphadash'] = true;
                         break;
 
                     // [REGEX] - Checks if variable matches a regex pattern
                     case 'regex':
-                        if(!preg_match($rule[1], $data)) $result['regex'] = 'INVALID';
+                        if(!preg_match($rule[1], $data)) $result['regex'] = true;
                         break;
                     
                     // [ARRAY] - Checks if variable is an array
                     case 'array':
-                        if(!is_array($data)) $result['array'] = 'INVALID';
+                        if(!is_array($data)) $result['array'] = true;
                         break;
 
                     // [DATE] - Checks if variable is a valid date
                     case 'date':
-                        if (!strtotime($data)) $result['date'] = 'INVALID';
+                        if (!strtotime($data)) $result['date'] = true;
                         break;
 
                     // [STRING] - Checks if variable is a string
                     case 'string':
-                        if (!is_string($data)) $result['string'] = 'INVALID';
+                        if (!is_string($data)) $result['string'] = true;
                         break;
 
                     // [INTEGER] - Checks if variable is an integer
                     case 'integer':
-                        if (!is_int($data)) $result['integer'] = 'INVALID';
+                        if (!is_int($data)) $result['integer'] = true;
+                        break;
+
+                    // [FLOAT] - Checks if variable is a float
+                    case 'float':
+                        if (!is_float($data)) $result['float'] = true;
+                        break;
+                        
+                    // [FILE] - Checks if path is an existing file
+                    case 'file':
+                        if(!is_file($data)) $result['file'] = true;
+                        break;
+
+                    // [UPLOAD] - Checks if variable is an uploaded file through HTTP POST
+                    case 'upload':
+                        if(!is_uploaded_file($data)) $result['upload'] = true;
+                        break;
+
+                    // [DIRECTORY] - Checks if path is an existing directory
+                    case 'directory':
+                        if(!is_dir($data)) $result['directory'] = true;
+                        break;
+
+                    // [WRITABLE] - Checks if path is an writable directory or file
+                    case 'writable':
+                        if(!is_writable($data)) $result['writable'] = true;
                         break;
                     
                     // [OBJECT] - Checks if variable is an object
                     case 'object':
-                        if(!is_object($data)) $result['object'] = 'INVALID';
+                        if(!is_object($data)) $result['object'] = true;
                         break;
 
                     // [BOOLEAN] - Checks if variable is a boolean
                     case 'boolean':
-                        if(!is_bool($data)) $result['boolean'] = 'INVALID';
+                        if(!is_bool($data)) $result['boolean'] = true;
                         break;
 
                     // [VALUE] - Checks if variable matches value
                     case 'value':
-                        if($data != $rule[1]) $result['value'] = 'INVALID';
+                        if($data != $rule[1]) $result['value'] = true;
                         break;
 
                     // [NOT] - Checks if variable does not match value
                     case 'not':
-                        if ($data == $rule[1]) $result['not'] = 'INVALID';
+                        if ($data == $rule[1]) $result['not'] = true;
                         break;
                     
                     // [EMPTY] - Check if variable is empty
                     case 'empty':
                         if (is_string($data)){
-                            if(trim($data) != '') $result['empty'] = 'INVALID';
+                            if(trim($data) != '') $result['empty'] = true;
                         }else{
                             if (isset($data)){
-                                if(!empty($data)) $result['empty'] = 'INVALID';
+                                if(!empty($data)) $result['empty'] = true;
                             }
                         }
                         break;
 
                     // [ENDSWITH] - Check if variable ends with string
                     case 'endswith':
-                        if (Util::endsWith($data, $rule[1])) $result['endswith'] = 'INVALID';
+                        if (Util::endsWith($data, $rule[1])) $result['endswith'] = true;
                         break;
 
                     // [STARTSWITH] - Check if variable starts with string
                     case 'startswith':
-                        if (Util::startsWith($data, $rule[1])) $result['startswith'] = 'INVALID';
+                        if (Util::startsWith($data, $rule[1])) $result['startswith'] = true;
                         break;
                 }
 

@@ -38,6 +38,18 @@
         protected $_timestamps = false;
 
         /**
+         * **Created at** field name (if timestamps enabled).
+         * @var string
+         */
+        protected $_createdField = 'created_at';
+
+        /**
+         * **Updated at** field name (if timestamps enabled).
+         * @var string
+         */
+        protected $_updatedField = 'updated_at';
+
+        /**
          * The initial data from a filled row.
          * @var Element
          */
@@ -63,12 +75,13 @@
         
         /**
          * Gets all rows from the model table.
+         * @param string $order (Optional) Ordering direction for the primary key field **(ASC or DESC)**.
          * @return array Returns an array with all rows.
          */
-        public function all(){
+        public function all(string $order = 'asc'){
             $this->clearQuery();
             $fields = !empty($this->_fields) ? $this->_fields : '*';
-            return $this->select($fields)->fetchAll();
+            return $this->select($fields)->orderBy($this->_primaryKey, $order)->fetchAll();
         }
 
         /**
@@ -93,8 +106,8 @@
             // Parse data and timestamps
             $data = $this->filterData($data);
             if($this->_timestamps){
-                $data['created_at'] = Kraken::raw('NOW()');
-                $data['updated_at'] = Kraken::raw('NOW()');
+                $data[$this->_createdField] = Kraken::raw('NOW()');
+                $data[$this->_updatedField] = Kraken::raw('NOW()');
             }
 
             // Inserts the element
@@ -115,7 +128,7 @@
             if(isset($data[$this->_primaryKey]) && $this->where($this->_primaryKey, $data[$this->_primaryKey])->exists()){
                 // Parse data and timestamps
                 $updatedData = $this->filterData($data);
-                if($this->_timestamps) $updatedData['updated_at'] = Kraken::raw('NOW()');
+                if($this->_timestamps) $updatedData[$this->_updatedField] = Kraken::raw('NOW()');
                 
                 // Updates the element
                 return $this->where($this->_primaryKey, $data[$this->_primaryKey])->update($updatedData);

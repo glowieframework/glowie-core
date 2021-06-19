@@ -199,12 +199,14 @@
          * @return string Returns the file extension, if exists.
          */
         private function getExtension(string $filename){
-            $parts = explode('.', $filename);
-            return count($parts) != 0 ? strtolower(end($parts)) : '';
+            $qpos = strpos($filename, "?");
+            if ($qpos !== false) $path = substr($filename, 0, $qpos);
+            $extension = pathinfo($path, PATHINFO_EXTENSION);
+            return $extension;
         }
 
         /**
-         * Checks for an existing file and returns the new filename if overwrite not enabled.
+         * Checks for an existing file and returns the new filename if overwrite is not enabled.
          * @param string $filename Filename to check.
          * @return string Returns the new filename.
          */

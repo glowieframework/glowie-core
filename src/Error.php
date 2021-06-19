@@ -21,7 +21,7 @@
         public static function register(){
             // Registers error handling functions
             error_reporting(GLOWIE_CONFIG['error_reporting']);
-            mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_ALL);
+            mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
             set_exception_handler([self::class, 'exceptionHandler']);
             set_error_handler([self::class, 'errorHandler']);
             ini_set('display_errors', 'Off');

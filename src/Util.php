@@ -118,6 +118,25 @@
         }
 
         /**
+         * Redirects to an URL relative to the application path.
+         * @param string $path (Optional) Path to append to the base URL.
+         * @param int $code (Optional) HTTP response code to pass with the redirect.
+         */
+        public static function redirectBase(string $path = '', int $code = 302){
+            return self::redirect(self::baseUrl($path), $code);
+        }
+
+        /**
+         * Redirects to a named route.
+         * @param string $route Route internal name/identifier.
+         * @param array $params (Optional) Route parameters to bind into the URL.
+         * @param int $code (Optional) HTTP response code to pass with the redirect.
+         */
+        public static function redirectRoute(string $route, array $params = [], int $code = 302){
+            return self::redirect(self::route($route, $params), $code);
+        }
+
+        /**
          * Reorders an associative array by a specific key value.
          * @param array $array Array to reorder.
          * @param mixed $key Key to use as reordering base.
