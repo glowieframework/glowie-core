@@ -76,33 +76,34 @@
             if(empty($routeData)) trigger_error('route: Route name "' . $route .'" does not match any existing route', E_USER_ERROR);
 
             // Gets the route parameters
-            $uri = explode('/:', $routeData['uri']);
+            $uri = [];
+            $result = [];
+            $missing = [];
+            foreach(explode('/', $routeData['uri']) as $segment){
+                if(self::startsWith($segment, ':')){
+                    $segment = substr($segment, 1);
+                    $result[] = $segment;
+                    if(isset($params[$segment])){
+                        $uri[] = $params[$segment];
+                    }else{
+                        $missing[] = $segment;
+                    }
+                }else{
+                    $uri[] = $segment;
+                }
+            }
+
+            // Validates missing parameters
+            if (!empty($missing)) trigger_error('route: Missing parameter "' . implode('", "', $missing) . '" for route "' . $route . '"', E_USER_ERROR);
 
             // Checks if the route has any parameters
-            if(count($uri) > 1){
-                unset($uri[0]);
-                $uri = array_flip($uri);
-
-                // Validates route parameters
-                $missing = array_diff_key($uri, $params);
-                if (!empty($missing)) trigger_error('route: Missing parameter "' . implode('", "', array_keys($missing)) . '" for route "' . $route . '"', E_USER_ERROR);
-
-                // Parses remaining parameters
-                $remaining = array_diff_key($params, $uri);
-
-                // Returns result
-                if (!empty($remaining)) {
-                    return self::baseUrl(implode('/', array_intersect_key($params, $uri)) . '?' . http_build_query($remaining));
-                } else {
-                    return self::baseUrl(implode('/', array_intersect_key($params, $uri)));
-                }
+            if(!empty($result)){
+                // Parses remaining parameters and returns result
+                $remaining = array_diff_key($params, array_flip($result));
+                return self::baseUrl(implode('/', $uri) . (!empty($remaining) ? '?' . http_build_query($remaining) : ''));
             }else{
                 // Returns result
-                if(!empty($params)){
-                    return self::baseUrl(implode('/', $uri) . '?' . http_build_query($params));
-                }else{
-                    return self::baseUrl(implode('/', $uri));
-                }
+                return self::baseUrl(implode('/', $uri) . (!empty($params) ? '?' . http_build_query($params) : ''));
             }
         }
 
@@ -252,6 +253,35 @@
             if($numbers) $data .= '0123456789';
             if($specialchars) $data .= '!@#$%&*(){}[]-+=/.,;:?\\|_';
             return substr(str_shuffle($data), 0, $length);
+        }
+
+        /**
+         * Converts a string to a valid friendly URI format.
+         * @param string $string String to convert.
+         * @return string Returns the friendly URI.
+         */
+        public static function friendlyUri(string $string){
+            $string = strtr(utf8_decode(strtolower($string)), utf8_decode('àáâãäçèéêëìíîïñòóôõöùúûüýÿÀÁÂÃÄÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝ'), 'aaaaaceeeeiiiinooooouuuuyyAAAAACEEEEIIIINOOOOOUUUUY');
+            $string = str_replace(' ', '-', $string);
+            $string = preg_replace('/[^a-zA-Z0-9-]/', '', $string);
+            return $string;
+        }
+
+        /**
+         * Converts a string to camelCase. It also removes all accents and characters that are not\
+         * valid letters, numbers or underscores.
+         * @param string $string String to be converted.
+         * @param bool $firstUpper (Optional) Determines if the first character should be uppercased (PascalCase).
+         * @return string Returns the converted string.
+         */
+        public static function camelCase(string $string, bool $firstUpper = false){
+            $string = strtr(utf8_decode(strtolower($string)), utf8_decode('àáâãäçèéêëìíîïñòóôõöùúûüýÿÀÁÂÃÄÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝ'), 'aaaaaceeeeiiiinooooouuuuyyAAAAACEEEEIIIINOOOOOUUUUY');
+            $string = preg_replace('/[^a-zA-Z0-9_]/', ' ', $string);
+            if($firstUpper){
+                return str_replace(' ', '', ucwords($string));
+            }else{
+                return str_replace(' ', '', lcfirst(ucwords($string)));
+            }
         }
 
         /**

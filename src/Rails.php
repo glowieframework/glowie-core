@@ -121,15 +121,9 @@
          * Initializes application routing.
          */
         public static function init(){
-            // Clean request URI
-            $cleanRoute = substr(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), !empty(GLOWIE_APP_FOLDER) ? strlen(GLOWIE_APP_FOLDER) + 2 : strlen(GLOWIE_APP_FOLDER) + 1);
-            
-            // Get current route
-            if (!empty($cleanRoute) && trim($cleanRoute) != '') {
-                $route = trim($cleanRoute);
-            } else {
-                $route = '/';
-            }
+            // Cleans request URI
+            $route = trim(substr(trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/'), strlen(GLOWIE_APP_FOLDER)), '/');
+            if (empty($route)) $route = '/';
 
             // Stores current route configuration
             $config = null;
@@ -137,16 +131,21 @@
 
             // Loops through routes configuration to find a valid route pattern
             foreach (self::$routes as $key => $item) {
+                // Creates a regex replacing dynamic parameters to valid regex patterns
                 $regex = str_replace('/', '\/', preg_replace('(:[^\/]+)', '([^/]+)', ltrim($item['uri'], '/')));
                 if (preg_match_all('/^' . $regex . '$/i', rtrim($route, '/'), $params)) {
                     // Fetch route parameters
-                    $keys = explode('/:', $item['uri']);
                     $result = [];
-                    if (count($keys) > 1) {
-                        unset($params[0]);
-                        unset($keys[0]);
-                        foreach ($keys as $i => $value) $result[$value] = $params[$i][0];
+                    foreach(explode('/', $item['uri']) as $segment){
+                        if(Util::startsWith($segment, ':')) $result[] = substr($segment, 1);
                     }
+
+                    // If all parameters were filled
+                    if (!empty($result)) {
+                        array_shift($params);
+                        $result = array_combine($result, array_column($params, 0));
+                    }
+
                     $config = $item;
                     $routeName = $key;
                     break;
@@ -233,20 +232,20 @@
 
                     // If only the controller was specified
                     }else if(count($autoroute) == 1){
-                        $controller = 'Glowie\Controllers\\' . self::parseName($autoroute[0], true);
+                        $controller = 'Glowie\Controllers\\' . Util::camelCase($autoroute[0], true);
                         $action = 'index';
                         return self::callAutoRoute($controller, $action, $routeName);
 
                     // Controller and action were specified
                     }else if(count($autoroute) == 2){
-                        $controller = 'Glowie\Controllers\\' . self::parseName($autoroute[0], true);
-                        $action = self::parseName($autoroute[1]);
+                        $controller = 'Glowie\Controllers\\' . Util::camelCase($autoroute[0], true);
+                        $action = Util::camelCase($autoroute[1]);
                         return self::callAutoRoute($controller, $action, $routeName);
                     
                     // Controller, action and parameters were specified
                     }else{
-                        $controller = 'Glowie\Controllers\\' . self::parseName($autoroute[0], true);
-                        $action = self::parseName($autoroute[1]);
+                        $controller = 'Glowie\Controllers\\' . Util::camelCase($autoroute[0], true);
+                        $action = Util::camelCase($autoroute[1]);
                         $params = array_slice($autoroute, 2);
                         return self::callAutoRoute($controller, $action, $routeName, $params);
                     }
@@ -254,23 +253,6 @@
                     // Route was not found
                     return self::callNotFound($routeName);
                 }
-            }
-        }
-
-        /**
-         * Parses names to camelCase convention. It also removes all accents and characters that are not\
-         * valid letters, numbers or underscores.
-         * @param string $string Name to be parsed.
-         * @param bool $firstUpper (Optional) Determines if the first character should be uppercased.
-         * @return string Parsed name.
-         */
-        private static function parseName(string $string, bool $firstUpper = false){
-            $string = strtr(utf8_decode(strtolower($string)), utf8_decode('àáâãäçèéêëìíîïñòóôõöùúûüýÿÀÁÂÃÄÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝ'), 'aaaaaceeeeiiiinooooouuuuyyAAAAACEEEEIIIINOOOOOUUUUY');
-            $string = preg_replace('/[^a-zA-Z0-9_]/', ' ', $string);
-            if($firstUpper){
-                return str_replace(' ', '', ucwords($string));
-            }else{
-                return str_replace(' ', '', lcfirst(ucwords($string)));
             }
         }
 

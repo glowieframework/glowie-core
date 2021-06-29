@@ -45,12 +45,13 @@
 
         /**
          * Creates an instance of the uploader.
-         * @param string $directory (Optional) Target directory to store the uploaded files. Must be an existing directory with write permissions.
+         * @param string $directory (Optional) Target directory to store the uploaded files. Must be an existing directory with write permissions\
+         * relative to the **app/public** folder.
          * @param array $extensions (Optional) Array of allowed file extensions. Use an empty array to allow any extension.
          * @param float $maxFileSize (Optional) Maximum allowed file size **in megabytes**. Use 0 for unlimited (not recommended).
          * @param bool $overwrite (Optional) Overwrite existing files. If false, uploaded files will append a number to its name.
          */
-        public function __construct(string $directory = 'public/uploads', array $extensions = [], float $maxFileSize = 0, bool $overwrite = false){
+        public function __construct(string $directory = 'uploads', array $extensions = [], float $maxFileSize = 0, bool $overwrite = false){
             $this->setDirectory($directory);
             $this->setExtensions($extensions);
             $this->setMaxFileSize($maxFileSize);
@@ -59,7 +60,7 @@
         
         /**
          * Sets the target directory to store the uploaded files. Must be an existing directory with write permissions.
-         * @param string $directory Directory location to store files (relative to the **app** folder).
+         * @param string $directory Directory location to store files (relative to the **app/public** folder).
          */
         public function setDirectory(string $directory){
             if(empty($directory) || trim($directory) == '') trigger_error('Uploader: $directory should not be empty', E_USER_ERROR);
@@ -200,8 +201,8 @@
          */
         private function getExtension(string $filename){
             $qpos = strpos($filename, "?");
-            if ($qpos !== false) $path = substr($filename, 0, $qpos);
-            $extension = pathinfo($path, PATHINFO_EXTENSION);
+            if ($qpos !== false) $filename = substr($filename, 0, $qpos);
+            $extension = pathinfo($filename, PATHINFO_EXTENSION);
             return $extension;
         }
 

@@ -18,7 +18,7 @@
         /**
          * Bootstrap Glowie application.
          */
-        public function run(){
+        public static function run(){
             // Store application start time
             define('GLOWIE_START_TIME', microtime(true));
 

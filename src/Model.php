@@ -70,7 +70,7 @@
         public function find($primary){
             $this->clearQuery();
             $fields = !empty($this->_fields) ? $this->_fields : '*';
-            return $this->select($fields)->where($this->_primaryKey, $primary)->limit(1)->fetchRow();
+            return $this->select($fields)->where($this->_primaryKey, $primary)->fetchRow();
         }
         
         /**
@@ -78,10 +78,10 @@
          * @param string $order (Optional) Ordering direction for the primary key field **(ASC or DESC)**.
          * @return array Returns an array with all rows.
          */
-        public function all(string $order = 'asc'){
+        public function all(){
             $this->clearQuery();
             $fields = !empty($this->_fields) ? $this->_fields : '*';
-            return $this->select($fields)->orderBy($this->_primaryKey, $order)->fetchAll();
+            return $this->select($fields)->fetchAll();
         }
 
         /**
@@ -91,7 +91,7 @@
          */
         public function drop($primary){
             $this->clearQuery();
-            return $this->where($this->_primaryKey, $primary)->limit(1)->delete();
+            return $this->where($this->_primaryKey, $primary)->delete();
         }
 
         /**
@@ -125,7 +125,7 @@
             $this->clearQuery();
             
             // Checks if the primary key was passed and matches an existing row
-            if(isset($data[$this->_primaryKey]) && $this->where($this->_primaryKey, $data[$this->_primaryKey])->exists()){
+            if(isset($data[$this->_primaryKey]) && $this->find($data[$this->_primaryKey])){
                 // Parse data and timestamps
                 $updatedData = $this->filterData($data);
                 if($this->_timestamps) $updatedData[$this->_updatedField] = Kraken::raw('NOW()');

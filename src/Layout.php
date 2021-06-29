@@ -53,8 +53,8 @@
             $this->_controller = $controller;
             $this->_helpers = new $helpers;
             $this->_path = $layout;
-            $controller = $this->_controller->view->toArray();
-            if(!empty($controller)) foreach ($controller as $key => $value) $this->$key = $value;
+            $viewData = $this->_controller->view->toArray();
+            if(!empty($viewData)) foreach ($viewData as $key => $value) $this->$key = $value;
             if(!empty($params)) foreach($params as $key => $value) $this->$key = $value;
 
             // Parse view

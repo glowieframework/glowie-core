@@ -92,8 +92,8 @@
         private $_order;
 
         /**
-         * LIMIT statement.
-         * @var string
+         * LIMIT statements.
+         * @var array
          */
         private $_limit;
 
@@ -132,6 +132,12 @@
          * @var string
          */
         private $_raw;
+
+        /**
+         * Last insert ID.
+         * @var int
+         */
+        private $_lastInsertId = 0;
 
         /**
          * Creates a new database connection.
@@ -804,9 +810,9 @@
          */
         public function limit(int $param1, $param2 = null){
             if(is_null($param2)){
-                $this->_limit = "0, {$param1}";
+                $this->_limit = [0, $param1];
             }else{
-                $this->_limit = "{$param1}, {$param2}";
+                $this->_limit = [$param1, $param2];
             }
             return $this;
         }
@@ -1038,7 +1044,7 @@
          * @return mixed Last insert id.
          */
         public function lastInsertId(){
-            return $this->_connection->insert_id;
+            return $this->_lastInsertId;
         }
 
         /**
@@ -1068,13 +1074,13 @@
             $this->_instruction = '';
             $this->_select = '';
             $this->_from = '';
-            $this->_into = '';
             $this->_join = [];
             $this->_where = [];
             $this->_group = '';
             $this->_order = [];
-            $this->_limit = '';
+            $this->_limit = [];
             $this->_insert = '';
+            $this->_into = '';
             $this->_into = '';
             $this->_values = '';
             $this->_update = '';
@@ -1150,9 +1156,14 @@
             }
 
             // Gets LIMIT statement
-            if($this->_instruction == 'SELECT' || $this->_instruction == 'SELECT DISTINCT' || $this->_instruction == 'UPDATE' || $this->_instruction == 'DELETE'){
+            if($this->_instruction == 'SELECT' || $this->_instruction == 'SELECT DISTINCT'){
                 if (!empty($this->_limit)) {
-                    $query .= " LIMIT {$this->_limit}";
+                    $limit = implode(', ', $this->_limit);
+                    $query .= " LIMIT {$limit}";
+                }
+            }else if($this->_instruction == 'UPDATE' || $this->_instruction == 'DELETE'){
+                if (!empty($this->_limit)) {
+                    $query .= " LIMIT {$this->_limit[1]}";
                 }
             }
 
@@ -1222,7 +1233,8 @@
                         }
                     }
 
-                    // Commits the transaction (if enabled) and return the result
+                    // Commits the transaction (if enabled) and returns the result
+                    $this->_lastInsertId = $this->_connection->insert_id;
                     if ($this->_transactions) $this->_connection->commit();
                     return $result;
                 }else{
