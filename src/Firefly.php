@@ -28,21 +28,29 @@
         private const TEMPLATE_FOLDER = 'vendor/glowieframework/glowie-core/firefly/';
 
         /**
+         * Command line arguments.
+         * @var array
+         */
+        private static $args;
+
+        /**
          * Runs the command line tool.
          */
         public static function run(){
             // Register arguments
             global $argv;
+            self::$args = $argv;
             
             // Gets the command
-            unset($argv[0]);
-            if(!isset($argv[1])){
-                self::print('To see a list of valid commands, use <color="yellow">php firefly help</color>.');
+            array_shift(self::$args);
+            if(!isset(self::$args[0])){
+                self::print('<color="magenta">Welcome to Firefly!</color>');
+                self::printLine('<color="blue">To see a list of valid commands, use</color> <color="yellow">php firefly help</color>.');
                 return;
             }
 
             // Runs the command
-            $command = strtolower(trim($argv[1]));
+            $command = strtolower(trim(self::$args[0]));
             switch($command){
                 case 'clear-cache':
                 case '-clear-cache':
@@ -52,16 +60,28 @@
                 case '-clear-log':
                     self::clearLog();
                     break;
+                case 'test-database':
+                case 'test-db':
+                case '-test-database':
+                case '-test-db':
+                    self::testDatabase();
+                    break;
                 case 'create-controller':
+                case 'create-ct':
                 case '-create-controller':
+                case '-create-ct':
                     self::createController();
                     break;
                 case 'create-middleware':
+                case 'create-mw':
                 case '-create-middleware':
+                case '-create-mw':
                     self::createMiddleware();
                     break;
                 case 'create-model':
+                case 'create-md':
                 case '-create-model':
+                case '-create-md':
                     self::createModel();
                     break;
                 case 'version':
@@ -77,8 +97,8 @@
                     self::help();
                     break;
                 default:
-                    self::print('<color="red">Unknown command \''. $command . '\'</color>');
-                    self::printLine('To see a list of valid commands, use <color="yellow">php firefly help</color>.');
+                    self::print('<color="red">Unknown command \''. $command . '\'!</color>');
+                    self::printLine('<color="blue">To see a list of valid commands, use</color> <color="yellow">php firefly help</color>.');
                     break;
             }
         }
@@ -123,40 +143,77 @@
         }
 
         /**
-         * Prints the current Firefly version.
+         * Tests the database connection.
          */
-        private static function version(){
-            self::print('<color="magenta">Firefly v1.0 by Glowie</color>');
-        }
+        private static function testDatabase(){
+            // Checks configuration file
+            if (!file_exists('app/config/Config.php')) {
+                self::print('<color="red">Configuration file not found!</color>');
+                self::printLine('<color="yellow">Please rename "app/config/Config.example.php" to "app/config/Config.php".</color>');
+                return;
+            }
 
-        /**
-         * Prints the help message.
-         */
-        private static function help(){
-            self::print('<color="magenta">Firefly commands:</color>');
-            self::printLine('');
-            self::printLine('  <color="yellow">clear-cache</color> - Clears the application cache folder');
-            self::printLine('  <color="yellow">clear-log</color> - Clears the application error log');
-            self::printLine('  <color="yellow">create-controller</color> - Creates a new controller for your application');
-            self::printLine('  <color="yellow">create-middleware</color> - Creates a new middleware for your application');
-            self::printLine('  <color="yellow">create-model</color> - Creates a new model for your application');
-            self::printLine('  <color="yellow">version</color> - Displays current Firefly version');
-            self::printLine('  <color="yellow">help</color> - Displays this help message');
+            // Loads the configuration file
+            require_once('app/config/Config.php');
+
+            // Checks if environment was filled
+            if(isset(self::$args[1])){
+                $env = trim(self::$args[1]);
+            }else{
+                self::print("Configuration environment to test (production): ");
+                $env = trim(fgets(STDIN));
+                if(empty($env)) $env = 'production';
+            }
+
+            // Loads the environment setting
+            if(empty($config[$env])){
+                self::print('<color="red">Invalid configuration environment!</color>');
+                self::printLine('<color="yellow">Please check your application settings.</color>');
+                return;
+            }
+            
+            // Sets the environment setting
+            define('GLOWIE_CONFIG', $config[$env]);
+
+            // Sets error reporting
+            error_reporting(E_ALL);
+            ini_set('display_errors', 'On');
+            ini_set('display_startup_errors', 'On');
+            mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+            // Attempts to create the connection
+            self::print('<color="blue">Testing database connection...</color>');
+            $time = microtime(true);
+            try {
+                new Kraken();
+            } catch (\Exception $e) {
+                self::printLine('<color="red">Database connection failed!</color>');
+                self::printLine('<color="yellow">' . $e->getMessage() . '</color>');
+                return;
+            }
+
+            // Prints the result
+            $time = round((microtime(true) - $time), 5);
+            self::printLine('<color="green">Database connected successfully in ' . $time . ' seconds!</color>');
         }
 
         /**
          * Creates a new controller.
          */
-        private static function createController(){
+        private static function createController(){           
             // Checks permissions
             if(!is_writable('app/controllers')){
                 self::print('<color="red">Directory "app/controllers" is not writable, please check your chmod settings</color>');
                 return;
             }
 
-            // Asks for name
-            self::print("Controller name: ");
-            $name = trim(fgets(STDIN));
+            // Checks if name was filled
+            if(isset(self::$args[1])){
+                $name = trim(self::$args[1]);
+            }else{
+                self::print("Controller name: ");
+                $name = trim(fgets(STDIN));
+            }
 
             // Validates the controller name
             if(empty($name)){
@@ -184,9 +241,13 @@
                 return;
             }
 
-            // Asks for name
-            self::print("Middleware name: ");
-            $name = trim(fgets(STDIN));
+            // Checks if name was filled
+            if(isset(self::$args[1])){
+                $name = trim(self::$args[1]);
+            }else{
+                self::print("Middleware name: ");
+                $name = trim(fgets(STDIN));
+            }
 
             // Validates the middleware name
             if(empty($name)){
@@ -214,9 +275,13 @@
                 return;
             }
 
-            // Asks for name
-            self::print("Model name: ");
-            $name = trim(fgets(STDIN));
+            // Checks if name was filled
+            if(isset(self::$args[1])){
+                $name = trim(self::$args[1]);
+            }else{
+                self::print("Model name: ");
+                $name = trim(fgets(STDIN));
+            }
 
             // Validates the model name
             if(empty($name)){
@@ -267,6 +332,29 @@
 
             // Success message
             self::print("<color=\"green\">Model {$name} created successfully!</color>");
+        }
+
+        /**
+         * Prints the current Firefly version.
+         */
+        private static function version(){
+            self::print('<color="magenta">Firefly v1.0 by Glowie</color>');
+        }
+
+        /**
+         * Prints the help message.
+         */
+        private static function help(){
+            self::print('<color="magenta">Firefly commands:</color>');
+            self::printLine('');
+            self::printLine('  <color="yellow">clear-cache</color> - Clears the application cache folder');
+            self::printLine('  <color="yellow">clear-log</color> - Clears the application error log');
+            self::printLine('  <color="yellow">test-database</color> <color="blue"><environment></color> - Tests the database connection for a configuration environment');
+            self::printLine('  <color="yellow">create-controller</color> <color="blue"><name></color> - Creates a new controller for your application');
+            self::printLine('  <color="yellow">create-middleware</color> <color="blue"><name></color> - Creates a new middleware for your application');
+            self::printLine('  <color="yellow">create-model</color> <color="blue"><name></color> - Creates a new model for your application');
+            self::printLine('  <color="yellow">version</color> - Displays current Firefly version');
+            self::printLine('  <color="yellow">help</color> - Displays this help message');
         }
 
     }
