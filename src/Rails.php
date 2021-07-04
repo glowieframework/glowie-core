@@ -122,7 +122,7 @@
          */
         public static function init(){
             // Cleans request URI
-            $route = substr(trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/'), strlen(GLOWIE_APP_FOLDER));
+            $route = trim(substr(trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/'), strlen(GLOWIE_APP_FOLDER)), '/');
             if (empty($route)) $route = '/';
 
             // Stores current route configuration
