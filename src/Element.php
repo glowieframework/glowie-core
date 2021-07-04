@@ -21,14 +21,14 @@
 
         /**
          * Instantiates a new Element.
-         * @param array $data (Optional) Initial data to parse.
+         * @param array $data (Optional) An associative array with the initial data to parse.
          */
         public function __construct(array $data = []){
             if(!empty($data)) $this->_data = $data;
         }
 
         /**
-         * Gets the value associated to a key in the data.
+         * Gets the value associated to a key in the Element data.
          * @param mixed $key Key to get value.
          * @return mixed Returns the value if exists or null if there is none.
          */
@@ -41,7 +41,7 @@
         }
 
         /**
-         * Gets the value associated to a key in the data.
+         * Gets the value associated to a key in the Element data.
          * @param mixed $key Key to get value.
          * @return mixed Returns the value if exists or null if there is none.
          */
@@ -50,7 +50,7 @@
         }
 
         /**
-         * Sets the value for a key in the data.
+         * Sets the value for a key in the Element data.
          * @param mixed $key Key to set value.
          * @param mixed $value Value to set.
          */
@@ -59,7 +59,7 @@
         }
 
         /**
-         * Sets the value for a key in the data.
+         * Sets the value for a key in the Element data.
          * @param mixed $key Key to set value.
          * @param mixed $value Value to set.
          */
@@ -68,7 +68,7 @@
         }
 
         /**
-         * Removes the associated key value in the data.
+         * Removes the associated key value from the Element data.
          * @param mixed $key Key to delete value.
          */
         public function __unset($key){
@@ -78,7 +78,7 @@
         }
 
         /**
-         * Removes the associated key value in the session.
+         * Removes the associated key value from the Element data.
          * @param mixed $key Key to delete value.
          */
         public function remove($key){
@@ -86,7 +86,7 @@
         }
 
         /**
-         * Checks if any value has been associated to a key in the data.
+         * Checks if any value has been associated to a key in the Element data.
          * @param mixed $key Key to check.
          * @return bool Returns true or false.
          */
@@ -95,7 +95,7 @@
         }
 
         /**
-         * Checks if any value has been associated to a key in the data.
+         * Checks if any value has been associated to a key in the Element data.
          * @param mixed $key Key to check.
          * @return bool Returns true or false.
          */
@@ -104,7 +104,7 @@
         }
 
         /**
-         * Deletes all data in the current Element.
+         * Deletes all data from the current Element.
          */
         public function flush(){
             $this->_data = [];

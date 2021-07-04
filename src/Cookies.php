@@ -33,14 +33,15 @@
 
         /**
          * Creates a new instance of the cookie manager.
-         * @param array $data (Optional) Initial data to store in the cookies **(default expire time is 1 hour)**.
+         * @param array $data (Optional) An associative array with the initial data to store in the cookies\
+         * **(default expire time is 1 hour)**.
          */
         public function __construct(array $data = []){
             if(!empty($data)) foreach($data as $key => $value) $this->set($key, $value);
         }
 
         /**
-         * Gets the value associated to a key in the cookies.
+         * Gets the value associated to a key in the cookies data.
          * @param mixed $key Key to get value.
          * @return mixed Returns the value if exists or null if there is none.
          */
@@ -53,21 +54,16 @@
         }
 
         /**
-         * Gets the value associated to a key in the cookies. If no key is specified, returns\
-         * an object with all the cookies data.
-         * @param mixed $key (Optional) Key to get value.
+         * Gets the value associated to a key in the cookies data.
+         * @param mixed $key Key to get value.
          * @return mixed Returns the value if exists or null if there is none.
          */
-        public function get($key = null){
-            if(!is_null($key)){
-                return $this->__get($key);
-            }else{
-                return new Element($_COOKIE);
-            }
+        public function get($key){
+            return $this->__get($key);
         }
 
         /**
-         * Sets the value for a key in the cookies.
+         * Sets the value for a key in the cookies data.
          * @param mixed $key Key to set value.
          * @param mixed $value Value to set.
          */
@@ -84,21 +80,22 @@
          * @param bool $restrict (Optional) Restrict the cookie access only through HTTP protocol.
          */
         public function set($key, $value, int $expires = self::EXPIRES_HOUR, string $path = '/', bool $restrict = false){
+            $_COOKIE[$key] = $value;
             setcookie($key, $value, time() + $expires, $path, '', false, $restrict);
         }
 
         /**
-         * Removes the associated key value in the cookies.
+         * Removes the associated key value from the cookies data.
          * @param mixed $key Key to delete value.
          */
         public function __unset($key){
             if (isset($_COOKIE[$key])) {
-                $this->set($key, '', -self::EXPIRES_HOUR);
+                $this->set($key, null, -self::EXPIRES_HOUR);
             }
         }
 
          /**
-         * Removes the associated key value in the cookies.
+         * Removes the associated key value from the cookies data.
          * @param mixed $key Key to delete value.
          */
         public function remove($key){
@@ -106,7 +103,7 @@
         }
 
         /**
-         * Checks if any value has been associated to a key in the cookies.
+         * Checks if any value has been associated to a key in the cookies data.
          * @param mixed $key Key to check.
          * @return bool Returns true or false.
          */
@@ -115,7 +112,7 @@
         }
 
         /**
-         * Checks if any value has been associated to a key in the cookies.
+         * Checks if any value has been associated to a key in the cookies data.
          * @param mixed $key Key to check.
          * @return bool Returns true or false.
          */
@@ -124,12 +121,20 @@
         }
 
         /**
-         * Deletes all data in the cookies.
+         * Deletes all data from the cookies.
          */
         public function flush(){
             if(!empty($_COOKIE)){
                 foreach($_COOKIE as $key => $value) $this->remove($key);
             }
+        }
+
+        /**
+         * Gets the cookies data as an associative array.
+         * @return array The resulting array.
+         */
+        public function toArray(){
+            return $_COOKIE;
         }
 
     }

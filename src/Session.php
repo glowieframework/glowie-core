@@ -15,7 +15,7 @@
 
         /**
          * Starts a new session or resumes the existing one.
-         * @param array $data (Optional) Initial data to store in the session.
+         * @param array $data (Optional) An associative array with the initial data to store in the session.
          */
         public function __construct(array $data = []){
             if(!isset($_SESSION)) session_start();
@@ -23,7 +23,7 @@
         }
 
         /**
-         * Gets the value associated to a key in the session.
+         * Gets the value associated to a key in the session data.
          * @param mixed $key Key to get value.
          * @return mixed Returns the value if exists or null if there is none.
          */
@@ -37,22 +37,16 @@
         }
 
         /**
-         * Gets the value associated to a key in the session. If no key is specified, returns\
-         * an object with all the session data.
-         * @param mixed $key (Optional) Key to get value.
+         * Gets the value associated to a key in the session data.
+         * @param mixed $key Key to get value.
          * @return mixed Returns the value if exists or null if there is none.
          */
-        public function get($key = null){
-            if(!is_null($key)){
-                return $this->__get($key);
-            }else{
-                if(!isset($_SESSION)) session_start();
-                return new Element($_SESSION);
-            }
+        public function get($key){
+            return $this->__get($key);
         }
 
         /**
-         * Sets the value for a key in the session.
+         * Sets the value for a key in the session data.
          * @param mixed $key Key to set value.
          * @param mixed $value Value to set.
          */
@@ -62,7 +56,7 @@
         }
 
         /**
-         * Sets the value for a key in the session.
+         * Sets the value for a key in the session data.
          * @param mixed $key Key to set value.
          * @param mixed $value Value to set.
          */
@@ -71,7 +65,7 @@
         }
 
         /**
-         * Removes the associated key value in the session.
+         * Removes the associated key value from the session data.
          * @param mixed $key Key to delete value.
          */
         public function __unset($key){
@@ -82,7 +76,7 @@
         }
 
          /**
-         * Removes the associated key value in the session.
+         * Removes the associated key value from the session data.
          * @param mixed $key Key to delete value.
          */
         public function remove($key){
@@ -90,7 +84,7 @@
         }
 
         /**
-         * Checks if any value has been associated to a key in the session.
+         * Checks if any value has been associated to a key in the session data.
          * @param mixed $key Key to check.
          * @return bool Returns true or false.
          */
@@ -100,7 +94,7 @@
         }
 
         /**
-         * Checks if any value has been associated to a key in the session.
+         * Checks if any value has been associated to a key in the session data.
          * @param mixed $key Key to check.
          * @return bool Returns true or false.
          */
@@ -109,11 +103,20 @@
         }
 
         /**
-         * Deletes all data in the current session.
+         * Deletes all data from the session.
          */
         public function flush(){
             if(!isset($_SESSION)) session_start();
             $_SESSION = [];
+        }
+
+        /**
+         * Gets the session data as an associative array.
+         * @return array The resulting array.
+         */
+        public function toArray(){
+            if(!isset($_SESSION)) session_start();
+            return $_SESSION;
         }
 
     }

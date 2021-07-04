@@ -25,7 +25,7 @@
          * Firefly templates folder.
          * @var string
          */
-        private const TEMPLATE_FOLDER = 'vendor/glowieframework/glowie-core/firefly/';
+        private const TEMPLATE_FOLDER = 'vendor/glowieframework/glowie-core/templates/';
 
         /**
          * Command line arguments.

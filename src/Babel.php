@@ -63,9 +63,9 @@
 
         /**
          * Gets an internalization string from a language configuration.
-         * @param string $key String key to get. Leave empty to get an array with all strings.
+         * @param string $key String key to get.
          * @param string $lang (Optional) Language identificator to get string from. Leave empty to use the current active language.
-         * @return mixed Returns internationalization string(s) or null if not found.
+         * @return mixed Returns internationalization string or null if not found.
          */
         public static function get(string $key, string $lang = ''){
             // Checks if languages were defined
@@ -74,9 +74,8 @@
                 if(empty($lang)) $lang = self::$active_language;
 
                 // Checks if specified language was defined
-                if(!empty(self::$languages[$lang])){
+                if(isset(self::$languages[$lang])){
                     // Checks if key exists
-                    if(empty($key)) return self::$languages[$lang];
                     if(!empty(self::$languages[$lang][$key])){
                         return self::$languages[$lang][$key];
                     }else{

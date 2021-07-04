@@ -69,7 +69,7 @@
          * @param string[] $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
          * @param string $name (Optional) Route internal name/identifier.
          */
-        public static function addProtectedRoute(string $route, string $middleware = 'Glowie\Middlewares\Main', string $controller = 'Glowie\Controllers\Main', string $action = 'index', array $methods = [], string $name = ''){
+        public static function addProtectedRoute(string $route, string $middleware = 'Glowie\Middlewares\Authenticate', string $controller = 'Glowie\Controllers\Main', string $action = 'index', array $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
             self::$routes[$name] = [
                 'uri' => $route,
@@ -122,7 +122,7 @@
          */
         public static function init(){
             // Cleans request URI
-            $route = trim(substr(trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/'), strlen(GLOWIE_APP_FOLDER)), '/');
+            $route = substr(trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/'), strlen(GLOWIE_APP_FOLDER));
             if (empty($route)) $route = '/';
 
             // Stores current route configuration
@@ -169,18 +169,18 @@
 
                     // Instantiates new controller
                     self::$controller = new $controller($routeName, $result);
-                    if (method_exists(self::$controller, 'init')) call_user_func([self::$controller, 'init']);
 
-                    // Runs the middleware
+                    // Checks for the route middleware
                     if(!empty($config['middleware'])){
                         // Gets the middleware
                         $middleware = $config['middleware'];
 
                         // If middleware class does not exists, trigger an error
                         if (!class_exists($middleware)) trigger_error("Rails: Middleware \"{$middleware}\" not found", E_USER_ERROR);
-
+                        
                         // Instantiates new middleware
                         self::$middleware = new $middleware(self::$controller, $routeName, $result);
+                        if (!method_exists(self::$middleware, 'handle')) trigger_error("Rails: Middleware \"{$middleware}\" does not have a handle() method", E_USER_ERROR);
                         if (method_exists(self::$middleware, 'init')) call_user_func([self::$middleware, 'init']);
                         
                         // Calls middleware handle() method
@@ -191,6 +191,7 @@
                         }else{
                             // Middleware blocked
                             if (method_exists(self::$middleware, 'fail')){
+                                http_response_code(403);
                                 return call_user_func([self::$middleware, 'fail']);
                             }else{
                                 return self::callForbidden($routeName, $result);
@@ -203,6 +204,9 @@
 
                     // If action does not exists, trigger an error
                     if (method_exists(self::$controller, $action)) {
+                        // Runs the controller init() method
+                        if (method_exists(self::$controller, 'init')) call_user_func([self::$controller, 'init']);
+
                         // Calls action
                         return call_user_func([self::$controller, $action]);
                     } else {

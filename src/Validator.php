@@ -23,7 +23,7 @@
 
         /**
          * Returns an associative array with the latest validation errors.
-         * @param string|int $key (Optional) Element/field key to get errors. Leave blank to get all.
+         * @param string|int $key (Optional) Item/field key to get errors. Leave blank to get all.
          * @return array Array with the fetched errors.
          */
         public function getErrors($key = null){
@@ -75,16 +75,16 @@
         }
 
         /**
-         * Validates an array of multiple elements with the same rules.
-         * @param array $data Array of elements to be validated.
+         * Validates an array of multiple items with the same rules.
+         * @param array $data Array of items to be validated.
          * @param array $rules Validation rules (check docs to see valid rules).
-         * @param bool $bail (Optional) Stop validation of element after first failure found.
-         * @param bool $bailAll (Optional) Stop validation of all elements after first element failure found.
+         * @param bool $bail (Optional) Stop validation of item after first failure found.
+         * @param bool $bailAll (Optional) Stop validation of all items after first item failure found.
          * @return bool Validation result.
          */
         public function validateMultiple(array $data, array $rules, bool $bail = false, bool $bailAll = false){
             // Check data
-            if(!is_array($data)) trigger_error('validateMultiple: $data must be an array of elements', E_USER_ERROR);
+            if(!is_array($data)) trigger_error('validateMultiple: $data must be an array of items', E_USER_ERROR);
 
             // Check ruleset
             if (!is_array($rules)) trigger_error('validateMultiple: $rules must be an array of rules', E_USER_ERROR);
@@ -248,7 +248,7 @@
                         if(!is_dir($data)) $result['directory'] = true;
                         break;
 
-                    // [WRITABLE] - Checks if path is an writable directory or file
+                    // [WRITABLE] - Checks if path is a writable directory or file
                     case 'writable':
                         if(!is_writable($data)) $result['writable'] = true;
                         break;
