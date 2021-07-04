@@ -23,6 +23,16 @@
         }
 
         /**
+         * Registers the session save path.
+         */
+        public static function register(){
+            $sessdir = '../storage/session';
+            if(!is_writable($sessdir)) trigger_error('Session: Directory "app/storage/session" is not writable, please check your chmod settings', E_USER_ERROR);
+            session_save_path($sessdir);
+            ini_set('session.gc_probability', 1);
+        }
+
+        /**
          * Gets the value associated to a key in the session data.
          * @param mixed $key Key to get value.
          * @return mixed Returns the value if exists or null if there is none.

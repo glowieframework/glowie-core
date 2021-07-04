@@ -5,7 +5,7 @@
 
     /**
      * Command line tool for Glowie application.
-     * @category Command line
+     * @category CLI
      * @package glowieframework/glowie-core
      * @author Glowie
      * @copyright Copyright (c) 2021
@@ -16,10 +16,16 @@
     class Firefly{
 
         /**
-         * Console colors.
+         * Console foreground color codes.
          * @var array
          */
-        private const COLORS = ['default' => "\033[0m", 'red' => "\033[91m", 'green' => "\033[92m", 'yellow' => "\033[93m", 'blue' => "\033[94m", 'magenta' => "\033[95m", 'cyan' => "\033[96m", 'gray' => "\033[37m"];
+        private const COLORS = ['default' => "\033[0m", 'red' => "\033[91m", 'green' => "\033[92m", 'yellow' => "\033[93m", 'blue' => "\033[94m", 'magenta' => "\033[95m", 'cyan' => "\033[96m", 'gray' => "\033[37m", 'black' => "\033[30m"];
+
+        /**
+         * Console background color codes.
+         * @var array
+         */
+        private const BACKGROUNDS = ['default' => "\033[49m", 'red' => "\033[101m", 'green' => "\033[42m", 'yellow' => "\033[103m", 'blue' => "\033[104m", 'magenta' => "\033[45m", 'cyan' => "\033[106m", 'gray' => "\033[47m", 'black' => "\033[40m"];
 
         /**
          * Firefly templates folder.
@@ -44,8 +50,8 @@
             // Gets the command
             array_shift(self::$args);
             if(!isset(self::$args[0])){
-                self::print('<color="magenta">Welcome to Firefly!</color>');
-                self::printLine('<color="blue">To see a list of valid commands, use</color> <color="yellow">php firefly help</color>.');
+                self::print('<bg="magenta"><color="black">Welcome to Firefly!</color></bg>');
+                self::print('<color="blue">To view a list of valid commands, use</color> <color="yellow">php firefly help</color>.');
                 return;
             }
 
@@ -97,8 +103,8 @@
                     self::help();
                     break;
                 default:
-                    self::print('<color="red">Unknown command \''. $command . '\'!</color>');
-                    self::printLine('<color="blue">To see a list of valid commands, use</color> <color="yellow">php firefly help</color>.');
+                    self::print('<bg="red"><color="black">Unknown command: '. $command . '</color></bg>');
+                    self::print('<color="blue">To view a list of valid commands, use</color> <color="yellow">php firefly help</color>.');
                     break;
             }
         }
@@ -106,26 +112,27 @@
         /**
          * Prints a formatted text in the console.
          * @var string $text Text to print.
+         * @var bool $break (Optional) Break line at the end.
          */
-        private static function print(string $text){
+        private static function print(string $text, bool $break = true){
+            // Replace color codes
             foreach(self::COLORS as $key => $value) $text = preg_replace('/<color="' . $key . '">/', $value, $text);
-            $text = preg_replace('/<\/color>/', self::COLORS['default'], $text);
-            echo $text;
-        }
+            foreach(self::BACKGROUNDS as $key => $value) $text = preg_replace('/<bg="' . $key . '">/', $value, $text);
 
-        /**
-         * Prints a formatted text in the console with a preceding line break.
-         * @var string $text Text to print.
-         */
-        private static function printLine(string $text){
-            echo "\n";
-            self::print($text);
+            // Replace closing brackets
+            $text = preg_replace(['/<\/color>/', '/<\/bg>/'], [self::COLORS['default'], self::BACKGROUNDS['default']], $text);
+            echo $text . ($break ? "\n" : '');
         }
 
         /**
          * Deletes all files in **app/storage/cache** folder.
          */
         private static function clearCache(){
+            if(!is_writable('app/storage/cache')){
+                self::print('<bg="red"><color="black">Oops, something went wrong!</color></bg>');
+                self::print('<color="red">Directory "app/storage/cache" is not writable, please check your chmod settings</color>');
+                return;
+            }
             foreach (Util::getFiles('app/storage/cache/*.tmp') as $filename) unlink($filename);
             self::print('<color="green">Cache cleared successfully!</color>');
         }
@@ -135,6 +142,7 @@
          */
         private static function clearLog(){
             if(!is_writable('app/storage')){
+                self::print('<bg="red"><color="black">Oops, something went wrong!</color></bg>');
                 self::print('<color="red">Directory "app/storage" is not writable, please check your chmod settings</color>');
                 return;
             }
@@ -143,13 +151,13 @@
         }
 
         /**
-         * Tests the database connection.
+         * Tests an environment database connection.
          */
         private static function testDatabase(){
             // Checks configuration file
             if (!file_exists('app/config/Config.php')) {
-                self::print('<color="red">Configuration file not found!</color>');
-                self::printLine('<color="yellow">Please rename "app/config/Config.example.php" to "app/config/Config.php".</color>');
+                self::print('<bg="red"><color="black">Configuration file not found!</color></bg>');
+                self::print('Please rename <color="yellow">"app/config/Config.example.php"</color> to <color="green">"app/config/Config.php"</color>.');
                 return;
             }
 
@@ -160,15 +168,15 @@
             if(isset(self::$args[1])){
                 $env = trim(self::$args[1]);
             }else{
-                self::print("Configuration environment to test (production): ");
+                self::print("Configuration environment to test (production): ", false);
                 $env = trim(fgets(STDIN));
                 if(empty($env)) $env = 'production';
             }
 
             // Loads the environment setting
             if(empty($config[$env])){
-                self::print('<color="red">Invalid configuration environment!</color>');
-                self::printLine('<color="yellow">Please check your application settings.</color>');
+                self::print('<bg="red"><color="black">Invalid configuration environment!</color></bg>');
+                self::print('<color="yellow">Please check your application settings.</color>');
                 return;
             }
             
@@ -177,8 +185,8 @@
 
             // Sets error reporting
             error_reporting(E_ALL);
-            ini_set('display_errors', 'On');
-            ini_set('display_startup_errors', 'On');
+            ini_set('display_errors', '1');
+            ini_set('display_startup_errors', '1');
             mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
             // Attempts to create the connection
@@ -187,14 +195,14 @@
             try {
                 new Kraken();
             } catch (\Exception $e) {
-                self::printLine('<color="red">Database connection failed!</color>');
-                self::printLine('<color="yellow">' . $e->getMessage() . '</color>');
+                self::print('<bg="red"><color="black">Database connection failed!</color></bg>');
+                self::print('<color="yellow">' . $e->getMessage() . '</color>');
                 return;
             }
 
             // Prints the result
             $time = round((microtime(true) - $time), 5);
-            self::printLine('<color="green">Database connected successfully in ' . $time . ' seconds!</color>');
+            self::print('<color="green">Database connected successfully in ' . $time . ' seconds!</color>');
         }
 
         /**
@@ -203,6 +211,7 @@
         private static function createController(){           
             // Checks permissions
             if(!is_writable('app/controllers')){
+                self::print('<bg="red"><color="black">Oops, something went wrong!</color></bg>');
                 self::print('<color="red">Directory "app/controllers" is not writable, please check your chmod settings</color>');
                 return;
             }
@@ -211,7 +220,7 @@
             if(isset(self::$args[1])){
                 $name = trim(self::$args[1]);
             }else{
-                self::print("Controller name: ");
+                self::print("Controller name: ", false);
                 $name = trim(fgets(STDIN));
             }
 
@@ -237,6 +246,7 @@
         private static function createMiddleware(){
             // Checks permissions
             if(!is_writable('app/middlewares')){
+                self::print('<bg="red"><color="black">Oops, something went wrong!</color></bg>');
                 self::print('<color="red">Directory "app/middlewares" is not writable, please check your chmod settings</color>');
                 return;
             }
@@ -245,7 +255,7 @@
             if(isset(self::$args[1])){
                 $name = trim(self::$args[1]);
             }else{
-                self::print("Middleware name: ");
+                self::print("Middleware name: ", false);
                 $name = trim(fgets(STDIN));
             }
 
@@ -271,6 +281,7 @@
         private static function createModel(){
             // Checks permissions
             if(!is_writable('app/models')){
+                self::print('<bg="red"><color="black">Oops, something went wrong!</color></bg>');
                 self::print('<color="red">Directory "app/models" is not writable, please check your chmod settings</color>');
                 return;
             }
@@ -279,7 +290,7 @@
             if(isset(self::$args[1])){
                 $name = trim(self::$args[1]);
             }else{
-                self::print("Model name: ");
+                self::print("Model name: ", false);
                 $name = trim(fgets(STDIN));
             }
 
@@ -291,17 +302,17 @@
             
             // Asks for table name
             $default_table = strtolower(Util::camelCase($name));
-            self::print("Model table ({$default_table}): ");
+            self::print("Model table ({$default_table}): ", false);
             $table = trim(fgets(STDIN));
             if(empty($table)) $table = $default_table;
 
             // Asks for primary key field
-            self::print("Primary key name (id): ");
+            self::print("Primary key name (id): ", false);
             $primary = trim(fgets(STDIN));
             if(empty($primary)) $primary = 'id';
 
             // Asks for timestamps
-            self::print("Handle timestamp fields (yes): ");
+            self::print("Handle timestamp fields (yes): ", false);
             $timestamps = strtolower(trim(fgets(STDIN)));
             if(empty($timestamps) || $timestamps == 'yes' || $timestamps == 'y' || $timestamps == 'true'){
                 $timestamps = 'true';
@@ -310,24 +321,19 @@
             }
 
             // Asks for created_at field
-            self::print("Created at field name (created_at): ");
+            self::print("Created at field name (created_at): ", false);
             $created_at = trim(fgets(STDIN));
             if(empty($created_at)) $created_at = 'created_at';
 
             // Asks for updated_at field
-            self::print("Updated at field name (updated_at): ");
+            self::print("Updated at field name (updated_at): ", false);
             $updated_at = trim(fgets(STDIN));
             if(empty($updated_at)) $updated_at = 'updated_at';
 
             // Creates the file
             $name = Util::camelCase($name, true);
             $template = file_get_contents(self::TEMPLATE_FOLDER . 'Model.php');
-            $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
-            $template = str_replace('__FIREFLY_TEMPLATE_TABLE__', $table, $template);
-            $template = str_replace('__FIREFLY_TEMPLATE_PRIMARY__', $primary, $template);
-            $template = str_replace('__FIREFLY_TEMPLATE_TIMESTAMPS__', $timestamps, $template);
-            $template = str_replace('__FIREFLY_TEMPLATE_CREATED__', $created_at, $template);
-            $template = str_replace('__FIREFLY_TEMPLATE_UPDATED__', $updated_at, $template);
+            $template = str_replace(['__FIREFLY_TEMPLATE_NAME__', '__FIREFLY_TEMPLATE_TABLE__', '__FIREFLY_TEMPLATE_PRIMARY__', '__FIREFLY_TEMPLATE_TIMESTAMPS__', '__FIREFLY_TEMPLATE_CREATED__', '__FIREFLY_TEMPLATE_UPDATED__'], [$name, $table, $primary, $timestamps, $created_at, $updated_at], $template);
             file_put_contents('app/models/' . $name . '.php', $template);
 
             // Success message
@@ -335,10 +341,12 @@
         }
 
         /**
-         * Prints the current Firefly version.
+         * Prints the current Firefly, Glowie and PHP CLI versions.
          */
         private static function version(){
-            self::print('<color="magenta">Firefly v1.0 by Glowie</color>');
+            self::print('<bg="magenta"><color="black">Firefly by Glowie</color></bg>');
+            self::print('<color="magenta">Firefly 1.0 with Glowie ' . Util::getVersion() . '</color>');
+            self::print('<color="blue">Running with PHP CLI ' . phpversion() . '</color>');
         }
 
         /**
@@ -346,15 +354,15 @@
          */
         private static function help(){
             self::print('<color="magenta">Firefly commands:</color>');
-            self::printLine('');
-            self::printLine('  <color="yellow">clear-cache</color> - Clears the application cache folder');
-            self::printLine('  <color="yellow">clear-log</color> - Clears the application error log');
-            self::printLine('  <color="yellow">test-database</color> <color="blue"><environment></color> - Tests the database connection for a configuration environment');
-            self::printLine('  <color="yellow">create-controller</color> <color="blue"><name></color> - Creates a new controller for your application');
-            self::printLine('  <color="yellow">create-middleware</color> <color="blue"><name></color> - Creates a new middleware for your application');
-            self::printLine('  <color="yellow">create-model</color> <color="blue"><name></color> - Creates a new model for your application');
-            self::printLine('  <color="yellow">version</color> - Displays current Firefly version');
-            self::printLine('  <color="yellow">help</color> - Displays this help message');
+            self::print('');
+            self::print('  <color="yellow">clear-cache</color> - Clears the application cache folder');
+            self::print('  <color="yellow">clear-log</color> - Clears the application error log');
+            self::print('  <color="yellow">test-database</color> <color="blue"><environment></color> - Tests the database connection for a configuration environment');
+            self::print('  <color="yellow">create-controller</color> <color="blue"><name></color> - Creates a new controller for your application');
+            self::print('  <color="yellow">create-middleware</color> <color="blue"><name></color> - Creates a new middleware for your application');
+            self::print('  <color="yellow">create-model</color> <color="blue"><name></color> - Creates a new model for your application');
+            self::print('  <color="yellow">version</color> - Displays current Firefly version');
+            self::print('  <color="yellow">help</color> - Displays this help message');
         }
 
     }

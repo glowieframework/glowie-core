@@ -24,8 +24,8 @@
             mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
             set_exception_handler([self::class, 'exceptionHandler']);
             set_error_handler([self::class, 'errorHandler']);
-            ini_set('display_errors', 'Off');
-            ini_set('display_startup_errors', 'Off');
+            ini_set('display_errors', '1');
+            ini_set('display_startup_errors', '1');
 
             // Sets syntax highliter style
             ini_set('highlight.comment', '#8BC34A');

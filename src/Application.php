@@ -49,11 +49,14 @@
                 Please check your application settings and "app/public/.htaccess".');
             }
 
-            // Timezone configuration
-            date_default_timezone_set(GLOWIE_CONFIG['timezone']);
-
             // Register error handling
             Error::register();
+
+            // Register session save path
+            Session::register();
+
+            // Timezone configuration
+            date_default_timezone_set(GLOWIE_CONFIG['timezone']);
 
             // Include application routes
             require_once('../config/Routes.php');

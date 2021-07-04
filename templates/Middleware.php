@@ -19,7 +19,7 @@
          * This method will be called before any other methods from this middleware.
          */
         public function init(){
-            // This method is optional
+            //
         }
 
         /**
@@ -34,14 +34,14 @@
          * Called if the middleware handler returns true.
          */
         public function success(){
-            // This method is optional
+            //
         }
 
         /**
          * Called if the middleware handler returns false.
          */
         public function fail(){
-            // This method is optional
+            //
         }
 
     }

@@ -17,7 +17,7 @@
          * This method will be called before any other methods from this controller.
          */
         public function init(){
-            // Calls the extended class init method
+            // Calls the BaseController init() method
             parent::init();
         }
         
