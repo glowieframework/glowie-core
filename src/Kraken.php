@@ -756,18 +756,20 @@
 
         /**
          * Fetches the first result from a SELECT query.
-         * @return Element|null Returns the first resulting row on success or null if not found.
+         * @param bool $assoc (Optional) Return the result as an associative array.
+         * @return mixed Returns the first resulting row on success or null if not found.
          */
-        public function fetchRow(){
-            return $this->execute(true, true);
+        public function fetchRow(bool $assoc = false){
+            return $this->execute(true, true, $assoc);
         }
         
         /**
          * Fetches all results from a SELECT query.
+         * @param bool $assoc (Optional) Return each result as an associative array.
          * @return array Returns an array with all resulting rows.
          */
-        public function fetchAll(){
-            return $this->execute(true);
+        public function fetchAll(bool $assoc = false){
+            return $this->execute(true, false, $assoc);
         }
 
         /**
@@ -929,9 +931,10 @@
          * Fetches all results from a SELECT query with pagination.
          * @param int $currentPage Current page to get results.
          * @param int $resultsPerPage (Optional) Number of results to get per page.
+         * @param bool $assoc (Optional) Return each result as an associative array.
          * @return Element Returns an object with the pagination result.
          */
-        public function paginate(int $currentPage, int $resultsPerPage = 25){
+        public function paginate(int $currentPage, int $resultsPerPage = 25, bool $assoc = false){
             // Counts total pages
             $totalResults = $this->count();
             $totalPages = floor($totalResults / $resultsPerPage);
@@ -939,7 +942,7 @@
 
             // Gets paginated results
             $this->limit(($currentPage - 1) * $resultsPerPage, $resultsPerPage);
-            $results = $this->execute(true);
+            $results = $this->execute(true, false, $assoc);
 
             // Parse results
             return new Element([
@@ -1097,17 +1100,18 @@
          * @param array $params Query parameters to restore.
          */
         private function restoreQuery(array $params){
-            foreach($params as $key => $value) $this->$key = $value;
+            foreach($params as $key => $value) $this->{$key} = $value;
         }
 
         /**
          * Run the current built query.
          * @param bool $returns (Optional) If the query should return a result.
          * @param bool $returnsFirst (Optional) If the query should return a single result.
+         * @param bool $returnAssoc (Optional) Return the result as an associative array instead of an object.
          * @return mixed If the query is successful and should return any results, will return an object with the first result or an array of\
          * results. Otherwise returns true on success.
          */
-        private function execute(bool $returns = false, bool $returnsFirst = false){
+        private function execute(bool $returns = false, bool $returnsFirst = false, bool $returnAssoc = false){
             // Initializes the transaction (if enabled)
             if($this->_transactions) $this->_connection->begin_transaction();
             
@@ -1128,7 +1132,7 @@
                             if ($query->num_rows > 0) {
                                 $row = $query->fetch_assoc();
                                 $query->close();
-                                $result = new Element($row);
+                                $result = $returnAssoc ? $row : new Element($row);
                             }
                         }else{
                             // Returns all rows
@@ -1136,7 +1140,11 @@
                             if ($query->num_rows > 0) {
                                 $rows = $query->fetch_all(MYSQLI_ASSOC);
                                 $query->close();
-                                foreach ($rows as $row) $result[] = new Element($row);
+                                if($returnAssoc){
+                                    $result = $rows;
+                                }else{
+                                    foreach ($rows as $row) $result[] = new Element($row);
+                                }
                             }
                         }
                     }

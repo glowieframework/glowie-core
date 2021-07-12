@@ -1,5 +1,6 @@
 <?php
     use Glowie\Core\Rails;
+    use Glowie\Core\Session;
 
     /**
      * Miscellaneous utilities for Glowie application.
@@ -40,15 +41,6 @@
          */
         public static function baseUrl(string $path = ''){
             return GLOWIE_BASE_URL . trim($path, '/');
-        }
-
-        /**
-         * Returns the current URL.
-         * @param $query (Optional) Include query string parameters.
-         * @return string Current URL.
-         */
-        public static function currentUrl($query = true){
-            return (isset($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . ($query ? $_SERVER['REQUEST_URI'] : parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
         }
 
         /**
@@ -105,36 +97,6 @@
                 // Returns result
                 return self::baseUrl(implode('/', $uri) . (!empty($params) ? '?' . http_build_query($params) : ''));
             }
-        }
-
-        /**
-         * Redirects to a relative or full URL.
-         * @param string $destination Target URL to redirect to.
-         * @param int $code (Optional) HTTP response code to pass with the redirect.
-         * @return void
-         */
-        public static function redirect(string $destination, int $code = 302){
-            header('Location: ' . $destination, true, $code);
-            die();
-        }
-
-        /**
-         * Redirects to an URL relative to the application path.
-         * @param string $path (Optional) Path to append to the base URL.
-         * @param int $code (Optional) HTTP response code to pass with the redirect.
-         */
-        public static function redirectBase(string $path = '', int $code = 302){
-            return self::redirect(self::baseUrl($path), $code);
-        }
-
-        /**
-         * Redirects to a named route.
-         * @param string $route Route internal name/identifier.
-         * @param array $params (Optional) Route parameters to bind into the URL.
-         * @param int $code (Optional) HTTP response code to pass with the redirect.
-         */
-        public static function redirectRoute(string $route, array $params = [], int $code = 302){
-            return self::redirect(self::route($route, $params), $code);
         }
 
         /**
@@ -237,6 +199,18 @@
             $iv = substr(hash('sha256', GLOWIE_CONFIG['api_token']), 0, 16);
             $string = openssl_decrypt(base64_decode($string), "AES-256-CBC", $key, 0, $iv);
             return $string;
+        }
+
+        /**
+         * Returns the session CSRF token if already exists or creates a new one.
+         * @return string The stored or new CSRF token for the current session.
+         */
+        public static function csrfToken(){
+            $session = new Session();
+            if($session->has('CSRF_TOKEN')) return $session->get('CSRF_TOKEN');
+            $token = bin2hex(random_bytes(32));
+            $session->set('CSRF_TOKEN', $token);
+            return $token;
         }
 
         /**

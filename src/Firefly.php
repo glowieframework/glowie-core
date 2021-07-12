@@ -2,6 +2,7 @@
     namespace Glowie\Core;
 
     use Util;
+    use Exception;
 
     /**
      * Command line tool for Glowie application.
@@ -38,6 +39,12 @@
          * @var array
          */
         private static $args;
+
+        /**
+         * Current migration.
+         * @var Migration
+         */
+        private static $migration;
 
         /**
          * Runs the command line tool.
@@ -90,6 +97,16 @@
                 case '-create-md':
                     self::createModel();
                     break;
+                case 'create-migration':
+                case 'create-mg':
+                case '-create-migration':
+                case '-create-mg':
+                    self::createMigration();
+                    break;
+                case 'migrate':
+                case '-migrate':
+                    self::migrate();
+                    break;
                 case 'version':
                 case '-version':
                 case '-v':
@@ -121,7 +138,7 @@
 
             // Replace closing brackets
             $text = preg_replace(['/<\/color>/', '/<\/bg>/'], [self::COLORS['default'], self::BACKGROUNDS['default']], $text);
-            echo $text . ($break ? "\n" : '');
+            echo $text . ($break ? PHP_EOL : '');
         }
 
         /**
@@ -158,7 +175,7 @@
             if (!file_exists('app/config/Config.php')) {
                 self::print('<bg="red"><color="black">Configuration file not found!</color></bg>');
                 self::print('Please rename <color="yellow">"app/config/Config.example.php"</color> to <color="green">"app/config/Config.php"</color>.');
-                return;
+                return false;
             }
 
             // Loads the configuration file
@@ -168,20 +185,20 @@
             if(isset(self::$args[1])){
                 $env = trim(self::$args[1]);
             }else{
-                self::print("Configuration environment to test (production): ", false);
+                self::print("Configuration environment to use database (production): ", false);
                 $env = trim(fgets(STDIN));
-                if(empty($env)) $env = 'production';
             }
+            if(empty($env)) $env = 'production';
 
             // Loads the environment setting
             if(empty($config[$env])){
                 self::print('<bg="red"><color="black">Invalid configuration environment!</color></bg>');
-                self::print('<color="yellow">Please check your application settings.</color>');
-                return;
+                self::print('<color="red">Please check your application settings.</color>');
+                return false;
             }
             
             // Sets the environment setting
-            define('GLOWIE_CONFIG', $config[$env]);
+            if(!defined('GLOWIE_CONFIG')) define('GLOWIE_CONFIG', $config[$env]);
 
             // Sets error reporting
             error_reporting(E_ALL);
@@ -190,19 +207,20 @@
             mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
             // Attempts to create the connection
-            self::print('<color="blue">Testing database connection...</color>');
+            self::print('<color="blue">Connecting to the database...</color>');
             $time = microtime(true);
             try {
                 new Kraken();
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 self::print('<bg="red"><color="black">Database connection failed!</color></bg>');
-                self::print('<color="yellow">' . $e->getMessage() . '</color>');
-                return;
+                self::print('<color="red">' . $e->getMessage() . '</color>');
+                return false;
             }
 
             // Prints the result
             $time = round((microtime(true) - $time), 5);
             self::print('<color="green">Database connected successfully in ' . $time . ' seconds!</color>');
+            return true;
         }
 
         /**
@@ -232,9 +250,15 @@
 
             // Creates the file
             $name = Util::camelCase($name, true);
-            $template = file_get_contents(self::TEMPLATE_FOLDER . 'Controller.php');
-            $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
-            file_put_contents('app/controllers/' . $name . '.php', $template);
+            try {
+                $template = file_get_contents(self::TEMPLATE_FOLDER . 'Controller.php');
+                $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
+                file_put_contents('app/controllers/' . $name . '.php', $template);
+            } catch (Exception $e) {
+                self::print('<bg="red"><color="black">Controller creation failed!</color></bg>');
+                self::print('<color="red">' . $e->getMessage() . '</color>');
+                return;
+            }
 
             // Success message
             self::print("<color=\"green\">Controller {$name} created successfully!</color>");
@@ -267,9 +291,15 @@
 
             // Creates the file
             $name = Util::camelCase($name, true);
-            $template = file_get_contents(self::TEMPLATE_FOLDER . 'Middleware.php');
-            $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
-            file_put_contents('app/middlewares/' . $name . '.php', $template);
+            try {
+               $template = file_get_contents(self::TEMPLATE_FOLDER . 'Middleware.php');
+                $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
+                file_put_contents('app/middlewares/' . $name . '.php', $template);
+            } catch (Exception $e) {
+                self::print('<bg="red"><color="black">Middleware creation failed!</color></bg>');
+                self::print('<color="red">' . $e->getMessage() . '</color>');
+                return;
+            }
 
             // Success message
             self::print("<color=\"green\">Middleware {$name} created successfully!</color>");
@@ -332,12 +362,102 @@
 
             // Creates the file
             $name = Util::camelCase($name, true);
-            $template = file_get_contents(self::TEMPLATE_FOLDER . 'Model.php');
-            $template = str_replace(['__FIREFLY_TEMPLATE_NAME__', '__FIREFLY_TEMPLATE_TABLE__', '__FIREFLY_TEMPLATE_PRIMARY__', '__FIREFLY_TEMPLATE_TIMESTAMPS__', '__FIREFLY_TEMPLATE_CREATED__', '__FIREFLY_TEMPLATE_UPDATED__'], [$name, $table, $primary, $timestamps, $created_at, $updated_at], $template);
-            file_put_contents('app/models/' . $name . '.php', $template);
+            try {
+                $template = file_get_contents(self::TEMPLATE_FOLDER . 'Model.php');
+                $template = str_replace(['__FIREFLY_TEMPLATE_NAME__', '__FIREFLY_TEMPLATE_TABLE__', '__FIREFLY_TEMPLATE_PRIMARY__', '__FIREFLY_TEMPLATE_TIMESTAMPS__', '__FIREFLY_TEMPLATE_CREATED__', '__FIREFLY_TEMPLATE_UPDATED__'], [$name, $table, $primary, $timestamps, $created_at, $updated_at], $template);
+                file_put_contents('app/models/' . $name . '.php', $template);
+            } catch (Exception $e) {
+                self::print('<bg="red"><color="black">Model creation failed!</color></bg>');
+                self::print('<color="red">' . $e->getMessage() . '</color>');
+                return;
+            }
 
             // Success message
             self::print("<color=\"green\">Model {$name} created successfully!</color>");
+        }
+
+        /**
+         * Creates a new migration.
+         */
+        private static function createMigration(){
+            // Checks permissions
+            if(!is_writable('app/migrations')){
+                self::print('<bg="red"><color="black">Oops, something went wrong!</color></bg>');
+                self::print('<color="red">Directory "app/migrations" is not writable, please check your chmod settings</color>');
+                return;
+            }
+
+            // Checks if name was filled
+            if(isset(self::$args[1])){
+                $name = trim(self::$args[1]);
+            }else{
+                self::print("Migration name: ", false);
+                $name = trim(fgets(STDIN));
+            }
+
+            // Creates the file
+            $cleanName = Util::camelCase($name, true);
+            $name = 'm' . date('Y_m_d_His_') . $cleanName;
+            try {
+               $template = file_get_contents(self::TEMPLATE_FOLDER . 'Migration.php');
+                $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
+                file_put_contents('app/migrations/' . $name . '.php', $template);
+            } catch (Exception $e) {
+                self::print('<bg="red"><color="black">Migration creation failed!</color></bg>');
+                self::print('<color="red">' . $e->getMessage() . '</color>');
+                return;
+            }
+
+            // Success message
+            self::print("<color=\"green\">Migration {$cleanName} created successfully!</color>");
+        }
+
+        /**
+         * Runs all pending migrations.
+         */
+        private static function migrate(){
+            // Loads the config and tests database
+            $result = self::testDatabase();
+            if($result === false) return;
+
+            // Stores current state
+            $migrateRun = false;
+            
+            // Loops through all the migration files
+            foreach (Util::getFiles('app/migrations/*.php') as $filename){
+                // Stores the execution start time
+                $time = microtime(true);
+
+                // Gets the migration class name
+                $name = pathinfo($filename, PATHINFO_FILENAME);
+                $classname = 'Glowie\Migrations\\' . $name;
+                
+                // Instantiates the migration class
+                self::$migration = new $classname;
+                if (is_callable([self::$migration, 'init'])) self::$migration->init();
+
+                try {
+                    // Checks if the migration was already applied
+                    if(!self::$migration->isApplied()){
+                        self::$migration->run();
+                        self::$migration->saveMigration();
+                        $migrateRun = true;
+                        $time = round((microtime(true) - $time), 5);
+                        self::print("<color=\"green\">Migration {$name} ran successfully in {$time} seconds!</color>");
+                    }
+                } catch (Exception $e) {
+                    self::print("<bg=\"red\"><color=\"black\">Failed to run migration {$name}!</color></bg>");
+                    self::print('<color="red">' . $e->getMessage() .'</color>');
+                    return;
+                }
+            }
+
+            // Checks if no migrations were run
+            if(!$migrateRun){
+                self::print('<color="yellow">There are no new migrations to run.</color>');
+            }else{
+                self::print('<color="green">All new migrations were run successfully.</color>');
+            }
         }
 
         /**
@@ -361,6 +481,8 @@
             self::print('  <color="yellow">create-controller</color> <color="blue"><name></color> - Creates a new controller for your application');
             self::print('  <color="yellow">create-middleware</color> <color="blue"><name></color> - Creates a new middleware for your application');
             self::print('  <color="yellow">create-model</color> <color="blue"><name></color> - Creates a new model for your application');
+            self::print('  <color="yellow">create-migration</color> <color="blue"><name></color> - Creates a new migration for your application');
+            self::print('  <color="yellow">migrate</color> <color="blue"><environment></color> - Runs all pending migrations from your application');
             self::print('  <color="yellow">version</color> - Displays current Firefly version');
             self::print('  <color="yellow">help</color> - Displays this help message');
         }

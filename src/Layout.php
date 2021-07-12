@@ -54,8 +54,8 @@
             $this->_helpers = new $helpers;
             $this->_path = $layout;
             $viewData = $this->_controller->view->toArray();
-            if(!empty($viewData)) foreach ($viewData as $key => $value) $this->$key = $value;
-            if(!empty($params)) foreach($params as $key => $value) $this->$key = $value;
+            if(!empty($viewData)) foreach ($viewData as $key => $value) $this->{$key} = $value;
+            if(!empty($params)) foreach($params as $key => $value) $this->{$key} = $value;
 
             // Parse view
             if(!empty($view)){
@@ -74,7 +74,7 @@
          * @param mixed $args Arguments to pass to the method.
          */
         public function __call($method, $args){
-            if(method_exists($this->_helpers, $method)){
+            if(is_callable([$this->_helpers, $method])){
                 return call_user_func_array([$this->_helpers, $method], $args);
             }else{
                 trigger_error('Layout: Method "' . $method .'" does not exist in "app/views/helpers/Helpers.php"', E_USER_ERROR);
@@ -132,4 +132,5 @@
         }
 
     }
+    
 ?>

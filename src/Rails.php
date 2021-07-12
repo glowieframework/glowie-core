@@ -34,6 +34,18 @@
         private static $middleware;
 
         /**
+         * Request handler.
+         * @var Request
+         */
+        private static $request;
+
+        /**
+         * Response handler.
+         * @var Response
+         */
+        private static $response;
+
+        /**
          * Application routes.
          * @var array
          */
@@ -121,9 +133,13 @@
          * Initializes application routing.
          */
         public static function init(){
-            // Cleans request URI
-            $route = trim(substr(trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/'), strlen(GLOWIE_APP_FOLDER)), '/');
-            if (empty($route)) $route = '/';
+            // Creates the request and response instance
+            self::$request = new Request();
+            self::$response = new Response();
+
+            // Retrieves the request URI
+            $route = self::$request->getURI();
+            if(empty($route)) $route = '/';
 
             // Stores current route configuration
             $config = null;
@@ -156,7 +172,8 @@
             if ($config) {
                 // Check if there is a request method configuration
                 if(!empty($config['methods'])){
-                    if(!in_array(strtolower($_SERVER['REQUEST_METHOD']), $config['methods'])) return self::callForbidden($route, $result);
+                    $config['methods'] = array_map('strtoupper', $config['methods']);
+                    if(!in_array(self::$request->getMethod(), $config['methods'])) return self::callMethodNotAllowed($route, $result);
                 }
 
                 // Check if there is a redirect configuration
@@ -180,19 +197,19 @@
                         
                         // Instantiates new middleware
                         self::$middleware = new $middleware(self::$controller, $routeName, $result);
-                        if (!method_exists(self::$middleware, 'handle')) trigger_error("Rails: Middleware \"{$middleware}\" does not have a handle() method", E_USER_ERROR);
-                        if (method_exists(self::$middleware, 'init')) call_user_func([self::$middleware, 'init']);
+                        if (!is_callable([self::$middleware, 'handle'])) trigger_error("Rails: Middleware \"{$middleware}\" does not have a handle() method", E_USER_ERROR);
+                        if (is_callable([self::$middleware, 'init'])) self::$middleware->init();
                         
                         // Calls middleware handle() method
-                        $response = call_user_func([self::$middleware, 'handle']);
+                        $response = self::$middleware->handle();
                         if($response){
                             // Middleware passed
-                            if (method_exists(self::$middleware, 'success')) call_user_func([self::$middleware, 'success']);
+                            if (is_callable([self::$middleware, 'success'])) self::$middleware->success();
                         }else{
                             // Middleware blocked
-                            if (method_exists(self::$middleware, 'fail')){
-                                http_response_code(403);
-                                return call_user_func([self::$middleware, 'fail']);
+                            if (is_callable([self::$middleware, 'fail'])){
+                                self::$response->setStatusCode(Response::HTTP_FORBIDDEN);
+                                return self::$middleware->fail();
                             }else{
                                 return self::callForbidden($routeName, $result);
                             };
@@ -203,12 +220,12 @@
                     $action = $config['action'];
 
                     // If action does not exists, trigger an error
-                    if (method_exists(self::$controller, $action)) {
+                    if (is_callable([self::$controller, $action])) {
                         // Runs the controller init() method
-                        if (method_exists(self::$controller, 'init')) call_user_func([self::$controller, 'init']);
+                        if (is_callable([self::$controller, 'init'])) self::$controller->init();
 
                         // Calls action
-                        return call_user_func([self::$controller, $action]);
+                        return self::$controller->{$action}();
                     } else {
                         trigger_error("Rails: Action \"{$action}()\" not found in {$controller} controller", E_USER_ERROR);
                     }
@@ -265,12 +282,12 @@
          * @param string $route Request route.
          */
         private static function callNotFound(string $route){
-            http_response_code(404);
+            self::$response->setStatusCode(Response::HTTP_NOT_FOUND);
             $controller = 'Glowie\Controllers\Error';
             if (class_exists($controller)) {
                 self::$controller = new $controller($route);
-                if (method_exists(self::$controller, 'init')) call_user_func([self::$controller, 'init']);
-                if (method_exists(self::$controller, 'notFound')) call_user_func([self::$controller, 'notFound']);
+                if (is_callable([self::$controller, 'init'])) self::$controller->init();
+                if (is_callable([self::$controller, 'notFound'])) self::$controller->notFound();
             }
         }
 
@@ -280,12 +297,27 @@
          * @param array $params (Optional) Route parameters.
          */
         private static function callForbidden(string $route, array $params = []){
-            http_response_code(403);
+            self::$response->setStatusCode(Response::HTTP_FORBIDDEN);
             $controller = 'Glowie\Controllers\Error';
             if (class_exists($controller)) {
                 self::$controller = new $controller($route, $params);
-                if (method_exists(self::$controller, 'init')) call_user_func([self::$controller, 'init']);
-                if (method_exists(self::$controller, 'forbidden')) call_user_func([self::$controller, 'forbidden']);
+                if (is_callable([self::$controller, 'init'])) self::$controller->init();
+                if (is_callable([self::$controller, 'forbidden'])) self::$controller->forbidden();
+            }
+        }
+
+         /**
+         * Calls `methodNotAllowed()` action in Error controller.
+         * @param string $route Request route.
+         * @param array $params (Optional) Route parameters.
+         */
+        private static function callMethodNotAllowed(string $route, array $params = []){
+            self::$response->setStatusCode(Response::HTTP_METHOD_NOT_ALLOWED);
+            $controller = 'Glowie\Controllers\Error';
+            if (class_exists($controller)) {
+                self::$controller = new $controller($route, $params);
+                if (is_callable([self::$controller, 'init'])) self::$controller->init();
+                if (is_callable([self::$controller, 'methodNotAllowed'])) self::$controller->methodNotAllowed();
             }
         }
 
@@ -305,9 +337,9 @@
                     }
                 }
                 self::$controller = new $controller($route, $params);
-                if (method_exists(self::$controller, 'init')) call_user_func([self::$controller, 'init']);
-                if (method_exists(self::$controller, $action)) {
-                    call_user_func([self::$controller, $action]);
+                if (is_callable([self::$controller, 'init'])) self::$controller->init();
+                if (is_callable([self::$controller, $action])) {
+                    self::$controller->{$action}();
                 } else {
                     self::callNotFound($route);
                 };

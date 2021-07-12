@@ -34,16 +34,22 @@
         protected $post;
 
         /**
+         * Request handler.
+         * @var Request
+         */
+        protected $request;
+
+        /**
+         * Response handler.
+         * @var Response
+         */
+        protected $response;
+
+        /**
          * Current instantiated route.
          * @var string
          */
         protected $route;
-
-        /**
-         * Web server parameters.
-         * @var Element
-         */
-        protected $server;
 
         /**
          * Session parameters.
@@ -66,8 +72,9 @@
             $this->get = new Element($_GET);
             $this->params = new Element($params);
             $this->post = new Element($_POST);
+            $this->request = new Request();
+            $this->response = new Response();
             $this->route = $route;
-            $this->server = new Element($_SERVER);
             $this->session = new Session();
             $this->view = new Element();
         }

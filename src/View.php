@@ -51,8 +51,8 @@
             $this->_helpers = new $helpers;
             $this->_path = $view;
             $viewData = $this->_controller->view->toArray();
-            if(!empty($viewData)) foreach ($viewData as $key => $value) $this->$key = $value;
-            if(!empty($params)) foreach($params as $key => $value) $this->$key = $value;
+            if(!empty($viewData)) foreach ($viewData as $key => $value) $this->{$key} = $value;
+            if(!empty($params)) foreach($params as $key => $value) $this->{$key} = $value;
             
             // Render view
             if($skeltch) $this->_path = Skeltch::run($this->_path);
@@ -66,7 +66,7 @@
          * @param mixed $args Arguments to pass to the method.
          */
         public function __call($method, $args){
-            if(method_exists($this->_helpers, $method)){
+            if(is_callable([$this->_helpers, $method])){
                 return call_user_func_array([$this->_helpers, $method], $args);
             }else{
                 trigger_error('View: Method "' . $method .'" does not exist in "app/views/helpers/Helpers.php"', E_USER_ERROR);
@@ -124,4 +124,5 @@
         }
 
     }
+    
 ?>
