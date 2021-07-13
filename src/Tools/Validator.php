@@ -1,5 +1,5 @@
 <?php
-    namespace Glowie\Core;
+    namespace Glowie\Core\Tools;
 
     use Util;
 
@@ -14,7 +14,7 @@
      * @version 1.0
      */
     class Validator{
-        
+
          /**
          * Validation errors.
          * @var array
@@ -119,7 +119,7 @@
         public function validate($data, array $rules, bool $bail = false){
             // Check ruleset
             if (!is_array($rules)) trigger_error('validate: $rules must be an array of rules', E_USER_ERROR);
-            
+
             $result = [];
 
             // Loops through rule array
@@ -127,7 +127,7 @@
 
                 // Parse rule parameters, if available
                 $rule = explode(':', $rule, 2);
-                
+
                 // Check type of rule
                 switch($rule[0]){
 
@@ -139,7 +139,7 @@
                             if(is_string($data) && trim($data) == '') $result['required'] = true;
                         }
                         break;
-                    
+
                     // [MIN] - Checks if variable is bigger or equal than min
                     case 'min':
                         if(is_array($data)){
@@ -161,7 +161,7 @@
                             if ($data > $rule[1]) $result['max'] = true;
                         }
                         break;
-                    
+
                     // [SIZE] - Checks if variable size equals to size
                     case 'size':
                         if (is_array($data)) {
@@ -172,7 +172,7 @@
                             if ($data != $rule[1]) $result['size'] = true;
                         }
                         break;
-                    
+
                     // [EMAIL] - Checks if variable is a valid email
                     case 'email':
                         if(!filter_var($data, FILTER_VALIDATE_EMAIL)) $result['email'] = true;
@@ -192,7 +192,7 @@
                     case 'numeric':
                         if(!is_numeric($data)) $result['numeric'] = true;
                         break;
-                    
+
                     // [ALPHANUMERIC] - Checks if variable is alphanumeric
                     case 'alphanumeric':
                         if (!preg_match('/^[a-z0-9]+$/i', $data)) $result['alphanumeric'] = true;
@@ -207,7 +207,7 @@
                     case 'regex':
                         if(!preg_match($rule[1], $data)) $result['regex'] = true;
                         break;
-                    
+
                     // [ARRAY] - Checks if variable is an array
                     case 'array':
                         if(!is_array($data)) $result['array'] = true;
@@ -232,7 +232,7 @@
                     case 'float':
                         if (!is_float($data)) $result['float'] = true;
                         break;
-                        
+
                     // [FILE] - Checks if path is an existing file
                     case 'file':
                         if(!is_file($data)) $result['file'] = true;
@@ -252,7 +252,7 @@
                     case 'writable':
                         if(!is_writable($data)) $result['writable'] = true;
                         break;
-                    
+
                     // [OBJECT] - Checks if variable is an object
                     case 'object':
                         if(!is_object($data)) $result['object'] = true;
@@ -272,7 +272,7 @@
                     case 'not':
                         if ($data == $rule[1]) $result['not'] = true;
                         break;
-                    
+
                     // [EMPTY] - Check if variable is empty
                     case 'empty':
                         if (is_string($data)){
@@ -302,7 +302,7 @@
             $this->errors = $result;
             return empty($result) ? true : false;
         }
-        
+
     }
 
 ?>

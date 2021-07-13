@@ -1,5 +1,7 @@
 <?php
-    namespace Glowie\Core;
+    namespace Glowie\Core\Http;
+
+    use Glowie\Core\Element;
 
     /**
      * Middleware core for Glowie application.
@@ -83,7 +85,7 @@
          * @return bool Should return true on success or false on fail.
          */
         abstract public function handle();
-        
+
     }
 
 ?>

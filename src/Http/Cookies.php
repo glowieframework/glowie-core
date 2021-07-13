@@ -1,5 +1,5 @@
 <?php
-    namespace Glowie\Core;
+    namespace Glowie\Core\Http;
 
     /**
      * Cookie manager for Glowie application.

@@ -1,5 +1,7 @@
 <?php
-    namespace Glowie\Core;
+    namespace Glowie\Core\Tools;
+
+    use Glowie\Core\Http\Response;
 
     /**
      * HTTP client for Glowie application.
@@ -113,7 +115,7 @@
                 }
                 curl_setopt($curl, CURLOPT_HTTPHEADER, $parsed);
             }
-            
+
             // Sets method
             $method = strtoupper(trim($method));
             if($method == 'GET'){

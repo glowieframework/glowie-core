@@ -1,5 +1,5 @@
 <?php
-    namespace Glowie\Core;
+    namespace Glowie\Core\Http;
 
     /**
      * Session manager for Glowie application.

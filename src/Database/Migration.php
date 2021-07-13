@@ -1,5 +1,5 @@
 <?php
-    namespace Glowie\Core;
+    namespace Glowie\Core\Database;
 
     /**
      * Migration core for Glowie application.
@@ -43,7 +43,6 @@
             if(!self::$tableCreated){
                 self::$tableCreated = $this->db->query(
                     'CREATE TABLE IF NOT EXISTS migrations(
-                            id INT AUTO_INCREMENT PRIMARY KEY,
                             filename VARCHAR(255) NOT NULL,
                             applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP()
                         )',
@@ -57,6 +56,7 @@
          * @return bool Returns true if applied or false if not.
          */
         public function isApplied(){
+            $this->db->clearQuery();
             return $this->db->table('migrations')->where('filename', $this->filename)->exists();
         }
 
@@ -65,14 +65,16 @@
          * @return bool Returns true on success or false on errors.
          */
         public function saveMigration(){
+            $this->db->clearQuery();
             return $this->db->table('migrations')->insert(['filename' => $this->filename]);
         }
-        
+
         /**
          * Deletes the migration from the migrations history table.
          * @return bool Returns true on success or false on errors.
          */
         public function deleteMigration(){
+            $this->db->clearQuery();
             return $this->db->table('migrations')->where('filename', $this->filename)->delete();
         }
 

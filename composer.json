@@ -24,8 +24,8 @@
             "Glowie\\Core\\": "src/"
         },
         "files": [
-            "src/Babel.php",
-            "src/Util.php"
+            "src/Utility/Babel.php",
+            "src/Utility/Util.php"
         ]
     },
     "minimum-stability": "dev",

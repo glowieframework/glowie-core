@@ -1,5 +1,5 @@
 <?php
-    namespace Glowie\Core;
+    namespace Glowie\Core\Http;
 
     use Util;
 
@@ -14,7 +14,7 @@
      * @version 1.0
      */
     class Response{
-        
+
         /**
          * HTTP 200 OK status code.
          * @var int
@@ -134,7 +134,7 @@
          * @var string
          */
         public const CONTENT_JSON = 'application/json';
-        
+
         /**
          * Content-Type header for XML.
          * @var string
@@ -185,9 +185,9 @@
          */
         public function setJson(array $data, int $flags = 0, int $depth = 512){
             $this->setContentType(self::CONTENT_JSON);
-            echo json_encode($data, $flags, $depth);            
+            echo json_encode($data, $flags, $depth);
         }
-        
+
          /**
          * Redirects to a relative or full URL.
          * @param string $destination Target URL to redirect to.

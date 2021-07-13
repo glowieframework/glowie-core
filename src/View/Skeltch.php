@@ -1,5 +1,5 @@
 <?php
-    namespace Glowie\Core;
+    namespace Glowie\Core\View;
 
     /**
      * Templating engine for Glowie application.
@@ -140,5 +140,5 @@
         }
 
     }
-    
+
 ?>

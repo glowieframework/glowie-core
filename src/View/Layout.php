@@ -1,9 +1,13 @@
 <?php
-    namespace Glowie\Core;
+    namespace Glowie\Core\View;
+
+    use Glowie\Helpers\Helpers;
+    use Glowie\Core\Http\Controller;
+    use Glowie\Core\Element;
 
     /**
-     * View core for Glowie application.
-     * @category View
+     * Layout core for Glowie application.
+     * @category Layout
      * @package glowieframework/glowie-core
      * @author Glowie
      * @copyright Copyright (c) 2021
@@ -11,16 +15,16 @@
      * @link https://glowie.tk
      * @version 1.0
      */
-    class View extends Element{
+    class Layout extends Element{
 
         /**
-         * View content.
+         * Layout view content.
          * @var string
          */
         private $_content;
 
         /**
-         * Controller that instantiated this view.
+         * Controller that instantiated this layout.
          * @var Controller
          */
         private $_controller;
@@ -32,32 +36,38 @@
         private $_helpers;
 
         /**
-         * View file path.
+         * Layout file path.
          * @var string
          */
         private $_path;
-        
+
         /**
-         * Instantiates a new View object.
-         * @param string $view View filename to instantiate.
+         * Instantiates a new Layout object.
+         * @param string $layout Layout filename to instantiate.
+         * @param string $view View filename to parse inside the layout.
          * @param array $params View parameters to parse.
-         * @param bool $skeltch Preprocess view using Skeltch.
+         * @param bool $skeltch Preprocess layout or view using Skeltch.
          * @param Controller $controller Current controller.
          */
-        public function __construct(string $view, array $params, bool $skeltch, bool $parse, Controller &$controller){
+        public function __construct(string $layout, string $view, array $params, bool $skeltch, Controller &$controller){
             // Parse parameters
             $helpers = 'Glowie\Helpers\Helpers';
             $this->_controller = $controller;
             $this->_helpers = new $helpers;
-            $this->_path = $view;
+            $this->_path = $layout;
             $viewData = $this->_controller->view->toArray();
             if(!empty($viewData)) foreach ($viewData as $key => $value) $this->{$key} = $value;
             if(!empty($params)) foreach($params as $key => $value) $this->{$key} = $value;
-            
-            // Render view
+
+            // Parse view
+            if(!empty($view)){
+                $view = new View($view, $params, $skeltch, false, $this->_controller);
+                $this->_content = $view->getContent();
+            }
+
+            // Render layout
             if($skeltch) $this->_path = Skeltch::run($this->_path);
-            $this->_content = $this->getBuffer();
-            if($parse) echo $this->_content;
+            echo $this->getBuffer();
         }
 
         /**
@@ -69,12 +79,12 @@
             if(is_callable([$this->_helpers, $method])){
                 return call_user_func_array([$this->_helpers, $method], $args);
             }else{
-                trigger_error('View: Method "' . $method .'" does not exist in "app/views/helpers/Helpers.php"', E_USER_ERROR);
+                trigger_error('Layout: Method "' . $method .'" does not exist in "app/views/helpers/Helpers.php"', E_USER_ERROR);
             }
         }
 
         /**
-         * Gets a view buffer.
+         * Gets a layout buffer.
          * @return string The buffer contents as string.
          */
         private function getBuffer(){
@@ -108,7 +118,7 @@
         }
 
         /**
-         * Returns the controller that instantiated this view.
+         * Returns the controller that instantiated this layout.
          * @return Controller The controller instance.
          */
         public function getController(){
@@ -116,7 +126,7 @@
         }
 
         /**
-         * Returns the view content as string.
+         * Returns the layout view content as string.
          * @return string View content.
          */
         public function getContent(){
@@ -124,5 +134,5 @@
         }
 
     }
-    
+
 ?>

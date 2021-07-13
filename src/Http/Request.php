@@ -1,5 +1,5 @@
 <?php
-    namespace Glowie\Core;
+    namespace Glowie\Core\Http;
 
     /**
      * Request handler for Glowie application.
@@ -12,7 +12,7 @@
      * @version 1.0
      */
     class Request{
-        
+
         /**
          * Returns the request full URL.
          * @return string Request full URL.
@@ -28,7 +28,7 @@
         public function getURI(){
             return trim(substr(trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/'), strlen(GLOWIE_APP_FOLDER)), '/');
         }
-        
+
         /**
          * Returns the request IP address.\
          * **Note:** If the IP address is not valid or cannot be detected, returns `0.0.0.0`.

@@ -1,6 +1,7 @@
 <?php
-    namespace Glowie\Core;
-    
+    namespace Glowie\Core\Database;
+
+    use Glowie\Core\Element;
     use mysqli;
     use mysqli_result;
     use mysqli_sql_exception;
@@ -153,7 +154,7 @@
             if (empty($database['username'])) trigger_error('Kraken:  Database username not defined', E_USER_ERROR);
             if (empty($database['db'])) trigger_error('Kraken: Database name not defined', E_USER_ERROR);
             if (empty($database['port'])) $database['port'] = 3306;
-            
+
             // Saves the database connection
             if($global){
                 // Checks if the global database is already connected
@@ -169,7 +170,7 @@
             $this->_connection = $connection;
             return $this;
         }
-        
+
         /**
          * Sets the working table.
          * @param string $table Table name to set as the working table.
@@ -388,7 +389,7 @@
                 $param3 = $param2;
                 $param2 = '=';
             }
-            
+
             // Checks operation types
             $param2 = strtoupper($param2);
             if(($param2 == 'BETWEEN' || $param2 == 'NOT BETWEEN') && is_array($param3)){
@@ -415,7 +416,7 @@
                         $values[] = "\"{$this->escape($value)}\"";
                     }
                 }
-                
+
                 if($param2 == '=') $param2 = 'IN';
                 $values = implode(', ', $values);
                 $query .= "{$param1} {$param2} ($values)";
@@ -520,7 +521,7 @@
         public function whereBetween(string $column, $value1, $value2){
             return $this->where($column, 'BETWEEN', [$value1, $value2]);
         }
-        
+
         /**
          * Adds an OR WHERE BETWEEN condition to the query.
          * @param string $column Column name.
@@ -531,7 +532,7 @@
         public function orWhereBetween(string $column, $value1, $value2){
             return $this->where($column, 'BETWEEN', [$value1, $value2], 'OR');
         }
-        
+
         /**
          * Adds a WHERE NOT BETWEEN condition to the query.
          * @param string $column Column name.
@@ -571,7 +572,7 @@
         public function orWhereNull(string $column){
             return $this->where($column, 'IS', 'NULL', 'OR');
         }
-        
+
         /**
          * Adds a WHERE NOT NULL condition to the query.
          * @param string $column Column name.
@@ -728,7 +729,7 @@
             $this->_order[] = "RAND()";
             return $this;
         }
-        
+
         /**
          * Adds a raw ORDER BY statement to the query.
          * @param string $statement Full ORDER BY statement.
@@ -762,7 +763,7 @@
         public function fetchRow(bool $assoc = false){
             return $this->execute(true, true, $assoc);
         }
-        
+
         /**
          * Fetches all results from a SELECT query.
          * @param bool $assoc (Optional) Return each result as an associative array.
@@ -791,12 +792,12 @@
             // Prepares the fields and values
             $fields = [];
             $values = [];
-            
+
             // Checks for multiple inserts
             if(isset($data[0]) && is_array($data[0])){
                 // Get fields
                 $fields = array_keys($data[0]);
-                
+
                 // Get values
                 foreach($data as $row){
                     $result = [];
@@ -815,7 +816,7 @@
             }else{
                foreach($data as $field => $value){
                   $fields[] = $field;
-                  
+
                   // Escape values
                   if($value instanceof stdClass){
                     $values[] = $value->value;
@@ -826,7 +827,7 @@
                $values = implode(', ', $values);
                $values = ["({$values})"];
             }
-            
+
             // Stores data to the query builder and run
             $this->_values = implode(', ', $values);
             $this->_insert = implode(', ', $fields);
@@ -870,7 +871,7 @@
                     $set[] = "{$key} = \"{$this->escape($value)}\"";
                 }
             }
-            
+
             $this->_set = implode(', ', $set);
             return $this->execute();
         }
@@ -1011,7 +1012,7 @@
             // Checks for empty query
             if(empty($this->_instruction)) $this->_instruction = 'SELECT';
             if(empty($this->_select)) $this->_select = '*';
-            
+
             // Gets the instruction
             $query = $this->_instruction;
 
@@ -1114,7 +1115,7 @@
         private function execute(bool $returns = false, bool $returnsFirst = false, bool $returnAssoc = false){
             // Initializes the transaction (if enabled)
             if($this->_transactions) $this->_connection->begin_transaction();
-            
+
             try {
                 // Run query and clear its data
                 $query = $this->_connection->query($this->getQuery());
@@ -1164,7 +1165,7 @@
                 throw $exception;
             }
         }
-        
+
     }
 
 ?>

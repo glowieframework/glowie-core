@@ -1,6 +1,6 @@
 <?php
-    use Glowie\Core\Rails;
-    use Glowie\Core\Session;
+    use Glowie\Core\Http\Rails;
+    use Glowie\Core\Http\Session;
 
     /**
      * Miscellaneous utilities for Glowie application.

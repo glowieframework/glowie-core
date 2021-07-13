@@ -1,5 +1,5 @@
 <?php
-    namespace Glowie\Core;
+    namespace Glowie\Core\Tools;
 
     /**
      * Mail sender for Glowie application.
@@ -84,7 +84,7 @@
             $headers .= "MIME-Version: 1.0\n";
             if($isHtml) $headers .= "Content-Type: text/html; charset=utf-8\n";
             if(!empty($this->headers)) $headers .= implode("\n", $this->headers);
-            
+
             // Sends the mail
             return mail($to, $subject, $message, $headers);
         }

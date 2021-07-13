@@ -1,6 +1,7 @@
 <?php
-    namespace Glowie\Core;
+    namespace Glowie\Core\CLI;
 
+    use Glowie\Core\Database\Kraken;
     use Util;
     use Exception;
 
@@ -32,7 +33,7 @@
          * Firefly templates folder.
          * @var string
          */
-        private const TEMPLATE_FOLDER = 'vendor/glowieframework/glowie-core/templates/';
+        private const TEMPLATE_FOLDER = 'vendor/glowieframework/glowie-core/src/CLI/Templates/';
 
         /**
          * Command line arguments.
@@ -53,7 +54,7 @@
             // Register arguments
             global $argv;
             self::$args = $argv;
-            
+
             // Gets the command
             array_shift(self::$args);
             if(!isset(self::$args[0])){
@@ -196,7 +197,7 @@
                 self::print('<color="red">Please check your application settings.</color>');
                 return false;
             }
-            
+
             // Sets the environment setting
             if(!defined('GLOWIE_CONFIG')) define('GLOWIE_CONFIG', $config[$env]);
 
@@ -226,7 +227,7 @@
         /**
          * Creates a new controller.
          */
-        private static function createController(){           
+        private static function createController(){
             // Checks permissions
             if(!is_writable('app/controllers')){
                 self::print('<bg="red"><color="black">Oops, something went wrong!</color></bg>');
@@ -329,7 +330,7 @@
                 self::print('<color="red">Model name cannot be empty!</color>');
                 return;
             }
-            
+
             // Asks for table name
             $default_table = strtolower(Util::camelCase($name));
             self::print("Model table ({$default_table}): ", false);
@@ -422,7 +423,7 @@
 
             // Stores current state
             $migrateRun = false;
-            
+
             // Loops through all the migration files
             foreach (Util::getFiles('app/migrations/*.php') as $filename){
                 // Stores the execution start time
@@ -431,7 +432,7 @@
                 // Gets the migration class name
                 $name = pathinfo($filename, PATHINFO_FILENAME);
                 $classname = 'Glowie\Migrations\\' . $name;
-                
+
                 // Instantiates the migration class
                 self::$migration = new $classname;
                 if (is_callable([self::$migration, 'init'])) self::$migration->init();

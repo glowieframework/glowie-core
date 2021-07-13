@@ -1,5 +1,5 @@
 <?php
-    namespace Glowie\Core;
+    namespace Glowie\Core\Tools;
 
     /**
      * File upload helper for Glowie application.
@@ -12,7 +12,7 @@
      * @version 1.0
      */
     class Uploader{
-        
+
         /**
          * Target directory.
          * @var string
@@ -57,7 +57,7 @@
             $this->setMaxFileSize($maxFileSize);
             $this->setOverwrite($overwrite);
         }
-        
+
         /**
          * Sets the target directory to store the uploaded files. Must be an existing directory with write permissions.
          * @param string $directory Directory location to store files (relative to the **app/public** folder).
@@ -67,7 +67,7 @@
             if(!is_dir($directory) || !is_writable($directory)) trigger_error('Uploader: Target directory is invalid or not writable', E_USER_ERROR);
             $this->directory = trim($directory, '/');
         }
-        
+
         /**
          * Sets the allowed extensions that the uploader will accept.
          * @param array $extensions Array of allowed file extensions. Use an empty array to allow any extension.
@@ -76,7 +76,7 @@
             if(!is_array($extensions)) trigger_error('Uploader: $extensions must be an array of extensions', E_USER_ERROR);
             $this->extensions = $extensions;
         }
-        
+
         /**
          * Sets the maximum file size that the uploader will accept.
          * @param float $maxFileSize Maximum allowed file size **in megabytes**. Use 0 for unlimited (not recommended).
@@ -236,7 +236,7 @@
         private function arrangeFiles(array $files){
             if(is_array($files['name'])){
                 $result = [];
-                for ($i=0; $i < count($files['name']); $i++) { 
+                for ($i=0; $i < count($files['name']); $i++) {
                     $result[] = [
                         'name' => $files['name'][$i],
                         'type' => $files['type'][$i],

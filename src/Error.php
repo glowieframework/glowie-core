@@ -1,7 +1,8 @@
 <?php
     namespace Glowie\Core;
-    
+
     use ErrorException;
+    use Glowie\Core\Http\Response;
 
     /**
      * Error handler for Glowie application.
@@ -122,10 +123,10 @@
                                 '<td style="border: 1px solid lightgray; padding: 10px; word-break: break-all;">' .
                                     // File/line
                                     (!empty($item['file']) && !empty($item['line']) ? '<i style="color: dimgray; display: block; font-size: 14px;">' . $item['file'] . ':' . $item['line'] . '</i>' : '') .
-                                    
+
                                     // Class
-                                    (!empty($item['class']) ? '<span style="color: #d2024a; font-weight: 600;">' . $item['class'] . '</span>-><span style="color: #ed578b">' . $item['function'] . '()</span>' : '') . 
-                                    
+                                    (!empty($item['class']) ? '<span style="color: #d2024a; font-weight: 600;">' . $item['class'] . '</span>-><span style="color: #ed578b">' . $item['function'] . '()</span>' : '') .
+
                                     // Args
                                     (!empty($item['args']) ? '<i style="font-size: 14px; font-weight: 600; display: block; margin: 10px 0;">Args:</i><pre style="white-space: pre-wrap; word-wrap: break-all; background-color: #f5f5f5; border: 1px solid gainsboro; padding: 15px; margin: 0;">' . print_r($item['args'], true) . '</pre>' : '') . '
                                 </td>

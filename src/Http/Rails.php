@@ -1,5 +1,5 @@
 <?php
-    namespace Glowie\Core;
+    namespace Glowie\Core\Http;
 
     use Util;
 
@@ -14,7 +14,7 @@
      * @version 1.0
      */
     class Rails{
-        
+
         /**
          * Auto routing setting.
          * @var bool
@@ -69,7 +69,7 @@
                 'methods' => $methods
             ];
         }
-        
+
         /**
          * Setup a new protected route for the application.
          * @param string $route The route URI to setup.
@@ -91,7 +91,7 @@
                 'methods' => $methods
             ];
         }
-        
+
         /**
          * Setup a new redirect route for the application.
          * @param string $route The route URI to redirect.
@@ -190,12 +190,12 @@
 
                         // If middleware class does not exists, trigger an error
                         if (!class_exists($middleware)) trigger_error("Rails: Middleware \"{$middleware}\" not found", E_USER_ERROR);
-                        
+
                         // Instantiates new middleware
                         self::$middleware = new $middleware(self::$controller, $routeName, $result);
                         if (!is_callable([self::$middleware, 'handle'])) trigger_error("Rails: Middleware \"{$middleware}\" does not have a handle() method", E_USER_ERROR);
                         if (is_callable([self::$middleware, 'init'])) self::$middleware->init();
-                        
+
                         // Calls middleware handle() method
                         $response = self::$middleware->handle();
                         if($response){
@@ -258,7 +258,7 @@
                         $controller = 'Glowie\Controllers\\' . Util::camelCase($autoroute[0], true);
                         $action = Util::camelCase($autoroute[1]);
                         return self::callAutoRoute($controller, $action, $routeName);
-                    
+
                     // Controller, action and parameters were specified
                     }else{
                         $controller = 'Glowie\Controllers\\' . Util::camelCase($autoroute[0], true);

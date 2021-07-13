@@ -1,6 +1,9 @@
 <?php
-    namespace Glowie\Core;
+    namespace Glowie\Core\Http;
 
+    use Glowie\Core\Element;
+    use Glowie\Core\View\View;
+    use Glowie\Core\View\Layout;
     use Util;
 
     /**
@@ -14,7 +17,7 @@
      * @version 1.0
      */
     class Controller{
-        
+
         /**
          * Request GET parameters.
          * @var Element

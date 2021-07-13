@@ -1,7 +1,7 @@
 <?php
     namespace Glowie\Middlewares;
 
-    use Glowie\Core\Middleware;
+    use Glowie\Core\Http\Middleware;
 
     /**
      * __FIREFLY_TEMPLATE_NAME__ middleware for Glowie application.

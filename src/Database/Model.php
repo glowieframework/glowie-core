@@ -1,5 +1,7 @@
 <?php
-    namespace Glowie\Core;
+    namespace Glowie\Core\Database;
+
+    use Glowie\Core\Element;
 
     /**
      * Model core for Glowie application.
@@ -12,7 +14,7 @@
      * @version 1.0
      */
     class Model extends Kraken{
-        
+
         /**
          * Model table name.
          * @var string
@@ -84,7 +86,7 @@
             $fields = !empty($this->_fields) ? $this->_fields : '*';
             return $this->select($fields)->where($field, $value)->fetchRow();
         }
-        
+
         /**
          * Gets all rows from the model table.
          * @return array Returns an array with all rows.
@@ -134,13 +136,13 @@
         public function updateOrCreate(array $data){
             // Clears the current built query
             $this->clearQuery();
-            
+
             // Checks if the primary key was passed and matches an existing row
             if(isset($data[$this->_primaryKey]) && $this->find($data[$this->_primaryKey])){
                 // Parse data and timestamps
                 $updatedData = $this->filterData($data);
                 if($this->_timestamps) $updatedData[$this->_updatedField] = Kraken::raw('NOW()');
-                
+
                 // Updates the element
                 return $this->where($this->_primaryKey, $data[$this->_primaryKey])->update($updatedData);
             }else{
