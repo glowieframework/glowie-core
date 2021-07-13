@@ -44,7 +44,7 @@
          * Sets an array of internationalization strings to a language configuration.\
          * **Warning:** This replaces all current language defined strings.
          * @param string $lang Language identificator to set strings.
-         * @param string[] $strings Associative array of strings with key and value.
+         * @param array $strings Associative array of strings with key and value.
          */
         public static function set(string $lang, array $strings){
             self::$languages[$lang] = $strings;
@@ -65,7 +65,7 @@
          * Gets an internalization string from a language configuration.
          * @param string $key String key to get.
          * @param string $lang (Optional) Language identificator to get string from. Leave empty to use the current active language.
-         * @return mixed Returns internationalization string or null if not found.
+         * @return string|null Returns internationalization string or null if not found.
          */
         public static function get(string $key, string $lang = ''){
             // Checks if languages were defined
@@ -75,12 +75,8 @@
 
                 // Checks if specified language was defined
                 if(isset(self::$languages[$lang])){
-                    // Checks if key exists
-                    if(!empty(self::$languages[$lang][$key])){
-                        return self::$languages[$lang][$key];
-                    }else{
-                        return null;
-                    }
+                    // Returns the value
+                    return self::$languages[$lang][$key] ?? null;
                 }else{
                     trigger_error('Babel: Language "'.$lang.'" does not exist in "app/languages"', E_USER_ERROR);
                 }

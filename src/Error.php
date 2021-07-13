@@ -57,7 +57,7 @@
             self::log("[{$date}] {$e->getMessage()} at file {$e->getFile()}:{$e->getLine()}\n{$e->getTraceAsString()}\n\n");
 
             // Display the error
-            http_response_code(500);
+            http_response_code(Response::HTTP_INTERNAL_SERVER_ERROR);
             if(error_reporting()){
                 echo '
                 <div style="clear: both; font-family: Segoe UI, sans-serif; font-size: 18px; background-color: white; color: black; margin: 10px; border: 1px solid #d04978;">
@@ -109,7 +109,7 @@
          * @param array $trace Stack trace array.
          * @return string Table result in HTML.
          */
-        private static function parseTrace($trace){
+        private static function parseTrace(array $trace){
             $isTraceable = false;
             $result =    '<strong style="color: #ed578b;">Stack trace:</strong>
                         <table cellspacing="0" cellpadding="0" style="width: 100%; table-layout: fixed; margin-top: 10px;"><tbody>';

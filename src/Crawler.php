@@ -19,7 +19,7 @@
          * @param array $headers (Optional) Custom headers to send in the request. Must be an associative array with the key being the name of the header\
          * and the value the header value (can be a string or an array of strings).
          * @param int $timeout (Optional) Maximum number of seconds that this request can wait for a response. Default is 30 seconds. Use 0 for unlimited.
-         * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on errors.
+         * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on failure.
          */
         public function get(string $url, array $headers = [], int $timeout = 30){
             return $this->request($url, 'GET', [], $headers, $timeout);
@@ -33,7 +33,7 @@
          * @param array $headers (Optional) Custom headers to send in the request. Must be an associative array with the key being the name of the header\
          * and the value the header value (can be a string or an array of strings).
          * @param int $timeout (Optional) Maximum number of seconds that this request can wait for a response. Default is 30 seconds. Use 0 for unlimited.
-         * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on errors.
+         * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on failure.
          */
         public function post(string $url, $data = [], array $headers = [], int $timeout = 30){
             return $this->request($url, 'POST', $data, $headers, $timeout);
@@ -47,7 +47,7 @@
          * @param array $headers (Optional) Custom headers to send in the request. Must be an associative array with the key being the name of the header\
          * and the value the header value (can be a string or an array of strings).
          * @param int $timeout (Optional) Maximum number of seconds that this request can wait for a response. Default is 30 seconds. Use 0 for unlimited.
-         * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on errors.
+         * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on failure.
          */
         public function put(string $url, $data = [], array $headers = [], int $timeout = 30){
             return $this->request($url, 'PUT', $data, $headers, $timeout);
@@ -61,7 +61,7 @@
          * @param array $headers (Optional) Custom headers to send in the request. Must be an associative array with the key being the name of the header\
          * and the value the header value (can be a string or an array of strings).
          * @param int $timeout (Optional) Maximum number of seconds that this request can wait for a response. Default is 30 seconds. Use 0 for unlimited.
-         * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on errors.
+         * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on failure.
          */
         public function patch(string $url, $data = [], array $headers = [], int $timeout = 30){
             return $this->request($url, 'PATCH', $data, $headers, $timeout);
@@ -75,7 +75,7 @@
          * @param array $headers (Optional) Custom headers to send in the request. Must be an associative array with the key being the name of the header\
          * and the value the header value (can be a string or an array of strings).
          * @param int $timeout (Optional) Maximum number of seconds that this request can wait for a response. Default is 30 seconds. Use 0 for unlimited.
-         * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on errors.
+         * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on failure.
          */
         public function delete(string $url, $data = [], array $headers = [], int $timeout = 30){
             return $this->request($url, 'DELETE', $data, $headers, $timeout);
@@ -90,7 +90,7 @@
          * @param array $headers (Optional) Custom headers to send in the request. Must be an associative array with the key being the name of the header\
          * and the value the header value (can be a string or an array of strings).
          * @param int $timeout (Optional) Maximum number of seconds that this request can wait for a response. Default is 30 seconds. Use 0 for unlimited.
-         * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on errors.
+         * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on failure.
          */
         public function request(string $url, string $method = 'GET', $data = [], array $headers = [], int $timeout = 30){
             // Initializes cURL
@@ -137,7 +137,7 @@
             curl_close($curl);
 
             // Returns result on HTTP 200 status code
-            if ($status === 200) {
+            if ($status === Response::HTTP_OK) {
                 return $response;
             } else {
                 return false;

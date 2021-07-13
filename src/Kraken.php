@@ -838,7 +838,7 @@
          * @param array $data An associative array relating fields and values to insert. Also accepts an array of multiple insert arrays.
          * @return bool Returns true on success.
          */
-        public function insertIgnore($data){
+        public function insertIgnore(array $data){
             return $this->insert($data, true);
         }
 
@@ -847,7 +847,7 @@
          * @param array $data An associative array relating fields and values to insert. Also accepts an array of multiple insert arrays.
          * @return bool Returns true on success.
          */
-        public function replace($data){
+        public function replace(array $data){
             return $this->insert($data, false, true);
         }
 
@@ -857,7 +857,7 @@
          * @param array $data An associative array relating fields and values to update.
          * @return bool Returns true on success.
          */
-        public function update($data){
+        public function update(array $data){
             // Set params
             $this->_instruction = 'UPDATE';
             $set = [];

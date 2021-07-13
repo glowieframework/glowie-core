@@ -58,7 +58,7 @@
         protected $session;
 
         /**
-         * Data bridge between controller and view.
+         * Data to pass globally to views.
          * @var Element
          */
         public $view;

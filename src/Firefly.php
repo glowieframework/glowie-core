@@ -443,10 +443,10 @@
                         self::$migration->saveMigration();
                         $migrateRun = true;
                         $time = round((microtime(true) - $time), 5);
-                        self::print("<color=\"green\">Migration {$name} ran successfully in {$time} seconds!</color>");
+                        self::print("<color=\"green\">Migration {$name} applied successfully in {$time} seconds!</color>");
                     }
                 } catch (Exception $e) {
-                    self::print("<bg=\"red\"><color=\"black\">Failed to run migration {$name}!</color></bg>");
+                    self::print("<bg=\"red\"><color=\"black\">Failed to apply migration {$name}!</color></bg>");
                     self::print('<color="red">' . $e->getMessage() .'</color>');
                     return;
                 }
@@ -454,9 +454,9 @@
 
             // Checks if no migrations were run
             if(!$migrateRun){
-                self::print('<color="yellow">There are no new migrations to run.</color>');
+                self::print('<color="yellow">There are no new migrations to apply.</color>');
             }else{
-                self::print('<color="green">All new migrations were run successfully.</color>');
+                self::print('<color="green">All new migrations were applied successfully.</color>');
             }
         }
 
@@ -482,7 +482,7 @@
             self::print('  <color="yellow">create-middleware</color> <color="blue"><name></color> - Creates a new middleware for your application');
             self::print('  <color="yellow">create-model</color> <color="blue"><name></color> - Creates a new model for your application');
             self::print('  <color="yellow">create-migration</color> <color="blue"><name></color> - Creates a new migration for your application');
-            self::print('  <color="yellow">migrate</color> <color="blue"><environment></color> - Runs all pending migrations from your application');
+            self::print('  <color="yellow">migrate</color> <color="blue"><environment></color> - Applies all pending migrations from your application');
             self::print('  <color="yellow">version</color> - Displays current Firefly version');
             self::print('  <color="yellow">help</color> - Displays this help message');
         }

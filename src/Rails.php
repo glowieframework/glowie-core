@@ -57,7 +57,7 @@
          * @param string $controller (Optional) The namespaced controller name that this route will instantiate.\
          * You can use `ControllerName::class` to get this property the correct way.
          * @param string $action (Optional) The action name from the controller that this route will instantiate.
-         * @param string[] $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
+         * @param array $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
          * @param string $name (Optional) Route internal name/identifier.
          */
         public static function addRoute(string $route, string $controller = 'Glowie\Controllers\Main', string $action = 'index', array $methods = [], string $name = ''){
@@ -78,7 +78,7 @@
          * @param string $controller (Optional) The namespaced controller name that this route will instantiate.\
          * You can use `ControllerName::class` to get this property the correct way.
          * @param string $action (Optional) The action name from the controller that this route will instantiate.
-         * @param string[] $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
+         * @param array $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
          * @param string $name (Optional) Route internal name/identifier.
          */
         public static function addProtectedRoute(string $route, string $middleware = 'Glowie\Middlewares\Authenticate', string $controller = 'Glowie\Controllers\Main', string $action = 'index', array $methods = [], string $name = ''){
@@ -96,7 +96,7 @@
          * Setup a new redirect route for the application.
          * @param string $route The route URI to redirect.
          * @param string $target The target URl to redirect this route to.
-         * @param string[] $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
+         * @param array $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
          * @param string $name (Optional) Route internal name/identifier.
          */
         public static function addRedirect(string $route, string $target, array $methods = [], string $name = ''){
@@ -122,11 +122,7 @@
          * @return array|null Returns the route setting as an array if valid or null if not.
          */
         public static function getRoute(string $route){
-            if(isset(self::$routes[$route])){
-                return self::$routes[$route];
-            }else{
-                return null;
-            }
+            return self::$routes[$route] ?? null;
         }
 
         /**
@@ -231,7 +227,7 @@
                     }
                 }else{
                     // Redirects to the target URL
-                    return Util::redirect($config['redirect']);
+                    return self::$response->redirect($config['redirect']);
                 }
             } else {
                 // Check if auto routing is enabled

@@ -72,10 +72,21 @@
             $fields = !empty($this->_fields) ? $this->_fields : '*';
             return $this->select($fields)->where($this->_primaryKey, $primary)->fetchRow();
         }
+
+        /**
+         * Gets the first row that matches a field value.
+         * @param string $field Field to use while searching.
+         * @param mixed $value Value to search for.
+         * @return Element|null Returns the row on success or null if not found.
+         */
+        public function findBy(string $field, $value){
+            $this->clearQuery();
+            $fields = !empty($this->_fields) ? $this->_fields : '*';
+            return $this->select($fields)->where($field, $value)->fetchRow();
+        }
         
         /**
          * Gets all rows from the model table.
-         * @param string $order (Optional) Ordering direction for the primary key field **(ASC or DESC)**.
          * @return array Returns an array with all rows.
          */
         public function all(){
@@ -140,19 +151,20 @@
 
         /**
          * Fills the model entity with a row data.
-         * @param Element $row Row object to retrieve data.
+         * @param Element|array $row Row to retrieve data.
          */
-        public function fill(Element $row){
+        public function fill($row){
+            if(is_array($row)) $row = new Element($row);
             $this->_initialData = $row;
             Element::__construct($row->toArray());
         }
 
         /**
          * Checks if the row data has been modified in the model entity.
-         * @param mixed $field (Optional) Field to check. Leave empty to compare everything.
+         * @param string $field (Optional) Field to check. Leave empty to compare everything.
          * @return bool Returns true if the row data has been modified.
          */
-        public function isDirty($field = ''){
+        public function isDirty(string $field = ''){
             if(!$this->_initialData instanceof Element) trigger_error('isDirty: Model entity was not filled with a row data', E_USER_ERROR);
             if(!empty($field)){
                 return ($this->_initialData->get($field) !== $this->get($field));
@@ -163,10 +175,10 @@
 
         /**
          * Checks if the row data has not been modified in the model entity.
-         * @param mixed $field (Optional) Field to check. Leave empty to compare everything.
+         * @param string $field (Optional) Field to check. Leave empty to compare everything.
          * @return bool Returns true if the row data has not been modified.
          */
-        public function isPristine($field = ''){
+        public function isPristine(string $field = ''){
             if(!$this->_initialData instanceof Element) trigger_error('isPristine: Model entity was not filled with a row data', E_USER_ERROR);
             return !$this->isDirty($field);
         }

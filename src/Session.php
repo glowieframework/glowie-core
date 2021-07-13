@@ -34,51 +34,47 @@
 
         /**
          * Gets the value associated to a key in the session data.
-         * @param mixed $key Key to get value.
+         * @param string $key Key to get value.
          * @return mixed Returns the value if exists or null if there is none.
          */
-        public function __get($key){
+        public function __get(string $key){
             if(!isset($_SESSION)) session_start();
-            if(isset($_SESSION[$key])){
-                return $_SESSION[$key];
-            }else{
-                return null;
-            }
+            return $_SESSION[$key] ?? null;
         }
 
         /**
          * Gets the value associated to a key in the session data.
-         * @param mixed $key Key to get value.
+         * @param string $key Key to get value.
          * @return mixed Returns the value if exists or null if there is none.
          */
-        public function get($key){
+        public function get(string $key){
             return $this->__get($key);
         }
 
         /**
          * Sets the value for a key in the session data.
-         * @param mixed $key Key to set value.
+         * @param string $key Key to set value.
          * @param mixed $value Value to set.
          */
-        public function __set($key, $value){
+        public function __set(string $key, $value){
             if(!isset($_SESSION)) session_start();
             $_SESSION[$key] = $value;
         }
 
         /**
          * Sets the value for a key in the session data.
-         * @param mixed $key Key to set value.
+         * @param string $key Key to set value.
          * @param mixed $value Value to set.
          */
-        public function set($key, $value){
+        public function set(string $key, $value){
             $this->__set($key, $value);
         }
 
         /**
          * Removes the associated key value from the session data.
-         * @param mixed $key Key to delete value.
+         * @param string $key Key to delete value.
          */
-        public function __unset($key){
+        public function __unset(string $key){
             if(!isset($_SESSION)) session_start();
             if (isset($_SESSION[$key])) {
                 unset($_SESSION[$key]);
@@ -87,28 +83,28 @@
 
          /**
          * Removes the associated key value from the session data.
-         * @param mixed $key Key to delete value.
+         * @param string $key Key to delete value.
          */
-        public function remove($key){
+        public function remove(string $key){
             $this->__unset($key);
         }
 
         /**
          * Checks if any value has been associated to a key in the session data.
-         * @param mixed $key Key to check.
+         * @param string $key Key to check.
          * @return bool Returns true or false.
          */
-        public function __isset($key){
+        public function __isset(string $key){
             if(!isset($_SESSION)) session_start();
             return isset($_SESSION[$key]);
         }
 
         /**
          * Checks if any value has been associated to a key in the session data.
-         * @param mixed $key Key to check.
+         * @param string $key Key to check.
          * @return bool Returns true or false.
          */
-        public function has($key){
+        public function has(string $key){
             return $this->__isset($key);
         }
 

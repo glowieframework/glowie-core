@@ -78,6 +78,7 @@
             $code = preg_replace('~(?<!@){\s*@url\s*\((.+?)\)\s*}~is', '<?php echo Util::baseUrl($1); ?>', $code);
             $code = preg_replace('~(?<!@){\s*@route\s*\((.+?)\)\s*}~is', '<?php echo Util::route($1); ?>', $code);
             $code = preg_replace('~(?<!@){\s*@content\s*}~is', '<?php echo $this->getContent(); ?>', $code);
+            $code = preg_replace('~(?<!@){\s*@csrf\s*}~is', '<?php echo Util::csrfToken(); ?>', $code);
             return $code;
         }
 

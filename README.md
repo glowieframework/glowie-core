@@ -1,4 +1,12 @@
-<a href="https://glowie.tk" target="_blank"><img src="https://i.imgur.com/5tsmOE4.png" alt="drawing" width="200"/></a>
+<p align="center">
+    <a href="https://glowie.tk" target="_blank"><img src="https://i.imgur.com/5tsmOE4.png" alt="Glowie" width="200"/></a>
+</p>
+
+<p align="center">
+    <a href="https://packagist.org/packages/glowieframework/glowie" target="_blank"><img src="https://img.shields.io/packagist/dt/glowieframework/glowie" alt="Total Downloads"></a>
+    <a href="https://packagist.org/packages/glowieframework/glowie" target="_blank"><img src="https://img.shields.io/github/license/glowieframework/glowie" alt="License"></a>
+    <a href="https://packagist.org/packages/glowieframework/glowie" target="_blank"><img src="https://img.shields.io/packagist/php-v/glowieframework/glowie" alt="PHP Version"></a>
+</p>
 
 > **Note:** This repository is suited only for Glowie core modules. For creating projects using Glowie, please refer to <a href="https://github.com/glowieframework/glowie">this repo</a>.
 
@@ -7,7 +15,7 @@ Glowie is a PHP framework designed to be as light, fast and powerful as possible
 
 ## Features
 - MVC structure with simple organization
-- Powerful database ORM toolkit and query builder
+- Powerful database ORM toolkit, query builder and migration support
 - Set of tools for validating forms and data the safest way
 - Built-in templating engine
 - Easy routing engine, with custom parameters and auto routing
@@ -16,6 +24,7 @@ Glowie is a PHP framework designed to be as light, fast and powerful as possible
 - Safe and fast session and cookies management
 - Easy to use HTTP request engine
 - File upload handler and validator
+- Command line tool for increasing workflow speed
 - Internationalization tools for multilanguage applications
 - Multiple environment settings for all kind of scenarios
 - On-the-fly updates with tiny blueprint

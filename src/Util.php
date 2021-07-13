@@ -44,15 +44,6 @@
         }
 
         /**
-         * Returns the previous URL where the user was.\
-         * **Note:** This information relies in the `HTTP_REFERER` header. This header cannot be sent\
-         * from some browsers or be unavailable when using different HTTP protocols.
-         */
-        public static function previousUrl(){
-            return $_SERVER['HTTP_REFERER'] ?? '';
-        }
-
-        /**
          * Returns the base URL from a named route.
          * @param string $route Route internal name/identifier.
          * @param array $params (Optional) Route parameters to bind into the URL.

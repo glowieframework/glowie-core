@@ -22,7 +22,7 @@
         }
 
         /**
-         * Returns the request clean URI (without query strings).
+         * Returns the request clean URI (without hostname or query strings).
          * @return string Request clean URI.
          */
         public function getURI(){
@@ -71,16 +71,55 @@
          * @return string Request method.
          */
         public function getMethod(){
-            return $_SERVER['REQUEST_METHOD'];
+            return $_SERVER['REQUEST_METHOD'] ?? 'GET';
         }
 
         /**
-         * Returns if the request was made using AJAX.
+         * Returns the previous URL where the user was.\
+         * **Note:** This information relies in the `HTTP_REFERER` header. This header cannot be sent\
+         * from some browsers or be unavailable when using mismatching HTTP protocols.
+         */
+        public function getPreviousUrl(){
+            return $_SERVER['HTTP_REFERER'] ?? '';
+        }
+
+        /**
+         * Gets the value of a header.
+         * @param string $name Header name to get.
+         * @return string|null Returns the header value if exists or null if there is none.
+         */
+        public function getHeader(string $name){
+            $headers = getallheaders();
+            if(!$headers) trigger_error('Request: Error retrieving request headers', E_USER_ERROR);
+            return $headers[$name] ?? null;
+        }
+
+        /**
+         * Gets the value of a variable from the request.
+         * @param string $key Variable key to get.
+         * @return mixed Returns the value if exists or null if not.
+         */
+        public function getVar(string $key){
+            return $_REQUEST[$key] ?? null;
+        }
+
+        /**
+         * Returns if the request was made using AJAX.\
+         * **Note:** This information relies in the `X-Requested-With` header. This header cannot be sent\
+         * from some Javascript frameworks.
          * @return bool True if is AJAX or false if not.
          */
-        public function isAJAX(){
+        public function isAjax(){
             if(empty($_SERVER['HTTP_X_REQUESTED_WITH'])) return false;
             return $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest';
+        }
+
+        /**
+         * Returns if the request was made using a secure connection (HTTPS).
+         * @return bool True if secure or false if not.
+         */
+        public function isSecure(){
+            return isset($_SERVER['HTTPS']);
         }
 
         /**
