@@ -82,7 +82,7 @@
          */
         private function getBuffer(){
             ob_start();
-            require($this->_path);
+            include($this->_path);
             return ob_get_clean();
         }
 

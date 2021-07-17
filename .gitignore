@@ -1,3 +1,2 @@
-# Ignore development tests folder and Composer files
+# Ignore development tests folder
 /tests/
-composer.lock

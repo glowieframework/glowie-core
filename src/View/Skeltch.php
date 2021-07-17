@@ -101,8 +101,14 @@
         private static function compileLoops(string $code){
             $code = preg_replace('~(?<!@){\s*foreach\s*\((.+?)\)\s*}~is', '<?php foreach($1): ?>', $code);
             $code = preg_replace('~(?<!@){\s*for\s*\((.+?)\)\s*}~is', '<?php for($1): ?>', $code);
+            $code = preg_replace('~(?<!@){\s*switch\s*\((.+?)\)\s*}~is', '<?php switch($1): ?>', $code);
+            $code = preg_replace('~(?<!@){\s*while\s*\((.+?)\)\s*}~is', '<?php while($1): ?>', $code);
+            $code = preg_replace('~(?<!@){\s*case\s*\((.+?)\)\s*}~is', '<?php case($1): ?>', $code);
+            $code = preg_replace('~(?<!@){\s*default\s*}~is', '<?php default: ?>', $code);
             $code = preg_replace('~(?<!@){\s*/foreach\s*}~is', '<?php endforeach; ?>', $code);
             $code = preg_replace('~(?<!@){\s*/for\s*}~is', '<?php endfor; ?>', $code);
+            $code = preg_replace('~(?<!@){\s*/switch\s*}~is', '<?php endswitch; ?>', $code);
+            $code = preg_replace('~(?<!@){\s*/while\s*}~is', '<?php endwhile; ?>', $code);
             $code = preg_replace('~(?<!@){\s*break\s*}~is', '<?php break; ?>', $code);
             $code = preg_replace('~(?<!@){\s*continue\s*}~is', '<?php continue; ?>', $code);
             return $code;

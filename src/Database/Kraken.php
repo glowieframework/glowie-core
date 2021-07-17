@@ -592,6 +592,28 @@
         }
 
         /**
+         * Adds a WHERE condition to the query comparing a date value in a date column.
+         * @param string $column Column name **(must be a DATE or DATETIME column)**.
+         * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the date value to check to.
+         * @param mixed $param2 (Optional) Value if `$param1` is the operator.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function whereDate(string $column, $param1, $param2 = null){
+            return $this->where("DATE({$column})", $param1, $param2);
+        }
+
+        /**
+         * Adds an OR WHERE condition to the query comparing a date value in a date column.
+         * @param string $column Column name **(must be a DATE or DATETIME column)**.
+         * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the date value to check to.
+         * @param mixed $param2 (Optional) Value if `$param1` is the operator.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function orWhereDate(string $column, $param1, $param2 = null){
+            return $this->where("DATE({$column})", $param1, $param2, 'OR');
+        }
+
+        /**
          * Adds a WHERE condition to the query comparing a day value in a date column.
          * @param string $column Column name **(must be a DATE or DATETIME column)**.
          * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the day value to check to.
@@ -637,7 +659,7 @@
 
         /**
          * Adds a WHERE condition to the query comparing an year value in a date column.
-         * @param string $column Column name **(must be a DATE or DATETIME column)**.
+         * @param string $column Column name **(must be a DATE, DATETIME or YEAR column)**.
          * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the year value to check to.
          * @param mixed $param2 (Optional) Value if `$param1` is the operator.
          * @return Kraken Current Kraken instance for nested calls.
@@ -648,13 +670,101 @@
 
         /**
          * Adds an OR WHERE condition to the query comparing an year value in a date column.
-         * @param string $column Column name **(must be a DATE or DATETIME column)**.
+         * @param string $column Column name **(must be a DATE, DATETIME or YEAR column)**.
          * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the year value to check to.
          * @param mixed $param2 (Optional) Value if `$param1` is the operator.
          * @return Kraken Current Kraken instance for nested calls.
          */
         public function orWhereYear(string $column, $param1, $param2 = null){
             return $this->where("YEAR({$column})", $param1, $param2, 'OR');
+        }
+
+        /**
+         * Adds a WHERE condition to the query comparing a time value in a time column.
+         * @param string $column Column name **(must be a TIME or DATETIME column)**.
+         * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the time value to check to.
+         * @param mixed $param2 (Optional) Value if `$param1` is the operator.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function whereTime(string $column, $param1, $param2 = null){
+            return $this->where("TIME({$column})", $param1, $param2);
+        }
+
+        /**
+         * Adds an OR WHERE condition to the query comparing a time value in a time column.
+         * @param string $column Column name **(must be a TIME or DATETIME column)**.
+         * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the time value to check to.
+         * @param mixed $param2 (Optional) Value if `$param1` is the operator.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function orWhereTime(string $column, $param1, $param2 = null){
+            return $this->where("TIME({$column})", $param1, $param2, 'OR');
+        }
+
+        /**
+         * Adds a WHERE condition to the query comparing the hours value in a time column.
+         * @param string $column Column name **(must be a TIME or DATETIME column)**.
+         * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the hours value to check to.
+         * @param mixed $param2 (Optional) Value if `$param1` is the operator.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function whereHour(string $column, $param1, $param2 = null){
+            return $this->where("HOUR({$column})", $param1, $param2);
+        }
+
+        /**
+         * Adds an OR WHERE condition to the query comparing the hours value in a time column.
+         * @param string $column Column name **(must be a TIME or DATETIME column)**.
+         * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the hours value to check to.
+         * @param mixed $param2 (Optional) Value if `$param1` is the operator.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function orWhereHour(string $column, $param1, $param2 = null){
+            return $this->where("HOUR({$column})", $param1, $param2, 'OR');
+        }
+
+        /**
+         * Adds a WHERE condition to the query comparing the minutes value in a time column.
+         * @param string $column Column name **(must be a TIME or DATETIME column)**.
+         * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the minutes value to check to.
+         * @param mixed $param2 (Optional) Value if `$param1` is the operator.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function whereMinute(string $column, $param1, $param2 = null){
+            return $this->where("MINUTE({$column})", $param1, $param2);
+        }
+
+        /**
+         * Adds an OR WHERE condition to the query comparing the minutes value in a time column.
+         * @param string $column Column name **(must be a TIME or DATETIME column)**.
+         * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the minutes value to check to.
+         * @param mixed $param2 (Optional) Value if `$param1` is the operator.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function orWhereMinute(string $column, $param1, $param2 = null){
+            return $this->where("MINUTE({$column})", $param1, $param2, 'OR');
+        }
+
+        /**
+         * Adds a WHERE condition to the query comparing the seconds value in a time column.
+         * @param string $column Column name **(must be a TIME or DATETIME column)**.
+         * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the seconds value to check to.
+         * @param mixed $param2 (Optional) Value if `$param1` is the operator.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function whereSecond(string $column, $param1, $param2 = null){
+            return $this->where("SECOND({$column})", $param1, $param2);
+        }
+
+        /**
+         * Adds an OR WHERE condition to the query comparing the seconds value in a time column.
+         * @param string $column Column name **(must be a TIME or DATETIME column)**.
+         * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the seconds value to check to.
+         * @param mixed $param2 (Optional) Value if `$param1` is the operator.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function orWhereSecond(string $column, $param1, $param2 = null){
+            return $this->where("SECOND({$column})", $param1, $param2, 'OR');
         }
 
         /**
@@ -889,7 +999,7 @@
         /**
          * Counts the number of resulting rows from a SELECT query.
          * @param string $column (Optional) Column to use as the counting base. Using `*` will count all rows including NULL values.\
-         * Setting a column name will count all rows excluding NULL values from that column.
+         * Setting a column name will count all rows excluding NULL values from that column. You can also use a raw COUNT expression.
          * @return int Returns the number of rows on success.
          */
         public function count(string $column = '*'){
@@ -897,7 +1007,7 @@
             $query = $this->backupQuery();
 
             // Count rows
-            $this->_instruction = "SELECT";
+            if($this->_instruction != 'SELECT' && $this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "COUNT({$column}) AS count";
             $result = $this->execute(true, true);
 
@@ -906,6 +1016,102 @@
 
             if($result !== false){
                 return (int)$result->count;
+            }else{
+                return $result;
+            }
+        }
+
+        /**
+         * Sums the value of all rows in a specific column.
+         * @param string $column Column to retrieve values. You can also use a raw SUM expression.
+         * @return string Returns the sum result on success.
+         */
+        public function sum(string $column){
+            // Saves current query state
+            $query = $this->backupQuery();
+
+            // Sum rows
+            if($this->_instruction != 'SELECT' && $this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
+            $this->_select = "SUM({$column}) AS sum";
+            $result = $this->execute(true, true);
+
+            // Rollback query state
+            $this->restoreQuery($query);
+
+            if($result !== false){
+                return $result->sum;
+            }else{
+                return $result;
+            }
+        }
+
+        /**
+         * Returns the highest value from a specific column.
+         * @param string $column Column to retrieve the value. You can also use a raw MAX expression.
+         * @return string Returns the highest value on success.
+         */
+        public function max(string $column){
+            // Saves current query state
+            $query = $this->backupQuery();
+
+            // Get max value
+            if($this->_instruction != 'SELECT' && $this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
+            $this->_select = "MAX({$column}) AS max";
+            $result = $this->execute(true, true);
+
+            // Rollback query state
+            $this->restoreQuery($query);
+
+            if($result !== false){
+                return $result->max;
+            }else{
+                return $result;
+            }
+        }
+
+        /**
+         * Returns the lowest value from a specific column.
+         * @param string $column Column to retrieve the value. You can also use a raw MIN expression.
+         * @return string Returns the lowest value on success.
+         */
+        public function min(string $column){
+            // Saves current query state
+            $query = $this->backupQuery();
+
+            // Get min value
+            if($this->_instruction != 'SELECT' && $this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
+            $this->_select = "MIN({$column}) AS min";
+            $result = $this->execute(true, true);
+
+            // Rollback query state
+            $this->restoreQuery($query);
+
+            if($result !== false){
+                return $result->min;
+            }else{
+                return $result;
+            }
+        }
+
+        /**
+         * Returns the average value from a specific column.
+         * @param string $column Column to retrieve the value. You can also use a raw AVG expression.
+         * @return string Returns the average value on success.
+         */
+        public function avg(string $column){
+            // Saves current query state
+            $query = $this->backupQuery();
+
+            // Get avg value
+            if($this->_instruction != 'SELECT' && $this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
+            $this->_select = "AVG({$column}) AS avg";
+            $result = $this->execute(true, true);
+
+            // Rollback query state
+            $this->restoreQuery($query);
+
+            if($result !== false){
+                return $result->avg;
             }else{
                 return $result;
             }

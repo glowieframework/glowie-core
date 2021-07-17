@@ -14,12 +14,19 @@
     class Session{
 
         /**
+         * Session flash data.
+         * @var array
+         */
+        private static $flash = [];
+
+        /**
          * Starts a new session or resumes the existing one.
          * @param array $data (Optional) An associative array with the initial data to store in the session.
          */
         public function __construct(array $data = []){
             if(!isset($_SESSION)) session_start();
             if(!empty($data)) $_SESSION = $data;
+            self::$flash = $this->get('FLASH_DATA') ?? [];
         }
 
         /**
@@ -114,6 +121,7 @@
         public function flush(){
             if(!isset($_SESSION)) session_start();
             $_SESSION = [];
+            self::$flash = [];
         }
 
         /**
@@ -123,6 +131,34 @@
         public function toArray(){
             if(!isset($_SESSION)) session_start();
             return $_SESSION;
+        }
+
+        /**
+         * Sets the value for a key in the session flash data.
+         * @param string $key Key to set value.
+         * @param mixed $value Value to set.
+         */
+        public function setFlash(string $key, $data){
+            self::$flash = $this->get('FLASH_DATA') ?? [];
+            self::$flash[$key] = $data;
+            $this->set('FLASH_DATA', self::$flash);
+        }
+
+        /**
+         * Gets the value associated to a key in the session flash data, then deletes it.
+         * @param string $key Key to get value.
+         * @return mixed Returns the value if exists or null if there is none.
+         */
+        public function getFlash(string $key){
+            self::$flash = $this->get('FLASH_DATA') ?? [];
+            if(isset(self::$flash[$key])){
+                $value = self::$flash[$key];
+                unset(self::$flash[$key]);
+                $this->set('FLASH_DATA', self::$flash);
+                return $value;
+            }else{
+                return null;
+            }
         }
 
     }

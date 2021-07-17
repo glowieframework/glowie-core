@@ -33,7 +33,7 @@
                 die('<strong>Configuration file not found!</strong><br>
                 Please rename "app/config/Config.example.php" to "app/config/Config.php".');
             }else{
-                require_once('../config/Config.php');
+                require('../config/Config.php');
             }
 
             // Workaround for servers who dont support SetEnv/GetEnv
@@ -61,10 +61,10 @@
             date_default_timezone_set(GLOWIE_CONFIG['timezone']);
 
             // Include application routes
-            require_once('../config/Routes.php');
+            require('../config/Routes.php');
 
             // Include languages
-            foreach (Util::getFiles('../languages/*.php') as $filename) require_once($filename);
+            foreach (Util::getFiles('../languages/*.php') as $filename) include($filename);
 
             // Initialize router
             Rails::init();

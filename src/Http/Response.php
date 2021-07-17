@@ -174,7 +174,7 @@
          * @param string $type Content-Type to set.
          */
         public function setContentType(string $type){
-            header("Content-type: {$type}");
+            header("Content-Type: {$type}");
         }
 
         /**
@@ -194,7 +194,8 @@
          * @param int $code (Optional) HTTP status code to pass with the redirect.
          * @return void
          */
-        public function redirect(string $destination, int $code = self::HTTP_FOUND){
+        public function redirect(string $destination, int $code = self::HTTP_TEMPORARY_REDIRECT){
+            $this->setStatusCode($code);
             header('Location: ' . $destination, true, $code);
             die();
         }
@@ -204,7 +205,7 @@
          * @param string $path (Optional) Path to append to the base URL.
          * @param int $code (Optional) HTTP status code to pass with the redirect.
          */
-        public function redirectBase(string $path = '', int $code = self::HTTP_FOUND){
+        public function redirectBase(string $path = '', int $code = self::HTTP_TEMPORARY_REDIRECT){
             return $this->redirect(Util::baseUrl($path), $code);
         }
 
@@ -214,7 +215,7 @@
          * @param array $params (Optional) Route parameters to bind into the URL.
          * @param int $code (Optional) HTTP status code to pass with the redirect.
          */
-        public function redirectRoute(string $route, array $params = [], int $code = self::HTTP_FOUND){
+        public function redirectRoute(string $route, array $params = [], int $code = self::HTTP_TEMPORARY_REDIRECT){
             return $this->redirect(Util::route($route, $params), $code);
         }
 
