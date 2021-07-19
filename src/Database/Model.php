@@ -67,34 +67,37 @@
         /**
          * Gets the first row that matches the model primary key value.
          * @param mixed $primary Primary key value to search for.
-         * @return Element|null Returns the row on success or null if not found.
+         * @param bool $assoc (Optional) Return the result as an associative array.
+         * @return mixed Returns the row on success or null if not found.
          */
-        public function find($primary){
+        public function find($primary, bool $assoc = false){
             $this->clearQuery();
             $fields = !empty($this->_fields) ? $this->_fields : '*';
-            return $this->select($fields)->where($this->_primaryKey, $primary)->fetchRow();
+            return $this->select($fields)->where($this->_primaryKey, $primary)->limit(1)->fetchRow($assoc);
         }
 
         /**
          * Gets the first row that matches a field value.
          * @param string $field Field to use while searching.
          * @param mixed $value Value to search for.
-         * @return Element|null Returns the row on success or null if not found.
+         * @param bool $assoc (Optional) Return the result as an associative array.
+         * @return mixed Returns the row on success or null if not found.
          */
-        public function findBy(string $field, $value){
+        public function findBy(string $field, $value, bool $assoc = false){
             $this->clearQuery();
             $fields = !empty($this->_fields) ? $this->_fields : '*';
-            return $this->select($fields)->where($field, $value)->fetchRow();
+            return $this->select($fields)->where($field, $value)->limit(1)->fetchRow($assoc);
         }
 
         /**
          * Gets all rows from the model table.
+         * @param bool $assoc (Optional) Return each result as an associative array.
          * @return array Returns an array with all rows.
          */
-        public function all(){
+        public function all(bool $assoc = false){
             $this->clearQuery();
             $fields = !empty($this->_fields) ? $this->_fields : '*';
-            return $this->select($fields)->fetchAll();
+            return $this->select($fields)->fetchAll($assoc);
         }
 
         /**

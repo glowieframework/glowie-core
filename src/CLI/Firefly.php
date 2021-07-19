@@ -113,8 +113,7 @@
             $args = [];
             foreach(self::$args as $value){
                 $match = [];
-                preg_match('/--(.+)=(.+)/', $value, $match);
-                if(count($match) == 3) $args[$match[1]] = $match[2];
+                if(preg_match('/--(.+)=(.+)/', $value, $match)) $args[strtolower($match[1])] = $match[2];
             }
 
             // Returns the result
@@ -435,8 +434,8 @@
             if(empty($table)) $table = $default_table;
 
             // Checks if primary key was filled
-            if(isset(self::$args['primarykey'])){
-                $primary = trim(self::$args['primarykey']);
+            if(isset(self::$args['primary'])){
+                $primary = trim(self::$args['primary']);
             }else if(self::$isCLI){
                 self::print("Primary key name (id): ", false);
                 $primary = trim(fgets(STDIN));
@@ -459,8 +458,8 @@
             }
 
             // Checks if created field was filled
-            if(isset(self::$args['createdfield'])){
-                $created_at = self::$args['createdfield'];
+            if(isset(self::$args['created'])){
+                $created_at = self::$args['created'];
             }else if(self::$isCLI){
                 self::print("Created at field name (created_at): ", false);
                 $created_at = trim(fgets(STDIN));
@@ -468,8 +467,8 @@
             if(empty($created_at)) $created_at = 'created_at';
 
             // Checks if updated field was filled
-            if(isset(self::$args['updatedfield'])){
-                $updated_at = self::$args['updatedfield'];
+            if(isset(self::$args['updated'])){
+                $updated_at = self::$args['updated'];
             }else if(self::$isCLI){
                 self::print("Updated at field name (updated_at): ", false);
                 $updated_at = trim(fgets(STDIN));
@@ -690,10 +689,10 @@
             self::print('  <color="yellow">test-database</color> <color="blue">--env</color> | Tests the database connection for a configuration environment');
             self::print('  <color="yellow">create-controller</color> <color="blue">--name</color> | Creates a new controller for your application');
             self::print('  <color="yellow">create-middleware</color> <color="blue">--name</color> | Creates a new middleware for your application');
-            self::print('  <color="yellow">create-model</color> <color="blue">--name</color> | Creates a new model for your application');
+            self::print('  <color="yellow">create-model</color> <color="blue">--name --table --primary --timestamps --created --updated</color> | Creates a new model for your application');
             self::print('  <color="yellow">create-migration</color> <color="blue">--name</color> | Creates a new migration for your application');
             self::print('  <color="yellow">migrate</color> <color="blue">--env --steps</color> | Applies pending migrations from your application');
-            self::print('  <color="yellow">rollback</color> <color="blue">--env --steps</color> | Rolls back applied migrations from your application');
+            self::print('  <color="yellow">rollback</color> <color="blue">--env --steps</color> | Rolls back the last applied migration');
             self::print('  <color="yellow">version</color> | Displays current Firefly version');
             self::print('  <color="yellow">help</color> | Displays this help message');
         }

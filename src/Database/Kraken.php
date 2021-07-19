@@ -1003,17 +1003,12 @@
          * @return int Returns the number of rows on success.
          */
         public function count(string $column = '*'){
-            // Saves current query state
-            $query = $this->backupQuery();
-
             // Count rows
             if($this->_instruction != 'SELECT' && $this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "COUNT({$column}) AS count";
             $result = $this->execute(true, true);
 
-            // Rollback query state
-            $this->restoreQuery($query);
-
+            // Returns the result
             if($result !== false){
                 return (int)$result->count;
             }else{
@@ -1027,17 +1022,12 @@
          * @return string Returns the sum result on success.
          */
         public function sum(string $column){
-            // Saves current query state
-            $query = $this->backupQuery();
-
             // Sum rows
             if($this->_instruction != 'SELECT' && $this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "SUM({$column}) AS sum";
             $result = $this->execute(true, true);
 
-            // Rollback query state
-            $this->restoreQuery($query);
-
+            // Returns the result
             if($result !== false){
                 return $result->sum;
             }else{
@@ -1051,17 +1041,12 @@
          * @return string Returns the highest value on success.
          */
         public function max(string $column){
-            // Saves current query state
-            $query = $this->backupQuery();
-
             // Get max value
             if($this->_instruction != 'SELECT' && $this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "MAX({$column}) AS max";
             $result = $this->execute(true, true);
 
-            // Rollback query state
-            $this->restoreQuery($query);
-
+            // Returns the result
             if($result !== false){
                 return $result->max;
             }else{
@@ -1075,17 +1060,12 @@
          * @return string Returns the lowest value on success.
          */
         public function min(string $column){
-            // Saves current query state
-            $query = $this->backupQuery();
-
             // Get min value
             if($this->_instruction != 'SELECT' && $this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "MIN({$column}) AS min";
             $result = $this->execute(true, true);
 
-            // Rollback query state
-            $this->restoreQuery($query);
-
+            // Returns the result
             if($result !== false){
                 return $result->min;
             }else{
@@ -1099,17 +1079,12 @@
          * @return string Returns the average value on success.
          */
         public function avg(string $column){
-            // Saves current query state
-            $query = $this->backupQuery();
-
             // Get avg value
             if($this->_instruction != 'SELECT' && $this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "AVG({$column}) AS avg";
             $result = $this->execute(true, true);
 
-            // Rollback query state
-            $this->restoreQuery($query);
-
+            // Returns the result
             if($result !== false){
                 return $result->avg;
             }else{
@@ -1142,10 +1117,16 @@
          * @return Element Returns an object with the pagination result.
          */
         public function paginate(int $currentPage, int $resultsPerPage = 25, bool $assoc = false){
+            // Backup current query state
+            $query = $this->backupQuery();
+
             // Counts total pages
             $totalResults = $this->count();
             $totalPages = floor($totalResults / $resultsPerPage);
             if($totalResults % $resultsPerPage != 0) $totalPages++;
+
+            // Restore query state
+            $this->restoreQuery($query);
 
             // Gets paginated results
             $this->limit(($currentPage - 1) * $resultsPerPage, $resultsPerPage);
@@ -1238,15 +1219,18 @@
 
             // Gets UPDATE statements
             if($this->_instruction == 'UPDATE'){
-                $query .= " {$this->_table} SET {$this->_set}";
+                $query .= " {$this->_table}";
+            }
+            
+            // Gets JOIN statements
+            if(!empty($this->_join)){
+                $join = implode(' ', $this->_join);
+                $query .= " {$join}";
             }
 
-            // Gets WHERE statements
-            if($this->_instruction == 'SELECT'|| $this->_instruction == 'SELECT DISTINCT' || $this->_instruction == 'UPDATE' || $this->_instruction == 'DELETE'){
-                if(!empty($this->_where)){
-                    $where = implode(' ', $this->_where);
-                    $query .= " WHERE {$where}";
-                }
+            // Gets SET statements
+            if($this->_instruction == 'UPDATE'){
+                $query .= " SET {$this->_set}";
             }
 
             // Gets INSERT statements
@@ -1256,10 +1240,12 @@
                 }
             }
 
-            // Gets JOIN statements
-            if(!empty($this->_join)){
-                $join = implode(' ', $this->_join);
-                $query .= " {$join}";
+            // Gets WHERE statements
+            if($this->_instruction == 'SELECT'|| $this->_instruction == 'SELECT DISTINCT' || $this->_instruction == 'UPDATE' || $this->_instruction == 'DELETE'){
+                if(!empty($this->_where)){
+                    $where = implode(' ', $this->_where);
+                    $query .= " WHERE {$where}";
+                }
             }
 
             // Gets GROUP BY and ORDER BY statements

@@ -1,6 +1,8 @@
 <?php
     namespace Glowie\Core\Http;
 
+    use Glowie\Core\Element;
+
     /**
      * Request handler for Glowie application.
      * @category Request
@@ -64,6 +66,16 @@
          */
         public function getBody(){
             return file_get_contents('php://input');
+        }
+
+        /**
+         * Returns the request JSON data as an object.
+         * @return Element|null The object containing the JSON data if valid or null if not.
+         */
+        public function getJson(){
+            $json = json_decode($this->getBody(), true);
+            if(!$json) return null;
+            return new Element($json);
         }
 
         /**
