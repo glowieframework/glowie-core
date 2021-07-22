@@ -45,7 +45,7 @@
          */
         public static function errorHandler(int $level, string $str, string $file = '', int $line = 0){
             self::exceptionHandler(new ErrorException($str, 0, $level, $file, $line));
-            return false;
+            return true;
         }
 
         /**

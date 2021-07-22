@@ -158,7 +158,7 @@
             // Saves the database connection
             if($global){
                 // Checks if the global database is already connected
-                if(!empty(self::$_global)){
+                if(self::$_global){
                     $connection = self::$_global;
                 }else{
                     $connection = new mysqli($database['host'], $database['username'], $database['password'], $database['db'], $database['port']);
@@ -212,10 +212,10 @@
 
         /**
          * Escapes special characters in a string, preventing SQL injections.
-         * @param string $string String to escape.
+         * @param mixed $string String to escape.
          * @return string Escaped string.
          */
-        public function escape(string $string){
+        public function escape($string){
             return $this->_connection->escape_string($string);
         }
 

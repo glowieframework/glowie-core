@@ -44,7 +44,7 @@
         private $overwrite;
 
         /**
-         * Creates an instance of the uploader.
+         * Creates a new file uploader instance.
          * @param string $directory (Optional) Target directory to store the uploaded files. Must be an existing directory with write permissions\
          * relative to the **app/public** folder.
          * @param array $extensions (Optional) Array of allowed file extensions. Use an empty array to allow any extension.

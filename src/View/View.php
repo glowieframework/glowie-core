@@ -32,7 +32,7 @@
          * View helpers instance.
          * @var Helpers
          */
-        private $_helpers;
+        private static $_helpers;
 
         /**
          * View file path.
@@ -44,33 +44,33 @@
          * Instantiates a new View object.
          * @param string $view View filename to instantiate.
          * @param array $params View parameters to parse.
-         * @param bool $skeltch Preprocess view using Skeltch.
+         * @param bool $parse Immediately parse view content.
          * @param Controller $controller Current controller.
          */
-        public function __construct(string $view, array $params, bool $skeltch, bool $parse, Controller &$controller){
+        public function __construct(string $view, array $params, bool $parse, Controller &$controller){
             // Parse parameters
             $helpers = 'Glowie\Helpers\Helpers';
+            if(!self::$_helpers) self::$_helpers = new $helpers;
             $this->_controller = $controller;
-            $this->_helpers = new $helpers;
             $this->_path = $view;
             $viewData = $this->_controller->view->toArray();
             if(!empty($viewData)) foreach ($viewData as $key => $value) $this->{$key} = $value;
             if(!empty($params)) foreach($params as $key => $value) $this->{$key} = $value;
 
             // Render view
-            if($skeltch) $this->_path = Skeltch::run($this->_path);
+            if(GLOWIE_CONFIG['skeltch']) $this->_path = Skeltch::run($this->_path);
             $this->_content = $this->getBuffer();
             if($parse) echo $this->_content;
         }
 
         /**
          * Calls a helper method dynamically.
-         * @param mixed $method Method to be called from the Helpers class.
+         * @param mixed $method Method to be called from `Glowie\Helpers\Helpers` class.
          * @param mixed $args Arguments to pass to the method.
          */
         public function __call($method, $args){
-            if(is_callable([$this->_helpers, $method])){
-                return call_user_func_array([$this->_helpers, $method], $args);
+            if(is_callable([self::$_helpers, $method])){
+                return call_user_func_array([self::$_helpers, $method], $args);
             }else{
                 trigger_error('View: Method "' . $method .'" does not exist in "app/views/helpers/Helpers.php"', E_USER_ERROR);
             }
@@ -90,11 +90,10 @@
          * Renders a view file.
          * @param string $view View filename. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
          * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
-         * @param bool $skeltch (Optional) Use Skeltch templating engine to compile the view.
          * @return void
          */
-        public function renderView(string $view, array $params = [], bool $skeltch = false){
-            $this->_controller->renderView($view, $params, $skeltch);
+        public function renderView(string $view, array $params = []){
+            $this->_controller->renderView($view, $params);
         }
 
         /**
@@ -103,11 +102,10 @@
          * @param string $view (Optional) View filename to render within layout. You can place its content by using `$this->getContent()`\
          * inside the layout file. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
          * @param array $params (Optional) Parameters to pass into the rendered view and layout. Should be an associative array with each variable name and value.
-         * @param bool $skeltch (Optional) Use Skeltch templating engine to compile the layout and view.
          * @return void
          */
-        public function renderLayout(string $layout, string $view = '', array $params = [], bool $skeltch = false){
-            $this->_controller->renderLayout($layout, $view, $params, $skeltch);
+        public function renderLayout(string $layout, string $view = '', array $params = []){
+            $this->_controller->renderLayout($layout, $view, $params);
         }
 
         /**

@@ -174,8 +174,8 @@
          * @return string Returns the encrypted string.
          */
         public static function encryptString(string $string){
-            $key = hash('sha256', GLOWIE_CONFIG['api_key']);
-            $iv = substr(hash('sha256', GLOWIE_CONFIG['api_token']), 0, 16);
+            $key = hash('sha256', GLOWIE_CONFIG['hash_key']);
+            $iv = substr(hash('sha256', GLOWIE_CONFIG['hash_token']), 0, 16);
             $string = base64_encode(openssl_encrypt($string, "AES-256-CBC", $key, 0, $iv));
             return $string;
         }
@@ -186,8 +186,8 @@
          * @return string Returns the decrypted string.
          */
         public static function decryptString(string $string){
-            $key = hash('sha256', GLOWIE_CONFIG['api_key']);
-            $iv = substr(hash('sha256', GLOWIE_CONFIG['api_token']), 0, 16);
+            $key = hash('sha256', GLOWIE_CONFIG['hash_key']);
+            $iv = substr(hash('sha256', GLOWIE_CONFIG['hash_token']), 0, 16);
             $string = openssl_decrypt(base64_decode($string), "AES-256-CBC", $key, 0, $iv);
             return $string;
         }

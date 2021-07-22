@@ -86,14 +86,13 @@
          * Renders a view file.
          * @param string $view View filename. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
          * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
-         * @param bool $skeltch (Optional) Use Skeltch templating engine to compile the view.
          * @return void
          */
-        public function renderView(string $view, array $params = [], bool $skeltch = false){
+        public function renderView(string $view, array $params = []){
             if(!is_array($params)) trigger_error('renderView: $params must be an array', E_USER_ERROR);
             $view = '../views/' . $view . (!Util::endsWith($view, '.phtml') ? '.phtml' : '');
             if(file_exists($view)){
-                return new View($view, $params, $skeltch, true, $this);
+                return new View($view, $params, true, $this);
             }else{
                 trigger_error('renderView: View file "' . str_replace('../', 'app/', $view) .'" not found', E_USER_ERROR);
             }
@@ -105,17 +104,16 @@
          * @param string $view (Optional) View filename to render within layout. You can place its content by using `$this->getContent()`\
          * inside the layout file. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
          * @param array $params (Optional) Parameters to pass into the rendered view and layout. Should be an associative array with each variable name and value.
-         * @param bool $skeltch (Optional) Use Skeltch templating engine to compile the layout and view.
          * @return void
          */
-        public function renderLayout(string $layout, string $view = '', array $params = [], bool $skeltch = false){
+        public function renderLayout(string $layout, string $view = '', array $params = []){
             if (!is_array($params)) trigger_error('renderLayout: $params must be an array', E_USER_ERROR);
             $layout = '../views/layouts/' . $layout . (!Util::endsWith($layout, '.phtml') ? '.phtml' : '');
             if(!empty($view)){
                 $view = '../views/' . $view . (!Util::endsWith($view, '.phtml') ? '.phtml' : '');
                 if (file_exists($layout)) {
                     if(file_exists($view)){
-                        return new Layout($layout, $view, $params, $skeltch, $this);
+                        return new Layout($layout, $view, $params, $this);
                     }else{
                         trigger_error('renderLayout: View file "' . str_replace('../', 'app/', $view) .'" not found', E_USER_ERROR);
                     }
@@ -124,7 +122,7 @@
                 }
             }else{
                 if (file_exists($layout)) {
-                    return new Layout($layout, '', $params, $skeltch, $this);
+                    return new Layout($layout, '', $params, $this);
                 } else {
                     trigger_error('renderLayout: Layout file "' . str_replace('../', 'app/', $layout) .'" not found', E_USER_ERROR);
                 }

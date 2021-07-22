@@ -59,6 +59,7 @@
             $code = preg_replace('~(?<!@){\s*isset\s*\((.+?)\)\s*}~is', '<?php if(isset($1)): ?>', $code);
             $code = preg_replace('~(?<!@){\s*empty\s*\((.+?)\)\s*}~is', '<?php if(empty($1)): ?>', $code);
             $code = preg_replace('~(?<!@){\s*notempty\s*\((.+?)\)\s*}~is', '<?php if(!empty($1)): ?>', $code);
+            $code = preg_replace('~(?<!@){\s*notset\s*\((.+?)\)\s*}~is', '<?php if(!isset($1)): ?>', $code);
             $code = preg_replace('~(?<!@){\s*elseif\s*\((.+?)\)\s*}~is', '<?php else if($1): ?>', $code);
             $code = preg_replace('~(?<!@){\s*else\s*}~is', '<?php else: ?>', $code);
             $code = preg_replace('~(?<!@){\s*(/if|/isset|/empty|/notempty|/notset)\s*}~is', '<?php endif; ?>', $code);

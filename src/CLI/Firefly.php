@@ -142,14 +142,17 @@
                 case 'create-controller':
                     self::createController();
                     break;
+                case 'create-language':
+                    self::createLanguage();
+                    break;
                 case 'create-middleware':
                     self::createMiddleware();
                     break;
-                case 'create-model':
-                    self::createModel();
-                    break;
                 case 'create-migration':
                     self::createMigration();
+                    break;
+                case 'create-model':
+                    self::createModel();
                     break;
                 case 'migrate':
                     self::migrate();
@@ -352,6 +355,50 @@
         }
 
         /**
+         * Creates a new language file.
+         */
+        private static function createLanguage(){
+            // Checks permissions
+            if(!is_writable(self::$appFolder . 'languages')){
+                self::print('<bg="red"><color="black">Oops, something went wrong!</color></bg>');
+                self::print('<color="red">Directory "app/languages" is not writable, please check your chmod settings</color>');
+                self::error('Directory "app/languages" is not writable, please check your chmod settings');
+                return false;
+            }
+
+            // Checks if id was filled
+            if(isset(self::$args['id'])){
+                $id = trim(self::$args['id']);
+            }else if(self::$isCLI){
+                self::print("Language id: ", false);
+                $id = trim(fgets(STDIN));
+            }
+
+            // Validates the language id
+            if(empty($id)){
+                self::print('<color="red">Language id cannot be empty!</color>');
+                self::error('Missing required argument "id" for this command');
+                return false;
+            }
+
+            // Creates the file
+            try {
+                $template = file_get_contents(self::$templateFolder . 'Language.php');
+                $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $id, $template);
+                file_put_contents(self::$appFolder . 'languages/' . $id . '.php', $template);
+            } catch (Exception $e) {
+                self::print('<bg="red"><color="black">Language file creation failed!</color></bg>');
+                self::print('<color="red">' . $e->getMessage() . '</color>');
+                self::error('Language file creation failed! ' . $e->getMessage());
+                return false;
+            }
+
+            // Success message
+            self::print("<color=\"green\">Language file {$id} created successfully!</color>");
+            return true;
+        }
+
+        /**
          * Creates a new middleware.
          */
         private static function createMiddleware(){
@@ -393,6 +440,52 @@
 
             // Success message
             self::print("<color=\"green\">Middleware {$name} created successfully!</color>");
+            return true;
+        }
+
+        /**
+         * Creates a new migration.
+         */
+        private static function createMigration(){
+            // Checks permissions
+            if(!is_writable(self::$appFolder . 'migrations')){
+                self::print('<bg="red"><color="black">Oops, something went wrong!</color></bg>');
+                self::print('<color="red">Directory "app/migrations" is not writable, please check your chmod settings</color>');
+                self::error('Directory "app/migrations" is not writable, please check your chmod settings');
+                return;
+            }
+
+            // Checks if name was filled
+            if(isset(self::$args['name'])){
+                $name = trim(self::$args['name']);
+            }else if(self::$isCLI){
+                self::print("Migration name: ", false);
+                $name = trim(fgets(STDIN));
+            }
+
+            // Validates the migration name
+            if(empty($name)){
+                self::print('<color="red">Migration name cannot be empty!</color>');
+                self::error('Missing required argument "name" for this command');
+                return false;
+            }
+
+            // Creates the file
+            $cleanName = Util::camelCase($name, true);
+            $name = 'm' . date('Y_m_d_His_') . $cleanName;
+            try {
+               $template = file_get_contents(self::$templateFolder . 'Migration.php');
+                $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
+                file_put_contents(self::$appFolder . 'migrations/' . $name . '.php', $template);
+            } catch (Exception $e) {
+                self::print('<bg="red"><color="black">Migration creation failed!</color></bg>');
+                self::print('<color="red">' . $e->getMessage() . '</color>');
+                self::error('Migration creation failed! ' . $e->getMessage());
+                return false;
+            }
+
+            // Success message
+            self::print("<color=\"green\">Migration {$cleanName} created successfully!</color>");
             return true;
         }
 
@@ -490,52 +583,6 @@
 
             // Success message
             self::print("<color=\"green\">Model {$name} created successfully!</color>");
-            return true;
-        }
-
-        /**
-         * Creates a new migration.
-         */
-        private static function createMigration(){
-            // Checks permissions
-            if(!is_writable(self::$appFolder . 'migrations')){
-                self::print('<bg="red"><color="black">Oops, something went wrong!</color></bg>');
-                self::print('<color="red">Directory "app/migrations" is not writable, please check your chmod settings</color>');
-                self::error('Directory "app/migrations" is not writable, please check your chmod settings');
-                return;
-            }
-
-            // Checks if name was filled
-            if(isset(self::$args['name'])){
-                $name = trim(self::$args['name']);
-            }else if(self::$isCLI){
-                self::print("Migration name: ", false);
-                $name = trim(fgets(STDIN));
-            }
-
-            // Validates the migration name
-            if(empty($name)){
-                self::print('<color="red">Migration name cannot be empty!</color>');
-                self::error('Missing required argument "name" for this command');
-                return false;
-            }
-
-            // Creates the file
-            $cleanName = Util::camelCase($name, true);
-            $name = 'm' . date('Y_m_d_His_') . $cleanName;
-            try {
-               $template = file_get_contents(self::$templateFolder . 'Migration.php');
-                $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
-                file_put_contents(self::$appFolder . 'migrations/' . $name . '.php', $template);
-            } catch (Exception $e) {
-                self::print('<bg="red"><color="black">Migration creation failed!</color></bg>');
-                self::print('<color="red">' . $e->getMessage() . '</color>');
-                self::error('Migration creation failed! ' . $e->getMessage());
-                return false;
-            }
-
-            // Success message
-            self::print("<color=\"green\">Migration {$cleanName} created successfully!</color>");
             return true;
         }
 
@@ -688,9 +735,10 @@
             self::print('  <color="yellow">clear-log</color> | Clears the application error log');
             self::print('  <color="yellow">test-database</color> <color="blue">--env</color> | Tests the database connection for a configuration environment');
             self::print('  <color="yellow">create-controller</color> <color="blue">--name</color> | Creates a new controller for your application');
+            self::print('  <color="yellow">create-language</color> <color="blue">--id</color> | Creates a new language file for your application');
             self::print('  <color="yellow">create-middleware</color> <color="blue">--name</color> | Creates a new middleware for your application');
-            self::print('  <color="yellow">create-model</color> <color="blue">--name --table --primary --timestamps --created --updated</color> | Creates a new model for your application');
             self::print('  <color="yellow">create-migration</color> <color="blue">--name</color> | Creates a new migration for your application');
+            self::print('  <color="yellow">create-model</color> <color="blue">--name --table --primary --timestamps --created --updated</color> | Creates a new model for your application');
             self::print('  <color="yellow">migrate</color> <color="blue">--env --steps</color> | Applies pending migrations from your application');
             self::print('  <color="yellow">rollback</color> <color="blue">--env --steps</color> | Rolls back the last applied migration');
             self::print('  <color="yellow">version</color> | Displays current Firefly version');

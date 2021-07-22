@@ -96,14 +96,16 @@
          * Setup a new redirect route for the application.
          * @param string $route The route URI to redirect.
          * @param string $target The target URl to redirect this route to.
+         * @param int $code (Optional) HTTP status code to pass with the redirect.
          * @param array $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
          * @param string $name (Optional) Route internal name/identifier.
          */
-        public static function addRedirect(string $route, string $target, array $methods = [], string $name = ''){
+        public static function addRedirect(string $route, string $target, int $code = Response::HTTP_TEMPORARY_REDIRECT, array $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
             self::$routes[$name] = [
                 'uri' => $route,
                 'redirect' => $target,
+                'code' => $code,
                 'methods' => $methods
             ];
         }
@@ -145,7 +147,7 @@
             foreach (self::$routes as $key => $item) {
                 // Creates a regex replacing dynamic parameters to valid regex patterns
                 $regex = str_replace('/', '\/', preg_replace('(:[^\/]+)', '([^/]+)', ltrim($item['uri'], '/')));
-                if (preg_match_all('/^' . $regex . '$/i', rtrim($route, '/'), $params)) {
+                if (preg_match_all('/^' . $regex . '$/', rtrim($route, '/'), $params)) {
                     // Fetch route parameters
                     $result = [];
                     foreach(explode('/', $item['uri']) as $segment){
@@ -227,7 +229,7 @@
                     }
                 }else{
                     // Redirects to the target URL
-                    return self::$response->redirect($config['redirect']);
+                    return self::$response->redirect($config['redirect'], $config['code']);
                 }
             } else {
                 // Check if auto routing is enabled
