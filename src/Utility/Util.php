@@ -93,11 +93,11 @@
         /**
          * Reorders an associative array by a specific key value.
          * @param array $array Array to reorder.
-         * @param mixed $key Key to use as reordering base.
+         * @param string $key Key to use as the reordering base.
          * @param int $order (Optional) Ordering direction, can be `SORT_ASC` (ascending) or `SORT_DESC` (descending).
          * @return array Returns the reordered array.
          */
-        public static function orderArray(array $array, $key, int $order = SORT_ASC){
+        public static function orderArray(array $array, string $key, int $order = SORT_ASC){
             if ((!empty($array)) && (!empty($key))) {
                 if (is_array($array)) {
                     foreach ($array as $col => $row) {
@@ -110,13 +110,13 @@
         }
 
         /**
-         * Filters an associative array with elements that matches a specific key value.
+         * Filters an associative array leaving only elements that matches a specific key value.
          * @param array $array Array to filter.
-         * @param mixed $key Key to use as filtering base.
+         * @param string $key Key to use as the filtering base.
          * @param mixed $value Value to filter.
          * @return array Returns the filtered array.
          */
-        public static function filterArray(array $array, $key, $value){
+        public static function filterArray(array $array, string $key, $value){
             $newarray = [];
             if (is_array($array) && count($array) > 0) {
                 foreach (array_keys($array) as $col) {
@@ -130,11 +130,11 @@
         /**
          * Searches an array of associative arrays for the first item that matches a specific key value.
          * @param array $array Array to search.
-         * @param mixed $key Key to match value.
+         * @param string $key Key to match value.
          * @param mixed $value Value to search.
-         * @return array Returns the first array found.
+         * @return array Returns the first array item found.
          */
-        public static function searchArray(array $array, $key, $value){
+        public static function searchArray(array $array, string $key, $value){
             $result = [];
             if (is_array($array) && count($array) > 0) {
                 $index = array_search($value, array_column($array, $key));
@@ -171,25 +171,29 @@
         /**
          * Encrypts a string using your application secret keys.
          * @param string $string String to encrypt.
-         * @return string Returns the encrypted string.
+         * @param string $method (Optional) Hashing algorithm to use in encryption.
+         * @return string|bool Returns the encrypted string on success or false on errors.
          */
-        public static function encryptString(string $string){
-            $key = hash('sha256', GLOWIE_CONFIG['hash_key']);
-            $iv = substr(hash('sha256', GLOWIE_CONFIG['hash_token']), 0, 16);
-            $string = base64_encode(openssl_encrypt($string, "AES-256-CBC", $key, 0, $iv));
-            return $string;
+        public static function encryptString(string $string, string $method = 'sha256'){
+            $key = hash($method, GLOWIE_CONFIG['app_key']);
+            $iv = substr(hash($method, GLOWIE_CONFIG['app_token']), 0, 16);
+            $hash = openssl_encrypt($string, "AES-256-CBC", $key, 0, $iv);
+            if(!$hash) return false;
+            return base64_encode($hash);
         }
 
         /**
          * Decrypts a string using your application secret keys.
          * @param string $string String to decrypt.
-         * @return string Returns the decrypted string.
+         * @param string $method (Optional) Hashing algorithm to use in decryption.
+         * @return string|bool Returns the decrypted string on success or false on errors.
          */
-        public static function decryptString(string $string){
-            $key = hash('sha256', GLOWIE_CONFIG['hash_key']);
-            $iv = substr(hash('sha256', GLOWIE_CONFIG['hash_token']), 0, 16);
-            $string = openssl_decrypt(base64_decode($string), "AES-256-CBC", $key, 0, $iv);
-            return $string;
+        public static function decryptString(string $string, string $method = 'sha256'){
+            $key = hash($method, GLOWIE_CONFIG['app_key']);
+            $iv = substr(hash($method, GLOWIE_CONFIG['app_token']), 0, 16);
+            $hash = base64_decode($string);
+            if(!$hash) return false;
+            return openssl_decrypt($hash, "AES-256-CBC", $key, 0, $iv);;
         }
 
         /**

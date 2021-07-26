@@ -45,9 +45,7 @@
                     'CREATE TABLE IF NOT EXISTS migrations(
                             filename VARCHAR(255) NOT NULL,
                             applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP()
-                        )',
-                    true
-                );
+                    )');
             }
         }
 
