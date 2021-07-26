@@ -34,7 +34,7 @@
         /**
          * Instantiates a new migration.
          */
-        public function __construct(){
+        final public function __construct(){
             // Creates the connection and stores the migration filename
             $this->db = new Kraken();
             $this->filename = 'app/migrations/' . str_replace('Glowie\Migrations\\', '', static::class) . '.php';
@@ -55,7 +55,7 @@
          * Checks if the migration was already applied.
          * @return bool Returns true if applied or false if not.
          */
-        public function isApplied(){
+        final public function isApplied(){
             $this->db->clearQuery();
             return $this->db->table('migrations')->where('filename', $this->filename)->exists();
         }
@@ -64,7 +64,7 @@
          * Saves the migration to the migrations history table.
          * @return bool Returns true on success or false on errors.
          */
-        public function saveMigration(){
+        final public function saveMigration(){
             $this->db->clearQuery();
             return $this->db->table('migrations')->insert(['filename' => $this->filename]);
         }
@@ -73,7 +73,7 @@
          * Deletes the migration from the migrations history table.
          * @return bool Returns true on success or false on errors.
          */
-        public function deleteMigration(){
+        final public function deleteMigration(){
             $this->db->clearQuery();
             return $this->db->table('migrations')->where('filename', $this->filename)->delete();
         }

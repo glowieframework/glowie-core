@@ -57,11 +57,14 @@
          * @param string $controller (Optional) The namespaced controller name that this route will instantiate.\
          * You can use `ControllerName::class` to get this property the correct way.
          * @param string $action (Optional) The action name from the controller that this route will instantiate.
-         * @param array $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
+         * @param string|array $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
          * @param string $name (Optional) Route internal name/identifier.
          */
-        public static function addRoute(string $route, string $controller = 'Glowie\Controllers\Main', string $action = 'index', array $methods = [], string $name = ''){
+        public static function addRoute(string $route, string $controller = 'Glowie\Controllers\Main', string $action = 'index', $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
+            if(empty($controller)) trigger_error('Rails: Controller cannot be empty', E_USER_ERROR);
+            if(empty($action)) trigger_error('Rails: Action cannot be empty', E_USER_ERROR);
+            if(!is_array($methods) && !empty($methods)) $methods = [$methods];
             self::$routes[$name] = [
                 'uri' => $route,
                 'controller' => $controller,
@@ -73,16 +76,22 @@
         /**
          * Setup a new protected route for the application.
          * @param string $route The route URI to setup.
-         * @param string $middleware (Optional) The namespaced middleware name that this route will use to protect itself.\
-         * You can use `MiddlewareName::class` to get this property the correct way.
+         * @param string|array $middleware (Optional) The namespaced middleware name that this route will use to protect itself.\
+         * You can use `MiddlewareName::class` to get this property the correct way.\
+         * You can also use an array of multiple middlewares.
          * @param string $controller (Optional) The namespaced controller name that this route will instantiate.\
          * You can use `ControllerName::class` to get this property the correct way.
          * @param string $action (Optional) The action name from the controller that this route will instantiate.
-         * @param array $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
+         * @param string|array $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
          * @param string $name (Optional) Route internal name/identifier.
          */
-        public static function addProtectedRoute(string $route, string $middleware = 'Glowie\Middlewares\Authenticate', string $controller = 'Glowie\Controllers\Main', string $action = 'index', array $methods = [], string $name = ''){
+        public static function addProtectedRoute(string $route, $middleware = 'Glowie\Middlewares\Authenticate', string $controller = 'Glowie\Controllers\Main', string $action = 'index', $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
+            if(empty($controller)) trigger_error('Rails: Controller cannot be empty', E_USER_ERROR);
+            if(empty($action)) trigger_error('Rails: Action cannot be empty', E_USER_ERROR);
+            if(empty($middleware)) trigger_error('Rails: Middleware cannot be empty', E_USER_ERROR);
+            if(!is_array($middleware)) $middleware = [$middleware];
+            if(!is_array($methods) && !empty($methods)) $methods = [$methods];
             self::$routes[$name] = [
                 'uri' => $route,
                 'controller' => $controller,
@@ -97,11 +106,13 @@
          * @param string $route The route URI to redirect.
          * @param string $target The target URl to redirect this route to.
          * @param int $code (Optional) HTTP status code to pass with the redirect.
-         * @param array $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
+         * @param string|array $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
          * @param string $name (Optional) Route internal name/identifier.
          */
-        public static function addRedirect(string $route, string $target, int $code = Response::HTTP_TEMPORARY_REDIRECT, array $methods = [], string $name = ''){
+        public static function addRedirect(string $route, string $target, int $code = Response::HTTP_TEMPORARY_REDIRECT, $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
+            if(empty($target)) trigger_error('Rails: Redirect target cannot be empty', E_USER_ERROR);
+            if(!is_array($methods) && !empty($methods)) $methods = [$methods];
             self::$routes[$name] = [
                 'uri' => $route,
                 'redirect' => $target,
@@ -125,6 +136,38 @@
          */
         public static function getRoute(string $route){
             return self::$routes[$route] ?? null;
+        }
+
+        /**
+         * Returns the current Request instance.
+         * @return Request Request instance.
+         */
+        public static function &getRequest(){
+            return self::$request;
+        }
+        
+        /**
+         * Returns the current Response instance.
+         * @return Response Response instance.
+         */
+        public static function &getResponse(){
+            return self::$response;
+        }
+
+        /**
+         * Returns the current Controller instance.
+         * @return Controller Controller instance.
+         */
+        public static function &getController(){
+            return self::$controller;
+        }
+
+        /**
+         * Returns the current Middleware instance.
+         * @return Middleware Middleware instance.
+         */
+        public static function &getMiddleware(){
+            return self::$middleware;
         }
 
         /**
@@ -160,57 +203,58 @@
                         $result = array_combine($result, array_column($params, 0));
                     }
 
+                    // Saves the configuration
                     $config = $item;
                     $routeName = $key;
                     break;
                 }
             }
 
-            // Check if route was found
+            // Checks if route was found
             if ($config) {
-                // Check if there is a request method configuration
+                // Checks if there is a request method configuration
                 if(!empty($config['methods'])){
                     $config['methods'] = array_map('strtoupper', $config['methods']);
                     if(!in_array(self::$request->getMethod(), $config['methods'])) return self::callMethodNotAllowed($route, $result);
                 }
 
-                // Check if there is a redirect configuration
+                // Checks if there is not a redirect configuration
                 if(empty($config['redirect'])){
                     // Gets the controller
                     $controller = $config['controller'];
 
-                    // If controller class does not exists, trigger an error
+                    // If the controller class does not exists, trigger an error
                     if (!class_exists($controller)) trigger_error("Rails: Controller \"{$controller}\" not found", E_USER_ERROR);
 
-                    // Instantiates new controller
+                    // Instantiates the controller
                     self::$controller = new $controller($routeName, $result);
 
-                    // Checks for the route middleware
+                    // Checks for the route middlewares
                     if(!empty($config['middleware'])){
-                        // Gets the middleware
-                        $middleware = $config['middleware'];
+                        // Runs each middleware
+                        foreach($config['middleware'] as $middleware){
+                            // If middleware class does not exists, trigger an error
+                            if (!class_exists($middleware)) trigger_error("Rails: Middleware \"{$middleware}\" not found", E_USER_ERROR);
 
-                        // If middleware class does not exists, trigger an error
-                        if (!class_exists($middleware)) trigger_error("Rails: Middleware \"{$middleware}\" not found", E_USER_ERROR);
+                            // Instantiates the middleware
+                            self::$middleware = new $middleware($routeName, $result);
+                            if (!is_callable([self::$middleware, 'handle'])) trigger_error("Rails: Middleware \"{$middleware}\" does not have a handle() method", E_USER_ERROR);
+                            if (is_callable([self::$middleware, 'init'])) self::$middleware->init();
 
-                        // Instantiates new middleware
-                        self::$middleware = new $middleware(self::$controller, $routeName, $result);
-                        if (!is_callable([self::$middleware, 'handle'])) trigger_error("Rails: Middleware \"{$middleware}\" does not have a handle() method", E_USER_ERROR);
-                        if (is_callable([self::$middleware, 'init'])) self::$middleware->init();
-
-                        // Calls middleware handle() method
-                        $response = self::$middleware->handle();
-                        if($response){
-                            // Middleware passed
-                            if (is_callable([self::$middleware, 'success'])) self::$middleware->success();
-                        }else{
-                            // Middleware blocked
-                            if (is_callable([self::$middleware, 'fail'])){
-                                self::$response->setStatusCode(Response::HTTP_FORBIDDEN);
-                                return self::$middleware->fail();
-                            }else{
-                                return self::callForbidden($routeName, $result);
-                            };
+                            // Calls middleware handle() method
+                            $response = self::$middleware->handle();
+                            if ($response) {
+                                // Middleware passed
+                                if (is_callable([self::$middleware, 'success'])) self::$middleware->success();
+                            } else {
+                                // Middleware blocked
+                                if (is_callable([self::$middleware, 'fail'])) {
+                                    self::$response->setStatusCode(Response::HTTP_FORBIDDEN);
+                                    return self::$middleware->fail();
+                                } else {
+                                    return self::callForbidden($routeName, $result);
+                                };
+                            }
                         }
                     }
 

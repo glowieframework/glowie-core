@@ -65,17 +65,16 @@
 
          /**
          * Instantiates a new instance of the middleware.
-         * @param Controller $controller Referenced controller that this middleware is handling.
          * @param string $route (Optional) Request route.
          * @param array $params (Optional) Route parameters.
          */
-        public function __construct(Controller &$controller, string $route = '', array $params = []){
-            $this->controller = $controller;
+        final public function __construct(string $route = '', array $params = []){
+            $this->controller = &Rails::getController();
             $this->get = new Element($_GET);
             $this->params = new Element($params);
             $this->post = new Element($_POST);
-            $this->request = new Request();
-            $this->response = new Response();
+            $this->request = &Rails::getRequest();
+            $this->response = &Rails::getResponse();
             $this->route = $route;
             $this->session = new Session();
         }

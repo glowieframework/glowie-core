@@ -71,12 +71,12 @@
          * @param string $route (Optional) Request route.
          * @param array $params (Optional) Route parameters.
          */
-        public function __construct(string $route = '', array $params = []){
+        final public function __construct(string $route = '', array $params = []){
             $this->get = new Element($_GET);
             $this->params = new Element($params);
             $this->post = new Element($_POST);
-            $this->request = new Request();
-            $this->response = new Response();
+            $this->request = &Rails::getRequest();
+            $this->response = &Rails::getResponse();
             $this->route = $route;
             $this->session = new Session();
             $this->view = new Element();
@@ -88,11 +88,11 @@
          * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
          * @return void
          */
-        public function renderView(string $view, array $params = []){
+        final public function renderView(string $view, array $params = []){
             if(!is_array($params)) trigger_error('renderView: $params must be an array', E_USER_ERROR);
             $view = '../views/' . $view . (!Util::endsWith($view, '.phtml') ? '.phtml' : '');
             if(file_exists($view)){
-                return new View($view, $params, true, $this);
+                return new View($view, $params, true);
             }else{
                 trigger_error('renderView: View file "' . str_replace('../', 'app/', $view) .'" not found', E_USER_ERROR);
             }
@@ -106,14 +106,14 @@
          * @param array $params (Optional) Parameters to pass into the rendered view and layout. Should be an associative array with each variable name and value.
          * @return void
          */
-        public function renderLayout(string $layout, string $view = '', array $params = []){
+        final public function renderLayout(string $layout, string $view = '', array $params = []){
             if (!is_array($params)) trigger_error('renderLayout: $params must be an array', E_USER_ERROR);
             $layout = '../views/layouts/' . $layout . (!Util::endsWith($layout, '.phtml') ? '.phtml' : '');
             if(!empty($view)){
                 $view = '../views/' . $view . (!Util::endsWith($view, '.phtml') ? '.phtml' : '');
                 if (file_exists($layout)) {
                     if(file_exists($view)){
-                        return new Layout($layout, $view, $params, $this);
+                        return new Layout($layout, $view, $params);
                     }else{
                         trigger_error('renderLayout: View file "' . str_replace('../', 'app/', $view) .'" not found', E_USER_ERROR);
                     }
@@ -122,7 +122,7 @@
                 }
             }else{
                 if (file_exists($layout)) {
-                    return new Layout($layout, '', $params, $this);
+                    return new Layout($layout, '', $params);
                 } else {
                     trigger_error('renderLayout: Layout file "' . str_replace('../', 'app/', $layout) .'" not found', E_USER_ERROR);
                 }

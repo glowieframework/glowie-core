@@ -60,7 +60,7 @@
         /**
          * Creates a new instance of the model.
          */
-        public function __construct(){
+        final public function __construct(){
             Kraken::__construct($this->_table);
         }
 

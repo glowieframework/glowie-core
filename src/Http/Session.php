@@ -45,17 +45,18 @@
          * @return mixed Returns the value if exists or null if there is none.
          */
         public function __get(string $key){
-            if(!isset($_SESSION)) session_start();
-            return $_SESSION[$key] ?? null;
+            return $this->get($key);
         }
 
         /**
          * Gets the value associated to a key in the session data.
          * @param string $key Key to get value.
-         * @return mixed Returns the value if exists or null if there is none.
+         * @param mixed $default (Optional) Default value to return if the key does not exists.
+         * @return mixed Returns the value if exists or the default if not.
          */
-        public function get(string $key){
-            return $this->__get($key);
+        public function get(string $key, $default = null){
+            if (!isset($_SESSION)) session_start();
+            return $_SESSION[$key] ?? $default;
         }
 
         /**

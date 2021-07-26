@@ -2,7 +2,7 @@
     namespace Glowie\Core\View;
 
     use Glowie\Core\Element;
-    use Glowie\Core\Http\Controller;
+    use Glowie\Core\Http\Rails;
 
     /**
      * View core for Glowie application.
@@ -23,12 +23,6 @@
         private $_content;
 
         /**
-         * Controller that instantiated this view.
-         * @var Controller
-         */
-        private $_controller;
-
-        /**
          * View helpers instance.
          * @var Helpers
          */
@@ -45,15 +39,13 @@
          * @param string $view View filename to instantiate.
          * @param array $params View parameters to parse.
          * @param bool $parse Immediately parse view content.
-         * @param Controller $controller Current controller.
          */
-        public function __construct(string $view, array $params, bool $parse, Controller &$controller){
+        public function __construct(string $view, array $params, bool $parse){
             // Parse parameters
             $helpers = 'Glowie\Helpers\Helpers';
             if(!self::$_helpers) self::$_helpers = new $helpers;
-            $this->_controller = $controller;
             $this->_path = $view;
-            $viewData = $this->_controller->view->toArray();
+            $viewData = Rails::getController()->view->toArray();
             if(!empty($viewData)) foreach ($viewData as $key => $value) $this->{$key} = $value;
             if(!empty($params)) foreach($params as $key => $value) $this->{$key} = $value;
 
@@ -93,7 +85,7 @@
          * @return void
          */
         public function renderView(string $view, array $params = []){
-            $this->_controller->renderView($view, $params);
+            Rails::getController()->renderView($view, $params);
         }
 
         /**
@@ -105,15 +97,7 @@
          * @return void
          */
         public function renderLayout(string $layout, string $view = '', array $params = []){
-            $this->_controller->renderLayout($layout, $view, $params);
-        }
-
-        /**
-         * Returns the controller that instantiated this view.
-         * @return Controller The controller instance.
-         */
-        public function getController(){
-            return $this->_controller;
+            Rails::getController()->renderLayout($layout, $view, $params);
         }
 
         /**
