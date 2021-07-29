@@ -115,6 +115,16 @@
             return $this->_data;
         }
 
+        /**
+         * Gets the Element data as JSON.
+         * @param int $flags (Optional) JSON encoding flags (same as in `json_encode()` function).
+         * @param int $depth (Optional) JSON encoding maximum depth (same as in `json_encode()` function).
+         * @return string The resulting JSON string.
+         */
+        public function toJson(int $flags = 0, int $depth = 512){
+            return json_encode($this->data, $flags, $depth);
+        }
+
     }
 
 ?>

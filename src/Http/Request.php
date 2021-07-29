@@ -2,6 +2,7 @@
     namespace Glowie\Core\Http;
 
     use Glowie\Core\Element;
+    use Util;
 
     /**
      * Request handler for Glowie application.
@@ -103,7 +104,30 @@
         public function getHeader(string $name){
             $headers = getallheaders();
             if(!$headers) trigger_error('Request: Error retrieving request headers', E_USER_ERROR);
-            return $headers[$name] ?? null;
+            $headers = array_map('strtolower', $headers);
+            return $headers[strtolower($name)] ?? null;
+        }
+
+        /**
+         * Gets a basic Authorization header.
+         * @return Element|null Returns an object with the username and password if exists or null if there is none.
+         */
+        public function getAuthorization(){
+            $value = $this->getHeader('Authorization');
+            if(!$value) return null;
+            if(!Util::startsWith($value, 'Basic ')) return null;
+            $value = base64_decode(substr($value, 6));
+            if(!$value) return null;
+            $value = explode(':', $value, 2);
+            return new Element(['username' => $value[0] ?? null, 'password' => $value[1] ?? null]);
+        }
+
+        /**
+         * Gets the Content-Type header.
+         * @return string|null Returns the header value if exists or null if there is none.
+         */
+        public function getContentType(){
+            return $this->getHeader('Content-Type');
         }
 
         /**

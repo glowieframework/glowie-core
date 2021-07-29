@@ -133,6 +133,17 @@
             if(!isset($_SESSION)) session_start();
             return $_SESSION;
         }
+        
+        /**
+         * Gets the session data as JSON.
+         * @param int $flags (Optional) JSON encoding flags (same as in `json_encode()` function).
+         * @param int $depth (Optional) JSON encoding maximum depth (same as in `json_encode()` function).
+         * @return string The resulting JSON string.
+         */
+        public function toJson(int $flags = 0, int $depth = 512){
+            if(!isset($_SESSION)) session_start();
+            return json_encode($_SESSION, $flags, $depth);
+        }
 
         /**
          * Sets the value for a key in the session flash data.

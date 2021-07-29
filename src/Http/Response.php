@@ -170,11 +170,20 @@
         }
 
         /**
+         * Sets a basic Authorization header with username and password.
+         * @param string $username Username to set.
+         * @param string $password Password to set.
+         */
+        public function setAuthorization(string $username, string $password){
+            $this->setHeader('Authorization', 'Basic ' . base64_encode("{$username}:{$password}"));
+        }
+
+        /**
          * Sets the Content-Type header.
          * @param string $type Content-Type to set.
          */
         public function setContentType(string $type){
-            header("Content-Type: {$type}");
+            $this->setHeader('Content-Type', $type);
         }
 
         /**
