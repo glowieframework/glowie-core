@@ -1,6 +1,8 @@
 <?php
     namespace Glowie\Core\Http;
 
+    use Glowie\Core\Exception\FileException;
+
     /**
      * Session manager for Glowie application.
      * @category Session manager
@@ -34,7 +36,7 @@
          */
         public static function register(){
             $sessdir = '../storage/session';
-            if(!is_writable($sessdir)) trigger_error('Session: Directory "app/storage/session" is not writable, please check your chmod settings', E_USER_ERROR);
+            if(!is_writable($sessdir)) throw new FileException('Session: Directory "app/storage/session" is not writable, please check your chmod settings');
             session_save_path($sessdir);
             ini_set('session.gc_probability', 1);
         }

@@ -4,6 +4,7 @@
     use Glowie\Helpers\Helpers;
     use Glowie\Core\Http\Rails;
     use Glowie\Core\Element;
+    use Glowie\Core\Exception\ViewException;
 
     /**
      * Layout core for Glowie application.
@@ -70,7 +71,7 @@
             if(is_callable([self::$_helpers, $method])){
                 return call_user_func_array([self::$_helpers, $method], $args);
             }else{
-                trigger_error('Layout: Method "' . $method .'" does not exist in "app/views/helpers/Helpers.php"', E_USER_ERROR);
+                throw new ViewException('Layout: Method "' . $method .'" does not exist in "app/views/helpers/Helpers.php"');
             }
         }
 

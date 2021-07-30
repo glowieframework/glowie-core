@@ -16,15 +16,52 @@
     class Crawler{
 
         /**
-         * Performs a GET request.
-         * @param string $url URL to perform request.
+         * Custom request headers.
+         * @var array
+         */
+        private $headers = [];
+
+        /**
+         * Creates a new HTTP client instance.
          * @param array $headers (Optional) Custom headers to send in the request. Must be an associative array with the key being the name of the header\
          * and the value the header value (can be a string or an array of strings).
-         * @param int $timeout (Optional) Maximum number of seconds that this request can wait for a response. Default is 30 seconds. Use 0 for unlimited.
+         * @param int $timeout (Optional) Maximum number of seconds that the request can wait for a response. Default is 30 seconds. Use 0 for unlimited.
+         */
+        public function __construct(array $headers = [], int $timeout = 30){
+            // Set headers
+            if(!empty($headers)){
+                foreach($headers as $key => $value) $this->addHeader($key, $value);
+            }
+
+            // Set timeout
+            $this->timeout = $timeout;
+        }
+
+        /**
+         * Adds a custom header to the request.
+         * @param string $name Header name.
+         * @param string|array $content Header content. Can be a value or an array of values.
+         */
+        public function addHeader(string $name, $content){
+            if(is_array($content)) $content = implode(', ', $content);
+            $this->headers[] = "{$name}: {$content}";
+        }
+
+        /**
+         * Sets the maximum number of seconds that the request can wait for a response.
+         * @param int $timeout Timeout in seconds. Use 0 for unlimited.
+         */
+        public function setTimeout(int $timeout){
+            $this->timeout = $timeout;
+        }
+
+        /**
+         * Performs a GET request.
+         * @param string $url URL to perform request.
          * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on failure.
          */
-        public function get(string $url, array $headers = [], int $timeout = 30){
-            return $this->request($url, 'GET', [], $headers, $timeout);
+        public function get(string $url){
+            return $this->request($url, 'GET');
         }
 
         /**
@@ -32,13 +69,10 @@
          * @param string $url URL to perform request.
          * @param array|string $data (Optional) Data to send in the request. Can be an associative array with the corresponding field names and values, JSON\
          * or plain text. **Content-Type** header must be needed depending on chosen data type.
-         * @param array $headers (Optional) Custom headers to send in the request. Must be an associative array with the key being the name of the header\
-         * and the value the header value (can be a string or an array of strings).
-         * @param int $timeout (Optional) Maximum number of seconds that this request can wait for a response. Default is 30 seconds. Use 0 for unlimited.
          * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on failure.
          */
-        public function post(string $url, $data = [], array $headers = [], int $timeout = 30){
-            return $this->request($url, 'POST', $data, $headers, $timeout);
+        public function post(string $url, $data = []){
+            return $this->request($url, 'POST', $data);
         }
 
         /**
@@ -46,13 +80,10 @@
          * @param string $url URL to perform request.
          * @param array|string $data (Optional) Data to send in the request. Can be an associative array with the corresponding field names and values, JSON\
          * or plain text. **Content-Type** header must be needed depending on chosen data type.
-         * @param array $headers (Optional) Custom headers to send in the request. Must be an associative array with the key being the name of the header\
-         * and the value the header value (can be a string or an array of strings).
-         * @param int $timeout (Optional) Maximum number of seconds that this request can wait for a response. Default is 30 seconds. Use 0 for unlimited.
          * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on failure.
          */
-        public function put(string $url, $data = [], array $headers = [], int $timeout = 30){
-            return $this->request($url, 'PUT', $data, $headers, $timeout);
+        public function put(string $url, $data = []){
+            return $this->request($url, 'PUT', $data);
         }
 
         /**
@@ -60,13 +91,10 @@
          * @param string $url URL to perform request.
          * @param array|string $data (Optional) Data to send in the request. Can be an associative array with the corresponding field names and values, JSON\
          * or plain text. **Content-Type** header must be needed depending on chosen data type.
-         * @param array $headers (Optional) Custom headers to send in the request. Must be an associative array with the key being the name of the header\
-         * and the value the header value (can be a string or an array of strings).
-         * @param int $timeout (Optional) Maximum number of seconds that this request can wait for a response. Default is 30 seconds. Use 0 for unlimited.
          * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on failure.
          */
-        public function patch(string $url, $data = [], array $headers = [], int $timeout = 30){
-            return $this->request($url, 'PATCH', $data, $headers, $timeout);
+        public function patch(string $url, $data = []){
+            return $this->request($url, 'PATCH', $data);
         }
 
         /**
@@ -74,58 +102,45 @@
          * @param string $url URL to perform request.
          * @param array|string $data (Optional) Data to send in the request. Can be an associative array with the corresponding field names and values, JSON\
          * or plain text. **Content-Type** header must be needed depending on chosen data type.
-         * @param array $headers (Optional) Custom headers to send in the request. Must be an associative array with the key being the name of the header\
-         * and the value the header value (can be a string or an array of strings).
-         * @param int $timeout (Optional) Maximum number of seconds that this request can wait for a response. Default is 30 seconds. Use 0 for unlimited.
          * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on failure.
          */
-        public function delete(string $url, $data = [], array $headers = [], int $timeout = 30){
-            return $this->request($url, 'DELETE', $data, $headers, $timeout);
+        public function delete(string $url, $data = []){
+            return $this->request($url, 'DELETE', $data);
         }
 
         /**
-         * Performs a HTTP request.
+         * Performs an HTTP request.
          * @param string $url URL to perform request.
          * @param string $method (Optional) Method to use in the request. Default is GET.
          * @param array|string $data (Optional) Data to send in the request. Can be an associative array with the corresponding field names and values, JSON\
          * or plain text. **Content-Type** header must be needed depending on chosen data type.
-         * @param array $headers (Optional) Custom headers to send in the request. Must be an associative array with the key being the name of the header\
-         * and the value the header value (can be a string or an array of strings).
-         * @param int $timeout (Optional) Maximum number of seconds that this request can wait for a response. Default is 30 seconds. Use 0 for unlimited.
          * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on failure.
          */
-        public function request(string $url, string $method = 'GET', $data = [], array $headers = [], int $timeout = 30){
+        public function request(string $url, string $method = 'GET', $data = []){
             // Initializes cURL
             $curl = curl_init($url);
 
             // Sets cURL options
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, $timeout);
+            curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, $this->timeout);
 
             // Sets headers
-            if (!empty($headers)) {
-                if(!is_array($headers)) trigger_error('Crawler: $headers must be an array', E_USER_ERROR);
-                $parsed = [];
-                foreach ($headers as $key => $value) {
-                    if(is_array($value)){
-                        $parsed[] = $key . ': ' . implode(', ', $value);
-                    }else{
-                        $parsed[] = $key . ': ' . $value;
-                    }
-                }
-                curl_setopt($curl, CURLOPT_HTTPHEADER, $parsed);
-            }
+            if (!empty($this->headers)) curl_setopt($curl, CURLOPT_HTTPHEADER, $this->headers);
 
             // Sets method
             $method = strtoupper(trim($method));
-            if($method == 'GET'){
-                # default
-            }else if ($method == 'POST') {
-                curl_setopt($curl, CURLOPT_POST, 1);
-            }else if($method == 'PUT'){
-                curl_setopt($curl, CURLOPT_PUT, 1);
-            }else{
-                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
+            switch($method){
+                case 'GET':
+                    break;
+                case 'POST':
+                    curl_setopt($curl, CURLOPT_POST, 1);
+                    break;
+                case 'PUT':
+                    curl_setopt($curl, CURLOPT_PUT, 1);
+                    break;
+                default:
+                    curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
+                    break;
             }
 
             // Sets data

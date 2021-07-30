@@ -2,6 +2,7 @@
     namespace Glowie\Core\CLI;
 
     use Glowie\Core\Database\Kraken;
+    use Glowie\Core\Exception\ConsoleException;
     use Util;
     use Exception;
 
@@ -36,28 +37,22 @@
         private static $args;
 
         /**
-         * Stores if Firefly is running through CLI or not.
+         * Stores if Firefly is running through CLI.
          * @var bool
          */
-        private static $isCLI = true;
-
-        /**
-         * Current migration.
-         * @var Migration
-         */
-        private static $migration;
+        private static $isCLI;
 
         /**
          * Firefly templates folder.
          * @var string
          */
-        private static $templateFolder = 'vendor/glowieframework/glowie-core/src/CLI/Templates/';
+        private static $templateFolder;
 
         /**
          * Firefly current working folder path.
          * @var string
          */
-        private static $appFolder = 'app/';
+        private static $appFolder;
 
         /**
          * Runs the command line tool.
@@ -67,7 +62,6 @@
             global $argv;
             self::$args = $argv;
             self::$isCLI = true;
-            self::$migration = null;
             self::$templateFolder = 'vendor/glowieframework/glowie-core/src/CLI/Templates/';
             self::$appFolder = 'app/';
 
@@ -94,7 +88,6 @@
             // Register settings
             self::$args = $args;
             self::$isCLI = false;
-            self::$migration = null;
             self::$templateFolder = '../../vendor/glowieframework/glowie-core/src/CLI/Templates/';
             self::$appFolder = '../';
 
@@ -201,7 +194,7 @@
             if(self::$isCLI) return;
 
             // Throw error
-            trigger_error('Firefly: ' . $message, E_USER_ERROR);
+            throw new ConsoleException('Firefly: ' . $message);
         }
 
         /**
@@ -607,7 +600,7 @@
             if(empty($steps)) $steps = 'all';
 
             // Loops through all the migration files
-            foreach (Util::getFiles(self::$appFolder . 'migrations/*.php') as $filename){
+            foreach (glob(self::$appFolder . 'migrations/*.php') as $filename){
                 // Checks current state
                 if($steps != 'all' && $stepsDone == $steps) break;
 
@@ -619,14 +612,14 @@
                 $classname = 'Glowie\Migrations\\' . $name;
 
                 // Instantiates the migration class
-                self::$migration = new $classname;
-                if (is_callable([self::$migration, 'init'])) self::$migration->init();
+                $migration = new $classname;
+                if (is_callable([$migration, 'init'])) $migration->init();
 
                 try {
                     // Checks if the migration was already applied
-                    if(!self::$migration->isApplied()){
-                        self::$migration->run();
-                        self::$migration->saveMigration();
+                    if(!$migration->isApplied()){
+                        $migration->run();
+                        $migration->saveMigration();
                         $migrateRun = true;
                         $stepsDone++;
                         $time = round((microtime(true) - $time), 5);
@@ -671,7 +664,7 @@
             if(empty($steps)) $steps = 1;
 
             // Loops through all the migration files
-            foreach (array_reverse(Util::getFiles(self::$appFolder . 'migrations/*.php')) as $filename) {
+            foreach (array_reverse(glob(self::$appFolder . 'migrations/*.php')) as $filename) {
                 // Checks current state
                 if($steps != 'all' && $stepsDone == $steps) break;
 
@@ -683,14 +676,14 @@
                 $classname = 'Glowie\Migrations\\' . $name;
 
                 // Instantiates the migration class
-                self::$migration = new $classname;
-                if (is_callable([self::$migration, 'init'])) self::$migration->init();
+                $migration = new $classname;
+                if (is_callable([$migration, 'init'])) $migration->init();
 
                 try {
                     // Checks if the migration was already applied
-                    if(self::$migration->isApplied()){
-                        self::$migration->rollback();
-                        self::$migration->deleteMigration();
+                    if($migration->isApplied()){
+                        $migration->rollback();
+                        $migration->deleteMigration();
                         $rollbackRun = true;
                         $stepsDone++;
                         $time = round((microtime(true) - $time), 5);

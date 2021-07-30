@@ -42,7 +42,7 @@
             $this->setFrom($from);
             $this->setTo($to);
         }
-        
+
         /**
          * Sets the email sender address.
          * @param string|array $from The sender address. You can also specify the sender display name by passing an array\
@@ -94,9 +94,10 @@
         /**
          * Adds a custom header to the message.
          * @param string $name Header name.
-         * @param string $content Header content.
+         * @param string|array $content Header content. Can be a value or an array of values.
          */
-        public function addHeader(string $name, string $content){
+        public function addHeader(string $name, $content){
+            if(is_array($content)) $content = implode(', ', $content);
             $this->headers[] = "{$name}: {$content}";
         }
 

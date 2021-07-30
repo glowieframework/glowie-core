@@ -1,10 +1,11 @@
 <?php
     namespace Glowie\Core\Http;
 
-    use Glowie\Core\Element;
     use Util;
+    use Glowie\Core\Element;
+    use Glowie\Core\Exception\RoutingException;
 
-    /**
+/**
      * Request handler for Glowie application.
      * @category Request
      * @package glowieframework/glowie-core
@@ -15,6 +16,21 @@
      * @version 1.0
      */
     class Request{
+
+        /**
+         * Current Request headers.
+         * @var array
+         */
+        private static $headers;
+
+        /**
+         * Creates a new Request handler instance.
+         */
+        public function __construct(){
+            $headers = getallheaders();
+            if(!$headers) throw new RoutingException('Request: Error retrieving request headers');
+            self::$headers = array_change_key_case($headers, CASE_LOWER);
+        }
 
         /**
          * Returns the request full URL.
@@ -102,10 +118,7 @@
          * @return string|null Returns the header value if exists or null if there is none.
          */
         public function getHeader(string $name){
-            $headers = getallheaders();
-            if(!$headers) trigger_error('Request: Error retrieving request headers', E_USER_ERROR);
-            $headers = array_map('strtolower', $headers);
-            return $headers[strtolower($name)] ?? null;
+            return self::$headers[strtolower($name)] ?? null;
         }
 
         /**

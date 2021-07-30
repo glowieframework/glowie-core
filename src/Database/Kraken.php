@@ -2,6 +2,8 @@
     namespace Glowie\Core\Database;
 
     use Glowie\Core\Element;
+    use Glowie\Core\Exception\DatabaseException;
+    use Glowie\Core\Exception\QueryException;
     use mysqli;
     use mysqli_result;
     use mysqli_sql_exception;
@@ -149,10 +151,10 @@
             if ($global) $database = GLOWIE_CONFIG['database'];
 
             // Validate settings
-            if (!is_array($database)) trigger_error('Kraken: Database connection settings must be an array', E_USER_ERROR);
-            if (empty($database['host'])) trigger_error('Kraken:  Database host not defined', E_USER_ERROR);
-            if (empty($database['username'])) trigger_error('Kraken:  Database username not defined', E_USER_ERROR);
-            if (empty($database['db'])) trigger_error('Kraken: Database name not defined', E_USER_ERROR);
+            if (!is_array($database)) throw new DatabaseException('Kraken: Database connection settings must be an array');
+            if (empty($database['host'])) throw new DatabaseException('Kraken: Database host not defined');
+            if (empty($database['username'])) throw new DatabaseException('Kraken: Database username not defined');
+            if (empty($database['db'])) throw new DatabaseException('Kraken: Database name not defined');
             if (empty($database['port'])) $database['port'] = 3306;
 
             // Saves the database connection
@@ -177,7 +179,7 @@
          * @return Kraken Current Kraken instance for nested calls.
          */
         public function table(string $table){
-            if (empty($table)) trigger_error('Kraken: Table name should not be empty', E_USER_ERROR);
+            if (empty($table)) throw new DatabaseException('Kraken: Table name should not be empty');
             $this->_table = $table;
             return $this;
         }
@@ -378,7 +380,7 @@
                 return $this;
             }else if(is_array($param1)){
                 foreach($param1 as $condition){
-                    if(!is_array($condition) || count($condition) < 2) trigger_error('Multiple WHERE conditions must be an array with at least two parameters', E_USER_ERROR);
+                    if(!is_array($condition) || count($condition) < 2) throw new DatabaseException('Multiple WHERE conditions must be an array with at least two parameters');
                     $this->where($condition[0], $condition[1], $condition[2] ?? null);
                 }
                 return $this;
@@ -1221,7 +1223,7 @@
             if($this->_instruction == 'UPDATE'){
                 $query .= " {$this->_table}";
             }
-            
+
             // Gets JOIN statements
             if(!empty($this->_join)){
                 $join = implode(' ', $this->_join);
@@ -1310,7 +1312,8 @@
 
             try {
                 // Run query and clear its data
-                $query = $this->_connection->query($this->getQuery());
+                $built = $this->getQuery();
+                $query = $this->_connection->query($built);
                 $this->clearQuery();
 
                 // Checks for query result
@@ -1351,10 +1354,10 @@
                     if($this->_transactions) $this->_connection->rollback();
                     return false;
                 }
-            } catch (mysqli_sql_exception $exception) {
+            } catch (mysqli_sql_exception $e) {
                 // Query failed with error
                 if($this->_transactions) $this->_connection->rollback();
-                throw $exception;
+                throw new QueryException($built, $e->getMessage(), $e->getCode(), $e);
             }
         }
 

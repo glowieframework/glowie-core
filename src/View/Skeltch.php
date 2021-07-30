@@ -1,5 +1,7 @@
 <?php
     namespace Glowie\Core\View;
+    
+    use Glowie\Core\Exception\FileException;
 
     /**
      * Templating engine for Glowie application.
@@ -21,7 +23,7 @@
         public static function run(string $filename){
             // Checks for file and cache folder permissions
             $tmpdir = '../storage/cache/';
-            if(!is_writable($tmpdir)) trigger_error('Skeltch: Directory "app/storage/cache" is not writable, please check your chmod settings', E_USER_ERROR);
+            if(!is_writable($tmpdir)) throw new FileException('Skeltch: Directory "app/storage/cache" is not writable, please check your chmod settings');
 
             // Checks if cache is enabled or should be recompiled
             $tmpfile = $tmpdir . md5($filename) . '.tmp';
