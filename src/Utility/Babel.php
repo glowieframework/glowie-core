@@ -1,5 +1,7 @@
 <?php
 
+    use Glowie\Core\Exception\FileException;
+
     /**
      * Internationalization helper for Glowie application.
      * @category Internationalization
@@ -78,10 +80,10 @@
                     // Returns the value
                     return self::$languages[$lang][$key] ?? null;
                 }else{
-                    trigger_error('Babel: Language "'.$lang.'" does not exist in "app/languages"', E_USER_ERROR);
+                    throw new FileException('Babel: Language "'.$lang.'" does not exist in "app/languages"');
                 }
             }else{
-                trigger_error('Babel: Language configuration not found in "app/languages"', E_USER_ERROR);
+                throw new FileException('Babel: Language configuration not found in "app/languages"');
             }
         }
 

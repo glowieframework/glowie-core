@@ -2,7 +2,7 @@
     namespace Glowie\Core\Database;
 
     use Glowie\Core\Element;
-    use Glowie\Core\Exception\DatabaseException;
+    use Exception;
 
     /**
      * Model core for Glowie application.
@@ -171,7 +171,7 @@
          * @return bool Returns true if the row data has been modified or false otherwise.
          */
         public function isDirty(string $field = ''){
-            if(!$this->_initialData instanceof Element) throw new DatabaseException('isDirty: Model entity was not filled with a row data');
+            if(!$this->_initialData instanceof Element) throw new Exception('isDirty: Model entity was not filled with a row data');
             if(!empty($field)){
                 return ($this->_initialData->get($field) !== $this->get($field));
             }else{
@@ -185,7 +185,7 @@
          * @return bool Returns true if the row data has not been modified or false otherwise.
          */
         public function isPristine(string $field = ''){
-            if(!$this->_initialData instanceof Element) throw new DatabaseException('isPristine: Model entity was not filled with a row data');
+            if(!$this->_initialData instanceof Element) throw new Exception('isPristine: Model entity was not filled with a row data');
             return !$this->isDirty($field);
         }
 

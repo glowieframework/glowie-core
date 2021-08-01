@@ -4,7 +4,6 @@
     use Glowie\Core\Element;
     use Glowie\Core\View\View;
     use Glowie\Core\View\Layout;
-    use Glowie\Core\Exception\ViewException;
     use Glowie\Core\Exception\FileException;
     use Util;
 
@@ -91,7 +90,6 @@
          * @return void
          */
         final public function renderView(string $view, array $params = []){
-            if(!is_array($params)) throw new ViewException('renderView: $params must be an array');
             $view = '../views/' . $view . (!Util::endsWith($view, '.phtml') ? '.phtml' : '');
             if(file_exists($view)){
                 return new View($view, $params, true);
@@ -109,7 +107,6 @@
          * @return void
          */
         final public function renderLayout(string $layout, string $view = '', array $params = []){
-            if (!is_array($params)) throw new ViewException('renderLayout: $params must be an array');
             $layout = '../views/layouts/' . $layout . (!Util::endsWith($layout, '.phtml') ? '.phtml' : '');
             if(!empty($view)){
                 $view = '../views/' . $view . (!Util::endsWith($view, '.phtml') ? '.phtml' : '');

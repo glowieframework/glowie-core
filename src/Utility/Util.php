@@ -1,6 +1,7 @@
 <?php
     use Glowie\Core\Http\Rails;
     use Glowie\Core\Http\Session;
+    use Exception;
 
     /**
      * Miscellaneous utilities for Glowie application.
@@ -51,12 +52,12 @@
          */
         public static function route(string $route, array $params = []){
             // Validate arguments
-            if(empty($route)) trigger_error('route: Route name cannot be empty', E_USER_ERROR);
-            if (!is_array($params)) trigger_error('route: $params must be an array', E_USER_ERROR);
+            if(empty($route)) throw new Exception('route: Route name cannot be empty');
+            if (!is_array($params)) throw new Exception('route: $params must be an array');
 
             // Gets the named route
             $routeData = Rails::getRoute($route);
-            if(empty($routeData)) trigger_error('route: Route name "' . $route .'" does not match any existing route', E_USER_ERROR);
+            if(empty($routeData)) throw new Exception('route: Route name "' . $route .'" does not match any existing route');
 
             // Gets the route parameters
             $uri = [];
@@ -77,7 +78,7 @@
             }
 
             // Validates missing parameters
-            if (!empty($missing)) trigger_error('route: Missing parameter "' . implode('", "', $missing) . '" for route "' . $route . '"', E_USER_ERROR);
+            if (!empty($missing)) throw new Exception('route: Missing parameter "' . implode('", "', $missing) . '" for route "' . $route . '"');
 
             // Checks if the route has any parameters
             if(!empty($result)){

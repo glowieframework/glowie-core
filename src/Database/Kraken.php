@@ -9,6 +9,7 @@
     use mysqli_sql_exception;
     use Closure;
     use stdClass;
+    use Exception;
 
     /**
      * Database ORM toolkit for Glowie application.
@@ -151,23 +152,27 @@
             if ($global) $database = GLOWIE_CONFIG['database'];
 
             // Validate settings
-            if (!is_array($database)) throw new DatabaseException('Kraken: Database connection settings must be an array');
-            if (empty($database['host'])) throw new DatabaseException('Kraken: Database host not defined');
-            if (empty($database['username'])) throw new DatabaseException('Kraken: Database username not defined');
-            if (empty($database['db'])) throw new DatabaseException('Kraken: Database name not defined');
+            if (!is_array($database)) throw new DatabaseException($database, 'Database connection settings must be an array');
+            if (empty($database['host'])) throw new DatabaseException($database, 'Database host not defined');
+            if (empty($database['username'])) throw new DatabaseException($database, 'Database username not defined');
+            if (empty($database['db'])) throw new DatabaseException($database, 'Database name not defined');
             if (empty($database['port'])) $database['port'] = 3306;
 
             // Saves the database connection
-            if($global){
-                // Checks if the global database is already connected
-                if(self::$_global){
-                    $connection = self::$_global;
+            try {
+                if($global){
+                    // Checks if the global database is already connected
+                    if(self::$_global){
+                        $connection = self::$_global;
+                    }else{
+                        $connection = new mysqli($database['host'], $database['username'], $database['password'], $database['db'], $database['port']);
+                        self::$_global = $connection;
+                    }
                 }else{
                     $connection = new mysqli($database['host'], $database['username'], $database['password'], $database['db'], $database['port']);
-                    self::$_global = $connection;
                 }
-            }else{
-                $connection = new mysqli($database['host'], $database['username'], $database['password'], $database['db'], $database['port']);
+            } catch (Exception $e) {
+                throw new DatabaseException($database, $e->getMessage(), $e->getCode(), $e);
             }
             $this->_connection = $connection;
             return $this;
@@ -179,7 +184,7 @@
          * @return Kraken Current Kraken instance for nested calls.
          */
         public function table(string $table){
-            if (empty($table)) throw new DatabaseException('Kraken: Table name should not be empty');
+            if (empty($table)) throw new Exception('Table name should not be empty');
             $this->_table = $table;
             return $this;
         }
@@ -380,7 +385,7 @@
                 return $this;
             }else if(is_array($param1)){
                 foreach($param1 as $condition){
-                    if(!is_array($condition) || count($condition) < 2) throw new DatabaseException('Multiple WHERE conditions must be an array with at least two parameters');
+                    if(!is_array($condition) || count($condition) < 2) throw new Exception('Multiple WHERE conditions must be an array with at least two parameters');
                     $this->where($condition[0], $condition[1], $condition[2] ?? null);
                 }
                 return $this;

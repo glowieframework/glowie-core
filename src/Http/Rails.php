@@ -63,8 +63,8 @@
          */
         public static function addRoute(string $route, string $controller = 'Glowie\Controllers\Main', string $action = 'index', $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
-            if(empty($controller)) throw new RoutingException('Rails: Controller cannot be empty');
-            if(empty($action)) throw new RoutingException('Rails: Action cannot be empty');
+            if(empty($controller)) throw new RoutingException('Controller cannot be empty');
+            if(empty($action)) throw new RoutingException('Action cannot be empty');
             if(!is_array($methods) && !empty($methods)) $methods = [$methods];
             self::$routes[$name] = [
                 'uri' => $route,
@@ -88,9 +88,9 @@
          */
         public static function addProtectedRoute(string $route, $middleware = 'Glowie\Middlewares\Authenticate', string $controller = 'Glowie\Controllers\Main', string $action = 'index', $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
-            if(empty($controller)) throw new RoutingException('Rails: Controller cannot be empty');
-            if(empty($action)) throw new RoutingException('Rails: Action cannot be empty');
-            if(empty($middleware)) throw new RoutingException('Rails: Middleware cannot be empty');
+            if(empty($controller)) throw new RoutingException('Controller cannot be empty');
+            if(empty($action)) throw new RoutingException('Action cannot be empty');
+            if(empty($middleware)) throw new RoutingException('Middleware cannot be empty');
             if(!is_array($middleware)) $middleware = [$middleware];
             if(!is_array($methods) && !empty($methods)) $methods = [$methods];
             self::$routes[$name] = [
@@ -112,7 +112,7 @@
          */
         public static function addRedirect(string $route, string $target, int $code = Response::HTTP_TEMPORARY_REDIRECT, $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
-            if(empty($target)) throw new RoutingException('Rails: Redirect target cannot be empty');
+            if(empty($target)) throw new RoutingException('Redirect target cannot be empty');
             if(!is_array($methods) && !empty($methods)) $methods = [$methods];
             self::$routes[$name] = [
                 'uri' => $route,
@@ -225,7 +225,7 @@
                     $controller = $config['controller'];
 
                     // If the controller class does not exists, trigger an error
-                    if (!class_exists($controller)) throw new RoutingException("Rails: Controller \"{$controller}\" not found");
+                    if (!class_exists($controller)) throw new RoutingException("Controller \"{$controller}\" not found");
 
                     // Instantiates the controller
                     self::$controller = new $controller($routeName, $result);
@@ -235,11 +235,11 @@
                         // Runs each middleware
                         foreach($config['middleware'] as $middleware){
                             // If middleware class does not exists, trigger an error
-                            if (!class_exists($middleware)) throw new RoutingException("Rails: Middleware \"{$middleware}\" not found");
+                            if (!class_exists($middleware)) throw new RoutingException("Middleware \"{$middleware}\" not found");
 
                             // Instantiates the middleware
                             self::$middleware = new $middleware($routeName, $result);
-                            if (!is_callable([self::$middleware, 'handle'])) throw new RoutingException("Rails: Middleware \"{$middleware}\" does not have a handle() method");
+                            if (!is_callable([self::$middleware, 'handle'])) throw new RoutingException("Middleware \"{$middleware}\" does not have a handle() method");
                             if (is_callable([self::$middleware, 'init'])) self::$middleware->init();
 
                             // Calls middleware handle() method
@@ -270,7 +270,7 @@
                         // Calls action
                         return self::$controller->{$action}();
                     } else {
-                        throw new RoutingException("Rails: Action \"{$action}()\" not found in {$controller} controller");
+                        throw new RoutingException("Action \"{$action}()\" not found in {$controller} controller");
                     }
                 }else{
                     // Redirects to the target URL

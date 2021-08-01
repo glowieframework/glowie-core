@@ -2,6 +2,7 @@
     namespace Glowie\Core\Tools;
 
     use Util;
+    use Exception;
 
     /**
      * Data validator for Glowie application.
@@ -43,19 +44,13 @@
          * @return bool Validation result.
          */
         public function validateFields(array $data, array $rules, bool $bail = false, bool $bailAll = false){
-            // Check data
-            if (!is_array($data)) trigger_error('validateFields: $data must be an array of fields', E_USER_ERROR);
-
-            // Check ruleset
-            if (!is_array($rules)) trigger_error('validateFields: $rules must be an array of rules', E_USER_ERROR);
-
             // Loops throug field list
             $result = true;
             $errors = [];
             foreach($data as $key => $item){
                 // Searches for field rule
                 if(isset($rules[$key])){
-                    if(!is_array($rules[$key])) trigger_error('validateFields: [' . $key .'] must be an array of rules', E_USER_ERROR);
+                    if(!is_array($rules[$key])) throw new Exception('validateFields: [' . $key .'] must be an array of rules');
 
                     // Validate item
                     $this->validate($item, $rules[$key], $bail);
@@ -83,12 +78,6 @@
          * @return bool Validation result.
          */
         public function validateMultiple(array $data, array $rules, bool $bail = false, bool $bailAll = false){
-            // Check data
-            if(!is_array($data)) trigger_error('validateMultiple: $data must be an array of items', E_USER_ERROR);
-
-            // Check ruleset
-            if (!is_array($rules)) trigger_error('validateMultiple: $rules must be an array of rules', E_USER_ERROR);
-
             // Loops through data array
             $errors = [];
             $result = true;
@@ -117,9 +106,7 @@
          * @return bool Validation result.
          */
         public function validate($data, array $rules, bool $bail = false){
-            // Check ruleset
-            if (!is_array($rules)) trigger_error('validate: $rules must be an array of rules', E_USER_ERROR);
-
+            // Stores result
             $result = [];
 
             // Loops through rule array

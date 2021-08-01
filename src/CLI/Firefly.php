@@ -31,6 +31,12 @@
         private const BACKGROUNDS = ['default' => "\033[49m", 'red' => "\033[101m", 'green' => "\033[42m", 'yellow' => "\033[103m", 'blue' => "\033[104m", 'magenta' => "\033[45m", 'cyan' => "\033[106m", 'gray' => "\033[47m", 'black' => "\033[40m"];
 
         /**
+         * Current command.
+         * @var string
+         */
+        private static $command;
+        
+        /**
          * Command arguments.
          * @var array
          */
@@ -60,6 +66,7 @@
         public static function run(){
             // Register settings
             global $argv;
+            self::$command = '';
             self::$args = $argv;
             self::$isCLI = true;
             self::$templateFolder = 'vendor/glowieframework/glowie-core/src/CLI/Templates/';
@@ -86,6 +93,7 @@
          */
         public static function call(string $command, array $args = []){
             // Register settings
+            self::$command = '';
             self::$args = $args;
             self::$isCLI = false;
             self::$templateFolder = '../../vendor/glowieframework/glowie-core/src/CLI/Templates/';
@@ -119,6 +127,7 @@
          */
         private static function triggerCommand(string $command){
             $command = strtolower($command);
+            self::$command = $command;
             switch ($command) {
                 case 'clear-cache':
                     self::clearCache();
@@ -194,7 +203,7 @@
             if(self::$isCLI) return;
 
             // Throw error
-            throw new ConsoleException('Firefly: ' . $message);
+            throw new ConsoleException(self::$command, self::$args, $message);
         }
 
         /**

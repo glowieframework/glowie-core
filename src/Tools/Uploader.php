@@ -1,6 +1,9 @@
 <?php
     namespace Glowie\Core\Tools;
 
+    use Exception;
+    use Glowie\Core\Exception\FileException;
+
     /**
      * File upload helper for Glowie application.
      * @category File uploads
@@ -63,8 +66,8 @@
          * @param string $directory Directory location to store files (relative to the **app/public** folder).
          */
         public function setDirectory(string $directory){
-            if(empty($directory) || trim($directory) == '') trigger_error('Uploader: $directory should not be empty', E_USER_ERROR);
-            if(!is_dir($directory) || !is_writable($directory)) trigger_error('Uploader: Target directory is invalid or not writable', E_USER_ERROR);
+            if(empty($directory) || trim($directory) == '') throw new Exception('Uploader: $directory should not be empty');
+            if(!is_dir($directory) || !is_writable($directory)) throw new FileException('Uploader: Target directory is invalid or not writable');
             $this->directory = trim($directory, '/');
         }
 
@@ -73,7 +76,6 @@
          * @param array $extensions Array of allowed file extensions. Use an empty array to allow any extension.
          */
         public function setExtensions(array $extensions){
-            if(!is_array($extensions)) trigger_error('Uploader: $extensions must be an array of extensions', E_USER_ERROR);
             $this->extensions = $extensions;
         }
 

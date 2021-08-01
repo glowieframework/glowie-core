@@ -17,14 +17,15 @@
     class Error{
 
         /**
-         * Registers the error handler.
+         * Registers the error handlers.
          */
         public static function register(){
             // Registers error handling functions
-            error_reporting(GLOWIE_CONFIG['error_reporting']);
+            $level = GLOWIE_CONFIG['error_reporting'];
+            error_reporting($level);
             mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
             set_exception_handler([self::class, 'exceptionHandler']);
-            set_error_handler([self::class, 'errorHandler']);
+            set_error_handler([self::class, 'errorHandler'], $level);
             ini_set('display_errors', '1');
             ini_set('display_startup_errors', '1');
 
@@ -37,14 +38,14 @@
         }
 
         /**
-         * Default error handler. Emulates an exception based in a given error.
-         * @param int $level Error level code.
-         * @param string $str Error message.
-         * @param string $file (Optional) Filename where the error was thrown.
-         * @param int $line (Optional) Line number where the error was thrown.
+         * Default error handler. Throws an exception based in a given error.
+         * @param int $level Error level.
+         * @param string $message Error message.
+         * @param string $file (Optional) Filename where the error occurred.
+         * @param int $line (Optional) Line number where the error was triggered.
          */
-        public static function errorHandler(int $level, string $str, string $file = '', int $line = 0){
-            self::exceptionHandler(new ErrorException($str, 0, $level, $file, $line));
+        public static function errorHandler(int $level, string $message, ?string $file = '', ?int $line = 0){
+            throw new ErrorException($message, 0, $level, $file, $line);
             return true;
         }
 
@@ -128,12 +129,23 @@
                                     (!empty($item['class']) ? '<span style="color: #d2024a; font-weight: 600;">' . $item['class'] . '</span>-><span style="color: #ed578b">' . $item['function'] . '()</span>' : '') .
 
                                     // Args
-                                    (!empty($item['args']) ? '<i style="font-size: 14px; font-weight: 600; display: block; margin: 10px 0;">Args:</i><pre style="white-space: pre-wrap; word-wrap: break-all; background-color: #f5f5f5; border: 1px solid gainsboro; padding: 15px; margin: 0;">' . print_r($item['args'], true) . '</pre>' : '') . '
+                                    (!empty($item['args']) ? '<i style="font-size: 14px; font-weight: 600; display: block; margin: 10px 0;">Args:</i><pre style="white-space: pre-wrap; word-wrap: break-all; background-color: #f5f5f5; border: 1px solid gainsboro; padding: 15px; margin: 0;">' . self::getDump($item['args']) . '</pre>' : '') . '
                                 </td>
                             </tr>';
             }
             $result .= '</tbody></table>';
             return $isTraceable ? $result : '';
+        }
+
+        /**
+         * Returns the value of `var_dump()` method to a string.
+         * @param mixed $var Variable to dump.
+         * @return string The variable dump as string.
+         */
+        private static function getDump($var){
+            ob_start();
+            var_dump($var);
+            return ob_get_clean();
         }
 
         /**

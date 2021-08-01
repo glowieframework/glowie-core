@@ -3,7 +3,7 @@
 
     use Util;
     use Glowie\Core\Element;
-    use Glowie\Core\Exception\RoutingException;
+    use Exception;
 
 /**
      * Request handler for Glowie application.
@@ -28,7 +28,7 @@
          */
         public function __construct(){
             $headers = getallheaders();
-            if(!$headers) throw new RoutingException('Request: Error retrieving request headers');
+            if(!$headers) throw new Exception('Request: Error retrieving request headers');
             self::$headers = array_change_key_case($headers, CASE_LOWER);
         }
 

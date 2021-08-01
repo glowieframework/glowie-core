@@ -3,7 +3,7 @@
 
     use Glowie\Core\Element;
     use Glowie\Core\Http\Rails;
-    use Glowie\Core\Exception\ViewException;
+    use BadMethodCallException;
 
     /**
      * View core for Glowie application.
@@ -65,7 +65,7 @@
             if(is_callable([self::$_helpers, $method])){
                 return call_user_func_array([self::$_helpers, $method], $args);
             }else{
-                throw new ViewException('View: Method "' . $method .'" does not exist in "app/views/helpers/Helpers.php"');
+                throw new BadMethodCallException('View: Method "' . $method .'" does not exist in "app/views/helpers/Helpers.php"');
             }
         }
 
