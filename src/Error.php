@@ -2,7 +2,6 @@
     namespace Glowie\Core;
 
     use ErrorException;
-    use Glowie\Core\Http\Response;
 
     /**
      * Error handler for Glowie application.
@@ -59,7 +58,7 @@
             self::log("[{$date}] {$e->getMessage()} at file {$e->getFile()}:{$e->getLine()}\n{$e->getTraceAsString()}\n\n");
 
             // Display the error
-            http_response_code(Response::HTTP_INTERNAL_SERVER_ERROR);
+            http_response_code(500);
             if(error_reporting()){
                 echo '
                 <div style="clear: both; font-family: Segoe UI, sans-serif; font-size: 18px; background-color: white; color: black; margin: 10px; border: 1px solid #d04978;">

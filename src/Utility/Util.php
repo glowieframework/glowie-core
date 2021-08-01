@@ -1,7 +1,7 @@
 <?php
     use Glowie\Core\Http\Rails;
     use Glowie\Core\Http\Session;
-    use Exception;
+    use Glowie\Core\Http\Response;
 
     /**
      * Miscellaneous utilities for Glowie application.
@@ -20,19 +20,21 @@
          * @return string Current Glowie core version.
          */
         public static function getVersion(){
-            return '1.0';
+            return '1.0.0';
         }
 
         /**
          * Prints a variable in an human-readable way.
          * @param mixed $var Variable to be printed.
          * @param bool $exit (Optional) Stop code execution after printing.
+         * @return void
          */
-        public static function log($var, bool $exit = false){
-            echo '<pre>';
-            print_r($var);
+        public static function log($var){
+            Rails::getResponse()->setContentType(Response::CONTENT_HTML);
+            echo '<pre style="white-space: pre-wrap; word-wrap: break-all; background-color: #f5f5f5; border: 1px solid gainsboro; padding: 15px; margin: 0;">';
+            var_dump($var);
             echo '</pre>';
-            if($exit) exit;
+            die();
         }
 
         /**
