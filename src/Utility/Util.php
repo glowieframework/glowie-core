@@ -101,13 +101,9 @@
          * @return array Returns the reordered array.
          */
         public static function orderArray(array $array, string $key, int $order = SORT_ASC){
-            if ((!empty($array)) && (!empty($key))) {
-                if (is_array($array)) {
-                    foreach ($array as $col => $row) {
-                        $data[$col] = $row[$key];
-                    }
-                    array_multisort($data, $order, $array);
-                }
+            if (!empty($array) && !empty($key)) {
+                foreach ($array as $col => $row) $data[$col] = $row[$key];
+                array_multisort($data, $order, $array);
             }
             return $array;
         }
@@ -121,7 +117,7 @@
          */
         public static function filterArray(array $array, string $key, $value){
             $newarray = [];
-            if (is_array($array) && count($array) > 0) {
+            if (!empty($array)) {
                 foreach (array_keys($array) as $col) {
                     $temp[$col] = $array[$col][$key];
                     if ($temp[$col] == $value) $newarray[$col] = $array[$col];
@@ -139,7 +135,7 @@
          */
         public static function searchArray(array $array, string $key, $value){
             $result = [];
-            if (is_array($array) && count($array) > 0) {
+            if (!empty($array)) {
                 $index = array_search($value, array_column($array, $key));
                 if ($index !== false) $result = $array[$index];
             }

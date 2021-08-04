@@ -161,9 +161,10 @@
         /**
          * Gets the value associated to a key in the session flash data, then deletes it.
          * @param string $key Key to get value.
-         * @return mixed Returns the value if exists or null if there is none.
+         * @param mixed $default (Optional) Default value to return if the key does not exists.
+         * @return mixed Returns the value if exists or the default if not.
          */
-        public function getFlash(string $key){
+        public function getFlash(string $key, $default = null){
             self::$flash = $this->get('FLASH_DATA') ?? [];
             if(isset(self::$flash[$key])){
                 $value = self::$flash[$key];
@@ -171,7 +172,7 @@
                 $this->set('FLASH_DATA', self::$flash);
                 return $value;
             }else{
-                return null;
+                return $default;
             }
         }
 

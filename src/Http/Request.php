@@ -49,9 +49,8 @@
         }
 
         /**
-         * Returns the request IP address.\
-         * **Note:** If the IP address is not valid or cannot be detected, returns `0.0.0.0`.
-         * @return string Request IP address.
+         * Returns the request IP address.
+         * @return string Request IP address if valid or `0.0.0.0` if not.
          */
         public function getIPAddress(){
             if(!empty($_SERVER['HTTP_CLIENT_IP'])){
@@ -105,11 +104,11 @@
 
         /**
          * Returns the previous URL where the user was.\
-         * **Note:** This information relies in the `HTTP_REFERER` header. This header cannot be sent\
-         * from some browsers or be unavailable when using mismatching HTTP protocols.
+         * **Note:** This information relies in the `Referer` header.
+         * @return string|null Returns the URL if the header exists or null if not.
          */
         public function getPreviousUrl(){
-            return $_SERVER['HTTP_REFERER'] ?? '';
+            return $this->getHeader('Referer');
         }
 
         /**
@@ -146,21 +145,20 @@
         /**
          * Gets the value of a variable from the request.
          * @param string $key Variable key to get.
-         * @return mixed Returns the value if exists or null if not.
+         * @param mixed $default (Optional) Default value to return if the key does not exists.
+         * @return mixed Returns the value if exists or the default if not.
          */
-        public function getVar(string $key){
-            return $_REQUEST[$key] ?? null;
+        public function getVar(string $key, $default = null){
+            return $_REQUEST[$key] ?? $default;
         }
 
         /**
          * Returns if the request was made using AJAX.\
-         * **Note:** This information relies in the `X-Requested-With` header. This header cannot be sent\
-         * from some Javascript frameworks.
-         * @return bool True if is AJAX or false if not.
+         * **Note:** This information relies in the `X-Requested-With` header.
+         * @return bool True if is AJAX or false if not or header is not present.
          */
         public function isAjax(){
-            if(empty($_SERVER['HTTP_X_REQUESTED_WITH'])) return false;
-            return $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest';
+            return $this->getHeader('X-Requested-With') == 'XMLHttpRequest';
         }
 
         /**

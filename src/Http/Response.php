@@ -2,8 +2,10 @@
     namespace Glowie\Core\Http;
 
     use Util;
+    use SimpleXMLElement;
+    use Glowie\Core\Element;
 
-    /**
+/**
      * Response handler for Glowie application.
      * @category Response
      * @package glowieframework/glowie-core
@@ -143,10 +145,15 @@
 
         /**
          * Sets the HTTP status code for the response.
-         * @param int $code HTTP status code to send.
+         * @param int $code HTTP status code to set.
+         * @param string $message (Optional) Custom reason phrase to set.
          */
-        public function setStatusCode(int $code){
-            http_response_code($code);
+        public function setStatusCode(int $code, string $message = ''){
+            if(empty($message)){
+                http_response_code($code);
+            }else{
+                header("HTTP/1.0 {$code} {$message}", true, $code);
+            }
         }
 
         /**
@@ -155,7 +162,7 @@
          * @param string|array $value Header value to set.
          */
         public function setHeader(string $name, $value){
-            if(is_array($value)) $value = implode(', ', $value);
+            $value = implode(', ', (array)$value);
             header("{$name}: {$value}");
         }
 
@@ -165,7 +172,7 @@
          * @param string|array $value Header value to set.
          */
         public function appendHeader(string $name, $value){
-            if(is_array($value)) $value = implode(', ', $value);
+            $value = implode(', ', (array)$value);
             header("{$name}: {$value}", false);
         }
 
@@ -185,16 +192,39 @@
         public function setContentType(string $type){
             $this->setHeader('Content-Type', $type);
         }
+        
+        /**
+         * Sends a raw plain text body to the response.
+         * @param string $content Content to set as the body.
+         */
+        public function setBody(string $content){
+            $this->setContentType(self::CONTENT_PLAIN);
+            echo $content;
+        }
 
         /**
          * Sends a JSON output to the response.
-         * @param array $data Associative array with data to encode to JSON.
+         * @param array|Element $data Associative array with data to encode to JSON. You can also use an Element object.
          * @param int $flags (Optional) JSON encoding flags (same as in `json_encode()` function).
          * @param int $depth (Optional) JSON encoding maximum depth (same as in `json_encode()` function).
          */
         public function setJson(array $data, int $flags = 0, int $depth = 512){
             $this->setContentType(self::CONTENT_JSON);
+            if($data instanceof Element) $data = $data->toArray();
             echo json_encode($data, $flags, $depth);
+        }
+
+        /**
+         * Sends a XML output to the response.
+         * @param array|Element $data Associative array with data to encode to XML. You can also use an Element object.
+         * @param string $root (Optional) Name of the XML root element.
+         */
+        public function setXML(array $data, string $root = 'data'){
+            $this->setContentType(self::CONTENT_XML);
+            $xml = new SimpleXMLElement("<?xml version=\"1.0\"?><{$root}></{$root}>");
+            if($data instanceof Element) $data = $data->toArray();
+            $this->arrayToXML($data, $xml);
+            echo $xml->asXML();
         }
 
          /**
@@ -226,6 +256,23 @@
          */
         public function redirectRoute(string $route, array $params = [], int $code = self::HTTP_TEMPORARY_REDIRECT){
             return $this->redirect(Util::route($route, $params), $code);
+        }
+
+        /**
+         * Converts an array to XML.
+         * @param array $data Array with data to convert to XML.
+         * @param SimpleXMLElement $xml_data XML Element to append data.
+         */
+        private function arrayToXML(array $data, &$xml_data){
+            foreach ($data as $key => $value) {
+                if (is_array($value)) {
+                    if (is_numeric($key)) $key = 'item' . $key;
+                    $subnode = $xml_data->addChild($key);
+                    $this->arrayToXML($value, $subnode);
+                } else {
+                    $xml_data->addChild("$key", htmlspecialchars("$value"));
+                }
+            }
         }
 
     }

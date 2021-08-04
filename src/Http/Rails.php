@@ -56,21 +56,21 @@
          * Setup a new route for the application.
          * @param string $route The route URI to setup.
          * @param string $controller (Optional) The namespaced controller name that this route will instantiate.\
-         * You can use `ControllerName::class` to get this property the correct way.
+         * You can use `ControllerName::class` to get this property correctly.
          * @param string $action (Optional) The action name from the controller that this route will instantiate.
-         * @param string|array $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
+         * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or\
+         * an array of methods. Leave empty for all.
          * @param string $name (Optional) Route internal name/identifier.
          */
         public static function addRoute(string $route, string $controller = 'Glowie\Controllers\Main', string $action = 'index', $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
             if(empty($controller)) throw new RoutingException('Controller cannot be empty');
             if(empty($action)) throw new RoutingException('Action cannot be empty');
-            if(!is_array($methods) && !empty($methods)) $methods = [$methods];
             self::$routes[$name] = [
                 'uri' => $route,
                 'controller' => $controller,
                 'action' => $action,
-                'methods' => $methods
+                'methods' => (array)$methods
             ];
         }
 
@@ -78,12 +78,13 @@
          * Setup a new protected route for the application.
          * @param string $route The route URI to setup.
          * @param string|array $middleware (Optional) The namespaced middleware name that this route will use to protect itself.\
-         * You can use `MiddlewareName::class` to get this property the correct way.\
+         * You can use `MiddlewareName::class` to get this property correctly.\
          * You can also use an array of multiple middlewares.
          * @param string $controller (Optional) The namespaced controller name that this route will instantiate.\
-         * You can use `ControllerName::class` to get this property the correct way.
+         * You can use `ControllerName::class` to get this property correctly.
          * @param string $action (Optional) The action name from the controller that this route will instantiate.
-         * @param string|array $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
+         * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or\
+         * an array of methods. Leave empty for all.
          * @param string $name (Optional) Route internal name/identifier.
          */
         public static function addProtectedRoute(string $route, $middleware = 'Glowie\Middlewares\Authenticate', string $controller = 'Glowie\Controllers\Main', string $action = 'index', $methods = [], string $name = ''){
@@ -91,14 +92,12 @@
             if(empty($controller)) throw new RoutingException('Controller cannot be empty');
             if(empty($action)) throw new RoutingException('Action cannot be empty');
             if(empty($middleware)) throw new RoutingException('Middleware cannot be empty');
-            if(!is_array($middleware)) $middleware = [$middleware];
-            if(!is_array($methods) && !empty($methods)) $methods = [$methods];
             self::$routes[$name] = [
                 'uri' => $route,
                 'controller' => $controller,
                 'action' => $action,
-                'middleware' => $middleware,
-                'methods' => $methods
+                'middleware' => (array)$middleware,
+                'methods' => (array)$methods
             ];
         }
 
@@ -107,18 +106,18 @@
          * @param string $route The route URI to redirect.
          * @param string $target The target URl to redirect this route to.
          * @param int $code (Optional) HTTP status code to pass with the redirect.
-         * @param string|array $methods (Optional) Array of allowed HTTP methods that this route accepts. Leave empty for all.
+         * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or\
+         * an array of methods. Leave empty for all.
          * @param string $name (Optional) Route internal name/identifier.
          */
         public static function addRedirect(string $route, string $target, int $code = Response::HTTP_TEMPORARY_REDIRECT, $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
             if(empty($target)) throw new RoutingException('Redirect target cannot be empty');
-            if(!is_array($methods) && !empty($methods)) $methods = [$methods];
             self::$routes[$name] = [
                 'uri' => $route,
                 'redirect' => $target,
                 'code' => $code,
-                'methods' => $methods
+                'methods' => (array)$methods
             ];
         }
 

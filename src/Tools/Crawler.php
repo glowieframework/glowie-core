@@ -43,7 +43,7 @@
          * @param string|array $content Header content. Can be a value or an array of values.
          */
         public function addHeader(string $name, $content){
-            if(is_array($content)) $content = implode(', ', $content);
+            $content = implode(', ', (array)$content);
             $this->headers[] = "{$name}: {$content}";
         }
 

@@ -152,7 +152,6 @@
             if ($global) $database = GLOWIE_CONFIG['database'];
 
             // Validate settings
-            if (!is_array($database)) throw new DatabaseException($database, 'Database connection settings must be an array');
             if (empty($database['host'])) throw new DatabaseException($database, 'Database host not defined');
             if (empty($database['username'])) throw new DatabaseException($database, 'Database username not defined');
             if (empty($database['db'])) throw new DatabaseException($database, 'Database name not defined');
@@ -245,11 +244,7 @@
          */
         public function select($columns = '*'){
             $this->_instruction = 'SELECT';
-            if(is_array($columns)){
-                $this->_select = implode(', ', $columns);
-            }else{
-                $this->_select = $columns;
-            }
+            $this->_select = implode(', ', (array)$columns);
             return $this;
         }
 
@@ -808,11 +803,7 @@
          * @return Kraken Current Kraken instance for nested calls.
          */
         public function groupBy($column){
-            if(is_array($column)){
-                $this->_group = implode(', ', $column);
-            }else{
-                $this->_group = $column;
-            }
+            $this->_group = implode(', ', (array)$column);
             return $this;
         }
 
