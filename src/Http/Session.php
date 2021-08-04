@@ -28,17 +28,27 @@
         public function __construct(array $data = []){
             if(!isset($_SESSION)) session_start();
             if(!empty($data)) $_SESSION = $data;
-            self::$flash = $this->get('FLASH_DATA') ?? [];
+            self::$flash = $this->get('app_flash_data') ?? [];
         }
 
         /**
-         * Registers the session save path.
+         * Registers the session save path and INI settings.
          */
         public static function register(){
+            // Save path
             $sessdir = '../storage/session';
             if(!is_writable($sessdir)) throw new FileException('Session: Directory "app/storage/session" is not writable, please check your chmod settings');
             session_save_path($sessdir);
-            ini_set('session.gc_probability', 1);
+
+            // INI settings
+            ini_set('session.name', 'app_session');
+            ini_set('session.gc_probability', '1');
+            ini_set('session.gc_divisor', '50');
+            ini_set('session.gc_maxlifetime', (string)GLOWIE_CONFIG['session_lifetime']);
+            ini_set('session.cookie_httponly', '1');
+            ini_set('session.use_cookies', '1');
+            ini_set('session.use_only_cookies', '1');
+            ini_set('session.use_strict_mode', '1');
         }
 
         /**
@@ -135,7 +145,7 @@
             if(!isset($_SESSION)) session_start();
             return $_SESSION;
         }
-        
+
         /**
          * Gets the session data as JSON.
          * @param int $flags (Optional) JSON encoding flags (same as in `json_encode()` function).
@@ -153,9 +163,9 @@
          * @param mixed $value Value to set.
          */
         public function setFlash(string $key, $data){
-            self::$flash = $this->get('FLASH_DATA') ?? [];
+            self::$flash = $this->get('app_flash_data') ?? [];
             self::$flash[$key] = $data;
-            $this->set('FLASH_DATA', self::$flash);
+            $this->set('app_flash_data', self::$flash);
         }
 
         /**
@@ -165,11 +175,11 @@
          * @return mixed Returns the value if exists or the default if not.
          */
         public function getFlash(string $key, $default = null){
-            self::$flash = $this->get('FLASH_DATA') ?? [];
+            self::$flash = $this->get('app_flash_data') ?? [];
             if(isset(self::$flash[$key])){
                 $value = self::$flash[$key];
                 unset(self::$flash[$key]);
-                $this->set('FLASH_DATA', self::$flash);
+                $this->set('app_flash_data', self::$flash);
                 return $value;
             }else{
                 return $default;

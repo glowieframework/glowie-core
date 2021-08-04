@@ -35,7 +35,7 @@
          * @var string
          */
         private static $command;
-        
+
         /**
          * Command arguments.
          * @var array

@@ -16,7 +16,7 @@
     class Error{
 
         /**
-         * Registers the error handlers.
+         * Registers the error handlers and INI settings.
          */
         public static function register(){
             // Registers error handling functions
@@ -28,7 +28,7 @@
             ini_set('display_errors', '1');
             ini_set('display_startup_errors', '1');
 
-            // Sets syntax highliter style
+            // INI settings
             ini_set('highlight.comment', '#8BC34A');
             ini_set('highlight.default', '#545454');
             ini_set('highlight.html', '#06B');
