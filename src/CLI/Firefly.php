@@ -129,6 +129,9 @@
             $command = strtolower($command);
             self::$command = $command;
             switch ($command) {
+                case 'shine':
+                    self::shine();
+                    break;
                 case 'clear-cache':
                     self::clearCache();
                     break;
@@ -205,6 +208,35 @@
             // Throw error
             throw new ConsoleException(self::$command, self::$args, $message);
         }
+        
+        /**
+         * Starts the local development server.
+         */
+        private static function shine(){
+            // Checks if CLI is running
+            if(!self::$isCLI){
+                self::error('This command cannot be used from outside the command line interface');
+                return;
+            }
+
+            // Checks if host was filled
+            if(isset(self::$args['host'])){
+                $host = trim(self::$args['host']);
+            }else{
+                $host = 'localhost';
+            }
+
+            // Checks if port was filled
+            if(isset(self::$args['port'])){
+                $port = trim(self::$args['port']);
+            }else{
+                $port = 8080;
+            }
+
+            // Starts the server
+            self::print('<color="green">Starting local development server...</color>');
+            system('php -S ' . $host . ':' . $port .' -t app/public ' . self::$templateFolder . '../Server.php');
+        }
 
         /**
          * Deletes all files in **app/storage/cache** folder.
@@ -271,10 +303,8 @@
                 if (isset(self::$args['env'])) {
                     $env = trim(self::$args['env']);
                 } else {
-                    self::print("Configuration environment to use database (production): ", false);
-                    $env = trim(fgets(STDIN));
+                    $env = 'production';
                 }
-                if (empty($env)) $env = 'production';
 
                 // Loads the environment setting
                 if (empty($config[$env])) {
@@ -541,7 +571,7 @@
             if(isset(self::$args['timestamps'])){
                 $timestamps = self::$args['timestamps'];
             }else if(self::$isCLI){
-                self::print("Handle timestamp fields (yes): ", false);
+                self::print("Handle timestamp fields (true): ", false);
                 $timestamps = strtolower(trim(fgets(STDIN)));
             }
 
@@ -732,6 +762,7 @@
         private static function help(){
             self::print('<color="magenta">Firefly commands:</color>');
             self::print('');
+            self::print('  <color="yellow">shine</color> <color="blue">--host --port</color> | Starts the local development server');
             self::print('  <color="yellow">clear-cache</color> | Clears the application cache folder');
             self::print('  <color="yellow">clear-session</color> | Clears the application session folder');
             self::print('  <color="yellow">clear-log</color> | Clears the application error log');
