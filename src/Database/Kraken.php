@@ -78,10 +78,16 @@
         private $_where;
 
         /**
-         * GROUP BY statement.
-         * @var string
+         * GROUP BY statements.
+         * @var array
          */
         private $_group;
+
+        /**
+         * HAVING statements.
+         * @var array
+         */
+        private $_having;
 
         /**
          * ORDER BY statements.
@@ -106,6 +112,12 @@
          * @var string
          */
         private $_values;
+
+        /**
+         * ON DUPLICATE KEY statement.
+         * @var string
+         */
+        private $_duplicate;
 
         /**
          * SET statement.
@@ -145,6 +157,7 @@
          * @param array $database Associative array with the database connection settings.\
          * Use an empty array to connect to the environment defined database (from **app/config/Config.php**).
          * @return Kraken Current Kraken instance for nested calls.
+         * @throws DatabaseException Throws an exception if the connection fails.
          */
         public function database(array $database){
             // Checks for the global database setting
@@ -222,7 +235,7 @@
          * @return string Escaped string.
          */
         public function escape($string){
-            return $this->_connection->escape_string($string);
+            return $this->_connection->escape_string((string)$string);
         }
 
         /**
@@ -245,6 +258,19 @@
         public function select($columns = '*'){
             $this->_instruction = 'SELECT';
             $this->_select = implode(', ', (array)$columns);
+            return $this;
+        }
+
+        /**
+         * Appends a SELECT statement to the existing one in the query.
+         * @param string|array $columns (Optional) Columns to select in the query. Can be a single column name or an array of columns.\
+         * You can also use a raw SELECT query.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function addSelect($columns = '*'){
+            $this->_instruction = 'SELECT';
+            $value = implode(', ', (array)$columns);
+            $this->_select .= (!empty($this->_select) ? ', ' : '') . $value;
             return $this;
         }
 
@@ -798,23 +824,262 @@
         }
 
         /**
-         * Sets the query GROUP BY statement.
-         * @param string|array $column Column name or an array of columns.
+         * Adds a GROUP BY statement to the query.
+         * @param string|array $column Column name to group. Can be a single column name or an array of columns.\
+         * You can also use a raw GROUP BY statement.
          * @return Kraken Current Kraken instance for nested calls.
          */
         public function groupBy($column){
-            $this->_group = implode(', ', (array)$column);
+            $this->_group[] = implode(', ', (array)$column);
             return $this;
         }
 
         /**
-         * Sets a raw GROUP BY statement to the query.
-         * @param string $statement Full GROUP BY statement.
+         * Adds a HAVING condition to the query.
+         * @param string|array|Closure $param1 Column name, array of HAVING conditions or a grouped HAVING closure.
+         * @param mixed $param2 (Optional) If `$param3` isset, the operator used in the condition. Otherwise, the value to check to.
+         * @param mixed $param3 (Optional) Value if `$param2` is the operator.
+         * @param string $type (Optional) Chaining type (AND or OR).
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function rawGroupBy(string $statement){
-            $this->_group = $statement;
+        public function having($param1, $param2 = null, $param3 = null, string $type = 'AND'){
+            // Checks for the condition type
+            $type = strtoupper($type);
+            if(!empty($this->_having)){
+                if(end($this->_having) == '('){
+                    $query = "";
+                }else{
+                    $query = "{$type} ";
+                }
+            }else{
+                $query = "";
+            }
+
+            // Checks for grouped havings
+            if($param1 instanceof Closure){
+                if(!empty($this->_having) && end($this->_having) != '('){
+                    $this->_having[] = "{$type} ";
+                    $this->_having[] = "(";
+                }else{
+                    $this->_having[] = "(";
+                }
+
+                call_user_func_array($param1, array(&$this));
+                $this->_having[] = ')';
+                return $this;
+            }else if(is_array($param1)){
+                foreach($param1 as $condition){
+                    if(!is_array($condition) || count($condition) < 2) throw new Exception('Multiple HAVING conditions must be an array with at least two parameters');
+                    $this->having($condition[0], $condition[1], $condition[2] ?? null);
+                }
+                return $this;
+            }
+
+            // Checks if the operator was passed
+            if(is_null($param3)){
+                $param3 = $param2;
+                $param2 = '=';
+            }
+
+            // Checks operation types
+            $param2 = strtoupper($param2);
+            if(($param2 == 'BETWEEN' || $param2 == 'NOT BETWEEN') && is_array($param3)){
+                $values = [];
+
+                // Escaping values
+                foreach($param3 as $value){
+                    if($value instanceof stdClass){
+                        $values[] = $value->value;
+                    }else{
+                        $values[] = "\"{$this->escape($value)}\"";
+                    }
+                }
+
+                $query .= "{$param1} {$param2} {$values[0]} AND {$values[1]}";
+            }else if(is_array($param3)){
+                $values = [];
+
+                // Escaping values
+                foreach($param3 as $value){
+                    if($value instanceof stdClass){
+                        $values[] = $value->value;
+                    }else{
+                        $values[] = "\"{$this->escape($value)}\"";
+                    }
+                }
+
+                if($param2 == '=') $param2 = 'IN';
+                $values = implode(', ', $values);
+                $query .= "{$param1} {$param2} ($values)";
+            }else if($param3 === 'NULL'){
+                if($param2 == '=') $param2 = 'IS';
+                $query .= "{$param1} {$param2} NULL";
+            }else{
+                // Escaping values
+                if($param3 instanceof stdClass){
+                    $param3 = $param3->value;
+                }else{
+                    $param3 = "\"{$this->escape($param3)}\"";
+                }
+
+                $query .= "{$param1} {$param2} {$param3}";
+            }
+
+            $this->_having[] = $query;
             return $this;
+        }
+
+        /**
+         * Adds an OR HAVING condition to the query.
+         * @param string|array|Closure $param1 Column name, array of HAVING conditions or a grouped HAVING closure.
+         * @param mixed $param2 (Optional) If `$param3` isset, the operator used in the condition. Otherwise, the value to check to.
+         * @param mixed $param3 (Optional) Value if `$param2` is the operator.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function orHaving($param1, $param2 = null, $param3 = null){
+            return $this->having($param1, $param2, $param3, 'OR');
+        }
+
+        /**
+         * Adds a raw HAVING condition to the query.\
+         * **Note: This does not prevent SQL injection attacks.**
+         * @param string $condition Full HAVING condition.
+         * @param string $type (Optional) Chaining type (AND or OR).
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function rawHaving(string $condition, string $type = 'AND'){
+            $this->_having[] = (!empty($this->_having) ? "{$type} " : "") . $condition;
+            return $this;
+        }
+
+        /**
+         * Adds a raw OR HAVING condition to the query.\
+         * **Note: This does not prevent SQL injection attacks.**
+         * @param string $condition Full HAVING condition.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function orRawHaving(string $condition){
+            return $this->rawHaving($condition, 'OR');
+        }
+
+        /**
+         * Adds a HAVING IN condition to the query.
+         * @param string $column Column name.
+         * @param array $values Array of values to check to.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function havingIn(string $column, array $values){
+            return $this->having($column, $values);
+        }
+
+        /**
+         * Adds an OR HAVING IN condition to the query.
+         * @param string $column Column name.
+         * @param array $values Array of values to check to.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function orHavingIn(string $column, array $values){
+            return $this->having($column, 'IN', $values, 'OR');
+        }
+
+        /**
+         * Adds a HAVING NOT IN condition to the query.
+         * @param string $column Column name.
+         * @param array $values Array of values to check to.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function havingNotIn(string $column, array $values){
+            return $this->having($column, 'NOT IN', $values);
+        }
+
+        /**
+         * Adds an OR HAVING NOT IN condition to the query.
+         * @param string $column Column name.
+         * @param array $values Array of values to check to.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function orHavingNotIn(string $column, array $values){
+            return $this->having($column, 'NOT IN', $values, 'OR');
+        }
+
+        /**
+         * Adds a HAVING BETWEEN condition to the query.
+         * @param string $column Column name.
+         * @param mixed $value1 First value in the range.
+         * @param mixed $value2 Last value in the range.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function havingBetween(string $column, $value1, $value2){
+            return $this->having($column, 'BETWEEN', [$value1, $value2]);
+        }
+
+        /**
+         * Adds an OR HAVING BETWEEN condition to the query.
+         * @param string $column Column name.
+         * @param mixed $value1 First value in the range.
+         * @param mixed $value2 Last value in the range.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function orHavingBetween(string $column, $value1, $value2){
+            return $this->having($column, 'BETWEEN', [$value1, $value2], 'OR');
+        }
+
+        /**
+         * Adds a HAVING NOT BETWEEN condition to the query.
+         * @param string $column Column name.
+         * @param mixed $value1 First value in the range.
+         * @param mixed $value2 Last value in the range.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function havingNotBetween(string $column, $value1, $value2){
+            return $this->having($column, 'NOT BETWEEN', [$value1, $value2]);
+        }
+
+        /**
+         * Adds an OR HAVING NOT BETWEEN condition to the query.
+         * @param string $column Column name.
+         * @param mixed $value1 First value in the range.
+         * @param mixed $value2 Last value in the range.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function orHavingNotBetween(string $column, $value1, $value2){
+            return $this->having($column, 'NOT BETWEEN', [$value1, $value2], 'OR');
+        }
+
+        /**
+         * Adds a HAVING NULL condition to the query.
+         * @param string $column Column name.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function havingNull(string $column){
+            return $this->having($column, 'NULL');
+        }
+
+        /**
+         * Adds an OR HAVING NULL condition to the query.
+         * @param string $column Column name.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function orHavingNull(string $column){
+            return $this->having($column, 'IS', 'NULL', 'OR');
+        }
+
+        /**
+         * Adds a HAVING NOT NULL condition to the query.
+         * @param string $column Column name.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function havingNotNull(string $column){
+            return $this->having($column, 'IS NOT', 'NULL');
+        }
+
+        /**
+         * Adds an OR HAVING NOT NULL condition to the query.
+         * @param string $column Column name.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function orHavingNotNull(string $column){
+            return $this->having($column, 'IS NOT', 'NULL', 'OR');
         }
 
         /**
@@ -823,7 +1088,7 @@
          * @param string $direction (Optional) Sorting direction **(ASC or DESC)**.
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function orderBy($column, string $direction = 'asc'){
+        public function orderBy(string $column, string $direction = 'ASC'){
             $direction = strtoupper($direction);
             $this->_order[] = "{$column} {$direction}";
             return $this;
@@ -867,6 +1132,7 @@
          * Fetches the first result from a SELECT query.
          * @param bool $assoc (Optional) Return the result as an associative array.
          * @return mixed Returns the first resulting row on success or null if not found.
+         * @throws QueryException Throws an exception if the query fails.
          */
         public function fetchRow(bool $assoc = false){
             return $this->execute(true, true, $assoc);
@@ -876,6 +1142,7 @@
          * Fetches all results from a SELECT query.
          * @param bool $assoc (Optional) Return each result as an associative array.
          * @return array Returns an array with all resulting rows.
+         * @throws QueryException Throws an exception if the query fails.
          */
         public function fetchAll(bool $assoc = false){
             return $this->execute(true, false, $assoc);
@@ -886,9 +1153,11 @@
          * @param array $data An associative array relating fields and values to insert. Also accepts an array of multiple insert arrays.
          * @param bool $ignore (Optional) Ignore failing or existing rows while inserting data (INSERT IGNORE).
          * @param bool $replace (Optional) Replace existing rows matching the primary key or unique indexes (REPLACE).
+         * @param array $onDuplicate (Optional) Associative array with fields and values to update on existing rows (ON DUPLICATE KEY).
          * @return bool Returns true on success.
+         * @throws QueryException Throws an exception if the query fails.
          */
-        public function insert(array $data, bool $ignore = false, bool $replace = false){
+        public function insert(array $data, bool $ignore = false, bool $replace = false, array $onDuplicate = []){
             // Prepares instruction
             if($replace){
                 $this->_instruction = "REPLACE";
@@ -936,6 +1205,23 @@
                $values = ["({$values})"];
             }
 
+            // Checks for ON DUPLICATE KEY statement
+            if(!empty($onDuplicate)){
+                $set = [];
+
+                // Escape values
+                foreach($onDuplicate as $key => $value){
+                    if($value instanceof stdClass){
+                        $set[] = "{$key} = {$value->value}";
+                    }else{
+                        $set[] = "{$key} = \"{$this->escape($value)}\"";
+                    }
+                }
+
+                $set = implode(', ', $set);
+                $this->_duplicate = "ON DUPLICATE KEY UPDATE {$set}";
+            }
+
             // Stores data to the query builder and run
             $this->_values = implode(', ', $values);
             $this->_insert = implode(', ', $fields);
@@ -946,6 +1232,7 @@
          * Inserts data into the table ignoring failing or existing rows.
          * @param array $data An associative array relating fields and values to insert. Also accepts an array of multiple insert arrays.
          * @return bool Returns true on success.
+         * @throws QueryException Throws an exception if the query fails.
          */
         public function insertIgnore(array $data){
             return $this->insert($data, true);
@@ -955,9 +1242,21 @@
          * Inserts data into the table replacing existing rows matching the primary key or unique indexes.
          * @param array $data An associative array relating fields and values to insert. Also accepts an array of multiple insert arrays.
          * @return bool Returns true on success.
+         * @throws QueryException Throws an exception if the query fails.
          */
         public function replace(array $data){
             return $this->insert($data, false, true);
+        }
+
+        /**
+         * Inserts data into the table or updates if a primary key or unique index already exists.
+         * @param array $data An associative array relating fields and values to insert.
+         * @param array $update An associative array relating fields and values to update if the row already exists.
+         * @return bool Returns true on success.
+         * @throws QueryException Throws an exception if the query fails.
+         */
+        public function upsert(array $data, array $update){
+            return $this->insert($data, false, false, $update);
         }
 
         /**
@@ -965,6 +1264,7 @@
          * **Do not forget to use WHERE statements before calling this function.**
          * @param array $data An associative array relating fields and values to update.
          * @return bool Returns true on success.
+         * @throws QueryException Throws an exception if the query fails.
          */
         public function update(array $data){
             // Set params
@@ -988,6 +1288,7 @@
          * Deletes data from the table.\
          * **Do not forget to use WHERE statements before calling this function.**
          * @return bool Returns true on success.
+         * @throws QueryException Throws an exception if the query fails.
          */
         public function delete(){
             $this->_instruction = 'DELETE';
@@ -999,6 +1300,7 @@
          * @param string $column (Optional) Column to use as the counting base. Using `*` will count all rows including NULL values.\
          * Setting a column name will count all rows excluding NULL values from that column. You can also use a raw COUNT expression.
          * @return int Returns the number of rows on success.
+         * @throws QueryException Throws an exception if the query fails.
          */
         public function count(string $column = '*'){
             // Count rows
@@ -1018,6 +1320,7 @@
          * Sums the value of all rows in a specific column.
          * @param string $column Column to retrieve values. You can also use a raw SUM expression.
          * @return string Returns the sum result on success.
+         * @throws QueryException Throws an exception if the query fails.
          */
         public function sum(string $column){
             // Sum rows
@@ -1037,6 +1340,7 @@
          * Returns the highest value from a specific column.
          * @param string $column Column to retrieve the value. You can also use a raw MAX expression.
          * @return string Returns the highest value on success.
+         * @throws QueryException Throws an exception if the query fails.
          */
         public function max(string $column){
             // Get max value
@@ -1056,6 +1360,7 @@
          * Returns the lowest value from a specific column.
          * @param string $column Column to retrieve the value. You can also use a raw MIN expression.
          * @return string Returns the lowest value on success.
+         * @throws QueryException Throws an exception if the query fails.
          */
         public function min(string $column){
             // Get min value
@@ -1075,6 +1380,7 @@
          * Returns the average value from a specific column.
          * @param string $column Column to retrieve the value. You can also use a raw AVG expression.
          * @return string Returns the average value on success.
+         * @throws QueryException Throws an exception if the query fails.
          */
         public function avg(string $column){
             // Get avg value
@@ -1093,6 +1399,7 @@
         /**
          * Checks if there are any records that match a SELECT query.
          * @return bool Returns true if exists or false if not.
+         * @throws QueryException Throws an exception if the query fails.
          */
         public function exists(){
             $result = $this->count();
@@ -1102,6 +1409,7 @@
         /**
          * Checks if there are not any records that match a SELECT query.
          * @return bool Returns true if does not exist or false if it does.
+         * @throws QueryException Throws an exception if the query fails.
          */
         public function doesntExist(){
             return !$this->exists();
@@ -1113,6 +1421,7 @@
          * @param int $resultsPerPage (Optional) Number of results to get per page.
          * @param bool $assoc (Optional) Return each result as an associative array.
          * @return Element Returns an object with the pagination result.
+         * @throws QueryException Throws an exception if the query fails.
          */
         public function paginate(int $currentPage, int $resultsPerPage = 25, bool $assoc = false){
             // Backup current query state
@@ -1162,6 +1471,7 @@
          * @param bool $return (Optional) Set to **true** if the query should return any results.
          * @return array|bool If the query is successful and should return results, will return an array with\
          * the results. Otherwise returns true on success.
+         * @throws QueryException Throws an exception if the query fails.
          */
         public function query(string $query, bool $return = false){
             $this->_raw = $query;
@@ -1177,11 +1487,13 @@
             $this->_from = '';
             $this->_join = [];
             $this->_where = [];
-            $this->_group = '';
+            $this->_group = [];
+            $this->_having = [];
             $this->_order = [];
             $this->_limit = [];
             $this->_insert = '';
             $this->_values = '';
+            $this->_duplicate = '';
             $this->_set = '';
             $this->_raw = '';
         }
@@ -1238,6 +1550,13 @@
                 }
             }
 
+            // Gets ON DUPLICATE KEY statement
+            if($this->_instruction == 'INSERT'){
+                if (!empty($this->_duplicate)) {
+                    $query .= " {$this->_duplicate}";
+                }
+            }
+
             // Gets WHERE statements
             if($this->_instruction == 'SELECT'|| $this->_instruction == 'SELECT DISTINCT' || $this->_instruction == 'UPDATE' || $this->_instruction == 'DELETE'){
                 if(!empty($this->_where)){
@@ -1246,10 +1565,16 @@
                 }
             }
 
-            // Gets GROUP BY and ORDER BY statements
+            // Gets GROUP BY, HAVING and ORDER BY statements
             if($this->_instruction == 'SELECT' || $this->_instruction == 'SELECT DISTINCT'){
                 if(!empty($this->_group)){
-                    $query .= " GROUP BY {$this->_group}";
+                    $group = implode(', ', $this->_group);
+                    $query .= " GROUP BY {$group}";
+                }
+
+                if(!empty($this->_having)){
+                    $having = implode(' ', $this->_having);
+                    $query .= " HAVING {$having}";
                 }
 
                 if(!empty($this->_order)){

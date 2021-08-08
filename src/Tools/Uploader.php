@@ -17,6 +17,36 @@
     class Uploader{
 
         /**
+         * Upload status success code.
+         * @var int
+         */
+        public const UPLOAD_SUCCESS = 0;
+
+        /**
+         * Upload status error code.
+         * @var int
+         */
+        public const UPLOAD_ERROR = 1;
+
+        /**
+         * File not selected error code.
+         * @var int
+         */
+        public const FILE_NOT_SELECTED = 2;
+
+        /**
+         * Extension not allowed error code.
+         * @var int
+         */
+        public const EXTENSION_NOT_ALLOWED = 3;
+
+        /**
+         * Maximum file size exceeded error code.
+         * @var int
+         */
+        public const MAX_SIZE_EXCEEDED = 4;
+
+        /**
          * Target directory.
          * @var string
          */
@@ -24,9 +54,9 @@
 
         /**
          * Upload errors.
-         * @var string|array
+         * @var int|array
          */
-        private $errors = '';
+        private $errors = 0;
 
         /**
          * Allowed extensions.
@@ -54,7 +84,7 @@
          * @param float $maxFileSize (Optional) Maximum allowed file size **in megabytes**. Use 0 for unlimited (not recommended).
          * @param bool $overwrite (Optional) Overwrite existing files. If false, uploaded files will append a number to its name.
          */
-        public function __construct(string $directory = 'uploads', array $extensions = [], float $maxFileSize = 0, bool $overwrite = false){
+        public function __construct(string $directory = 'uploads', array $extensions = [], float $maxFileSize = 2, bool $overwrite = false){
             $this->setDirectory($directory);
             $this->setExtensions($extensions);
             $this->setMaxFileSize($maxFileSize);
@@ -81,7 +111,8 @@
 
         /**
          * Sets the maximum file size that the uploader will accept.
-         * @param float $maxFileSize Maximum allowed file size **in megabytes**. Use 0 for unlimited (not recommended).
+         * @param float $maxFileSize Maximum allowed file size **in megabytes**. Use 0 for unlimited (not recommended).\
+         * **Important:** This setting cannot be higher than your php.ini `upload_max_filesize` directive.
          */
         public function setMaxFileSize(float $maxFileSize){
             $this->maxFileSize = $maxFileSize;
@@ -97,7 +128,7 @@
 
         /**
          * Returns the latest upload errors.
-         * @return string|array Upload errors.
+         * @return int|array Upload errors.
          */
         public function getErrors(){
             return $this->errors;
@@ -130,6 +161,7 @@
                     }
                     $this->errors = $errors;
                     if(empty($this->errors)){
+                        $this->erorrs = 0;
                         return $result;
                     }else{
                         foreach($result as $file) if (is_file($file)) unlink($file);
@@ -137,7 +169,7 @@
                     }
                 }
             }else{
-                $this->errors = 'FILE_NOT_SELECTED';
+                $this->errors = self::FILE_NOT_SELECTED;
                 return false;
             }
         }
@@ -153,18 +185,18 @@
                     $filename = $this->generateFilename($file['name']);
                     $target = $this->directory . '/' . $filename;
                     if (is_uploaded_file($file['tmp_name']) && move_uploaded_file($file['tmp_name'], $target)) {
-                        $this->errors = '';
+                        $this->errors = self::UPLOAD_SUCCESS;
                         return $target;
                     } else {
-                        $this->errors = 'UPLOAD_ERROR';
+                        $this->errors = self::UPLOAD_ERROR;
                         return false;
                     }
                 } else {
-                    $this->errors = 'INVALID_EXTENSION';
+                    $this->errors = self::EXTENSION_NOT_ALLOWED;
                     return false;
                 }
             } else {
-                $this->errors = 'INVALID_SIZE';
+                $this->errors = self::MAX_SIZE_EXCEEDED;
                 return false;
             }
         }

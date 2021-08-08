@@ -37,10 +37,17 @@
          * with the following structure: `['Jane Doe', 'jane@address.com']`.
          * @param string|array $to The recipient address. You can also specify the recipient display name by passing an array\
          * with the following structure: `['Jane Doe', 'jane@address.com']`.
+         * @param array $headers (Optional) Custom headers to append to the message. Must be an associative array with the key\
+         * being the name of the header and the value the header value (can be a string or an array of strings).
          */
-        public function __construct($from, $to){
+        public function __construct($from, $to, array $headers = []){
             $this->setFrom($from);
             $this->setTo($to);
+            
+            // Set headers
+            if(!empty($headers)){
+                foreach($headers as $key => $value) $this->addHeader($key, $value);
+            }
         }
 
         /**

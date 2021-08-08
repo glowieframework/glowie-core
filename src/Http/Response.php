@@ -5,7 +5,7 @@
     use SimpleXMLElement;
     use Glowie\Core\Element;
 
-/**
+    /**
      * Response handler for Glowie application.
      * @category Response
      * @package glowieframework/glowie-core

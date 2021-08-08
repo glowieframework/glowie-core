@@ -102,6 +102,30 @@
         }
 
         /**
+         * Gets all rows from the model table ordering by the newest **created at** field.
+         * @param bool $assoc (Optional) Return each result as an associative array.
+         * @return array Returns an array with all rows.
+         */
+        public function latest(bool $assoc = false){
+            if(!$this->_timestamps) throw new Exception('latest(): This model is not handling timestamp fields');
+            $this->clearQuery();
+            $fields = !empty($this->_fields) ? $this->_fields : '*';
+            return $this->select($fields)->orderBy($this->_createdField, 'DESC')->fetchAll($assoc);
+        }
+
+        /**
+         * Gets all rows from the model table ordering by the oldest **created at** field.
+         * @param bool $assoc (Optional) Return each result as an associative array.
+         * @return array Returns an array with all rows.
+         */
+        public function oldest(bool $assoc = false){
+            if(!$this->_timestamps) throw new Exception('oldest(): This model is not handling timestamp fields');
+            $this->clearQuery();
+            $fields = !empty($this->_fields) ? $this->_fields : '*';
+            return $this->select($fields)->orderBy($this->_createdField, 'ASC')->fetchAll($assoc);
+        }
+
+        /**
          * Deletes the first row that matches the model primary key value.
          * @param mixed $primary Primary key value to search for.
          * @return bool Returns true on success.
@@ -171,7 +195,7 @@
          * @return bool Returns true if the row data has been modified or false otherwise.
          */
         public function isDirty(string $field = ''){
-            if(!$this->_initialData instanceof Element) throw new Exception('isDirty: Model entity was not filled with a row data');
+            if(!$this->_initialData instanceof Element) throw new Exception('isDirty(): Model entity was not filled with a row data');
             if(!empty($field)){
                 return ($this->_initialData->get($field) !== $this->get($field));
             }else{
@@ -185,7 +209,7 @@
          * @return bool Returns true if the row data has not been modified or false otherwise.
          */
         public function isPristine(string $field = ''){
-            if(!$this->_initialData instanceof Element) throw new Exception('isPristine: Model entity was not filled with a row data');
+            if(!$this->_initialData instanceof Element) throw new Exception('isPristine(): Model entity was not filled with a row data');
             return !$this->isDirty($field);
         }
 

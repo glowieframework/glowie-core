@@ -16,6 +16,18 @@
     class Crawler{
 
         /**
+         * Content-Type header for plain text.
+         * @var string
+         */
+        public const CONTENT_PLAIN = 'text/plain';
+
+        /**
+         * Content-Type header for JSON.
+         * @var string
+         */
+        public const CONTENT_JSON = 'application/json';
+
+        /**
          * Custom request headers.
          * @var array
          */
@@ -45,6 +57,23 @@
         public function addHeader(string $name, $content){
             $content = implode(', ', (array)$content);
             $this->headers[] = "{$name}: {$content}";
+        }
+
+        /**
+         * Sets the Content-Type header.
+         * @param string $type Content-Type to set.
+         */
+        public function setContentType(string $type){
+            $this->addHeader('Content-Type', $type);
+        }
+
+        /**
+         * Sets a basic Authorization header with username and password.
+         * @param string $username Username to set.
+         * @param string $password Password to set.
+         */
+        public function setAuthorization(string $username, string $password){
+            $this->addHeader('Authorization', 'Basic ' . base64_encode("{$username}:{$password}"));
         }
 
         /**
