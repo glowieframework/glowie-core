@@ -401,7 +401,7 @@
                     $this->_where[] = "(";
                 }
 
-                call_user_func_array($param1, array(&$this));
+                call_user_func_array($param1, array($this));
                 $this->_where[] = ')';
                 return $this;
             }else if(is_array($param1)){
@@ -864,7 +864,7 @@
                     $this->_having[] = "(";
                 }
 
-                call_user_func_array($param1, array(&$this));
+                call_user_func_array($param1, array($this));
                 $this->_having[] = ')';
                 return $this;
             }else if(is_array($param1)){

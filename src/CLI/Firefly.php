@@ -369,7 +369,7 @@
             }
 
             // Creates the file
-            $name = Util::camelCase($name, true);
+            $name = Util::pascalCase($name);
             try {
                 $template = file_get_contents(self::$templateFolder . 'Controller.php');
                 $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
@@ -458,7 +458,7 @@
             }
 
             // Creates the file
-            $name = Util::camelCase($name, true);
+            $name = Util::pascalCase($name);
             try {
                $template = file_get_contents(self::$templateFolder . 'Middleware.php');
                 $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
@@ -503,7 +503,7 @@
             }
 
             // Creates the file
-            $cleanName = Util::camelCase($name, true);
+            $cleanName = Util::pascalCase($name);
             $name = 'm' . date('Y_m_d_His_') . $cleanName;
             try {
                $template = file_get_contents(self::$templateFolder . 'Migration.php');
@@ -549,7 +549,7 @@
             }
 
             // Checks if table was filled
-            $default_table = strtolower(Util::camelCase($name));
+            $default_table = Util::snakeCase($name);
             if(isset(self::$args['table'])){
                 $table = trim(self::$args['table']);
             }else if(self::$isCLI){
@@ -601,7 +601,7 @@
             if(empty($updated_at)) $updated_at = 'updated_at';
 
             // Creates the file
-            $name = Util::camelCase($name, true);
+            $name = Util::pascalCase($name);
             try {
                 $template = file_get_contents(self::$templateFolder . 'Model.php');
                 $template = str_replace(['__FIREFLY_TEMPLATE_NAME__', '__FIREFLY_TEMPLATE_TABLE__', '__FIREFLY_TEMPLATE_PRIMARY__', '__FIREFLY_TEMPLATE_TIMESTAMPS__', '__FIREFLY_TEMPLATE_CREATED__', '__FIREFLY_TEMPLATE_UPDATED__'], [$name, $table, $primary, $timestamps, $created_at, $updated_at], $template);

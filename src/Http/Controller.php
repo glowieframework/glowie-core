@@ -76,8 +76,8 @@
             $this->get = new Element($_GET);
             $this->params = new Element($params);
             $this->post = new Element($_POST);
-            $this->request = &Rails::getRequest();
-            $this->response = &Rails::getResponse();
+            $this->request = Rails::getRequest();
+            $this->response = Rails::getResponse();
             $this->route = $route;
             $this->session = new Session();
             $this->view = new Element();

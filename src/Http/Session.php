@@ -44,7 +44,7 @@
             ini_set('session.name', 'app_session');
             ini_set('session.gc_probability', '1');
             ini_set('session.gc_divisor', '50');
-            ini_set('session.gc_maxlifetime', (string)GLOWIE_CONFIG['session_lifetime'] ?? 120);
+            ini_set('session.gc_maxlifetime', (string)(GLOWIE_CONFIG['session_lifetime'] ?? 120));
             ini_set('session.cookie_httponly', '1');
             ini_set('session.use_cookies', '1');
             ini_set('session.use_only_cookies', '1');

@@ -142,7 +142,7 @@
          * Returns the current Request instance.
          * @return Request Request instance.
          */
-        public static function &getRequest(){
+        public static function getRequest(){
             return self::$request;
         }
 
@@ -150,7 +150,7 @@
          * Returns the current Response instance.
          * @return Response Response instance.
          */
-        public static function &getResponse(){
+        public static function getResponse(){
             return self::$response;
         }
 
@@ -158,7 +158,7 @@
          * Returns the current Controller instance.
          * @return Controller Controller instance.
          */
-        public static function &getController(){
+        public static function getController(){
             return self::$controller;
         }
 
@@ -166,7 +166,7 @@
          * Returns the current Middleware instance.
          * @return Middleware Middleware instance.
          */
-        public static function &getMiddleware(){
+        public static function getMiddleware(){
             return self::$middleware;
         }
 
@@ -295,19 +295,19 @@
 
                     // If only the controller was specified
                     }else if(count($autoroute) == 1){
-                        $controller = 'Glowie\Controllers\\' . Util::camelCase($autoroute[0], true);
+                        $controller = 'Glowie\Controllers\\' . Util::pascalCase($autoroute[0]);
                         $action = 'index';
                         return self::callAutoRoute($controller, $action, $routeName);
 
                     // Controller and action were specified
                     }else if(count($autoroute) == 2){
-                        $controller = 'Glowie\Controllers\\' . Util::camelCase($autoroute[0], true);
+                        $controller = 'Glowie\Controllers\\' . Util::pascalCase($autoroute[0]);
                         $action = Util::camelCase($autoroute[1]);
                         return self::callAutoRoute($controller, $action, $routeName);
 
                     // Controller, action and parameters were specified
                     }else{
-                        $controller = 'Glowie\Controllers\\' . Util::camelCase($autoroute[0], true);
+                        $controller = 'Glowie\Controllers\\' . Util::pascalCase($autoroute[0]);
                         $action = Util::camelCase($autoroute[1]);
                         $params = array_slice($autoroute, 2);
                         return self::callAutoRoute($controller, $action, $routeName, $params);

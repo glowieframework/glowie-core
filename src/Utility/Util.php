@@ -101,7 +101,7 @@
          * @return array Returns the reordered array.
          */
         public static function orderArray(array $array, string $key, int $order = SORT_ASC){
-            if (!empty($array) && !empty($key)) {
+            if (!empty($array)) {
                 foreach ($array as $col => $row) $data[$col] = $row[$key];
                 array_multisort($data, $order, $array);
             }
@@ -161,9 +161,7 @@
          */
         public static function endsWith(string $haystack, string $needle){
             $length = strlen($needle);
-            if (!$length) {
-                return true;
-            }
+            if (!$length) return true;
             return substr($haystack, -$length) == $needle;
         }
 
@@ -224,11 +222,12 @@
         }
 
         /**
-         * Converts a string to a valid friendly URI format.
+         * Converts a string to a valid slug URI format. It also removes all accents and characters that are not\
+         * valid letters, numbers or dashes, and converts spaces into dashes.
          * @param string $string String to convert.
-         * @return string Returns the friendly URI.
+         * @return string Returns the converted string.
          */
-        public static function friendlyUri(string $string){
+        public static function slug(string $string){
             $string = strtr(utf8_decode(strtolower($string)), utf8_decode('àáâãäçèéêëìíîïñòóôõöùúûüýÿÀÁÂÃÄÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝ'), 'aaaaaceeeeiiiinooooouuuuyyAAAAACEEEEIIIINOOOOOUUUUY');
             $string = str_replace(' ', '-', $string);
             $string = preg_replace('/[^a-zA-Z0-9-]/', '', $string);
@@ -236,20 +235,38 @@
         }
 
         /**
-         * Converts a string to camelCase. It also removes all accents and characters that are not\
-         * valid letters, numbers or underscores.
-         * @param string $string String to be converted.
-         * @param bool $firstUpper (Optional) Determines if the first character should be uppercased (PascalCase).
+         * Converts a string to **snake_case** convention. It also removes all accents and characters that are not\
+         * valid letters, numbers or underscores, and converts spaces into underscores.
+         * @param string $string String to convert.
          * @return string Returns the converted string.
          */
-        public static function camelCase(string $string, bool $firstUpper = false){
+        public static function snakeCase(string $string){
+            $string = strtr(utf8_decode(strtolower($string)), utf8_decode('àáâãäçèéêëìíîïñòóôõöùúûüýÿÀÁÂÃÄÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝ'), 'aaaaaceeeeiiiinooooouuuuyyAAAAACEEEEIIIINOOOOOUUUUY');
+            $string = str_replace(' ', '_', $string);
+            $string = preg_replace('/[^a-zA-Z0-9_]/', '', $string);
+            return $string;
+        }
+
+        /**
+         * Converts a string to **camelCase** convention. It also removes all accents and characters that are not\
+         * valid letters, numbers or underscores.
+         * @param string $string String to be converted.
+         * @return string Returns the converted string.
+         */
+        public static function camelCase(string $string){
             $string = strtr(utf8_decode(strtolower($string)), utf8_decode('àáâãäçèéêëìíîïñòóôõöùúûüýÿÀÁÂÃÄÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝ'), 'aaaaaceeeeiiiinooooouuuuyyAAAAACEEEEIIIINOOOOOUUUUY');
             $string = preg_replace('/[^a-zA-Z0-9_]/', ' ', $string);
-            if($firstUpper){
-                return str_replace(' ', '', ucwords($string));
-            }else{
-                return str_replace(' ', '', lcfirst(ucwords($string)));
-            }
+            return str_replace(' ', '', lcfirst(ucwords($string)));
+        }
+
+        /**
+         * Converts a string to **PascalCase** convention. It also removes all accents and characters that are not\
+         * valid letters, numbers or underscores.
+         * @param string $string String to be converted.
+         * @return string Returns the converted string.
+         */
+        public static function pascalCase(string $string){
+            return ucfirst(self::camelCase($string));
         }
 
         /**
