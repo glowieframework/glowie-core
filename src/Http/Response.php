@@ -147,6 +147,7 @@
          * Sets the HTTP status code for the response.
          * @param int $code HTTP status code to set.
          * @param string $message (Optional) Custom reason phrase to set.
+         * @return Response Current Response instance for nested calls.
          */
         public function setStatusCode(int $code, string $message = ''){
             if(empty($message)){
@@ -154,45 +155,54 @@
             }else{
                 header("HTTP/1.0 {$code} {$message}", true, $code);
             }
+            return $this;
         }
 
         /**
          * Sets a new header value or replaces the existing one.
          * @param string $name Header name to set.
          * @param string|array $value Header value to set.
+         * @return Response Current Response instance for nested calls.
          */
         public function setHeader(string $name, $value){
             $value = implode(', ', (array)$value);
             header("{$name}: {$value}");
+            return $this;
         }
 
         /**
          * Sets a new header value or appends the value to the existing one.
          * @param string $name Header name to set.
          * @param string|array $value Header value to set.
+         * @return Response Current Response instance for nested calls.
          */
         public function appendHeader(string $name, $value){
             $value = implode(', ', (array)$value);
             header("{$name}: {$value}", false);
+            return $this;
         }
 
         /**
-         * Sets a basic Authorization header with username and password.
+         * Sets a basic `Authorization` header with username and password.
          * @param string $username Username to set.
          * @param string $password Password to set.
+         * @return Response Current Response instance for nested calls.
          */
         public function setAuthorization(string $username, string $password){
             $this->setHeader('Authorization', 'Basic ' . base64_encode("{$username}:{$password}"));
+            return $this;
         }
 
         /**
-         * Sets the Content-Type header.
+         * Sets the `Content-Type` header.
          * @param string $type Content-Type to set.
+         * @return Response Current Response instance for nested calls.
          */
         public function setContentType(string $type){
             $this->setHeader('Content-Type', $type);
+            return $this;
         }
-        
+
         /**
          * Sends a raw plain text body to the response.
          * @param string $content Content to set as the body.

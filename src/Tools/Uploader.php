@@ -81,7 +81,8 @@
          * @param string $directory (Optional) Target directory to store the uploaded files. Must be an existing directory with write permissions\
          * relative to the **app/public** folder.
          * @param array $extensions (Optional) Array of allowed file extensions. Use an empty array to allow any extension.
-         * @param float $maxFileSize (Optional) Maximum allowed file size **in megabytes**. Use 0 for unlimited (not recommended).
+         * @param float $maxFileSize (Optional) Maximum allowed file size **in megabytes**. Use `0` for unlimited (not recommended).\
+         * **Important:** This setting cannot be higher than your php.ini `upload_max_filesize` directive.
          * @param bool $overwrite (Optional) Overwrite existing files. If false, uploaded files will append a number to its name.
          */
         public function __construct(string $directory = 'uploads', array $extensions = [], float $maxFileSize = 2, bool $overwrite = false){
@@ -94,36 +95,44 @@
         /**
          * Sets the target directory to store the uploaded files. Must be an existing directory with write permissions.
          * @param string $directory Directory location to store files (relative to the **app/public** folder).
+         * @return Uploader Current Uploader instance for nested calls.
          */
         public function setDirectory(string $directory){
             if(empty($directory) || trim($directory) == '') throw new Exception('Uploader: $directory should not be empty');
             if(!is_dir($directory) || !is_writable($directory)) throw new FileException('Uploader: Target directory is invalid or not writable');
             $this->directory = trim($directory, '/');
+            return $this;
         }
 
         /**
          * Sets the allowed extensions that the uploader will accept.
          * @param array $extensions Array of allowed file extensions. Use an empty array to allow any extension.
+         * @return Uploader Current Uploader instance for nested calls.
          */
         public function setExtensions(array $extensions){
             $this->extensions = $extensions;
+            return $this;
         }
 
         /**
          * Sets the maximum file size that the uploader will accept.
-         * @param float $maxFileSize Maximum allowed file size **in megabytes**. Use 0 for unlimited (not recommended).\
+         * @param float $maxFileSize Maximum allowed file size **in megabytes**. Use `0` for unlimited (not recommended).\
          * **Important:** This setting cannot be higher than your php.ini `upload_max_filesize` directive.
+         * @return Uploader Current Uploader instance for nested calls.
          */
         public function setMaxFileSize(float $maxFileSize){
             $this->maxFileSize = $maxFileSize;
+            return $this;
         }
 
         /**
          * Sets if the uploader should overwrite existing files.
          * @param bool $overwrite If true, uploaded files will be overwritten. Otherwise, it will append a number to its name.
+         * @return Uploader Current Uploader instance for nested calls.
          */
         public function setOverwrite(bool $overwrite){
             $this->overwrite = $overwrite;
+            return $this;
         }
 
         /**
@@ -204,7 +213,7 @@
         /**
          * Checks the file extension.
          * @param string $filename Filename to check.
-         * @return bool Returns true if the file extension is allowed.
+         * @return bool Returns true if the file extension is allowed, false otherwise.
          */
         private function checkExtension(string $filename){
             if(!empty($this->extensions)){
@@ -217,7 +226,7 @@
         /**
          * Checks the file size.
          * @param float $size File size to check.
-         * @return bool Returns true if the file size is below maximum allowed size.
+         * @return bool Returns true if the file size is below maximum allowed size, false otherwise.
          */
         private function checkFileSize(float $size){
             if($this->maxFileSize != 0){

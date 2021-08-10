@@ -121,7 +121,7 @@
         }
 
         /**
-         * Gets a basic Authorization header.
+         * Gets a basic `Authorization` header.
          * @return Element|null Returns an object with the username and password if exists or null if there is none.
          */
         public function getAuthorization(){
@@ -135,7 +135,7 @@
         }
 
         /**
-         * Gets the Content-Type header.
+         * Gets the `Content-Type` header.
          * @return string|null Returns the header value if exists or null if there is none.
          */
         public function getContentType(){

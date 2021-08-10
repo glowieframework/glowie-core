@@ -43,7 +43,7 @@
         public function __construct($from, $to, array $headers = []){
             $this->setFrom($from);
             $this->setTo($to);
-            
+
             // Set headers
             if(!empty($headers)){
                 foreach($headers as $key => $value) $this->addHeader($key, $value);
@@ -54,20 +54,24 @@
          * Sets the email sender address.
          * @param string|array $from The sender address. You can also specify the sender display name by passing an array\
          * with the following structure: `['Jane Doe', 'jane@address.com']`.
+         * @return Mailer Current Mailer instance for nested calls.
          */
         public function setFrom($from){
             if(is_array($from)) $from = "{$from[0]} <{$from[1]}>";
             $this->from = $from;
+            return $this;
         }
 
         /**
          * Sets the email recipient address.
          * @param string|array $to The recipient address. You can also specify the recipient display name by passing an array\
          * with the following structure: `['Jane Doe', 'jane@address.com']`.
+         * @return Mailer Current Mailer instance for nested calls.
          */
         public function setTo($to){
             if(is_array($to)) $to = "{$to[0]} <{$to[1]}>";
             $this->to = $to;
+            return $this;
         }
 
         /**
@@ -75,6 +79,7 @@
          * of the message and their addresses will be shown to all recipients.
          * @param string|array $address The address to add. You can also specify the recipient display name by passing an array\
          * with the following structure: `['Jane Doe', 'jane@address.com']`.
+         * @return Mailer Current Mailer instance for nested calls.
          */
         public function addCc($address){
             if(is_array($address)){
@@ -82,6 +87,7 @@
             }else{
                 $this->addHeader('Cc', $address);
             }
+            return $this;
         }
 
         /**
@@ -89,6 +95,7 @@
          * of the message, but their addresses will not be shown to the recipients.
          * @param string|array $address The address to add. You can also specify the recipient display name by passing an array\
          * with the following structure: `['Jane Doe', 'jane@address.com']`.
+         * @return Mailer Current Mailer instance for nested calls.
          */
         public function addBcc($address){
             if(is_array($address)){
@@ -96,16 +103,19 @@
             }else{
                 $this->addHeader('Bcc', $address);
             }
+            return $this;
         }
 
         /**
          * Adds a custom header to the message.
          * @param string $name Header name.
          * @param string|array $content Header content. Can be a value or an array of values.
+         * @return Mailer Current Mailer instance for nested calls.
          */
         public function addHeader(string $name, $content){
             $content = implode(', ', (array)$content);
             $this->headers[] = "{$name}: {$content}";
+            return $this;
         }
 
         /**

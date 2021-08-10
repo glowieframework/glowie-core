@@ -182,11 +182,13 @@
         /**
          * Fills the model entity with a row data.
          * @param Element|array $row Row to retrieve data.
+         * @return Model Current Model instance for nested calls.
          */
         public function fill($row){
             if(is_array($row)) $row = new Element($row);
             $this->_initialData = $row;
             Element::__construct($row->toArray());
+            return $this;
         }
 
         /**
