@@ -296,20 +296,37 @@
         /**
          * Adds a table JOIN in the query.
          * @param string $table Table name to JOIN.
-         * @param string $param1 First condition parameter.
-         * @param string $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
+         * @param string|Closure $param1 First condition parameter or a grouped ON closure.
+         * @param string|null $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
          * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
          * @param string $type (Optional) JOIN type (INNER, LEFT, RIGHT or FULL).
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function join(string $table, string $param1, string $param2, $param3 = null, string $type = 'INNER'){
+        public function join(string $table, $param1, $param2 = null, $param3 = null, string $type = 'INNER'){
+            // Adds the join
+            $this->_join[] = "{$type} JOIN {$table}";
+
+            // Checks for grouped ON closure
+            if($param1 instanceof Closure){
+                if(!empty($this->_join) && end($this->_join) != '('){
+                    $this->_join[] = "ON";
+                    $this->_join[] = "(";
+                }else{
+                    $this->_join[] = "(";
+                }
+
+                call_user_func_array($param1, array($this));
+                $this->_join[] = ')';
+                return $this;
+            }
+
             // Checks if the operator was passed
             if(is_null($param3)){
                 $param3 = $param2;
                 $param2 = '=';
             }
-            $type = strtoupper($type);
-            $this->_join[] = "{$type} JOIN {$table} ON {$param1} {$param2} {$param3}";
+
+            $this->_join[] = "ON {$param1} {$param2} {$param3}";
             return $this;
         }
 
@@ -326,49 +343,85 @@
         /**
          * Adds a table INNER JOIN in the query.
          * @param string $table Table name to JOIN.
-         * @param string $param1 First condition parameter.
-         * @param string $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
+         * @param string|Closure $param1 First condition parameter or a grouped ON closure.
+         * @param string|null $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
          * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function innerJoin(string $table, string $param1, string $param2, $param3 = null){
+        public function innerJoin(string $table, $param1, $param2 = null, $param3 = null){
             return $this->join($table, $param1, $param2, $param3);
         }
 
         /**
          * Adds a table LEFT JOIN in the query.
          * @param string $table Table name to JOIN.
-         * @param string $param1 First condition parameter.
-         * @param string $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
+         * @param string|Closure $param1 First condition parameter or a grouped ON closure.
+         * @param string|null $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
          * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function leftJoin(string $table, string $param1, string $param2, $param3 = null){
+        public function leftJoin(string $table, $param1, $param2 = null, $param3 = null){
             return $this->join($table, $param1, $param2, $param3, 'LEFT');
         }
 
         /**
          * Adds a table RIGHT JOIN in the query.
          * @param string $table Table name to JOIN.
-         * @param string $param1 First condition parameter.
-         * @param string $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
+         * @param string|Closure $param1 First condition parameter or a grouped ON closure.
+         * @param string|null $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
          * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function rightJoin(string $table, string $param1, string $param2, $param3 = null){
+        public function rightJoin(string $table, $param1, $param2 = null, $param3 = null){
             return $this->join($table, $param1, $param2, $param3, 'RIGHT');
         }
 
         /**
          * Adds a table FULL JOIN in the query.
          * @param string $table Table name to JOIN.
+         * @param string|Closure $param1 First condition parameter or a grouped ON closure.
+         * @param string|null $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
+         * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function fullJoin(string $table, $param1, $param2 = null, $param3 = null){
+            return $this->join($table, $param1, $param2, $param3, 'FULL');
+        }
+
+        /**
+         * Adds an ON condition to the last JOIN statement in the query.
+         * @param string $param1 First condition parameter.
+         * @param string $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
+         * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
+         * @param string $type (Optional) Chaining type (AND or OR).
+         * @return Kraken Current Kraken instance for nested calls.
+         */
+        public function on(string $param1, string $param2, $param3 = null, string $type = 'AND'){
+            // Checks for empty joins
+            if(empty($this->_join)) throw new Exception('There are no JOIN statements in the query yet');
+
+            // Checks for the condition type
+            if(end($this->_join) == '(') $type = "";
+
+            // Checks if the operator was passed
+            if(is_null($param3)){
+                $param3 = $param2;
+                $param2 = '=';
+            }
+
+            $this->_join[] = "{$type} {$param1} {$param2} {$param3}";
+            return $this;
+        }
+
+        /**
+         * Adds an OR ON condition to the last JOIN statement in the query.
          * @param string $param1 First condition parameter.
          * @param string $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
          * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function fullJoin(string $table, string $param1, string $param2, $param3 = null){
-            return $this->join($table, $param1, $param2, $param3, 'FULL');
+        public function orOn(string $param1, string $param2, $param3 = null){
+            return $this->on($param1, $param2, $param3, 'OR');
         }
 
         /**
