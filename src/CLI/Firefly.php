@@ -3,6 +3,7 @@
 
     use Glowie\Core\Database\Kraken;
     use Glowie\Core\Exception\ConsoleException;
+    use Glowie\Core\Config;
     use Util;
     use Exception;
 
@@ -76,7 +77,7 @@
             array_shift(self::$args);
             if(!isset(self::$args[0])){
                 self::print('<bg="magenta"><color="black">Welcome to Firefly!</color></bg>');
-                self::print('<color="blue">To view a list of valid commands, use</color> <color="yellow">php firefly help</color>.');
+                self::print('<color="blue">To view a list of valid commands, use</color> <color="pink">php firefly help</color>');
                 return;
             }
 
@@ -173,7 +174,7 @@
                     break;
                 default:
                     self::print('<bg="red"><color="black">Unknown command: ' . $command . '</color></bg>');
-                    self::print('<color="blue">To view a list of valid commands, use</color> <color="yellow">php firefly help</color>.');
+                    self::print('<color="blue">To view a list of valid commands, use</color> <color="pink">php firefly help</color>');
                     self::error('Unknown command: ' . $command);
                     break;
             }
@@ -235,6 +236,7 @@
 
             // Starts the server
             self::print('<color="green">Starting local development server...</color>');
+            self::print('<color="yellow">To shutdown the server press</color> <color="pink">Ctrl+C</color>');
             system('php -S ' . $host . ':' . $port .' -t app/public ' . self::$templateFolder . '../Server.php');
         }
 
@@ -248,6 +250,7 @@
                 self::error('Directory "app/storage/cache" is not writable, please check your chmod settings');
                 return;
             }
+            self::print("<color=\"blue\">Clearing cache...</color>");
             foreach (Util::getFiles(self::$appFolder . 'storage/cache/*.tmp') as $filename) unlink($filename);
             self::print('<color="green">Cache cleared successfully!</color>');
             return true;
@@ -263,6 +266,7 @@
                 self::error('Directory "app/storage/session" is not writable, please check your chmod settings');
                 return;
             }
+            self::print("<color=\"blue\">Clearing session data...</color>");
             foreach (Util::getFiles(self::$appFolder . 'storage/session/*') as $filename) unlink($filename);
             self::print('<color="green">Session data cleared successfully!</color>');
             return true;
@@ -278,43 +282,29 @@
                 self::error('Directory "app/storage" is not writable, please check your chmod settings');
                 return;
             }
+            self::print("<color=\"blue\">Clearing error log...</color>");
             file_put_contents(self::$appFolder . 'storage/error.log', '');
             self::print('<color="green">Error log cleared successfully!</color>');
             return true;
         }
 
         /**
-         * Tests an environment database connection.
+         * Tests the database connection for the current environment.
          */
         private static function testDatabase(){
             // Checks if CLI is running
             if(self::$isCLI){
-                // Checks configuration file
-                if (!file_exists(self::$appFolder . 'config/Config.php')) {
-                    self::print('<bg="red"><color="black">Configuration file not found!</color></bg>');
-                    self::print('Please rename <color="yellow">"app/config/Config.example.php"</color> to <color="green">"app/config/Config.php"</color>.');
-                    return false;
+                // Checks the configuration file
+                if (!defined('GLOWIE_CONFIG')){
+                    if (!file_exists(self::$appFolder . 'config/Config.php')) {
+                        self::print('<bg="red"><color="black">Configuration file not found!</color></bg>');
+                        self::print('Please rename <color="yellow">"app/config/Config.example.php"</color> to <color="green">"app/config/Config.php"</color>.');
+                        return false;
+                    }
+
+                    // Loads the configuration file
+                    Config::load(self::$appFolder);
                 }
-
-                // Loads the configuration file
-                require(self::$appFolder . 'config/Config.php');
-
-                // Checks if environment was filled
-                if (isset(self::$args['env'])) {
-                    $env = trim(self::$args['env']);
-                } else {
-                    $env = 'production';
-                }
-
-                // Loads the environment setting
-                if (empty($config[$env])) {
-                    self::print('<bg="red"><color="black">Invalid configuration environment!</color></bg>');
-                    self::print('<color="red">Please check your application settings.</color>');
-                    return false;
-                }
-
-                // Sets the environment setting
-                if (!defined('GLOWIE_CONFIG')) define('GLOWIE_CONFIG', $config[$env]);
 
                 // Sets error reporting
                 error_reporting(E_ALL);
@@ -657,6 +647,7 @@
                 try {
                     // Checks if the migration was already applied
                     if(!$migration->isApplied()){
+                        self::print("<color=\"blue\">Applying migration {$name}...</color>");
                         $migration->run();
                         $migration->saveMigration();
                         $migrateRun = true;
@@ -677,7 +668,7 @@
                 self::print('<color="yellow">There are no new migrations to apply.</color>');
                 return true;
             }else{
-                self::print('<color="green">All new migrations were applied successfully.</color>');
+                self::print('<color="yellow">All new migrations were applied successfully.</color>');
                 return true;
             }
         }
@@ -721,6 +712,7 @@
                 try {
                     // Checks if the migration was already applied
                     if($migration->isApplied()){
+                        self::print("<color=\"blue\">Rolling back migration {$name}...</color>");
                         $migration->rollback();
                         $migration->deleteMigration();
                         $rollbackRun = true;
@@ -741,7 +733,7 @@
                 self::print('<color="yellow">There are no migrations to rollback.</color>');
                 return true;
             }else{
-                self::print('<color="green">Migrations were rolled back successfully.</color>');
+                self::print('<color="yellow">Migrations were rolled back successfully.</color>');
                 return true;
             }
         }
@@ -766,14 +758,14 @@
             self::print('  <color="yellow">clear-cache</color> | Clears the application cache folder');
             self::print('  <color="yellow">clear-session</color> | Clears the application session folder');
             self::print('  <color="yellow">clear-log</color> | Clears the application error log');
-            self::print('  <color="yellow">test-database</color> <color="blue">--env</color> | Tests the database connection for a configuration environment');
+            self::print('  <color="yellow">test-database</color> | Tests the database connection for the current environment');
             self::print('  <color="yellow">create-controller</color> <color="blue">--name</color> | Creates a new controller for your application');
             self::print('  <color="yellow">create-language</color> <color="blue">--id</color> | Creates a new language file for your application');
             self::print('  <color="yellow">create-middleware</color> <color="blue">--name</color> | Creates a new middleware for your application');
             self::print('  <color="yellow">create-migration</color> <color="blue">--name</color> | Creates a new migration for your application');
             self::print('  <color="yellow">create-model</color> <color="blue">--name --table --primary --timestamps --created --updated</color> | Creates a new model for your application');
-            self::print('  <color="yellow">migrate</color> <color="blue">--env --steps</color> | Applies pending migrations from your application');
-            self::print('  <color="yellow">rollback</color> <color="blue">--env --steps</color> | Rolls back the last applied migration');
+            self::print('  <color="yellow">migrate</color> <color="blue">--steps</color> | Applies pending migrations from your application');
+            self::print('  <color="yellow">rollback</color> <color="blue">--steps</color> | Rolls back the last applied migration');
             self::print('  <color="yellow">version</color> | Displays current Firefly version');
             self::print('  <color="yellow">help</color> | Displays this help message');
         }

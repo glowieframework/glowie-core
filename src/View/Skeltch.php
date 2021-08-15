@@ -2,6 +2,7 @@
     namespace Glowie\Core\View;
     
     use Glowie\Core\Exception\FileException;
+    use Glowie\Core\Config;
 
     /**
      * Templating engine for Glowie application.
@@ -27,7 +28,7 @@
 
             // Checks if cache is enabled or should be recompiled
             $tmpfile = $tmpdir . md5($filename) . '.tmp';
-            if(!GLOWIE_CONFIG['cache'] || !file_exists($tmpfile) || filemtime($tmpfile) < filemtime($filename)) self::compile($filename, $tmpfile);
+            if(!Config::get('cache', true) || !file_exists($tmpfile) || filemtime($tmpfile) < filemtime($filename)) self::compile($filename, $tmpfile);
 
             // Returns the processed file location
             return $tmpfile;

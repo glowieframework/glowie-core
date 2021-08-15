@@ -50,7 +50,7 @@
             foreach($data as $key => $item){
                 // Searches for field rule
                 if(isset($rules[$key])){
-                    if(!is_array($rules[$key])) throw new Exception('validateFields: [' . $key .'] must be an array of rules');
+                    if(!is_array($rules[$key])) throw new Exception('validateFields(): [' . $key .'] must be an array of rules');
 
                     // Validate item
                     $this->validate($item, $rules[$key], $bail);

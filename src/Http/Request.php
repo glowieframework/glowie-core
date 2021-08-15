@@ -145,7 +145,7 @@
         /**
          * Gets the value of a variable from the request.
          * @param string $key Variable key to get.
-         * @param mixed $default (Optional) Default value to return if the key does not exists.
+         * @param mixed $default (Optional) Default value to return if the key does not exist.
          * @return mixed Returns the value if exists or the default if not.
          */
         public function getVar(string $key, $default = null){

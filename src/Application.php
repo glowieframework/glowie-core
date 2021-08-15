@@ -28,28 +28,8 @@
             define('GLOWIE_APP_FOLDER', trim(substr($_SERVER['PHP_SELF'], 0, strpos($_SERVER['PHP_SELF'], '/app/public/index.php')), '/'));
             define('GLOWIE_BASE_URL', (isset($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/' . GLOWIE_APP_FOLDER . (!empty(GLOWIE_APP_FOLDER) ? '/' : ''));
 
-            // Include configuration file
-            if (!file_exists('../config/Config.php')) {
-                die('<strong>Configuration file not found!</strong><br>
-                Please rename "app/config/Config.example.php" to "app/config/Config.php".');
-            }else{
-                require('../config/Config.php');
-            }
-
-            // Workaround for servers who dont support SetEnv/GetEnv
-            if(getenv('GLOWIE_ENVIRONMENT') !== false){
-                define('GLOWIE_ENVIRONMENT', getenv('GLOWIE_ENVIRONMENT'));
-            }else{
-                define('GLOWIE_ENVIRONMENT', 'production');
-            }
-
-            // Setup configuration environment
-            if (!empty($config[GLOWIE_ENVIRONMENT])) {
-                define('GLOWIE_CONFIG', $config[GLOWIE_ENVIRONMENT]);
-            }else{
-                die('<strong>Invalid configuration environment!</strong><br>
-                Please check your application settings and "app/public/.htaccess".');
-            }
+            // Load configuration file
+            Config::load();
 
             // Register error handling
             Error::register();
@@ -58,7 +38,7 @@
             Session::register();
 
             // Timezone configuration
-            date_default_timezone_set(GLOWIE_CONFIG['timezone']);
+            date_default_timezone_set(Config::get('timezone', 'America/Sao_Paulo'));
 
             // Include application routes
             require('../config/Routes.php');

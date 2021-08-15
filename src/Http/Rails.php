@@ -223,7 +223,7 @@
                     // Gets the controller
                     $controller = $config['controller'];
 
-                    // If the controller class does not exists, trigger an error
+                    // If the controller class does not exist, trigger an error
                     if (!class_exists($controller)) throw new RoutingException("Controller \"{$controller}\" not found");
 
                     // Instantiates the controller
@@ -233,7 +233,7 @@
                     if(!empty($config['middleware'])){
                         // Runs each middleware
                         foreach($config['middleware'] as $middleware){
-                            // If middleware class does not exists, trigger an error
+                            // If middleware class does not exist, trigger an error
                             if (!class_exists($middleware)) throw new RoutingException("Middleware \"{$middleware}\" not found");
 
                             // Instantiates the middleware
@@ -261,7 +261,7 @@
                     // Gets the action
                     $action = $config['action'];
 
-                    // If action does not exists, trigger an error
+                    // If action does not exist, trigger an error
                     if (is_callable([self::$controller, $action])) {
                         // Runs the controller init() method
                         if (is_callable([self::$controller, 'init'])) self::$controller->init();

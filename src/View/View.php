@@ -3,6 +3,7 @@
 
     use Glowie\Core\Element;
     use Glowie\Core\Http\Rails;
+    use Glowie\Core\Config;
     use BadMethodCallException;
 
     /**
@@ -51,7 +52,7 @@
             if(!empty($params)) foreach($params as $key => $value) $this->{$key} = $value;
 
             // Render view
-            if(GLOWIE_CONFIG['skeltch']) $this->_path = Skeltch::run($this->_path);
+            if(Config::get('skeltch', true)) $this->_path = Skeltch::run($this->_path);
             $this->_content = $this->getBuffer();
             if($parse) echo $this->_content;
         }

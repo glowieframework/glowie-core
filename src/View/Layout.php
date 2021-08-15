@@ -4,6 +4,7 @@
     use Glowie\Helpers\Helpers;
     use Glowie\Core\Http\Rails;
     use Glowie\Core\Element;
+    use Glowie\Core\Config;
     use BadMethodCallException;
 
     /**
@@ -58,7 +59,7 @@
             }
 
             // Render layout
-            if(GLOWIE_CONFIG['skeltch']) $this->_path = Skeltch::run($this->_path);
+            if(Config::get('skeltch', true)) $this->_path = Skeltch::run($this->_path);
             echo $this->getBuffer();
         }
 

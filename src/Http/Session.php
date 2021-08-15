@@ -2,6 +2,7 @@
     namespace Glowie\Core\Http;
 
     use Glowie\Core\Exception\FileException;
+    use Glowie\Core\Config;
 
     /**
      * Session manager for Glowie application.
@@ -44,7 +45,7 @@
             ini_set('session.name', 'app_session');
             ini_set('session.gc_probability', '1');
             ini_set('session.gc_divisor', '50');
-            ini_set('session.gc_maxlifetime', (string)(GLOWIE_CONFIG['session_lifetime'] ?? 120));
+            ini_set('session.gc_maxlifetime', (string)Config::get('session_lifetime', 120));
             ini_set('session.cookie_httponly', '1');
             ini_set('session.use_cookies', '1');
             ini_set('session.use_only_cookies', '1');
@@ -63,7 +64,7 @@
         /**
          * Gets the value associated to a key in the session data.
          * @param string $key Key to get value.
-         * @param mixed $default (Optional) Default value to return if the key does not exists.
+         * @param mixed $default (Optional) Default value to return if the key does not exist.
          * @return mixed Returns the value if exists or the default if not.
          */
         public function get(string $key, $default = null){
@@ -171,7 +172,7 @@
         /**
          * Gets the value associated to a key in the session flash data, then deletes it.
          * @param string $key Key to get value.
-         * @param mixed $default (Optional) Default value to return if the key does not exists.
+         * @param mixed $default (Optional) Default value to return if the key does not exist.
          * @return mixed Returns the value if exists or the default if not.
          */
         public function getFlash(string $key, $default = null){

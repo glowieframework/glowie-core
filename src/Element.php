@@ -39,7 +39,7 @@
         /**
          * Gets the value associated to a key in the Element data.
          * @param string $key Key to get value.
-         * @param mixed $default (Optional) Default value to return if the key does not exists.
+         * @param mixed $default (Optional) Default value to return if the key does not exist.
          * @return mixed Returns the value if exists or the default if not.
          */
         public function get(string $key, $default = null){

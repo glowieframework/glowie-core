@@ -2,6 +2,7 @@
     use Glowie\Core\Http\Rails;
     use Glowie\Core\Http\Session;
     use Glowie\Core\Http\Response;
+    use Glowie\Core\Config;
 
     /**
      * Miscellaneous utilities for Glowie application.
@@ -20,7 +21,7 @@
          * @return string Current Glowie core version.
          */
         public static function getVersion(){
-            return '1.0.0';
+            return '1.0.2';
         }
 
         /**
@@ -54,12 +55,12 @@
          */
         public static function route(string $route, array $params = []){
             // Validate arguments
-            if(empty($route)) throw new Exception('route: Route name cannot be empty');
-            if (!is_array($params)) throw new Exception('route: $params must be an array');
+            if(empty($route)) throw new Exception('route(): Route name cannot be empty');
+            if (!is_array($params)) throw new Exception('route(): $params must be an array');
 
             // Gets the named route
             $routeData = Rails::getRoute($route);
-            if(empty($routeData)) throw new Exception('route: Route name "' . $route .'" does not match any existing route');
+            if(empty($routeData)) throw new Exception('route(): Route name "' . $route .'" does not match any existing route');
 
             // Gets the route parameters
             $uri = [];
@@ -80,7 +81,7 @@
             }
 
             // Validates missing parameters
-            if (!empty($missing)) throw new Exception('route: Missing parameter "' . implode('", "', $missing) . '" for route "' . $route . '"');
+            if (!empty($missing)) throw new Exception('route(): Missing parameter "' . implode('", "', $missing) . '" for route "' . $route . '"');
 
             // Checks if the route has any parameters
             if(!empty($result)){
@@ -172,8 +173,8 @@
          * @return string|bool Returns the encrypted string on success or false on errors.
          */
         public static function encryptString(string $string, string $method = 'sha256'){
-            $key = hash($method, GLOWIE_CONFIG['app_key']);
-            $iv = substr(hash($method, GLOWIE_CONFIG['app_token']), 0, 16);
+            $key = hash($method, Config::get('app_key', 'f08e8ba131c7abab97dba275fab5a85e'));
+            $iv = substr(hash($method, Config::get('app_token', 'd147723d9e91340d9dd28fbd5a0b6651')), 0, 16);
             $hash = openssl_encrypt($string, "AES-256-CBC", $key, 0, $iv);
             if(!$hash) return false;
             return base64_encode($hash);
@@ -186,8 +187,8 @@
          * @return string|bool Returns the decrypted string on success or false on errors.
          */
         public static function decryptString(string $string, string $method = 'sha256'){
-            $key = hash($method, GLOWIE_CONFIG['app_key']);
-            $iv = substr(hash($method, GLOWIE_CONFIG['app_token']), 0, 16);
+            $key = hash($method, Config::get('app_key', 'f08e8ba131c7abab97dba275fab5a85e'));
+            $iv = substr(hash($method, Config::get('app_token', 'd147723d9e91340d9dd28fbd5a0b6651')), 0, 16);
             $hash = base64_decode($string);
             if(!$hash) return false;
             return openssl_decrypt($hash, "AES-256-CBC", $key, 0, $iv);;

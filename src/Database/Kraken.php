@@ -4,6 +4,7 @@
     use Glowie\Core\Element;
     use Glowie\Core\Exception\DatabaseException;
     use Glowie\Core\Exception\QueryException;
+    use Glowie\Core\Config;
     use mysqli;
     use mysqli_result;
     use mysqli_sql_exception;
@@ -42,10 +43,10 @@
         private static $_global;
 
         /**
-         * Enable transactions.
+         * Stores if there is a transaction running.
          * @var bool
          */
-        private $_transactions;
+        private $_transaction;
 
         /**
          * Query instruction.
@@ -143,13 +144,11 @@
          * @param array $database (Optional) Associative array with the database connection settings.\
          * Use an empty array to connect to the environment defined database (from **app/config/Config.php**).
          * @param string $charset (Optional) Database character set encoding to use.
-         * @param bool $transactions (Optional) Enable or disable database transactions.
          */
-        public function __construct(string $table = 'glowie', array $database = [], string $charset = 'utf8', bool $transactions = true){
+        public function __construct(string $table = 'glowie', array $database = [], string $charset = 'utf8'){
             $this->database($database);
             $this->table($table);
             $this->charset($charset);
-            $this->transactions($transactions);
         }
 
         /**
@@ -162,7 +161,13 @@
         public function database(array $database){
             // Checks for the global database setting
             $global = empty($database);
-            if ($global) $database = GLOWIE_CONFIG['database'];
+            if ($global) $database = Config::get('database', [
+                'host' => 'localhost',
+                'username' => 'root',
+                'password' => '',
+                'db' => 'glowie',
+                'port' => 3306
+            ]);
 
             // Validate settings
             if (empty($database['host'])) throw new DatabaseException($database, 'Database host not defined');
@@ -196,7 +201,7 @@
          * @return Kraken Current Kraken instance for nested calls.
          */
         public function table(string $table){
-            if (empty($table)) throw new Exception('Table name should not be empty');
+            if (empty($table)) throw new Exception('Kraken: Table name should not be empty');
             $this->_table = $table;
             return $this;
         }
@@ -216,16 +221,6 @@
          */
         public function charset(string $charset){
             $this->_connection->set_charset($charset);
-            return $this;
-        }
-
-        /**
-         * Enables or disables database transactions.
-         * @param bool $option True or false.
-         * @return Kraken Current Kraken instance for nested calls.
-         */
-        public function transactions(bool $option){
-            $this->_transactions = $option;
             return $this;
         }
 
@@ -398,7 +393,7 @@
          */
         public function on(string $param1, string $param2, $param3 = null, string $type = 'AND'){
             // Checks for empty joins
-            if(empty($this->_join)) throw new Exception('There are no JOIN statements in the query yet');
+            if(empty($this->_join)) throw new Exception('Kraken: There are no JOIN statements in the query yet');
 
             // Checks for the condition type
             if(end($this->_join) == '(') $type = "";
@@ -459,7 +454,7 @@
                 return $this;
             }else if(is_array($param1)){
                 foreach($param1 as $condition){
-                    if(!is_array($condition) || count($condition) < 2) throw new Exception('Multiple WHERE conditions must be an array with at least two parameters');
+                    if(!is_array($condition) || count($condition) < 2) throw new Exception('Kraken: Multiple WHERE conditions must be an array with at least two parameters');
                     $this->where($condition[0], $condition[1], $condition[2] ?? null);
                 }
                 return $this;
@@ -922,7 +917,7 @@
                 return $this;
             }else if(is_array($param1)){
                 foreach($param1 as $condition){
-                    if(!is_array($condition) || count($condition) < 2) throw new Exception('Multiple HAVING conditions must be an array with at least two parameters');
+                    if(!is_array($condition) || count($condition) < 2) throw new Exception('Kraken: Multiple HAVING conditions must be an array with at least two parameters');
                     $this->having($condition[0], $condition[1], $condition[2] ?? null);
                 }
                 return $this;
@@ -1532,6 +1527,60 @@
         }
 
         /**
+         * Starts an SQL transaction for the next queries.
+         * @return bool Returns true on success or false on failure.
+         * @throws Exception Throws an exception if a pending transaction is already running.
+         */
+        public function beginTransaction(){
+            if($this->_transaction) throw new Exception('There is a pending transaction already running');
+            $this->_transaction = true;
+            return $this->_connection->begin_transaction();
+        }
+
+        /**
+         * Commits the current SQL transaction.
+         * @return bool Returns true on success or false on failure.
+         * @throws Exception Throws an exception if there is not a running transaction.
+         */
+        public function commit(){
+            if(!$this->_transaction) throw new Exception('There is not a running transaction');
+            $this->_transaction = false;
+            return $this->_connection->commit();
+        }
+        
+        /**
+         * Rolls back the current SQL transaction.
+         * @return bool Returns true on success or false on failure.
+         * @throws Exception Throws an exception if there is not a running transaction.
+         */
+        public function rollback(){
+            if(!$this->_transaction) throw new Exception('There is not a running transaction');
+            $this->_transaction = false;
+            return $this->_connection->rollback();
+        }
+
+        /**
+         * Enclosures a set of operations in a transaction.
+         * @param Closure $operations Set of operations to run inside the transaction.
+         * @return bool Returns true on success or false on failure.
+         */
+        public function transaction(Closure $operations){
+            // Begins the transaction
+            $this->beginTransaction();
+
+            try {
+                // Run operations
+                call_user_func_array($operations, array($this));
+            } catch (Exception $th) {
+                // If something fails, rolls back the transaction
+                return $this->rollback();
+            }
+
+            // Commits the transaction if nothing failed
+            return $this->commit();
+        }
+
+        /**
          * Clears the current built query entirely.
          */
         public function clearQuery(){
@@ -1660,7 +1709,6 @@
             $params = get_object_vars($this);
             unset($params['_table']);
             unset($params['_connection']);
-            unset($params['_transactions']);
             return $params;
         }
 
@@ -1681,9 +1729,6 @@
          * results. Otherwise returns true on success.
          */
         private function execute(bool $returns = false, bool $returnsFirst = false, bool $returnAssoc = false){
-            // Initializes the transaction (if enabled)
-            if($this->_transactions) $this->_connection->begin_transaction();
-
             try {
                 // Run query and clear its data
                 $built = $this->getQuery();
@@ -1719,18 +1764,15 @@
                         }
                     }
 
-                    // Commits the transaction (if enabled) and returns the result
+                    // Stores the last insert ID and returns the result
                     $this->_lastInsertId = $this->_connection->insert_id;
-                    if ($this->_transactions) $this->_connection->commit();
                     return $result;
                 }else{
                     // Query failed
-                    if($this->_transactions) $this->_connection->rollback();
                     return false;
                 }
             } catch (mysqli_sql_exception $e) {
                 // Query failed with error
-                if($this->_transactions) $this->_connection->rollback();
                 throw new QueryException($built, $e->getMessage(), $e->getCode(), $e);
             }
         }
