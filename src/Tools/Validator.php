@@ -25,7 +25,7 @@
         /**
          * Returns an associative array with the latest validation errors.
          * @param string|int $key (Optional) Item/field key to get errors. Leave blank to get all.
-         * @return array Array with the fetched errors.
+         * @return array Returns an array with the fetched errors.
          */
         public function getErrors($key = null){
             if(!is_null($key)){
@@ -38,10 +38,10 @@
         /**
          * Validates an associative array of multiple fields with unique rules for each of them.
          * @param array $data Associative array of fields to be validated.
-         * @param array $rules Associative array with validation rules for each field (check docs to see valid rules).
-         * @param bool $bail (Optional) Stop validation of field after first failure found.
-         * @param bool $bailAll (Optional) Stop validation of all fields after first field failure found.
-         * @return bool Validation result.
+         * @param array $rules Associative array with validation rules for each field.
+         * @param bool $bail (Optional) Stop validation of each field after first failure found.
+         * @param bool $bailAll (Optional) Stop validation of all fields after first failure found.
+         * @return bool Returns true if all rules passed for all fields, false otherwise.
          */
         public function validateFields(array $data, array $rules, bool $bail = false, bool $bailAll = false){
             // Loops throug field list
@@ -50,8 +50,6 @@
             foreach($data as $key => $item){
                 // Searches for field rule
                 if(isset($rules[$key])){
-                    if(!is_array($rules[$key])) throw new Exception('validateFields(): [' . $key .'] must be an array of rules');
-
                     // Validate item
                     $this->validate($item, $rules[$key], $bail);
                     if(!empty($this->errors)){
@@ -70,14 +68,14 @@
         }
 
         /**
-         * Validates an array of multiple items with the same rules.
-         * @param array $data Array of items to be validated.
-         * @param array $rules Validation rules (check docs to see valid rules).
-         * @param bool $bail (Optional) Stop validation of item after first failure found.
-         * @param bool $bailAll (Optional) Stop validation of all items after first item failure found.
-         * @return bool Validation result.
+         * Validates an array of multiple values with the same rules for all of them.
+         * @param array $data Array of values to be validated.
+         * @param string|array $rules Validation rules for the data. Can be a single rule or an array of rules.
+         * @param bool $bail (Optional) Stop validation of each value after first failure found.
+         * @param bool $bailAll (Optional) Stop validation of all values after first failure found.
+         * @return bool Returns true if all rules passed for all values, false otherwise.
          */
-        public function validateMultiple(array $data, array $rules, bool $bail = false, bool $bailAll = false){
+        public function validateMultiple(array $data, $rules, bool $bail = false, bool $bailAll = false){
             // Loops through data array
             $errors = [];
             $result = true;
@@ -99,18 +97,18 @@
         }
 
         /**
-         * Validates a single variable.
-         * @param mixed $data Data to be validated.
-         * @param array $rules Validation rules (check docs to see valid rules).
+         * Validates a single value.
+         * @param mixed $data Value to be validated.
+         * @param string|array $rules Validation rules for the data. Can be a single rule or an array of rules.
          * @param bool $bail (Optional) Stop validation after first failure found.
-         * @return bool Validation result.
+         * @return bool Returns true if all rules passed, false otherwise.
          */
-        public function validate($data, array $rules, bool $bail = false){
+        public function validate($data, $rules, bool $bail = false){
             // Stores result
             $result = [];
 
             // Loops through rule array
-            foreach($rules as $rule){
+            foreach((array)$rules as $rule){
 
                 // Parse rule parameters, if available
                 $rule = explode(':', $rule, 2);

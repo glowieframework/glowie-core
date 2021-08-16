@@ -77,7 +77,7 @@
             array_shift(self::$args);
             if(!isset(self::$args[0])){
                 self::print('<bg="magenta"><color="black">Welcome to Firefly!</color></bg>');
-                self::print('<color="blue">To view a list of valid commands, use</color> <color="pink">php firefly help</color>');
+                self::print('<color="yellow">To view a list of valid commands, use php firefly help</color>');
                 return;
             }
 
@@ -174,7 +174,7 @@
                     break;
                 default:
                     self::print('<bg="red"><color="black">Unknown command: ' . $command . '</color></bg>');
-                    self::print('<color="blue">To view a list of valid commands, use</color> <color="pink">php firefly help</color>');
+                    self::print('<color="yellow">To view a list of valid commands, use php firefly help</color>');
                     self::error('Unknown command: ' . $command);
                     break;
             }
@@ -236,7 +236,7 @@
 
             // Starts the server
             self::print('<color="green">Starting local development server...</color>');
-            self::print('<color="yellow">To shutdown the server press</color> <color="pink">Ctrl+C</color>');
+            self::print('<color="yellow">To shutdown the server press Ctrl+C</color>');
             system('php -S ' . $host . ':' . $port .' -t app/public ' . self::$templateFolder . '../Server.php');
         }
 

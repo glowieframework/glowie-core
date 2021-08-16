@@ -163,7 +163,7 @@
          * @param string $method (Optional) Method to use in the request. Default is GET.
          * @param array|string $data (Optional) Data to send in the request.\
          * `Content-Type` header must be needed depending on chosen data type.
-         * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on failure.
+         * @return string|bool Returns the response body as a string on success (HTTP 200 status code) or false on failure.
          */
         public function request(string $url, string $method = 'GET', $data = []){
             // Initializes cURL
