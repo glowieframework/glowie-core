@@ -67,7 +67,7 @@
                     </div>
                     <div style="padding: 20px;">
                         <i style="word-wrap: break-word; color: dimgray; display: block; font-size: 16px;">File: <b style="color: #ed578b;">' . $e->getFile() . '</b> at line <b style="color: #ed578b;">' . $e->getLine() . '</b>.</i>
-                        <span style="font-size: 14px; color: gray; display: block;">Exception thrown in ' . self::getExceptionTime() . ' seconds.</span>' .
+                        <span style="font-size: 14px; color: gray; display: block;">Exception thrown in <strong>' . self::getExceptionTime() . '</strong>.</span>' .
                         self::highlight($e->getFile(), $e->getLine()) .
                         self::parseTrace($e->getTrace()) .
                     '</div>
@@ -162,7 +162,7 @@
          * @return float Exception time.
          */
         private static function getExceptionTime(){
-            return round((microtime(true) - GLOWIE_START_TIME), 5);
+            return round((microtime(true) - APP_START_TIME) * 1000, 2) . 'ms';
         }
 
     }

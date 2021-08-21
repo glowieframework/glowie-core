@@ -201,7 +201,6 @@
          * @return Kraken Current Kraken instance for nested calls.
          */
         public function table(string $table){
-            if (empty($table)) throw new Exception('Kraken: Table name should not be empty');
             $this->_table = $table;
             return $this;
         }
@@ -1571,7 +1570,7 @@
             try {
                 // Run operations
                 call_user_func_array($operations, array($this));
-            } catch (Exception $th) {
+            } catch (Exception $e) {
                 // If something fails, rolls back the transaction
                 return $this->rollback();
             }
@@ -1709,6 +1708,7 @@
             $params = get_object_vars($this);
             unset($params['_table']);
             unset($params['_connection']);
+            unset($params['_transaction']);
             return $params;
         }
 

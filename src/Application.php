@@ -22,11 +22,11 @@
          */
         public static function run(){
             // Store application start time
-            define('GLOWIE_START_TIME', microtime(true));
+            define('APP_START_TIME', microtime(true));
 
             // Store application folder and base URL
-            define('GLOWIE_APP_FOLDER', trim(substr($_SERVER['PHP_SELF'], 0, strpos($_SERVER['PHP_SELF'], '/app/public/index.php')), '/'));
-            define('GLOWIE_BASE_URL', (isset($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/' . GLOWIE_APP_FOLDER . (!empty(GLOWIE_APP_FOLDER) ? '/' : ''));
+            define('APP_FOLDER', trim(substr($_SERVER['PHP_SELF'], 0, strpos($_SERVER['PHP_SELF'], '/app/public/index.php')), '/'));
+            define('APP_BASE_URL', (isset($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/' . APP_FOLDER . (!empty(APP_FOLDER) ? '/' : ''));
 
             // Load configuration file
             Config::load();

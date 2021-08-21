@@ -94,7 +94,7 @@
             if(file_exists($view)){
                 return new View($view, $params, true);
             }else{
-                throw new FileException('renderView(): View file "' . str_replace('../', 'app/', $view) .'" not found');
+                throw new FileException(sprintf('renderView(): View file "%s" not found', str_replace('../', 'app/', $view)));
             }
         }
 
@@ -114,16 +114,16 @@
                     if(file_exists($view)){
                         return new Layout($layout, $view, $params);
                     }else{
-                        throw new FileException('renderLayout(): View file "' . str_replace('../', 'app/', $view) .'" not found');
+                        throw new FileException(sprintf('renderLayout(): View file "%s" not found', str_replace('../', 'app/', $view)));
                     }
                 } else {
-                    throw new FileException('renderLayout(): Layout file "' . str_replace('../', 'app/', $layout) .'" not found');
+                    throw new FileException(sprintf('renderLayout(): Layout file "%s" not found', str_replace('../', 'app/', $layout)));
                 }
             }else{
                 if (file_exists($layout)) {
                     return new Layout($layout, '', $params);
                 } else {
-                    throw new FileException('renderLayout(): Layout file "' . str_replace('../', 'app/', $layout) .'" not found');
+                    throw new FileException(sprintf('renderLayout(): Layout file "%s" not found', str_replace('../', 'app/', $layout)));
                 }
             }
         }

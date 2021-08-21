@@ -17,19 +17,20 @@
          * Current config settings.
          * @var array
          */
-        private static $config;
+        private static $config = [];
         
         /**
          * Loads the configuration file.
          * @param string $appFolder (Optional) Application "app" folder path relative to the running script.
          */
         public static function load(string $appFolder = '../'){
-            if (!file_exists($appFolder . 'config/Config.php')) {
-                die('<strong>Configuration file not found!</strong><br>
-                Please rename "app/config/Config.example.php" to "app/config/Config.php".');
-            }else{
-                self::$config = require_once($appFolder . 'config/Config.php');
-                if(!defined('GLOWIE_CONFIG')) define('GLOWIE_CONFIG', true);
+            if(!self::hasLoaded()){
+                if (!file_exists($appFolder . 'config/Config.php')) {
+                    die('<strong>Configuration file was not found!</strong><br>
+                    Please rename "app/config/Config.example.php" to "app/config/Config.php".');
+                } else {
+                    self::$config = require($appFolder . 'config/Config.php');
+                }
             }
         }
 
@@ -41,6 +42,14 @@
          */
         public static function get(string $key, $default = null){
             return self::$config[$key] ?? $default;
+        }
+
+        /**
+         * Checks if the configuration file was already loaded.
+         * @return bool Returns true if yes, false otherwise.
+         */
+        public static function hasLoaded(){
+            return !empty(self::$config);
         }
 
     }

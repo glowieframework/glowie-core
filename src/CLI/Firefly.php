@@ -295,7 +295,7 @@
             // Checks if CLI is running
             if(self::$isCLI){
                 // Checks the configuration file
-                if (!defined('GLOWIE_CONFIG')){
+                if (!Config::hasLoaded()){
                     if (!file_exists(self::$appFolder . 'config/Config.php')) {
                         self::print('<bg="red"><color="black">Configuration file not found!</color></bg>');
                         self::print('Please rename <color="yellow">"app/config/Config.example.php"</color> to <color="green">"app/config/Config.php"</color>.');
@@ -326,8 +326,8 @@
             }
 
             // Prints the result
-            $time = round((microtime(true) - $time), 5);
-            self::print('<color="green">Database connected successfully in ' . $time . ' seconds!</color>');
+            $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
+            self::print('<color="green">Database connected successfully in ' . $time . '!</color>');
             return true;
         }
 
@@ -652,8 +652,8 @@
                         $migration->saveMigration();
                         $migrateRun = true;
                         $stepsDone++;
-                        $time = round((microtime(true) - $time), 5);
-                        self::print("<color=\"green\">Migration {$name} applied successfully in {$time} seconds!</color>");
+                        $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
+                        self::print("<color=\"green\">Migration {$name} applied successfully in {$time}!</color>");
                     }
                 } catch (Exception $e) {
                     self::print("<bg=\"red\"><color=\"black\">Failed to apply migration {$name}!</color></bg>");
@@ -717,8 +717,8 @@
                         $migration->deleteMigration();
                         $rollbackRun = true;
                         $stepsDone++;
-                        $time = round((microtime(true) - $time), 5);
-                        self::print("<color=\"green\">Migration {$name} rolled back successfully in {$time} seconds!</color>");
+                        $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
+                        self::print("<color=\"green\">Migration {$name} rolled back successfully in {$time}!</color>");
                     }
                 } catch (Exception $e) {
                     self::print("<bg=\"red\"><color=\"black\">Failed to rollback migration {$name}!</color></bg>");

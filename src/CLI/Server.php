@@ -8,9 +8,6 @@
         Use `php firefly shine` to start.
     */
 
-    // Sets the environment
-    putenv('GLOWIE_ENVIRONMENT=development');
-
     // Changes the working folder
     chdir('app/public');
 

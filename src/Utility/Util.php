@@ -44,7 +44,7 @@
          * @return string Full base URL.
          */
         public static function baseUrl(string $path = ''){
-            return GLOWIE_BASE_URL . trim($path, '/');
+            return APP_BASE_URL . trim($path, '/');
         }
 
         /**
@@ -54,10 +54,6 @@
          * @return string Full URL relative to the application path.
          */
         public static function route(string $route, array $params = []){
-            // Validate arguments
-            if(empty($route)) throw new Exception('route(): Route name cannot be empty');
-            if (!is_array($params)) throw new Exception('route(): $params must be an array');
-
             // Gets the named route
             $routeData = Rails::getRoute($route);
             if(empty($routeData)) throw new Exception('route(): Route name "' . $route .'" does not match any existing route');
