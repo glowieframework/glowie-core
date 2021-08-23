@@ -17,7 +17,7 @@
     class Util{
 
         /**
-         * Returns current Glowie core version.
+         * Returns the current Glowie core version.
          * @return string Current Glowie core version.
          */
         public static function getVersion(){
@@ -25,9 +25,8 @@
         }
 
         /**
-         * Prints a variable in an human-readable way.
+         * Prints a variable in a human-readable way.
          * @param mixed $var Variable to be printed.
-         * @param bool $exit (Optional) Stop code execution after printing.
          * @return void
          */
         public static function log($var){
@@ -39,8 +38,8 @@
         }
 
         /**
-         * Returns the full URL relative to the application path.
-         * @param string $path (Optional) Path to append to the base URL.
+         * Returns the absolute URL of the application path.
+         * @param string $path (Optional) Relative path to append to the base URL.
          * @return string Full base URL.
          */
         public static function baseUrl(string $path = ''){
@@ -48,10 +47,10 @@
         }
 
         /**
-         * Returns the base URL from a named route.
+         * Returns the base URL of a named route.
          * @param string $route Route internal name/identifier.
          * @param array $params (Optional) Route parameters to bind into the URL.
-         * @return string Full URL relative to the application path.
+         * @return string Returns the absolute URL of the application path with the route appended.
          */
         public static function route(string $route, array $params = []){
             // Gets the named route
@@ -140,6 +139,15 @@
         }
 
         /**
+         * Returns a random item from an array.
+         * @param array $array Array to pick a random item.
+         * @return mixed Returns the random item value.
+         */
+        public static function randomArray(array $array){
+            return $array[array_rand($array)];
+        }
+
+        /**
          * Checks if a string starts with a given substring.
          * @param string $haystack The string to search in.
          * @param string $needle The substring to search for in the haystack.
@@ -160,6 +168,28 @@
             $length = strlen($needle);
             if (!$length) return true;
             return substr($haystack, -$length) == $needle;
+        }
+
+        /**
+         * Checks if a string contains a given substring.
+         * @param string $haystack The string to search in.
+         * @param string $needle The substring to search for in the haystack.
+         * @return bool Returns **true** if haystack contains needle, **false** otherwise.
+         */
+        public static function stringContains(string $haystack, string $needle){
+            return strpos($haystack, $needle) !== false;
+        }
+
+        /**
+         * Limits the number of characters in a string.
+         * @param string $string String to limit.
+         * @param int $limit Maximum number of characters to limit.
+         * @param string $end (Optional) Text to append to the end of the limited string.
+         * @return string Returns the limited string.
+         */
+        public static function limitString(string $string, int $limit, string $end = '...'){
+            if (mb_strwidth($string, 'UTF-8') <= $limit) return $string;
+            return rtrim(mb_strimwidth($string, 0, $limit, '', 'UTF-8')) . $end;
         }
 
         /**
@@ -192,7 +222,7 @@
 
         /**
          * Returns the session CSRF token if already exists or creates a new one.
-         * @return string The stored or new CSRF token for the current session.
+         * @return string Returns the stored or new CSRF token for the current session.
          */
         public static function csrfToken(){
             $session = new Session();
@@ -219,45 +249,54 @@
         }
 
         /**
-         * Converts a string to a valid slug URI format. It also removes all accents and characters that are not\
-         * valid letters, numbers or dashes, and converts spaces into dashes.
+         * Converts UTF-8 accented characters from a string into its non-accented equivalents.
          * @param string $string String to convert.
          * @return string Returns the converted string.
          */
-        public static function slug(string $string){
-            $string = strtr(utf8_decode(strtolower($string)), utf8_decode('àáâãäçèéêëìíîïñòóôõöùúûüýÿÀÁÂÃÄÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝ'), 'aaaaaceeeeiiiinooooouuuuyyAAAAACEEEEIIIINOOOOOUUUUY');
-            $string = str_replace(' ', '-', $string);
-            $string = preg_replace('/[^a-zA-Z0-9-]/', '', $string);
+        public static function stripAccents(string $string){
+            $accents = 'àáâãäçèéêëìíîïñòóôõöùúûüýÿÀÁÂÃÄÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝ';
+            $replace = 'aaaaaceeeeiiiinooooouuuuyyAAAAACEEEEIIIINOOOOOUUUUY';
+            return strtr(utf8_decode($string), utf8_decode($accents), $replace);
+        }
+
+        /**
+         * Converts a string into a valid URI slug format. It also removes all accents and characters that are not\
+         * valid letters, numbers or dashes, and converts spaces into dashes.
+         * @param string $string String to convert.
+         * @param string $separator (Optional) Separator to use to replace spaces.
+         * @return string Returns the converted string.
+         */
+        public static function slug(string $string, string $separator = '-'){
+            $string = self::stripAccents(strtolower($string));
+            $string = str_replace(' ', $separator, $string);
+            $string = preg_replace('/[^a-zA-Z0-9' . $separator . ']/', '', $string);
             return $string;
         }
 
         /**
-         * Converts a string to **snake_case** convention. It also removes all accents and characters that are not\
+         * Converts a string into **snake_case** convention. It also removes all accents and characters that are not\
          * valid letters, numbers or underscores, and converts spaces into underscores.
          * @param string $string String to convert.
          * @return string Returns the converted string.
          */
         public static function snakeCase(string $string){
-            $string = strtr(utf8_decode(strtolower($string)), utf8_decode('àáâãäçèéêëìíîïñòóôõöùúûüýÿÀÁÂÃÄÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝ'), 'aaaaaceeeeiiiinooooouuuuyyAAAAACEEEEIIIINOOOOOUUUUY');
-            $string = str_replace(' ', '_', $string);
-            $string = preg_replace('/[^a-zA-Z0-9_]/', '', $string);
-            return $string;
+            return self::slug($string, '_');
         }
 
         /**
-         * Converts a string to **camelCase** convention. It also removes all accents and characters that are not\
+         * Converts a string into **camelCase** convention. It also removes all accents and characters that are not\
          * valid letters, numbers or underscores.
          * @param string $string String to be converted.
          * @return string Returns the converted string.
          */
         public static function camelCase(string $string){
-            $string = strtr(utf8_decode(strtolower($string)), utf8_decode('àáâãäçèéêëìíîïñòóôõöùúûüýÿÀÁÂÃÄÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝ'), 'aaaaaceeeeiiiinooooouuuuyyAAAAACEEEEIIIINOOOOOUUUUY');
+            $string = self::stripAccents(strtolower($string));
             $string = preg_replace('/[^a-zA-Z0-9_]/', ' ', $string);
             return str_replace(' ', '', lcfirst(ucwords($string)));
         }
 
         /**
-         * Converts a string to **PascalCase** convention. It also removes all accents and characters that are not\
+         * Converts a string into **PascalCase** convention. It also removes all accents and characters that are not\
          * valid letters, numbers or underscores.
          * @param string $string String to be converted.
          * @return string Returns the converted string.
@@ -269,7 +308,7 @@
         /**
          * Returns a list of all files in a directory and its subdirectories matching a pattern.
          * @param string $pattern Valid pathname pattern, same as used in `glob()`.
-         * @return array Array with the filenames.
+         * @return array Returns an array with the filenames.
          */
         public static function getFiles(string $pattern){
             $files = glob($pattern);
@@ -277,6 +316,15 @@
                 $files = array_merge($files, self::getFiles($dir . '/' . basename($pattern)));
             }
             return $files;
+        }
+
+        /**
+         * Sanitizes a filename against directory traversal attacks.
+         * @param string $filename Filename to sanitize.
+         * @return string Returns the sanitized filename.
+         */
+        public static function sanitizeFilename(string $filename){
+            return trim(str_replace(['../', '..\\', './', '.\\'], '', urldecode($filename)), '/');
         }
 
     }

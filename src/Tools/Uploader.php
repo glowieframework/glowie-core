@@ -2,6 +2,7 @@
     namespace Glowie\Core\Tools;
 
     use Exception;
+    use Util;
     use Glowie\Core\Exception\FileException;
 
     /**
@@ -281,7 +282,7 @@
                 $result = [];
                 for ($i=0; $i < count($files['name']); $i++) {
                     $result[] = [
-                        'name' => $files['name'][$i],
+                        'name' => Util::sanitizeFilename($files['name'][$i]),
                         'type' => $files['type'][$i],
                         'tmp_name' => $files['tmp_name'][$i],
                         'error' => $files['error'][$i],
