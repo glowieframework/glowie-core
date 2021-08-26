@@ -4,8 +4,8 @@
     use Glowie\Core\Database\Kraken;
     use Glowie\Core\Exception\ConsoleException;
     use Glowie\Core\Config;
+    use ErrorException;
     use Util;
-    use Exception;
 
     /**
      * Command line tool for Glowie application.
@@ -35,31 +35,31 @@
          * Current command.
          * @var string
          */
-        private static $command;
+        private static $command = '';
 
         /**
          * Command arguments.
          * @var array
          */
-        private static $args;
+        private static $args = [];
 
         /**
          * Stores if Firefly is running through CLI.
          * @var bool
          */
-        private static $isCLI;
+        private static $isCLI = true;
 
         /**
          * Firefly templates folder.
          * @var string
          */
-        private static $templateFolder;
+        private static $templateFolder = __DIR__ . '/Templates/';
 
         /**
          * Firefly current working folder path.
          * @var string
          */
-        private static $appFolder;
+        private static $appFolder = '';
 
         /**
          * Runs the command line tool.
@@ -70,8 +70,36 @@
             self::$command = '';
             self::$args = $argv;
             self::$isCLI = true;
-            self::$templateFolder = 'vendor/glowieframework/glowie-core/src/CLI/Templates/';
             self::$appFolder = 'app/';
+
+            // Store application start time
+            define('APP_START_TIME', microtime(true));
+
+            // Store application folder and base URL
+            define('APP_FOLDER', trim(getcwd(), '/'));
+            define('APP_BASE_URL', APP_FOLDER . '/');
+
+            // Load configuration
+            if (!file_exists(self::$appFolder . 'config/Config.php')) {
+                self::print('<bg="red"><color="black">Configuration file not found!</color></bg>');
+                self::print('Please rename <color="yellow">"app/config/Config.example.php"</color> to <color="green">"app/config/Config.php"</color>.');
+                return;
+            }
+
+            // Loads the configuration file
+            Config::load(self::$appFolder);
+
+            // Register error handling
+            self::registerHandlers();
+
+            // Timezone configuration
+            date_default_timezone_set(Config::get('timezone', 'America/Sao_Paulo'));
+
+            // Include application routes
+            require(self::$appFolder . 'config/Routes.php');
+
+            // Include languages
+            foreach (Util::getFiles(self::$appFolder . 'languages/*.php') as $filename) include($filename);
 
             // Gets the command
             array_shift(self::$args);
@@ -97,7 +125,6 @@
             self::$command = '';
             self::$args = $args;
             self::$isCLI = false;
-            self::$templateFolder = '../../vendor/glowieframework/glowie-core/src/CLI/Templates/';
             self::$appFolder = '../';
 
             // Runs the command
@@ -145,6 +172,9 @@
                 case 'test-database':
                     self::testDatabase();
                     break;
+                case 'create-command':
+                    self::createCommand();
+                    break;
                 case 'create-controller':
                     self::createController();
                     break;
@@ -173,19 +203,25 @@
                     self::help();
                     break;
                 default:
-                    self::print('<bg="red"><color="black">Unknown command: ' . $command . '</color></bg>');
-                    self::print('<color="yellow">To view a list of valid commands, use php firefly help</color>');
-                    self::error('Unknown command: ' . $command);
+                    $classname = 'Glowie\Commands\\' . Util::pascalCase($command);
+                    if(class_exists($classname)){
+                        $class = new $classname;
+                        if (!is_callable([$class, 'run'])) throw new ConsoleException($command, self::$args, "Command \"{$classname}\" does not have a run() method");
+                        if (is_callable([$class, 'init'])) $class->init();
+                        $class->run();
+                    }else{
+                        throw new ConsoleException($command, self::$args, 'Unknown command ' . $command);
+                    }
                     break;
             }
         }
 
         /**
-         * Prints a formatted text in the console.
-         * @var string $text Text to print.
-         * @var bool $break (Optional) Break line at the end.
+         * Prints a text in the console.
+         * @param string $text Text to print.
+         * @param bool $break (Optional) Break line at the end.
          */
-        private static function print(string $text, bool $break = true){
+        public static function print(string $text, bool $break = true){
             // Checks if CLI is running
             if(!self::$isCLI) return;
 
@@ -199,15 +235,46 @@
         }
 
         /**
-         * Triggers an error in the script.
-         * @var string $message Error message to send.
+         * Asks for the user input in the console.
+         * @param string $message (Optional) Message to prompt to the user.
+         * @param string $default (Optional) Default value to return if no input is provided.
+         * @return string Returns the input value as a string.
          */
-        private static function error(string $message){
-            // Checks if CLI is running
-            if(self::$isCLI) return;
+        public static function input(string $message = '', string $default = ''){
+            if(!self::$isCLI) return $default;
+            self::print($message, false);
+            $value = trim(fgets(STDIN));
+            if($value === '') return $default;
+            return $value;
+        }
 
-            // Throw error
-            throw new ConsoleException(self::$command, self::$args, $message);
+        /**
+         * Checks if an argument has been passed, otherwise asks for the user input in the console.
+         * @param string $arg Argument name to check. If passed, its value will be returned.
+         * @param string $message (Optional) Message to prompt to the user if the argument was not passed.
+         * @param string $default (Optional) Default value to return if the argument is not passed or no input is provided.
+         * @return string Returns the value as a string.
+         */
+        public static function argOrInput(string $arg, string $message = '', string $default = ''){
+            return self::$args[$arg] ?? self::input($message, $default);
+        }
+
+        /**
+         * Gets an argument value.
+         * @param string $arg Argument key to get.
+         * @param mixed $default (Optional) Default value to return if the key does not exist.
+         * @return mixed Returns the value if exists or the default if not.
+         */
+        public static function getArg(string $arg, $default = null){
+            return self::$args[$arg] ?? $default;
+        }
+
+        /**
+         * Gets all arguments as an associative array.
+         * @return array Returns an array of arguments.
+         */
+        public static function getArgs(){
+            return self::$args;
         }
         
         /**
@@ -215,24 +282,13 @@
          */
         private static function shine(){
             // Checks if CLI is running
-            if(!self::$isCLI){
-                self::error('This command cannot be used from outside the command line interface');
-                return;
-            }
+            if(!self::$isCLI) throw new ConsoleException(self::$command, self::$args, 'This command cannot be used from outside the console');
 
             // Checks if host was filled
-            if(isset(self::$args['host'])){
-                $host = trim(self::$args['host']);
-            }else{
-                $host = 'localhost';
-            }
+            $host = self::getArg('host', 'localhost');
 
             // Checks if port was filled
-            if(isset(self::$args['port'])){
-                $port = trim(self::$args['port']);
-            }else{
-                $port = 8080;
-            }
+            $port = self::getArg('port', 8080);
 
             // Starts the server
             self::print('<color="green">Starting local development server...</color>');
@@ -244,12 +300,7 @@
          * Deletes all files in **app/storage/cache** folder.
          */
         private static function clearCache(){
-            if(!is_writable(self::$appFolder . 'storage/cache')){
-                self::print('<bg="red"><color="black">Oops, something went wrong!</color></bg>');
-                self::print('<color="red">Directory "app/storage/cache" is not writable, please check your chmod settings</color>');
-                self::error('Directory "app/storage/cache" is not writable, please check your chmod settings');
-                return;
-            }
+            if(!is_writable(self::$appFolder . 'storage/cache')) throw new ConsoleException(self::$command, self::$args, 'Directory "app/storage/cache" is not writable, please check your chmod settings');
             self::print("<color=\"blue\">Clearing cache...</color>");
             foreach (Util::getFiles(self::$appFolder . 'storage/cache/*.tmp') as $filename) unlink($filename);
             self::print('<color="green">Cache cleared successfully!</color>');
@@ -260,12 +311,7 @@
          * Deletes all files in **app/storage/session** folder.
          */
         private static function clearSession(){
-             if(!is_writable(self::$appFolder . 'storage/session')){
-                self::print('<bg="red"><color="black">Oops, something went wrong!</color></bg>');
-                self::print('<color="red">Directory "app/storage/session" is not writable, please check your chmod settings</color>');
-                self::error('Directory "app/storage/session" is not writable, please check your chmod settings');
-                return;
-            }
+            if(!is_writable(self::$appFolder . 'storage/session')) throw new ConsoleException(self::$command, self::$args, 'Directory "app/storage/session" is not writable, please check your chmod settings');
             self::print("<color=\"blue\">Clearing session data...</color>");
             foreach (Util::getFiles(self::$appFolder . 'storage/session/*') as $filename) unlink($filename);
             self::print('<color="green">Session data cleared successfully!</color>');
@@ -276,12 +322,7 @@
          * Clears the error log.
          */
         private static function clearLog(){
-            if(!is_writable(self::$appFolder . 'storage')){
-                self::print('<bg="red"><color="black">Oops, something went wrong!</color></bg>');
-                self::print('<color="red">Directory "app/storage" is not writable, please check your chmod settings</color>');
-                self::error('Directory "app/storage" is not writable, please check your chmod settings');
-                return;
-            }
+            if(!is_writable(self::$appFolder . 'storage')) throw new ConsoleException(self::$command, self::$args, 'Directory "app/storage" is not writable, please check your chmod settings');
             self::print("<color=\"blue\">Clearing error log...</color>");
             file_put_contents(self::$appFolder . 'storage/error.log', '');
             self::print('<color="green">Error log cleared successfully!</color>');
@@ -292,38 +333,10 @@
          * Tests the database connection for the current environment.
          */
         private static function testDatabase(){
-            // Checks if CLI is running
-            if(self::$isCLI){
-                // Checks the configuration file
-                if (!Config::hasLoaded()){
-                    if (!file_exists(self::$appFolder . 'config/Config.php')) {
-                        self::print('<bg="red"><color="black">Configuration file not found!</color></bg>');
-                        self::print('Please rename <color="yellow">"app/config/Config.example.php"</color> to <color="green">"app/config/Config.php"</color>.');
-                        return false;
-                    }
-
-                    // Loads the configuration file
-                    Config::load(self::$appFolder);
-                }
-
-                // Sets error reporting
-                error_reporting(E_ALL);
-                ini_set('display_errors', '1');
-                ini_set('display_startup_errors', '1');
-                mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-            }
-
             // Attempts to create the connection
             self::print('<color="blue">Connecting to the database...</color>');
             $time = microtime(true);
-            try {
-                new Kraken();
-            } catch (Exception $e) {
-                self::print('<bg="red"><color="black">Database connection failed!</color></bg>');
-                self::print('<color="red">' . $e->getMessage() . '</color>');
-                self::error('Database connection failed! ' . $e->getMessage());
-                return false;
-            }
+            new Kraken();
 
             // Prints the result
             $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
@@ -332,44 +345,47 @@
         }
 
         /**
+         * Creates a new command.
+         */
+        private static function createCommand(){
+            // Checks permissions
+            if(!is_writable(self::$appFolder . 'commands')) throw new ConsoleException(self::$command, self::$args, 'Directory "app/commands" is not writable, please check your chmod settings');
+
+            // Checks if name was filled
+            $name = self::argOrInput('name', 'Command name: ');
+
+            // Validates the controller name
+            if(empty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
+
+            // Creates the file
+            $name = Util::pascalCase($name);
+            $template = file_get_contents(self::$templateFolder . 'Command.php');
+            $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
+            file_put_contents(self::$appFolder . 'commands/' . $name . '.php', $template);
+
+            // Success message
+            self::print("<color=\"green\">Command {$name} created successfully!</color>");
+            return true;
+        }
+
+        /**
          * Creates a new controller.
          */
         private static function createController(){
             // Checks permissions
-            if(!is_writable(self::$appFolder . 'controllers')){
-                self::print('<bg="red"><color="black">Oops, something went wrong!</color></bg>');
-                self::print('<color="red">Directory "app/controllers" is not writable, please check your chmod settings</color>');
-                self::error('Directory "app/controllers" is not writable, please check your chmod settings');
-                return false;
-            }
+            if(!is_writable(self::$appFolder . 'controllers')) throw new ConsoleException(self::$command, self::$args, 'Directory "app/controllers" is not writable, please check your chmod settings');
 
             // Checks if name was filled
-            if(isset(self::$args['name'])){
-                $name = trim(self::$args['name']);
-            }else if(self::$isCLI){
-                self::print("Controller name: ", false);
-                $name = trim(fgets(STDIN));
-            }
+            $name = self::argOrInput('name', 'Controller name: ');
 
             // Validates the controller name
-            if(empty($name)){
-                self::print('<color="red">Controller name cannot be empty!</color>');
-                self::error('Missing required argument "name" for this command');
-                return false;
-            }
+            if(empty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
 
             // Creates the file
             $name = Util::pascalCase($name);
-            try {
-                $template = file_get_contents(self::$templateFolder . 'Controller.php');
-                $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
-                file_put_contents(self::$appFolder . 'controllers/' . $name . '.php', $template);
-            } catch (Exception $e) {
-                self::print('<bg="red"><color="black">Controller creation failed!</color></bg>');
-                self::print('<color="red">' . $e->getMessage() . '</color>');
-                self::error('Controller creation failed! ' . $e->getMessage());
-                return false;
-            }
+            $template = file_get_contents(self::$templateFolder . 'Controller.php');
+            $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
+            file_put_contents(self::$appFolder . 'controllers/' . $name . '.php', $template);
 
             // Success message
             self::print("<color=\"green\">Controller {$name} created successfully!</color>");
@@ -381,39 +397,19 @@
          */
         private static function createLanguage(){
             // Checks permissions
-            if(!is_writable(self::$appFolder . 'languages')){
-                self::print('<bg="red"><color="black">Oops, something went wrong!</color></bg>');
-                self::print('<color="red">Directory "app/languages" is not writable, please check your chmod settings</color>');
-                self::error('Directory "app/languages" is not writable, please check your chmod settings');
-                return false;
-            }
+            if(!is_writable(self::$appFolder . 'languages')) throw new ConsoleException(self::$command, self::$args, 'Directory "app/languages" is not writable, please check your chmod settings');
 
             // Checks if id was filled
-            if(isset(self::$args['id'])){
-                $id = trim(self::$args['id']);
-            }else if(self::$isCLI){
-                self::print("Language id: ", false);
-                $id = trim(fgets(STDIN));
-            }
+            $id = self::argOrInput('id', 'Language id: ');
 
             // Validates the language id
-            if(empty($id)){
-                self::print('<color="red">Language id cannot be empty!</color>');
-                self::error('Missing required argument "id" for this command');
-                return false;
-            }
-
+            if(empty($id)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "id" for this command');
+            
             // Creates the file
-            try {
-                $template = file_get_contents(self::$templateFolder . 'Language.php');
-                $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $id, $template);
-                file_put_contents(self::$appFolder . 'languages/' . $id . '.php', $template);
-            } catch (Exception $e) {
-                self::print('<bg="red"><color="black">Language file creation failed!</color></bg>');
-                self::print('<color="red">' . $e->getMessage() . '</color>');
-                self::error('Language file creation failed! ' . $e->getMessage());
-                return false;
-            }
+            $id = trim(strtolower($id));
+            $template = file_get_contents(self::$templateFolder . 'Language.php');
+            $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $id, $template);
+            file_put_contents(self::$appFolder . 'languages/' . $id . '.php', $template);
 
             // Success message
             self::print("<color=\"green\">Language file {$id} created successfully!</color>");
@@ -425,40 +421,19 @@
          */
         private static function createMiddleware(){
             // Checks permissions
-            if(!is_writable(self::$appFolder . 'middlewares')){
-                self::print('<bg="red"><color="black">Oops, something went wrong!</color></bg>');
-                self::print('<color="red">Directory "app/middlewares" is not writable, please check your chmod settings</color>');
-                self::error('Directory "app/middlewares" is not writable, please check your chmod settings');
-                return false;
-            }
+            if(!is_writable(self::$appFolder . 'middlewares')) throw new ConsoleException(self::$command, self::$args, 'Directory "app/middlewares" is not writable, please check your chmod settings');
 
             // Checks if name was filled
-            if(isset(self::$args['name'])){
-                $name = trim(self::$args['name']);
-            }else if(self::$isCLI){
-                self::print("Middleware name: ", false);
-                $name = trim(fgets(STDIN));
-            }
+            $name = self::argOrInput('name', 'Middleware name: ');
 
             // Validates the middleware name
-            if(empty($name)){
-                self::print('<color="red">Middleware name cannot be empty!</color>');
-                self::error('Missing required argument "name" for this command');
-                return false;
-            }
+            if(empty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
 
             // Creates the file
             $name = Util::pascalCase($name);
-            try {
-               $template = file_get_contents(self::$templateFolder . 'Middleware.php');
-                $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
-                file_put_contents(self::$appFolder . 'middlewares/' . $name . '.php', $template);
-            } catch (Exception $e) {
-                self::print('<bg="red"><color="black">Middleware creation failed!</color></bg>');
-                self::print('<color="red">' . $e->getMessage() . '</color>');
-                self::error('Middleware creation failed! ' . $e->getMessage());
-                return false;
-            }
+            $template = file_get_contents(self::$templateFolder . 'Middleware.php');
+            $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
+            file_put_contents(self::$appFolder . 'middlewares/' . $name . '.php', $template);
 
             // Success message
             self::print("<color=\"green\">Middleware {$name} created successfully!</color>");
@@ -470,41 +445,20 @@
          */
         private static function createMigration(){
             // Checks permissions
-            if(!is_writable(self::$appFolder . 'migrations')){
-                self::print('<bg="red"><color="black">Oops, something went wrong!</color></bg>');
-                self::print('<color="red">Directory "app/migrations" is not writable, please check your chmod settings</color>');
-                self::error('Directory "app/migrations" is not writable, please check your chmod settings');
-                return;
-            }
+            if(!is_writable(self::$appFolder . 'migrations')) throw new ConsoleException(self::$command, self::$args, 'Directory "app/migrations" is not writable, please check your chmod settings');
 
             // Checks if name was filled
-            if(isset(self::$args['name'])){
-                $name = trim(self::$args['name']);
-            }else if(self::$isCLI){
-                self::print("Migration name: ", false);
-                $name = trim(fgets(STDIN));
-            }
+            $name = self::argOrInput('name', 'Migration name: ');
 
             // Validates the migration name
-            if(empty($name)){
-                self::print('<color="red">Migration name cannot be empty!</color>');
-                self::error('Missing required argument "name" for this command');
-                return false;
-            }
+            if(empty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
 
             // Creates the file
             $cleanName = Util::pascalCase($name);
             $name = 'm' . date('Y_m_d_His_') . $cleanName;
-            try {
-               $template = file_get_contents(self::$templateFolder . 'Migration.php');
-                $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
-                file_put_contents(self::$appFolder . 'migrations/' . $name . '.php', $template);
-            } catch (Exception $e) {
-                self::print('<bg="red"><color="black">Migration creation failed!</color></bg>');
-                self::print('<color="red">' . $e->getMessage() . '</color>');
-                self::error('Migration creation failed! ' . $e->getMessage());
-                return false;
-            }
+            $template = file_get_contents(self::$templateFolder . 'Migration.php');
+            $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
+            file_put_contents(self::$appFolder . 'migrations/' . $name . '.php', $template);
 
             // Success message
             self::print("<color=\"green\">Migration {$cleanName} created successfully!</color>");
@@ -516,92 +470,40 @@
          */
         private static function createModel(){
             // Checks permissions
-            if(!is_writable(self::$appFolder . 'models')){
-                self::print('<bg="red"><color="black">Oops, something went wrong!</color></bg>');
-                self::print('<color="red">Directory "app/models" is not writable, please check your chmod settings</color>');
-                self::error('Directory "app/models" is not writable, please check your chmod settings');
-                return false;
-            }
+            if(!is_writable(self::$appFolder . 'models')) throw new ConsoleException(self::$command, self::$args, 'Directory "app/models" is not writable, please check your chmod settings');
 
             // Checks if name was filled
-            if(isset(self::$args['name'])){
-                $name = trim(self::$args['name']);
-            }else if(self::$isCLI){
-                self::print("Model name: ", false);
-                $name = trim(fgets(STDIN));
-            }
+            $name = self::argOrInput('name', 'Model name: ');
 
             // Validates the model name
-            if(empty($name)){
-                self::print('<color="red">Model name cannot be empty!</color>');
-                self::error('Missing required argument "name" for this command');
-                return false;
-            }
+            if(empty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
 
             // Checks if table was filled
             $default_table = Util::snakeCase($name);
-            if(isset(self::$args['table'])){
-                $table = trim(self::$args['table']);
-            }else if(self::$isCLI){
-                self::print("Model table ({$default_table}): ", false);
-                $table = trim(fgets(STDIN));
-            }
-            if(empty($table)) $table = $default_table;
+            $table = self::argOrInput('table', "Model table ({$default_table}): ", $default_table);
+            $table = trim($table);
 
             // Checks if primary key was filled
-            if(isset(self::$args['primary'])){
-                $primary = trim(self::$args['primary']);
-            }else if(self::$isCLI){
-                self::print("Primary key name (id): ", false);
-                $primary = trim(fgets(STDIN));
-            }
-            if(empty($primary)) $primary = 'id';
+            $primary = self::argOrInput('primary', 'Primary key name (id): ', 'id');
+            $primary = trim($primary);
 
             // Checks if timestamps was filled
-            if(isset(self::$args['timestamps'])){
-                $timestamps = self::$args['timestamps'];
-            }else if(self::$isCLI){
-                self::print("Handle timestamp fields (true): ", false);
-                $timestamps = strtolower(trim(fgets(STDIN)));
-            }
-
-            // Parses timestamps value
-            if ((self::$isCLI && empty($timestamps)) || $timestamps === 'true' || $timestamps === true) {
-                $timestamps = 'true';
-            } else {
-                $timestamps = 'false';
-            }
+            $timestamps = self::argOrInput('timestamps', 'Handle timestamp fields (true): ', 'true');
+            $timestamps = filter_var($timestamps, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
 
             // Checks if created field was filled
-            if(isset(self::$args['created'])){
-                $created_at = self::$args['created'];
-            }else if(self::$isCLI){
-                self::print("Created at field name (created_at): ", false);
-                $created_at = trim(fgets(STDIN));
-            }
-            if(empty($created_at)) $created_at = 'created_at';
-
+            $created_at = self::argOrInput('created', 'Created at field name (created_at): ', 'created_at');
+            $created_at = trim($created_at);
+            
             // Checks if updated field was filled
-            if(isset(self::$args['updated'])){
-                $updated_at = self::$args['updated'];
-            }else if(self::$isCLI){
-                self::print("Updated at field name (updated_at): ", false);
-                $updated_at = trim(fgets(STDIN));
-            }
-            if(empty($updated_at)) $updated_at = 'updated_at';
+            $updated_at = self::argOrInput('created', 'Created at field name (updated_at): ', 'updated_at');
+            $updated_at = trim($updated_at);
 
             // Creates the file
             $name = Util::pascalCase($name);
-            try {
-                $template = file_get_contents(self::$templateFolder . 'Model.php');
-                $template = str_replace(['__FIREFLY_TEMPLATE_NAME__', '__FIREFLY_TEMPLATE_TABLE__', '__FIREFLY_TEMPLATE_PRIMARY__', '__FIREFLY_TEMPLATE_TIMESTAMPS__', '__FIREFLY_TEMPLATE_CREATED__', '__FIREFLY_TEMPLATE_UPDATED__'], [$name, $table, $primary, $timestamps, $created_at, $updated_at], $template);
-                file_put_contents(self::$appFolder . 'models/' . $name . '.php', $template);
-            } catch (Exception $e) {
-                self::print('<bg="red"><color="black">Model creation failed!</color></bg>');
-                self::print('<color="red">' . $e->getMessage() . '</color>');
-                self::error('Model creation failed! ' . $e->getMessage());
-                return false;
-            }
+            $template = file_get_contents(self::$templateFolder . 'Model.php');
+            $template = str_replace(['__FIREFLY_TEMPLATE_NAME__', '__FIREFLY_TEMPLATE_TABLE__', '__FIREFLY_TEMPLATE_PRIMARY__', '__FIREFLY_TEMPLATE_TIMESTAMPS__', '__FIREFLY_TEMPLATE_CREATED__', '__FIREFLY_TEMPLATE_UPDATED__'], [$name, $table, $primary, $timestamps, $created_at, $updated_at], $template);
+            file_put_contents(self::$appFolder . 'models/' . $name . '.php', $template);
 
             // Success message
             self::print("<color=\"green\">Model {$name} created successfully!</color>");
@@ -617,21 +519,16 @@
             if($result === false) return;
 
             // Checks if steps were filled
-            if(isset(self::$args['steps'])){
-                $steps = trim(self::$args['steps']);
-            }
+            $steps = self::getArg('steps', 'all');
 
             // Stores current state
             $migrateRun = false;
             $stepsDone = 0;
 
-            // Validates the steps
-            if(empty($steps)) $steps = 'all';
-
             // Loops through all the migration files
             foreach (glob(self::$appFolder . 'migrations/*.php') as $filename){
                 // Checks current state
-                if($steps != 'all' && $stepsDone == $steps) break;
+                if($steps != 'all' && $stepsDone == (int)$steps) break;
 
                 // Stores the execution start time
                 $time = microtime(true);
@@ -639,27 +536,21 @@
                 // Gets the migration class name
                 $name = pathinfo($filename, PATHINFO_FILENAME);
                 $classname = 'Glowie\Migrations\\' . $name;
+                if(!class_exists($classname)) continue;
 
                 // Instantiates the migration class
                 $migration = new $classname;
                 if (is_callable([$migration, 'init'])) $migration->init();
 
-                try {
-                    // Checks if the migration was already applied
-                    if(!$migration->isApplied()){
-                        self::print("<color=\"blue\">Applying migration {$name}...</color>");
-                        $migration->run();
-                        $migration->saveMigration();
-                        $migrateRun = true;
-                        $stepsDone++;
-                        $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
-                        self::print("<color=\"green\">Migration {$name} applied successfully in {$time}!</color>");
-                    }
-                } catch (Exception $e) {
-                    self::print("<bg=\"red\"><color=\"black\">Failed to apply migration {$name}!</color></bg>");
-                    self::print('<color="red">' . $e->getMessage() .'</color>');
-                    self::error("Failed to apply migration {$name}! " . $e->getMessage());
-                    return false;
+                // Checks if the migration was already applied
+                if(!$migration->isApplied()){
+                    self::print("<color=\"blue\">Applying migration {$name}...</color>");
+                    $migration->run();
+                    $migration->saveMigration();
+                    $migrateRun = true;
+                    $stepsDone++;
+                    $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
+                    self::print("<color=\"green\">Migration {$name} applied successfully in {$time}!</color>");
                 }
             }
 
@@ -682,21 +573,16 @@
             if($result === false) return;
 
             // Checks if steps were filled
-            if(isset(self::$args['steps'])){
-                $steps = trim(self::$args['steps']);
-            }
+            $steps = self::getArg('steps', 1);
 
             // Stores current state
             $rollbackRun = false;
             $stepsDone = 0;
 
-            // Validates the steps
-            if(empty($steps)) $steps = 1;
-
             // Loops through all the migration files
             foreach (array_reverse(glob(self::$appFolder . 'migrations/*.php')) as $filename) {
                 // Checks current state
-                if($steps != 'all' && $stepsDone == $steps) break;
+                if($steps != 'all' && $stepsDone == (int)$steps) break;
 
                 // Stores the execution start time
                 $time = microtime(true);
@@ -704,27 +590,21 @@
                 // Gets the migration class name
                 $name = pathinfo($filename, PATHINFO_FILENAME);
                 $classname = 'Glowie\Migrations\\' . $name;
+                if(!class_exists($classname)) continue;
 
                 // Instantiates the migration class
                 $migration = new $classname;
                 if (is_callable([$migration, 'init'])) $migration->init();
 
-                try {
-                    // Checks if the migration was already applied
-                    if($migration->isApplied()){
-                        self::print("<color=\"blue\">Rolling back migration {$name}...</color>");
-                        $migration->rollback();
-                        $migration->deleteMigration();
-                        $rollbackRun = true;
-                        $stepsDone++;
-                        $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
-                        self::print("<color=\"green\">Migration {$name} rolled back successfully in {$time}!</color>");
-                    }
-                } catch (Exception $e) {
-                    self::print("<bg=\"red\"><color=\"black\">Failed to rollback migration {$name}!</color></bg>");
-                    self::print('<color="red">' . $e->getMessage() .'</color>');
-                    self::error("Failed to rollback migration {$name}! " . $e->getMessage());
-                    return false;
+                // Checks if the migration was already applied
+                if($migration->isApplied()){
+                    self::print("<color=\"blue\">Rolling back migration {$name}...</color>");
+                    $migration->rollback();
+                    $migration->deleteMigration();
+                    $rollbackRun = true;
+                    $stepsDone++;
+                    $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
+                    self::print("<color=\"green\">Migration {$name} rolled back successfully in {$time}!</color>");
                 }
             }
 
@@ -743,9 +623,9 @@
          */
         private static function version(){
             self::print('<bg="magenta"><color="black">Firefly by Glowie</color></bg>');
-            self::print('<color="magenta">Firefly 1.0 with Glowie ' . Util::getVersion() . '</color>');
+            self::print('<color="magenta">Firefly 1.1 with Glowie ' . Util::getVersion() . '</color>');
             self::print('<color="blue">Running with PHP CLI ' . phpversion() . '</color>');
-            return 'Firefly 1.0 with Glowie ' . Util::getVersion();
+            return 'Firefly 1.1 with Glowie ' . Util::getVersion();
         }
 
         /**
@@ -759,6 +639,7 @@
             self::print('  <color="yellow">clear-session</color> | Clears the application session folder');
             self::print('  <color="yellow">clear-log</color> | Clears the application error log');
             self::print('  <color="yellow">test-database</color> | Tests the database connection for the current environment');
+            self::print('  <color="yellow">create-command</color> <color="blue">--name</color> | Creates a new command for your application');
             self::print('  <color="yellow">create-controller</color> <color="blue">--name</color> | Creates a new controller for your application');
             self::print('  <color="yellow">create-language</color> <color="blue">--id</color> | Creates a new language file for your application');
             self::print('  <color="yellow">create-middleware</color> <color="blue">--name</color> | Creates a new middleware for your application');
@@ -768,6 +649,92 @@
             self::print('  <color="yellow">rollback</color> <color="blue">--steps</color> | Rolls back the last applied migration');
             self::print('  <color="yellow">version</color> | Displays current Firefly version');
             self::print('  <color="yellow">help</color> | Displays this help message');
+        }
+
+        /**
+         * Registers CLI error handlers.
+         */
+        private static function registerHandlers(){
+            // Registers error handling functions
+            $level = Config::get('error_reporting', E_ALL);
+            error_reporting($level);
+            mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+            set_exception_handler([self::class, 'exceptionHandler']);
+            set_error_handler([self::class, 'errorHandler'], $level);
+            ini_set('display_errors', '1');
+            ini_set('display_startup_errors', '1');
+
+            // INI settings
+            ini_set('highlight.comment', '#8BC34A');
+            ini_set('highlight.default', '#545454');
+            ini_set('highlight.html', '#06B');
+            ini_set('highlight.keyword', '#FF5722');
+            ini_set('highlight.string', '#4CAF50');
+        }
+
+        /**
+         * Default CLI error handler. Throws an exception based in a given error.
+         * @param int $level Error level.
+         * @param string $message Error message.
+         * @param string $file (Optional) Filename where the error occurred.
+         * @param int $line (Optional) Line number where the error was triggered.
+         */
+        public static function errorHandler(int $level, string $message, ?string $file = '', ?int $line = 0){
+            throw new ErrorException($message, 0, $level, $file, $line);
+            return true;
+        }
+
+        /**
+         * CLI exception handler.
+         * @param Exception $e Thrown exception.
+         */
+        public static function exceptionHandler($e){
+            // Error logging
+            $date = date('Y-m-d H:i:s');
+            self::log("[{$date}] {$e->getMessage()} at file {$e->getFile()}:{$e->getLine()}\n{$e->getTraceAsString()}\n\n");
+
+            // Display the error
+            if(error_reporting()){
+                self::print('<bg="red"><color="black">Oops! An error has ocurred!</color></bg>');
+                self::print('<color="red">' . $e->getMessage() . '</color>');
+                self::print('');
+                self::print('<color="yellow">File: ' . $e->getFile() . ' at line ' . $e->getLine() . '</color>');
+                self::print('');
+                self::print(self::highlight($e->getFile(), $e->getLine()));
+                self::print('');
+                self::print('<color="green">Stack trace:</color>');
+                self::print($e->getTraceAsString());
+            }
+        }
+
+        /**
+         * Highlights a single line from a PHP file.
+         * @param string $file File path.
+         * @param int $line Line to highlight.
+         * @return string Highlighted result in HTML.
+         */
+        private static function highlight(string $file, int $line){
+            // Checks for the line
+            if(!is_readable($file)) return '';
+            $text = file($file, FILE_IGNORE_NEW_LINES);
+            if($text === false) return '';
+            if(empty($text[$line - 1])) return '';
+
+            // Returns the result
+            return '    <color="magenta">' . $line . '</color>  ' . trim($text[$line - 1]);
+        }
+
+        /**
+         * Logs the error to the error.log file.
+         * @param string $content Content to append to the file.
+         */
+        private static function log(string $content){
+            if(!Config::get('error_log', true)) return;
+            if(!is_writable(self::$appFolder . 'storage')){
+                self::print('<color="red">Error: Directory "app/storage" is not writable, please check your chmod settings</color>');
+                die();
+            }
+            file_put_contents(self::$appFolder . 'storage/error.log', $content, FILE_APPEND);
         }
 
     }
