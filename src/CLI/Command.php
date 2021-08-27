@@ -1,6 +1,16 @@
 <?php
     namespace Glowie\Core\CLI;
 
+    /**
+     * CLI command core for Glowie application.
+     * @category Command
+     * @package glowieframework/glowie-core
+     * @author Glowie
+     * @copyright Copyright (c) 2021
+     * @license MIT
+     * @link https://glowie.tk
+     * @version 1.0
+     */
     abstract class Command{
 
         /**

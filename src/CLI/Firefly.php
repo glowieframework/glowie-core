@@ -82,8 +82,8 @@
             // Load configuration
             if (!file_exists(self::$appFolder . 'config/Config.php')) {
                 self::print('<bg="red"><color="black">Configuration file not found!</color></bg>');
-                self::print('Please rename <color="yellow">"app/config/Config.example.php"</color> to <color="green">"app/config/Config.php"</color>.');
-                return;
+                self::print('<color="red">Please rename "app/config/Config.example.php" to "app/config/Config.php"</color>');
+                die();
             }
 
             // Loads the configuration file
@@ -731,7 +731,8 @@
         private static function log(string $content){
             if(!Config::get('error_log', true)) return;
             if(!is_writable(self::$appFolder . 'storage')){
-                self::print('<color="red">Error: Directory "app/storage" is not writable, please check your chmod settings</color>');
+                self::print('<bg="red"><color="black">Unable to log errors!</color></bg>');
+                self::print('<color="red">Directory "app/storage" is not writable, please check your chmod settings</color>');
                 die();
             }
             file_put_contents(self::$appFolder . 'storage/error.log', $content, FILE_APPEND);

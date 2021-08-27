@@ -121,6 +121,14 @@
         }
 
         /**
+         * Gets all the request headers as an associative array.
+         * @return array Returns an associative array with all headers.
+         */
+        public function getHeaders(){
+            return getallheaders();
+        }
+
+        /**
          * Gets a basic `Authorization` header.
          * @return Element|null Returns an object with the username and password if exists or null if there is none.
          */
@@ -150,6 +158,14 @@
          */
         public function getVar(string $key, $default = null){
             return $_REQUEST[$key] ?? $default;
+        }
+
+        /**
+         * Gets all variables from the request as an associative array.
+         * @return array Returns an associative array with all variables.
+         */
+        public function getVars(){
+            return $_REQUEST;
         }
 
         /**

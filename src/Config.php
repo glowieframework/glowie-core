@@ -45,6 +45,15 @@
         }
 
         /**
+         * Checks if a configuration exists.
+         * @param string $key Key to check.
+         * @return bool Returns true or false.
+         */
+        public static function has(string $key){
+            return isset(self::$config[$key]);
+        }
+
+        /**
          * Checks if the configuration file was already loaded.
          * @return bool Returns true if yes, false otherwise.
          */

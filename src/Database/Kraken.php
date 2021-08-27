@@ -22,7 +22,7 @@
      * @link https://glowie.tk
      * @version 1.0
      */
-    class Kraken extends Element{
+    class Kraken{
 
         /**
          * Current working table.

@@ -1,9 +1,8 @@
 <?php
     namespace Glowie\Core\View;
 
-    use Glowie\Helpers\Helpers;
     use Glowie\Core\Http\Rails;
-    use Glowie\Core\Element;
+    use Glowie\Core\Traits\ElementTrait;
     use Glowie\Core\Config;
     use BadMethodCallException;
 
@@ -17,7 +16,8 @@
      * @link https://glowie.tk
      * @version 1.0
      */
-    class Layout extends Element{
+    class Layout{
+        use ElementTrait;
 
         /**
          * Layout view content.

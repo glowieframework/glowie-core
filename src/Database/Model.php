@@ -2,6 +2,7 @@
     namespace Glowie\Core\Database;
 
     use Glowie\Core\Element;
+    use Glowie\Core\Traits\ElementTrait;
     use Exception;
 
     /**
@@ -15,6 +16,7 @@
      * @version 1.0
      */
     class Model extends Kraken{
+        use ElementTrait;
 
         /**
          * Model table name.
@@ -187,7 +189,7 @@
         public function fill($row){
             if(is_array($row)) $row = new Element($row);
             $this->_initialData = $row;
-            Element::__construct($row->toArray());
+            $this->__constructTrait($row->toArray());
             return $this;
         }
 

@@ -144,6 +144,14 @@
             return json_encode($_COOKIE, $flags, $depth);
         }
 
+        /**
+         * Gets the cookies data as JSON.
+         * @return string The resulting JSON string.
+         */
+        public function __toString(){
+            return $this->toJson();
+        }
+
     }
 
 ?>

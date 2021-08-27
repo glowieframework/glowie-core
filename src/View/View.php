@@ -1,8 +1,8 @@
 <?php
     namespace Glowie\Core\View;
 
-    use Glowie\Core\Element;
     use Glowie\Core\Http\Rails;
+    use Glowie\Core\Traits\ElementTrait;
     use Glowie\Core\Config;
     use BadMethodCallException;
 
@@ -16,7 +16,8 @@
      * @link https://glowie.tk
      * @version 1.0
      */
-    class View extends Element{
+    class View{
+        use ElementTrait;
 
         /**
          * View content.

@@ -159,6 +159,14 @@
         }
 
         /**
+         * Gets the session data as JSON.
+         * @return string The resulting JSON string.
+         */
+        public function __toString(){
+            return $this->toJson();
+        }
+
+        /**
          * Sets the value for a key in the session flash data.
          * @param string $key Key to set value.
          * @param mixed $value Value to set.
