@@ -62,7 +62,7 @@
         private static $appFolder = '';
 
         /**
-         * Runs the command line tool.
+         * Runs the command line tool and bootstraps Glowie modules.
          */
         public static function run(){
             // Register settings
@@ -514,10 +514,6 @@
          * Runs pending migrations.
          */
         private static function migrate(){
-            // Loads the config and tests database
-            $result = self::testDatabase();
-            if($result === false) return;
-
             // Checks if steps were filled
             $steps = self::getArg('steps', 'all');
 
@@ -568,10 +564,6 @@
          * Rolls back applied migrations.
          */
         private static function rollback(){
-            // Loads the config and tests database
-            $result = self::testDatabase();
-            if($result === false) return;
-
             // Checks if steps were filled
             $steps = self::getArg('steps', 1);
 

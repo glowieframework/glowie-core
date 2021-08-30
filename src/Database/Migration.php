@@ -20,10 +20,10 @@
         protected $db;
 
         /**
-         * Migration filename.
+         * Migration name.
          * @var string
          */
-        private $filename;
+        private $name;
 
         /**
          * Stores if the migrations history table was created.
@@ -35,15 +35,16 @@
          * Instantiates a new migration.
          */
         final public function __construct(){
-            // Creates the connection and stores the migration filename
+            // Creates the connection and stores the migration name
+            $classname = explode('\\', get_class($this));
+            $this->name = end($classname);
             $this->db = new Kraken();
-            $this->filename = 'app/migrations/' . str_replace('Glowie\Migrations\\', '', static::class) . '.php';
 
             // Creates the migrations history table if not exists
             if(!self::$tableCreated){
                 self::$tableCreated = $this->db->query(
                     'CREATE TABLE IF NOT EXISTS migrations(
-                            filename VARCHAR(255) NOT NULL,
+                            name VARCHAR(255) NOT NULL,
                             applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP()
                     )');
             }
@@ -55,7 +56,7 @@
          */
         final public function isApplied(){
             $this->db->clearQuery();
-            return $this->db->table('migrations')->where('filename', $this->filename)->exists();
+            return $this->db->table('migrations')->where('name', $this->name)->exists();
         }
 
         /**
@@ -64,7 +65,7 @@
          */
         final public function saveMigration(){
             $this->db->clearQuery();
-            return $this->db->table('migrations')->insert(['filename' => $this->filename]);
+            return $this->db->table('migrations')->insert(['name' => $this->name]);
         }
 
         /**
@@ -73,7 +74,7 @@
          */
         final public function deleteMigration(){
             $this->db->clearQuery();
-            return $this->db->table('migrations')->where('filename', $this->filename)->delete();
+            return $this->db->table('migrations')->where('name', $this->name)->delete();
         }
 
         /**

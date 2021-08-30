@@ -29,7 +29,7 @@
 
         /**
          * Table manageable fields.
-         * @var string[]
+         * @var array
          */
         protected $_fields = [];
 

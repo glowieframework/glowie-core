@@ -3,6 +3,7 @@
 
     use Glowie\Core\Element;
     use Glowie\Core\Traits\ElementTrait;
+    use Util;
     use Exception;
 
     /**
@@ -22,7 +23,7 @@
          * Model table name.
          * @var string
          */
-        protected $_table = 'glowie';
+        protected $_table = '';
 
         /**
          * Table primary key name.
@@ -32,7 +33,7 @@
 
         /**
          * Table manageable fields.
-         * @var string[]
+         * @var array
          */
         protected $_fields = [];
 
@@ -56,7 +57,7 @@
 
         /**
          * The initial data from a filled row.
-         * @var Element
+         * @var Element|null
          */
         private $_initialData = null;
 
@@ -64,6 +65,13 @@
          * Creates a new instance of the model.
          */
         final public function __construct(){
+            // Gets the table name
+            if(empty($this->_table)){
+                $classname = explode('\\', get_class($this));
+                $this->_table = Util::snakeCase(end($classname));
+            }
+
+            // Constructs the query builder
             Kraken::__construct($this->_table);
         }
 
