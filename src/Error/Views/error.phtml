@@ -1,0 +1,67 @@
+<html>
+    <head>
+        <title><?= $e->getMessage(); ?></title>
+        <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+        <style>
+            .wrapper {
+                font-family: Segoe UI, sans-serif;
+                font-size: 18px;
+                background-color: white;
+                color: black;
+                margin: 10px;
+                border: 1px solid #d04978;
+            }
+
+            .wrapper .title {
+                background-color: #e25787;
+                color: white;
+                padding: 10px 20px;
+            }
+
+            .wrapper .details {
+                padding: 20px;
+            }
+
+            .wrapper .details i {
+                word-wrap: break-word;
+                color: dimgray;
+                display: block;
+                font-size: 16px;
+            }
+
+            .wrapper .details i b {
+                color: #ed578b;
+            }
+
+            .wrapper .details .time {
+                font-size: 14px;
+                color: gray;
+                display: block;
+            }
+
+            .wrapper .details code {
+                white-space: wrap;
+                word-wrap: break-word;
+                font-size: 16px;
+                display: block;
+                border: 1px solid gainsboro;
+                margin: 20px 0;
+                background-color: #f5f5f5;
+                padding: 15px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrapper">
+            <div class="title">
+                <strong>Oops! An error has ocurred: </strong><?= $e->getMessage(); ?>
+            </div>
+            <div class="details">
+                <i>File: <b><?= $e->getFile(); ?></b> at line <b><?= $e->getLine(); ?></b>.</i>
+                <span class="time">Exception thrown in <strong><?= self::getExceptionTime(); ?></strong>.</span>
+                <code><?= self::highlight($e->getFile(), $e->getLine()); ?></code>
+                <?= self::parseTrace($e->getTrace()); ?>
+            </div>
+        </div>
+    </body>
+</html>

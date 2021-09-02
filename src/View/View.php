@@ -4,6 +4,7 @@
     use Glowie\Core\Http\Rails;
     use Glowie\Core\Traits\ElementTrait;
     use Glowie\Core\Config;
+    use Glowie\Core\Buffer;
     use BadMethodCallException;
 
     /**
@@ -76,9 +77,9 @@
          * @return string The buffer contents as string.
          */
         private function getBuffer(){
-            ob_start();
+            Buffer::start();
             include($this->_path);
-            return ob_get_clean();
+            return Buffer::get();
         }
 
         /**

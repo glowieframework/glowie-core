@@ -1,6 +1,9 @@
 <?php
-    namespace Glowie\Core;
+    namespace Glowie\Core\Error;
 
+    use Glowie\Core\Config;
+    use Glowie\Core\Http\Response;
+    use Glowie\Core\Buffer;
     use ErrorException;
 
     /**
@@ -13,7 +16,7 @@
      * @link https://glowie.tk
      * @version 1.0
      */
-    class Error{
+    class Handler{
 
         /**
          * Registers the error handlers and INI settings.
@@ -57,21 +60,15 @@
             $date = date('Y-m-d H:i:s');
             self::log("[{$date}] {$e->getMessage()} at file {$e->getFile()}:{$e->getLine()}\n{$e->getTraceAsString()}\n\n");
 
-            // Display the error
-            http_response_code(500);
+            // Clean output buffer
+            http_response_code(Response::HTTP_INTERNAL_SERVER_ERROR);
+            Buffer::clean();
+
+            // Display the error or the default error page
             if(error_reporting()){
-                echo '
-                <div style="clear: both; font-family: Segoe UI, sans-serif; font-size: 18px; background-color: white; color: black; margin: 10px; border: 1px solid #d04978;">
-                    <div style="background-color: #e25787; color: white; padding: 10px 20px;">
-                        <strong>Oops! An error has ocurred:</strong> ' . $e->getMessage() . '
-                    </div>
-                    <div style="padding: 20px;">
-                        <i style="word-wrap: break-word; color: dimgray; display: block; font-size: 16px;">File: <b style="color: #ed578b;">' . $e->getFile() . '</b> at line <b style="color: #ed578b;">' . $e->getLine() . '</b>.</i>
-                        <span style="font-size: 14px; color: gray; display: block;">Exception thrown in <strong>' . self::getExceptionTime() . '</strong>.</span>' .
-                        self::highlight($e->getFile(), $e->getLine()) .
-                        self::parseTrace($e->getTrace()) .
-                    '</div>
-                </div>';
+                include(__DIR__ . '/Views/error.phtml');
+            }else{
+                include(__DIR__ . '/Views/default.phtml');
             }
         }
 
@@ -81,7 +78,7 @@
          * @param int $line Line to highlight.
          * @return string Highlighted result in HTML.
          */
-        private static function highlight(string $file, int $line){
+        protected static function highlight(string $file, int $line){
             // Checks for the line
             if(!is_readable($file)) return '';
             $text = file($file, FILE_IGNORE_NEW_LINES);
@@ -100,9 +97,7 @@
             $text = preg_replace("|^(\\<span style\\=\"color\\: #[a-fA-F0-9]{0,6}\"\\>)(&lt;\\?php&nbsp;)(.*?)(\\</span\\>)|", "\$1\$3\$4", $text);
 
             // Returns resulting block
-            return '<code style="white-space: wrap; word-wrap: break-word; font-size: 16px; display: block; border: 1px solid gainsboro; margin: 20px 0; background-color: #f5f5f5; padding: 15px;">
-                        <span style="color: #75715E;">' . $line . '</span> ' . $text . '</span>
-                    </code>';
+            return '<span style="color: #75715E;">' . $line . '</span> ' . $text . '</span>';
         }
 
         /**
@@ -110,7 +105,7 @@
          * @param array $trace Stack trace array.
          * @return string Table result in HTML.
          */
-        private static function parseTrace(array $trace){
+        protected static function parseTrace(array $trace){
             $isTraceable = false;
             $result =    '<strong style="color: #ed578b;">Stack trace:</strong>
                         <table cellspacing="0" cellpadding="0" style="width: 100%; table-layout: fixed; margin-top: 10px;"><tbody>';
@@ -142,9 +137,9 @@
          * @return string The variable dump as string.
          */
         private static function getDump($var){
-            ob_start();
+            Buffer::start();
             var_dump($var);
-            return ob_get_clean();
+            return Buffer::get();
         }
 
         /**
@@ -161,7 +156,7 @@
          * Returns the page exception time.
          * @return float Exception time.
          */
-        private static function getExceptionTime(){
+        protected static function getExceptionTime(){
             return round((microtime(true) - APP_START_TIME) * 1000, 2) . 'ms';
         }
 

@@ -3,6 +3,7 @@
 
     use Util;
     use Glowie\Core\Http\Session;
+    use Glowie\Core\Error\Handler;
     use Glowie\Core\Http\Rails;
 
     /**
@@ -32,7 +33,7 @@
             Config::load();
 
             // Register error handling
-            Error::register();
+            Handler::register();
 
             // Register session save path
             Session::register();
@@ -46,8 +47,14 @@
             // Include languages
             foreach (Util::getFiles('../languages/*.php') as $filename) include($filename);
 
+            // Start output buffering
+            Buffer::start();
+
             // Initialize router
             Rails::init();
+
+            // Flush the output buffer if no errors were thrown
+            Buffer::flush();
         }
 
     }

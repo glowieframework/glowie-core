@@ -60,7 +60,7 @@
 
             // Render layout
             if(Config::get('skeltch', true)) $this->_path = Skeltch::run($this->_path);
-            echo $this->getBuffer();
+            include($this->_path);
         }
 
         /**
@@ -74,16 +74,6 @@
             }else{
                 throw new BadMethodCallException('Layout: Method "' . $method .'" does not exist in "app/views/helpers/Helpers.php"');
             }
-        }
-
-        /**
-         * Gets a layout buffer.
-         * @return string The buffer contents as string.
-         */
-        private function getBuffer(){
-            ob_start();
-            include($this->_path);
-            return ob_get_clean();
         }
 
         /**
