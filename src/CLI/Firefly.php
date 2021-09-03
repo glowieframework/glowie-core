@@ -276,7 +276,7 @@
         public static function getArgs(){
             return self::$args;
         }
-        
+
         /**
          * Starts the local development server.
          */
@@ -293,7 +293,7 @@
             // Starts the server
             self::print('<color="green">Starting local development server...</color>');
             self::print('<color="yellow">To shutdown the server press Ctrl+C</color>');
-            system('php -S ' . $host . ':' . $port .' -t app/public ' . self::$templateFolder . '../Server.php');
+            system('php -S ' . $host . ':' . $port .' -t app/public ' . __DIR__ . '/Server.php');
         }
 
         /**
@@ -404,7 +404,7 @@
 
             // Validates the language id
             if(empty($id)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "id" for this command');
-            
+
             // Creates the file
             $id = trim(strtolower($id));
             $template = file_get_contents(self::$templateFolder . 'Language.php');
@@ -494,7 +494,7 @@
             // Checks if created field was filled
             $created_at = self::argOrInput('created', 'Created at field name (created_at): ', 'created_at');
             $created_at = trim($created_at);
-            
+
             // Checks if updated field was filled
             $updated_at = self::argOrInput('created', 'Created at field name (updated_at): ', 'updated_at');
             $updated_at = trim($updated_at);

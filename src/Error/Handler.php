@@ -61,10 +61,10 @@
             self::log("[{$date}] {$e->getMessage()} at file {$e->getFile()}:{$e->getLine()}\n{$e->getTraceAsString()}\n\n");
 
             // Clean output buffer
-            http_response_code(Response::HTTP_INTERNAL_SERVER_ERROR);
             Buffer::clean();
 
             // Display the error or the default error page
+            http_response_code(Response::HTTP_INTERNAL_SERVER_ERROR);
             if(error_reporting()){
                 include(__DIR__ . '/Views/error.phtml');
             }else{
@@ -78,7 +78,7 @@
          * @param int $line Line to highlight.
          * @return string Highlighted result in HTML.
          */
-        protected static function highlight(string $file, int $line){
+        private static function highlight(string $file, int $line){
             // Checks for the line
             if(!is_readable($file)) return '';
             $text = file($file, FILE_IGNORE_NEW_LINES);
@@ -108,22 +108,25 @@
         protected static function parseTrace(array $trace){
             $isTraceable = false;
             $result =    '<strong style="color: #ed578b;">Stack trace:</strong>
-                        <table cellspacing="0" cellpadding="0" style="width: 100%; table-layout: fixed; margin-top: 10px;"><tbody>';
+                        <table cellspacing="0" cellpadding="0"><tbody>';
             foreach($trace as $key => $item){
                 if(!empty($item['class']) && $item['class'] == self::class) continue;
                 if(!$isTraceable) $isTraceable = true;
                 $result .=   '<tr>' .
                                 // Index
-                                '<td style="border: 1px solid lightgray; padding: 10px; vertical-align: top; text-align: center; font-weight: bold; color: #ed578b; width: 40px;">#' . ($key + 1) .'</td>' .
-                                '<td style="border: 1px solid lightgray; padding: 10px; word-break: break-all;">' .
+                                '<th>#' . ($key + 1) .'</th>' .
+                                '<td>' .
                                     // File/line
-                                    (!empty($item['file']) && !empty($item['line']) ? '<i style="color: dimgray; display: block; font-size: 14px;">' . $item['file'] . ':' . $item['line'] . '</i>' : '') .
+                                    (!empty($item['file']) && !empty($item['line']) ? '<i>' . $item['file'] . ':' . $item['line'] . '</i>' : '') .
 
                                     // Class
-                                    (!empty($item['class']) ? '<span style="color: #d2024a; font-weight: 600;">' . $item['class'] . '</span>-><span style="color: #ed578b">' . $item['function'] . '()</span>' : '') .
+                                    (!empty($item['class']) ? '<span class="class">' . $item['class'] . '</span>-><span class="method">' . $item['function'] . '()</span>' : '') .
+
+                                    // Highlight
+                                    (!empty($item['file']) && !empty($item['line']) ? '<code>' . self::highlight($item['file'], $item['line']) . '</code>' : '') .
 
                                     // Args
-                                    (!empty($item['args']) ? '<i style="font-size: 14px; font-weight: 600; display: block; margin: 10px 0;">Args:</i><pre style="white-space: pre-wrap; word-wrap: break-all; background-color: #f5f5f5; border: 1px solid gainsboro; padding: 15px; margin: 0;">' . self::getDump($item['args']) . '</pre>' : '') . '
+                                    (!empty($item['args']) ? '<a href="javascript:void(0);" onclick="javascript:toggleArgs(\'#args_' . $key . '\')" class="args-toggle">View args</a><pre class="args" id="args_' . $key . '">' . self::getDump($item['args']) . '</pre>' : '') . '
                                 </td>
                             </tr>';
             }
