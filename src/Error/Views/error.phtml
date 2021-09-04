@@ -9,7 +9,7 @@
             }
 
             .wrapper {
-                font-family: Segoe UI, sans-serif;
+                font-family: 'Segoe UI', sans-serif;
                 font-size: 18px;
                 background-color: white;
                 color: black;
@@ -25,6 +25,14 @@
 
             .wrapper .details {
                 padding: 20px;
+            }
+
+            .wrapper .details h3{
+                margin: 0;
+                font-weight: 400;
+                color: dimgray;
+                font-size: 18px;
+                margin-bottom: 10px;
             }
 
             .wrapper .details i {
@@ -75,7 +83,7 @@
             .wrapper .details .args{
                 white-space: pre-wrap;
                 word-wrap: break-all;
-                background-color: #fff6fa;
+                background-color: #f1f1f1;
                 border: 1px solid gainsboro;
                 padding: 15px;
                 margin: 0;
@@ -135,8 +143,9 @@
                 <strong>Oops! An error has ocurred: </strong><?= $e->getMessage(); ?>
             </div>
             <div class="details">
+                <h3><?= get_class($e); ?></h3>
                 <i>File: <b><?= $e->getFile(); ?></b> at line <b><?= $e->getLine(); ?></b>.</i>
-                <span class="time">Exception thrown in <strong><?= self::getExceptionTime(); ?></strong>.</span>
+                <span class="time">Exception thrown in <strong><?= self::getExceptionTime(); ?></strong></span>
                 <code><?= self::highlight($e->getFile(), $e->getLine()); ?></code>
                 <?= self::parseTrace($e->getTrace()); ?>
             </div>

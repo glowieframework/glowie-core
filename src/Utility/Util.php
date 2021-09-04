@@ -3,6 +3,7 @@
     use Glowie\Core\Http\Session;
     use Glowie\Core\Http\Response;
     use Glowie\Core\Config;
+    use Glowie\Core\Buffer;
 
     /**
      * Miscellaneous utilities for Glowie application.
@@ -27,13 +28,24 @@
         /**
          * Prints a variable in a human-readable way.
          * @param mixed $var Variable to be printed.
+         * @param bool $plain (Optional) Print variable as plain text instead of HTML.
          * @return void
          */
-        public static function log($var){
-            Rails::getResponse()->setContentType(Response::CONTENT_HTML);
-            echo '<pre style="white-space: pre-wrap; word-wrap: break-all; background-color: #f5f5f5; border: 1px solid gainsboro; padding: 15px; margin: 0;">';
+        public static function log($var, bool $plain = false){
+            // Clean output buffer
+            Buffer::clean();
+
+            // Set content type
+            if($plain){
+                Rails::getResponse()->setContentType(Response::CONTENT_PLAIN);
+            }else{
+                Rails::getResponse()->setContentType(Response::CONTENT_HTML);
+            }
+            
+            // Dump the content
+            if(!$plain) echo '<pre style="white-space: pre-wrap; word-wrap: break-all; background-color: black; color: white; padding: 15px; margin: 0;">';
             var_dump($var);
-            echo '</pre>';
+            if(!$plain) echo '</pre>';
             die();
         }
 

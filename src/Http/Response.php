@@ -4,6 +4,7 @@
     use Util;
     use SimpleXMLElement;
     use Glowie\Core\Element;
+    use Glowie\Core\Buffer;
 
     /**
      * Response handler for Glowie application.
@@ -208,6 +209,7 @@
          * @param string $content Content to set as the body.
          */
         public function setBody(string $content){
+            Buffer::clean();
             $this->setContentType(self::CONTENT_PLAIN);
             echo $content;
         }
@@ -219,6 +221,7 @@
          * @param int $depth (Optional) JSON encoding maximum depth (same as in `json_encode()` function).
          */
         public function setJson(array $data, int $flags = 0, int $depth = 512){
+            Buffer::clean();
             $this->setContentType(self::CONTENT_JSON);
             if($data instanceof Element) $data = $data->toArray();
             echo json_encode($data, $flags, $depth);
@@ -230,6 +233,7 @@
          * @param string $root (Optional) Name of the XML root element.
          */
         public function setXML(array $data, string $root = 'data'){
+            Buffer::clean();
             $this->setContentType(self::CONTENT_XML);
             $xml = new SimpleXMLElement("<?xml version=\"1.0\"?><{$root}></{$root}>");
             if($data instanceof Element) $data = $data->toArray();
@@ -244,6 +248,7 @@
          * @return void
          */
         public function redirect(string $destination, int $code = self::HTTP_TEMPORARY_REDIRECT){
+            Buffer::clean();
             $this->setStatusCode($code);
             header('Location: ' . $destination, true, $code);
             die();
