@@ -68,7 +68,7 @@
          * @param bool $break (Optional) Break line at the end.
          */
         public function info(string $text, bool $break = true){
-            Firefly::print('<color="blue">' . $text . '</color>', $break);
+            Firefly::print('<color="cyan">' . $text . '</color>', $break);
         }
 
         /**
