@@ -619,13 +619,12 @@
         }
 
         /**
-         * Prints the current Firefly, Glowie and PHP CLI versions.
+         * Prints the current Glowie and PHP CLI versions.
          */
         private static function version(){
-            self::print('<bg="magenta"><color="black">Firefly by Glowie</color></bg>');
-            self::print('<color="magenta">Firefly 1.1 with Glowie ' . Util::getVersion() . '</color>');
-            self::print('<color="blue">Running with PHP CLI ' . phpversion() . '</color>');
-            return 'Firefly 1.1 with Glowie ' . Util::getVersion();
+            self::print('<color="magenta">Firefly | Glowie ' . Util::getVersion() . '</color>');
+            self::print('<color="blue">Running in PHP CLI ' . phpversion() . '</color>');
+            return 'Firefly | Glowie ' . Util::getVersion();
         }
 
         /**

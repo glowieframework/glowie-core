@@ -171,9 +171,9 @@
          * @param string $key Key to set value.
          * @param mixed $value Value to set.
          */
-        public function setFlash(string $key, $data){
+        public function setFlash(string $key, $value){
             self::$flash = $this->get('app_flash_data') ?? [];
-            self::$flash[$key] = $data;
+            self::$flash[$key] = $value;
             $this->set('app_flash_data', self::$flash);
         }
 

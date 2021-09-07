@@ -60,7 +60,7 @@
          * @param string $action (Optional) The action name from the controller that this route will instantiate.
          * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or\
          * an array of methods. Leave empty for all.
-         * @param string $name (Optional) Route internal name/identifier.
+         * @param string $name (Optional) Route name.
          */
         public static function addRoute(string $route, string $controller = 'Glowie\Controllers\Main', string $action = 'index', $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
@@ -85,7 +85,7 @@
          * @param string $action (Optional) The action name from the controller that this route will instantiate.
          * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or\
          * an array of methods. Leave empty for all.
-         * @param string $name (Optional) Route internal name/identifier.
+         * @param string $name (Optional) Route name.
          */
         public static function addProtectedRoute(string $route, $middleware = 'Glowie\Middlewares\Authenticate', string $controller = 'Glowie\Controllers\Main', string $action = 'index', $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
@@ -108,7 +108,7 @@
          * @param int $code (Optional) HTTP status code to pass with the redirect.
          * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or\
          * an array of methods. Leave empty for all.
-         * @param string $name (Optional) Route internal name/identifier.
+         * @param string $name (Optional) Route name.
          */
         public static function addRedirect(string $route, string $target, int $code = Response::HTTP_TEMPORARY_REDIRECT, $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
@@ -131,7 +131,7 @@
 
         /**
          * Gets an specific route configuration.
-         * @param string $route Route internal name/identifier to get.
+         * @param string $route Name of the route to get.
          * @return array|null Returns the route setting as an array if valid or null if not.
          */
         public static function getRoute(string $route){

@@ -52,7 +52,7 @@
         protected $response;
 
         /**
-         * Current instantiated route.
+         * Current requested route.
          * @var string
          */
         protected $route;
@@ -64,8 +64,8 @@
         protected $session;
 
          /**
-         * Instantiates a new instance of the middleware.
-         * @param string $route (Optional) Request route.
+         * Creates a new instance of the middleware.
+         * @param string $route (Optional) Requested route.
          * @param array $params (Optional) Route parameters.
          */
         final public function __construct(string $route = '', array $params = []){

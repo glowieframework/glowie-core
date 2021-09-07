@@ -265,7 +265,7 @@
 
         /**
          * Redirects to a named route.
-         * @param string $route Route internal name/identifier.
+         * @param string $route Route name.
          * @param array $params (Optional) Route parameters to bind into the URL.
          * @param int $code (Optional) HTTP status code to pass with the redirect.
          */

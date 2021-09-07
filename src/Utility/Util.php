@@ -22,7 +22,7 @@
          * @return string Current Glowie core version.
          */
         public static function getVersion(){
-            return '1.0.2';
+            return '1.0.3';
         }
 
         /**
@@ -60,7 +60,7 @@
 
         /**
          * Returns the base URL of a named route.
-         * @param string $route Route internal name/identifier.
+         * @param string $route Route name.
          * @param array $params (Optional) Route parameters to bind into the URL.
          * @return string Returns the absolute URL of the application path with the route appended.
          */
