@@ -31,6 +31,12 @@
         private $_fields;
 
         /**
+         * Table COLLATE.
+         * @var string
+         */
+        private $_collate;
+
+        /**
          * Table primary keys.
          * @var array
          */
@@ -46,7 +52,13 @@
          * Table indexes.
          * @var array
          */
-        private $_key;
+        private $_index;
+
+        /**
+         * Key drops.
+         * @var array
+         */
+        private $_drops;
 
         /**
          * RENAME table statement.
@@ -68,91 +80,222 @@
         }
 
         /**
-         * Adds a field to the table blueprint.
-         * @param string $name Field name to add.
-         * @param string $type Field data type. Must be a valid type supported by your current MySQL version.
+         * Creates a column in a new table.
+         * @param string $name Column name to create.
+         * @param string $type Column data type. Must be a valid type supported by your current MySQL version.
          * @param int|null $size (Optional) Field maximum length.
          * @param bool $nullable (Optional) Set to **true** if the field should accept `NULL` values.
          * @param mixed $default (Optional) Default field value.
          * @param bool $autoincrement (Optional) Set to **true** to auto increment the field value.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
-        public function addField(string $name, string $type, $size = null, bool $nullable = true, $default = null, bool $autoincrement = false){
-            // Field name
-            $field = "`{$name}` ";
+        public function createColumn(string $name, string $type, $size = null, bool $nullable = true, $default = null, bool $autoincrement = false){
+            return $this->modifyColumns([
+                'operation' => 'create',
+                'name' => $name,
+                'type' => $type,
+                'size' => $size,
+                'nullable' => $nullable,
+                'default' => $default,
+                'autoincrement' => $autoincrement
+            ]);
+        }
+
+        /**
+         * Adds a column to an existing table.
+         * @param string $name Column name to add.
+         * @param string $type Column data type. Must be a valid type supported by your current MySQL version.
+         * @param int|null $size (Optional) Field maximum length.
+         * @param bool $nullable (Optional) Set to **true** if the field should accept `NULL` values.
+         * @param mixed $default (Optional) Default field value.
+         * @param bool $autoincrement (Optional) Set to **true** to auto increment the field value.
+         * @param string|null $after (Optional) Name of other column to move this column below it.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function addColumn(string $name, string $type, $size = null, bool $nullable = true, $default = null, bool $autoincrement = false, $after = null){
+            return $this->modifyColumns([
+                'operation' => 'add',
+                'name' => $name,
+                'type' => $type,
+                'size' => $size,
+                'nullable' => $nullable,
+                'default' => $default,
+                'autoincrement' => $autoincrement,
+                'after' => $after
+            ]);
+        }
+
+        /**
+         * Changes an existing column in a table.
+         * @param string $name Column name to change.
+         * @param string $new_name New column name.
+         * @param string $type Column data type. Must be a valid type supported by your current MySQL version.
+         * @param int|null $size (Optional) Field maximum length.
+         * @param bool $nullable (Optional) Set to **true** if the field should accept `NULL` values.
+         * @param mixed $default (Optional) Default field value.
+         * @param bool $autoincrement (Optional) Set to **true** to auto increment the field value.
+         * @param string|null $after (Optional) Name of other column to move this column below it.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function changeColumn(string $name, string $new_name, string $type, $size = null, bool $nullable = true, $default = null, bool $autoincrement = false, $after = null){
+            return $this->modifyColumns([
+                'operation' => 'change',
+                'name' => $name,
+                'new_name' => $new_name,
+                'type' => $type,
+                'size' => $size,
+                'nullable' => $nullable,
+                'default' => $default,
+                'autoincrement' => $autoincrement,
+                'after' => $after
+            ]);
+        }
+
+        /**
+         * Deletes an existing column from a table.
+         * @param string $name Column name to drop.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function dropColumn(string $name){
+            return $this->modifyColumns([
+                'operation' => 'drop',
+                'name' => $name
+            ]);
+        }
+
+        /**
+         * Parse column operations.
+         * @param array $data Associative array of data to parse.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        private function modifyColumns(array $data){
+            // Column name
+            switch($data['operation']){
+                case 'create':
+                    $field = "`{$data['name']}` ";
+                    break;
+
+                case 'change':
+                    $field = "CHANGE COLUMN `{$data['name']}` `{$data['new_name']}` ";
+                    break;
+
+                case 'add':
+                    $field = "ADD COLUMN `{$data['name']}` ";
+                    break;
+
+                case 'drop':
+                    $field = "DROP COLUMN `{$data['name']}`";
+                    $this->_fields[] = $field;
+                    return $this;
+            }
 
             // Field type and size
-            $field .= strtoupper($type);
-            if(!empty($size)) $field .= "({$size})";
+            $field .= strtoupper($data['type']);
+            if(!empty($data['size'])) $field .= "({$data['size']})";
 
             // Not nullable field
-            if(!$nullable) $field .= " NOT NULL";
+            if(!$data['nullable']) $field .= " NOT NULL";
 
             // Default value
-            if($default !== null){
-                if ($default instanceof stdClass) {
-                    $field .= " DEFAULT {$default->value}";
+            if($data['default'] !== null){
+                if ($data['default'] instanceof stdClass) {
+                    $field .= " DEFAULT {$data['default']->value}";
                 } else {
-                    $field .= " DEFAULT \"{$this->escape($default)}\"";
+                    $field .= " DEFAULT \"{$this->escape($data['default'])}\"";
                 }
-            }else if($autoincrement){
+            }else if($data['autoincrement']){
                 $field .= " AUTO_INCREMENT";
             }
 
+            // After
+            if($data['operation'] != 'create'){
+                if(!empty($data['after'])) $field .= " AFTER `{$data['after']}`";
+            }
+            
             // Saves the result
             $this->_fields[] = $field;
             return $this;
         }
 
         /**
-         * Adds a raw field to the table blueprint.
+         * Adds a table column to a PRIMARY KEY.
+         * @param string|array $column A single column name or an array of columns to add to the primary key.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
-        public function rawAddField(string $field){
-            $this->_fields[] = $field;
-            return $this;
-        }
-
-        /**
-         * Adds a table field to a PRIMARY KEY.
-         * @param string|array $field A single field name or an array of fields to add to the primary key.
-         * @return Skeleton Current Skeleton instance for nested calls.
-         */
-        public function primaryKey($field){
-            foreach((array)$field as $item){
+        public function primaryKey($column){
+            foreach((array)$column as $item){
                 $this->_primary[] = $item;
             }
             return $this;
         }
 
         /**
-         * Adds a table field to an INDEX key.
-         * @param string|array $field A single field name or an array of fields to add to the key.
+         * Adds a table column to an INDEX key.
+         * @param string|array $column A single column name or an array of columns to add to the key.
          * @param string $name (Optional) The key name. Leave empty to assign each field to its own key.
          * @param bool $unique (Optional) Mark the key as an UNIQUE INDEX.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
-        public function key($field, string $name = '', bool $unique = false){
-            foreach((array)$field as $item){
+        public function index($column, string $name = '', bool $unique = false){
+            foreach((array)$column as $item){
                 $key = $name;
                 if(empty($name)) $key = $item;
                 if($unique){
                     $this->_unique[$key][] = "`{$item}`";
                 }else{
-                    $this->_key[$key][] = "`{$item}`";
+                    $this->_index[$key][] = "`{$item}`";
                 }
             }
             return $this;
         }
 
         /**
-         * Adds a table field to an UNIQUE INDEX key.
-         * @param string|array $field A single field name or an array of fields to add to the key.
+         * Adds a table column to an UNIQUE INDEX key.
+         * @param string|array $column A single column name or an array of columns to add to the key.
          * @param string $name (Optional) The key name. Leave empty to assign each field to its own key.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
-        public function unique($field, string $name = ''){
-            return $this->key($field, $name, true);
+        public function unique($column, string $name = ''){
+            return $this->index($column, $name, true);
+        }
+
+        /**
+         * Deletes an existing primary key from the table.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function dropPrimaryKey(){
+            $this->_drops[] = 'DROP PRIMARY KEY';
+            return $this;
+        }
+
+        /**
+         * Deletes an existing INDEX key from the table.
+         * @param string $name The key name to drop.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function dropIndex(string $name){
+            $this->_drops[] = "DROP INDEX `{$name}`";
+            return $this;
+        }
+
+        /**
+         * Deletes an existing UNIQUE INDEX key from the table.
+         * @param string $name The key name to drop.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function dropUnique(string $name){
+            return $this->dropIndex($name);
+        }
+
+        /**
+         * Renames an existing INDEX key from the table.
+         * @param string $name The key name.
+         * @param string $new_name The new name to set.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function renameIndex(string $name, string $new_name){
+            $this->_drops[] = "RENAME INDEX `{$name}` TO `{$new_name}`";
+            return $this;
         }
 
         /**
@@ -174,13 +317,33 @@
         }
 
         /**
+         * Adds a COLLATE setting to the table.
+         * @param string $collate Collate to set.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function collate(string $collate){
+            $this->_collate = $collate;
+            return $this;
+        }
+
+        /**
          * Creates a new table.\
-         * **Important:** The table must have at least one field.
+         * **Important:** The table must have at least one column.
          * @return bool Returns true on success.
          * @throws QueryException Throws an exception if the query fails.
          */
         public function create(){
             $this->_instruction = 'CREATE TABLE';
+            return $this->execute();
+        }
+
+        /**
+         * Updates an existing table structure.
+         * @return bool Returns true on success.
+         * @throws QueryException Throws an exception if the query fails.
+         */
+        public function alter(){
+            $this->_instruction = 'ALTER TABLE';
             return $this->execute();
         }
 
@@ -217,15 +380,40 @@
         }
 
         /**
+         * Checks if a column exists in the current table.
+         * @param string $column Column name to check.
+         * @return bool Returns true if the column exists, false otherwise.
+         */
+        public function columnExists(string $column){
+            $this->_raw = "SHOW COLUMNS FROM `{$this->_table}` LIKE \"{$column}\"";
+            $result = $this->execute(true, false);
+            return !empty($result);
+        }
+
+        /**
+         * Checks if a table exists in the current database.
+         * @param string $table (Optional) Table name to check, leave empty to use the current working table.
+         * @return bool Returns true if the table exists, false otherwise.
+         */
+        public function tableExists(string $table = ''){
+            if(empty($table)) $table = $this->_table;
+            $this->_raw = "SHOW TABLES LIKE \"{$table}\"";
+            $result = $this->execute(true, false);
+            return !empty($result);
+        }
+
+        /**
          * Clears the current built query entirely.
          */
         public function clearQuery(){
             $this->_instruction = '';
             $this->_exists = '';
             $this->_fields = [];
+            $this->_collate = '';
             $this->_primary = [];
             $this->_unique = [];
-            $this->_key = [];
+            $this->_index = [];
+            $this->_drops = [];
             $this->_rename = '';
             $this->_raw = '';
         }
@@ -274,9 +462,9 @@
                     }
                 }
 
-                // Keys
-                if(!empty($this->_key)){
-                    foreach($this->_key as $name => $key){
+                // Indexes
+                if(!empty($this->_index)){
+                    foreach($this->_index as $name => $key){
                         $fields = implode(', ', $key);
                         $instructions[] = "INDEX `{$name}` ({$fields})";
                     }
@@ -287,11 +475,61 @@
 
                 // Closing parenthesis
                 $query .= ')';
+
+                // Collate
+                if(!empty($this->_collate)){
+                    $query .= " COLLATE=\"{$this->_collate}\"";
+                }
             }
 
-            // Gets RENAME parameters
+            // Gets ALTER TABLE parameters
+            if($this->_instruction == 'ALTER TABLE'){
+                $instructions = [];
+                $query .= ' ';
+
+                // Fields
+                if(!empty($this->_fields)) $instructions = $this->_fields;
+
+                // Key drops
+                if(!empty($this->_drops)){
+                    $instructions[] = implode(', ', $this->_drops);
+                }
+
+                // Primary keys
+                if(!empty($this->_primary)){
+                    $primary = implode('`, `', $this->_primary);
+                    $instructions[] = "ADD PRIMARY KEY (`{$primary}`)";
+                }
+
+                // Unique indexes
+                if(!empty($this->_unique)){
+                    foreach($this->_unique as $name => $unique){
+                        $fields = implode(', ', $unique);
+                        $instructions[] = "ADD UNIQUE INDEX `{$name}` ({$fields})";
+                    }
+                }
+
+                // Indexes
+                if(!empty($this->_index)){
+                    foreach($this->_index as $name => $key){
+                        $fields = implode(', ', $key);
+                        $instructions[] = "ADD INDEX `{$name}` ({$fields})";
+                    }
+                }
+
+                // Collate
+                if(!empty($this->_collate)){
+                    $instructions[] = "COLLATE=\"{$this->_collate}\"";
+                }
+
+                // Creates the instruction
+                $query .= implode(', ', $instructions);
+            }
+
+            // Gets RENAME TABLE parameters
             if($this->_instruction == 'RENAME TABLE'){
                 $query .= " TO `{$this->_rename}`";
+                $this->table($this->_rename);
             }
 
             // Returns the result

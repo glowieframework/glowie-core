@@ -20,6 +20,12 @@
         protected $db;
 
         /**
+         * Database schema handler.
+         * @var Skeleton
+         */
+        protected $forge;
+
+        /**
          * Migration name.
          * @var string
          */
@@ -39,14 +45,17 @@
             $classname = explode('\\', get_class($this));
             $this->name = end($classname);
             $this->db = new Kraken();
+            $this->forge = new Skeleton();
 
             // Creates the migrations history table if not exists
             if(!self::$tableCreated){
-                self::$tableCreated = $this->db->query(
-                    'CREATE TABLE IF NOT EXISTS migrations(
-                            name VARCHAR(255) NOT NULL,
-                            applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP()
-                    )');
+                if(!$this->forge->tableExists('migrations')){
+                    $this->forge->table('migrations')
+                                ->addColumn('name', 'VARCHAR', 255, false)
+                                ->addColumn('applied_at', 'DATETIME', null, false, Skeleton::raw('CURRENT_TIMESTAMP()'))
+                                ->create();
+                    self::$tableCreated = true;
+                };
             }
         }
 
