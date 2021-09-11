@@ -51,8 +51,8 @@
             if(!self::$tableCreated){
                 if(!$this->forge->tableExists('migrations')){
                     $this->forge->table('migrations')
-                                ->addColumn('name', 'VARCHAR', 255, false)
-                                ->addColumn('applied_at', 'DATETIME', null, false, Skeleton::raw('CURRENT_TIMESTAMP()'))
+                                ->createColumn('name', 'VARCHAR', 255)
+                                ->createColumn('applied_at', 'DATETIME', null, Skeleton::raw('CURRENT_TIMESTAMP()'))
                                 ->create();
                     self::$tableCreated = true;
                 };

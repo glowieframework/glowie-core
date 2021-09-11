@@ -27,7 +27,7 @@
             if(!self::hasLoaded()){
                 if (!file_exists($appFolder . 'config/Config.php')) {
                     die('<strong>Configuration file was not found!</strong><br>
-                    Please rename "app/config/Config.example.php" to "app/config/Config.php".');
+                    Please copy "app/config/Config.example.php" to "app/config/Config.php".');
                 } else {
                     self::$config = require($appFolder . 'config/Config.php');
                 }

@@ -82,7 +82,7 @@
             // Load configuration
             if (!file_exists(self::$appFolder . 'config/Config.php')) {
                 self::print('<bg="red"><color="black">Configuration file not found!</color></bg>');
-                self::print('<color="red">Please rename "app/config/Config.example.php" to "app/config/Config.php"</color>');
+                self::print('<color="red">Please copy "app/config/Config.example.php" to "app/config/Config.php"</color>');
                 die();
             }
 

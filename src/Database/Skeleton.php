@@ -37,6 +37,12 @@
         private $_collate;
 
         /**
+         * AUTO_INCREMENT field.
+         * @var string
+         */
+        private $_autoincrement;
+
+        /**
          * Table primary keys.
          * @var array
          */
@@ -84,21 +90,53 @@
          * @param string $name Column name to create.
          * @param string $type Column data type. Must be a valid type supported by your current MySQL version.
          * @param int|null $size (Optional) Field maximum length.
-         * @param bool $nullable (Optional) Set to **true** if the field should accept `NULL` values.
          * @param mixed $default (Optional) Default field value.
-         * @param bool $autoincrement (Optional) Set to **true** to auto increment the field value.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
-        public function createColumn(string $name, string $type, $size = null, bool $nullable = true, $default = null, bool $autoincrement = false){
+        public function createColumn(string $name, string $type, $size = null, $default = null){
             return $this->modifyColumns([
                 'operation' => 'create',
                 'name' => $name,
                 'type' => $type,
                 'size' => $size,
-                'nullable' => $nullable,
                 'default' => $default,
-                'autoincrement' => $autoincrement
+                'nullable' => false
             ]);
+        }
+
+        /**
+         * Creates a nullable column in a new table.
+         * @param string $name Column name to create.
+         * @param string $type Column data type. Must be a valid type supported by your current MySQL version.
+         * @param int|null $size (Optional) Field maximum length.
+         * @param mixed $default (Optional) Default field value.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function createNullableColumn(string $name, string $type, $size = null, $default = null){
+            return $this->modifyColumns([
+                'operation' => 'create',
+                'name' => $name,
+                'type' => $type,
+                'size' => $size,
+                'default' => $default,
+                'nullable' => true
+            ]);
+        }
+
+        /**
+         * Creates an AUTO_INCREMENT column in the table.\
+         * **Important:** This column must also be set as a key.
+         * @param string $name Column name to create.
+         * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
+         * @param int|null $size (Optional) Field maximum length.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function autoIncrement(string $name, string $type = 'INT', $size = null){
+            $type = strtoupper($type);
+            $field = "`{$name}` {$type}";
+            if(!empty($size)) $field .= "({$size})";
+            $this->_autoincrement = "{$field} NOT NULL";
+            return $this;
         }
 
         /**
@@ -106,22 +144,40 @@
          * @param string $name Column name to add.
          * @param string $type Column data type. Must be a valid type supported by your current MySQL version.
          * @param int|null $size (Optional) Field maximum length.
-         * @param bool $nullable (Optional) Set to **true** if the field should accept `NULL` values.
          * @param mixed $default (Optional) Default field value.
-         * @param bool $autoincrement (Optional) Set to **true** to auto increment the field value.
-         * @param string|null $after (Optional) Name of other column to move this column below it.
+         * @param string|null $after (Optional) Name of other column to place this column after it.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
-        public function addColumn(string $name, string $type, $size = null, bool $nullable = true, $default = null, bool $autoincrement = false, $after = null){
+        public function addColumn(string $name, string $type, $size = null, $default = null, $after = null){
             return $this->modifyColumns([
                 'operation' => 'add',
                 'name' => $name,
                 'type' => $type,
                 'size' => $size,
-                'nullable' => $nullable,
                 'default' => $default,
-                'autoincrement' => $autoincrement,
-                'after' => $after
+                'after' => $after,
+                'nullable' => false
+            ]);
+        }
+
+        /**
+         * Adds a nullable column to an existing table.
+         * @param string $name Column name to add.
+         * @param string $type Column data type. Must be a valid type supported by your current MySQL version.
+         * @param int|null $size (Optional) Field maximum length.
+         * @param mixed $default (Optional) Default field value.
+         * @param string|null $after (Optional) Name of other column to place this column after it.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function addNullableColumn(string $name, string $type, $size = null, $default = null, $after = null){
+            return $this->modifyColumns([
+                'operation' => 'add',
+                'name' => $name,
+                'type' => $type,
+                'size' => $size,
+                'default' => $default,
+                'after' => $after,
+                'nullable' => true
             ]);
         }
 
@@ -133,11 +189,10 @@
          * @param int|null $size (Optional) Field maximum length.
          * @param bool $nullable (Optional) Set to **true** if the field should accept `NULL` values.
          * @param mixed $default (Optional) Default field value.
-         * @param bool $autoincrement (Optional) Set to **true** to auto increment the field value.
          * @param string|null $after (Optional) Name of other column to move this column below it.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
-        public function changeColumn(string $name, string $new_name, string $type, $size = null, bool $nullable = true, $default = null, bool $autoincrement = false, $after = null){
+        public function changeColumn(string $name, string $new_name, string $type, $size = null, bool $nullable = true, $default = null, $after = null){
             return $this->modifyColumns([
                 'operation' => 'change',
                 'name' => $name,
@@ -146,7 +201,6 @@
                 'size' => $size,
                 'nullable' => $nullable,
                 'default' => $default,
-                'autoincrement' => $autoincrement,
                 'after' => $after
             ]);
         }
@@ -203,8 +257,6 @@
                 } else {
                     $field .= " DEFAULT \"{$this->escape($data['default'])}\"";
                 }
-            }else if($data['autoincrement']){
-                $field .= " AUTO_INCREMENT";
             }
 
             // After
@@ -264,7 +316,7 @@
          * @return Skeleton Current Skeleton instance for nested calls.
          */
         public function dropPrimaryKey(){
-            $this->_drops[] = 'DROP PRIMARY KEY';
+            $this->_drops[] = "DROP PRIMARY KEY";
             return $this;
         }
 
@@ -303,7 +355,7 @@
          * @return Skeleton Current Skeleton instance for nested calls.
          */
         public function ifExists(){
-            $this->_exists = ' IF EXISTS';
+            $this->_exists = " IF EXISTS";
             return $this;
         }
 
@@ -312,7 +364,7 @@
          * @return Skeleton Current Skeleton instance for nested calls.
          */
         public function ifNotExists(){
-            $this->_exists = ' IF NOT EXISTS';
+            $this->_exists = " IF NOT EXISTS";
             return $this;
         }
 
@@ -354,7 +406,7 @@
          * @throws QueryException Throws an exception if the query fails.
          */
         public function rename(string $name){
-            $this->_instruction = 'RENAME TABLE';
+            $this->_instruction = "RENAME TABLE";
             $this->_rename = $name;
             return $this->execute();
         }
@@ -365,7 +417,7 @@
          * @throws QueryException Throws an exception if the query fails.
          */
         public function truncate(){
-            $this->_instruction = 'TRUNCATE TABLE';
+            $this->_instruction = "TRUNCATE TABLE";
             return $this->execute();
         }
 
@@ -375,7 +427,7 @@
          * @throws QueryException Throws an exception if the query fails.
          */
         public function drop(){
-            $this->_instruction = 'DROP TABLE';
+            $this->_instruction = "DROP TABLE";
             return $this->execute();
         }
 
@@ -410,6 +462,7 @@
             $this->_exists = '';
             $this->_fields = [];
             $this->_collate = '';
+            $this->_autoincrement = '';
             $this->_primary = [];
             $this->_unique = [];
             $this->_index = [];
@@ -445,8 +498,13 @@
                 $instructions = [];
                 $query .= ' (';
 
+                // Auto increment
+                if(!empty($this->_autoincrement)){
+                    $instructions[] = "{$this->_autoincrement} AUTO_INCREMENT";
+                }
+
                 // Fields
-                if (!empty($this->_fields)) $instructions = $this->_fields;
+                if (!empty($this->_fields)) $instructions = array_merge($instructions, $this->_fields);
 
                 // Primary keys
                 if(!empty($this->_primary)){
@@ -487,8 +545,13 @@
                 $instructions = [];
                 $query .= ' ';
 
+                // Auto increment
+                if(!empty($this->_autoincrement)){
+                    $instructions[] = "ADD COLUMN {$this->_autoincrement} AUTO_INCREMENT";
+                }
+
                 // Fields
-                if(!empty($this->_fields)) $instructions = $this->_fields;
+                if(!empty($this->_fields)) $instructions = array_merge($instructions, $this->_fields);
 
                 // Key drops
                 if(!empty($this->_drops)){
