@@ -17,7 +17,7 @@
         use ElementTrait;
 
         /**
-         * Instantiates a new Element.
+         * Creates a new Element.
          * @param array $data (Optional) An associative array with the initial data to parse.
          */
         public function __construct(array $data = []){

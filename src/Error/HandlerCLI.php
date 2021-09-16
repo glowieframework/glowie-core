@@ -58,10 +58,14 @@
                 Firefly::print('<color="blue">' . get_class($e) . '</color>');
                 Firefly::print('');
                 Firefly::print('File: <color="yellow">' . $e->getFile() . '</color> at line <color="yellow">' . $e->getLine() . '</color>.');
-                Firefly::print('<color="red">Exception thrown in ' . self::getExceptionTime() . '</color>');
                 Firefly::print('');
-                Firefly::print(self::highlight($e->getFile(), $e->getLine()));
-                Firefly::print('');
+
+                $highlight = self::highlight($e->getFile(), $e->getLine());
+                if(!empty($highlight)){
+                    Firefly::print($highlight);
+                    Firefly::print('');
+                }
+
                 Firefly::print('<color="green">Stack trace:</color>');
                 Firefly::print($e->getTraceAsString());
             }else{
@@ -98,14 +102,6 @@
                 die();
             }
             file_put_contents(Firefly::getAppFolder() . 'storage/error.log', $content, FILE_APPEND);
-        }
-
-        /**
-         * Returns the page exception time.
-         * @return float Exception time.
-         */
-        private static function getExceptionTime(){
-            return round((microtime(true) - APP_START_TIME) * 1000, 2) . 'ms';
         }
 
     }

@@ -5,6 +5,7 @@
     use Glowie\Core\Exception\ConsoleException;
     use Glowie\Core\Error\HandlerCLI;
     use Glowie\Core\Config;
+    use Glowie\Core\Buffer;
     use Util;
 
     /**
@@ -160,6 +161,9 @@
                 case 'shine':
                     self::shine();
                     break;
+                case 'sandbox':
+                    self::sandbox();
+                    break;
                 case 'clear-cache':
                     self::clearCache();
                     break;
@@ -302,6 +306,37 @@
             self::print('<color="green">Starting local development server...</color>');
             self::print('<color="yellow">To shutdown the server press Ctrl+C</color>');
             system('php -S ' . $host . ':' . $port .' -t app/public ' . __DIR__ . '/Server.php');
+        }
+
+        /**
+         * Starts the REPL interactive mode.
+         */
+        private static function sandbox(){
+            // Checks if CLI is running
+            if(!self::$isCLI) throw new ConsoleException(self::$command, self::$args, 'This command cannot be used from outside the console');
+
+            // Starts the interactive mode
+            self::print('<color="green">Welcome to Firefly Sandbox!</color>');
+            self::print('<color="yellow">Press Ctrl+C to quit the interactive mode</color>');
+
+            // REPL
+            while (true) {
+                // Starting tag
+                self::print('<color="cyan">sandbox >> </color>', false);
+
+                // Gets the current command
+                $_command = trim(fgets(STDIN));
+                if($_command == 'quit' || $_command == 'exit') break;
+
+                // Captures the output buffer
+                Buffer::start();
+
+                // Evaluates the command
+                eval($_command . ';');
+
+                // Flushes the buffer
+                self::print('<color="yellow">>> ' . Buffer::get() . '</color>');
+            }
         }
 
         /**
@@ -634,6 +669,7 @@
             self::print('<color="magenta">Firefly commands:</color>');
             self::print('');
             self::print('  <color="yellow">shine</color> <color="blue">--host --port</color> | Starts the local development server');
+            self::print('  <color="yellow">sandbox</color> | Starts the REPL interactive mode');
             self::print('  <color="yellow">clear-cache</color> | Clears the application cache folder');
             self::print('  <color="yellow">clear-session</color> | Clears the application session folder');
             self::print('  <color="yellow">clear-log</color> | Clears the application error log');
