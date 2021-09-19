@@ -28,10 +28,16 @@
         protected $_primaryKey = '__FIREFLY_TEMPLATE_PRIMARY__';
 
         /**
-         * Table manageable fields.
+         * Table retrievable fields.
          * @var array
          */
         protected $_fields = [];
+
+        /**
+         * Table updatable fields.
+         * @var array
+         */
+        protected $_updatable = [];
 
         /**
          * Handle timestamp fields.

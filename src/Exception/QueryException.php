@@ -30,7 +30,7 @@
          * @param null|Throwable $previous (Optional) Previous throwable used for exception chaining.
          */
         public function __construct(string $query, string $message = "", int $code = 0, ?Throwable $previous = null){
-            parent::__construct(sprintf('Kraken: [SQL %s] %s (%s)', $code, $message, $query), $code, $previous);
+            parent::__construct(sprintf('SQL: [SQL %s] %s (%s)', $code, $message, $query), $code, $previous);
             $this->query = $query;
         }
 

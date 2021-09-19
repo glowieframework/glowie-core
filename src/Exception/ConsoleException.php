@@ -37,7 +37,7 @@
          * @param null|Throwable $previous (Optional) Previous throwable used for exception chaining.
          */
         public function __construct(string $command, array $args, string $message = "", int $code = 0, ?Throwable $previous = null){
-            parent::__construct('Firefly: ' . $message, $code, $previous);
+            parent::__construct('CLI: ' . $message, $code, $previous);
             $this->command = $command;
             $this->args = $args;
         }

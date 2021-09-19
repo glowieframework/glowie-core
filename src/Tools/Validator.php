@@ -248,6 +248,11 @@
                         if(!is_bool($data)) $result['boolean'] = true;
                         break;
 
+                    // [JSON] - Checks if string is valid JSON format
+                    case 'json':
+                        if(!json_decode($data)) $result['json'] = true;
+                        break;
+
                     // [VALUE] - Checks if variable matches value
                     case 'value':
                         if($data != $rule[1]) $result['value'] = true;

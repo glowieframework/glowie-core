@@ -32,10 +32,16 @@
         protected $_primaryKey = 'id';
 
         /**
-         * Table manageable fields.
+         * Table retrievable fields.
          * @var array
          */
         protected $_fields = [];
+
+        /**
+         * Table updatable fields.
+         * @var array
+         */
+        protected $_updatable = [];
 
         /**
          * Handle timestamp fields.
@@ -234,17 +240,13 @@
         }
 
         /**
-         * Filters a data array returning only the specified fields in `$this->_fields` property.
+         * Filters an array of data returning only the fields in `$this->_updatable` setting.
          * @param array $data An associative array of fields and values to filter.
          * @return array Returns the filtered array.
          */
         private function filterData(array $data){
-            if(empty($this->_fields)) return $data;
-            $result = [];
-            foreach($data as $key => $value){
-                if(in_array($key, $this->_fields)) $result[$key] = $value;
-            }
-            return $result;
+            if(empty($this->_updatable)) return $data;
+            return array_intersect_key($data, array_flip($this->_updatable));
         }
 
     }

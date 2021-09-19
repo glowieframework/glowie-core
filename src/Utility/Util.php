@@ -26,7 +26,7 @@
         }
 
         /**
-         * Prints a variable in a human-readable way.
+         * Prints a variable in a human-readable way and ends the script execution.
          * @param mixed $var Variable to be printed.
          * @param bool $plain (Optional) Print variable as plain text instead of HTML.
          * @return void
@@ -102,10 +102,10 @@
         }
 
         /**
-         * Reorders an associative array by a specific key value.
+         * Reorders an array of associative arrays by a specific key value.
          * @param array $array Array to reorder.
          * @param string $key Key to use as the reordering base.
-         * @param int $order (Optional) Ordering direction, can be `SORT_ASC` (ascending) or `SORT_DESC` (descending).
+         * @param int $order (Optional) Ordering direction: `SORT_ASC` (ascending) or `SORT_DESC` (descending).
          * @return array Returns the reordered array.
          */
         public static function orderArray(array $array, string $key, int $order = SORT_ASC){
@@ -117,7 +117,7 @@
         }
 
         /**
-         * Filters an associative array leaving only elements that matches a specific key value.
+         * Filters an array of associative arrays leaving only items that match a specific key value.
          * @param array $array Array to filter.
          * @param string $key Key to use as the filtering base.
          * @param mixed $value Value to filter.
