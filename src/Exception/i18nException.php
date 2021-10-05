@@ -5,7 +5,7 @@
     use Throwable;
 
     /**
-     * File exception handler for Glowie application.
+     * Internationalization exception handler for Glowie application.
      * @category Exception
      * @package glowieframework/glowie-core
      * @author Glowie
@@ -14,16 +14,16 @@
      * @link https://glowie.tk
      * @version 1.0
      */
-    class FileException extends Exception{
+    class i18nException extends Exception{
 
         /**
-         * Creates a new instance of FileException.
+         * Creates a new instance of i18nException.
          * @param string $message (Optional) The exception message.
          * @param int $code (Optional) The exception code.
          * @param null|Throwable $previous (Optional) Previous throwable used for exception chaining.
          */
         public function __construct(string $message = "", int $code = 0, ?Throwable $previous = null){
-            parent::__construct('File: ' . $message, $code, $previous);
+            parent::__construct('Internationalization: ' . $message, $code, $previous);
         }
 
     }

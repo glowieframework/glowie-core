@@ -2,6 +2,7 @@
     namespace Glowie\Core;
 
     use Util;
+    use Babel;
     use Glowie\Core\Http\Session;
     use Glowie\Core\Error\Handler;
     use Glowie\Core\Http\Rails;
@@ -35,17 +36,17 @@
             // Register error handling
             Handler::register();
 
+            // Load language files
+            Babel::load();
+
             // Register session save path
             Session::register();
 
             // Timezone configuration
             date_default_timezone_set(Config::get('timezone', 'America/Sao_Paulo'));
 
-            // Include application routes
-            require('../config/Routes.php');
-
-            // Include languages
-            foreach (Util::getFiles('../languages/*.php') as $filename) include($filename);
+            // Load route configuration file
+            Rails::load();
 
             // Start output buffering
             Buffer::start();

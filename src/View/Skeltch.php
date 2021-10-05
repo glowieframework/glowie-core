@@ -24,7 +24,7 @@
         public static function run(string $filename){
             // Checks for file and cache folder permissions
             $tmpdir = '../storage/cache/';
-            if(!is_writable($tmpdir)) throw new FileException('Skeltch: Directory "app/storage/cache" is not writable, please check your chmod settings');
+            if(!is_writable($tmpdir)) throw new FileException('Directory "app/storage/cache" is not writable, please check your chmod settings');
 
             // Checks if cache is enabled or should be recompiled
             $tmpfile = $tmpdir . md5($filename) . '.tmp';
@@ -80,6 +80,7 @@
             $code = preg_replace('~(?<!@){\s*@layout\s*\((.+?)\)\s*}~is', '<?php $this->renderLayout($1); ?>', $code);
             $code = preg_replace('~(?<!@){\s*@babel\s*\((.+?)\)\s*}~is', '<?php echo Babel::get($1); ?>', $code);
             $code = preg_replace('~(?<!@){\s*@url\s*\((.+?)\)\s*}~is', '<?php echo Util::baseUrl($1); ?>', $code);
+            $code = preg_replace('~(?<!@){\s*@asset\s*\((.+?)\)\s*}~is', '<?php echo Util::asset($1); ?>', $code);
             $code = preg_replace('~(?<!@){\s*@route\s*\((.+?)\)\s*}~is', '<?php echo Util::route($1); ?>', $code);
             $code = preg_replace('~(?<!@){\s*@content\s*}~is', '<?php echo $this->getContent(); ?>', $code);
             $code = preg_replace('~(?<!@){\s*@csrf\s*}~is', '<?php echo Util::csrfToken(); ?>', $code);

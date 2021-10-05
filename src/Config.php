@@ -29,7 +29,7 @@
                     die('<strong>Configuration file was not found!</strong><br>
                     Please copy "app/config/Config.example.php" to "app/config/Config.php".');
                 } else {
-                    self::$config = require($appFolder . 'config/Config.php');
+                    self::$config = require_once($appFolder . 'config/Config.php');
                 }
             }
         }

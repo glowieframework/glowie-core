@@ -2,11 +2,14 @@
     namespace Glowie\Core\CLI;
 
     use Glowie\Core\Database\Kraken;
+    use Glowie\Core\Exception\FileException;
     use Glowie\Core\Exception\ConsoleException;
     use Glowie\Core\Error\HandlerCLI;
     use Glowie\Core\Config;
+    use Glowie\Core\Http\Rails;
     use Glowie\Core\Buffer;
     use Util;
+    use Babel;
 
     /**
      * Command line tool for Glowie application.
@@ -93,14 +96,14 @@
             // Register error handling
             HandlerCLI::register();
 
+            // Load language files
+            Babel::load(self::$appFolder);
+
             // Timezone configuration
             date_default_timezone_set(Config::get('timezone', 'America/Sao_Paulo'));
 
-            // Include application routes
-            require(self::$appFolder . 'config/Routes.php');
-
-            // Include languages
-            foreach (Util::getFiles(self::$appFolder . 'languages/*.php') as $filename) include($filename);
+            // Load route configuration file
+            Rails::load(self::$appFolder);
 
             // Gets the command
             array_shift(self::$args);
@@ -325,14 +328,19 @@
                 self::print('<color="cyan">sandbox >> </color>', false);
 
                 // Gets the current command
-                $_command = trim(fgets(STDIN));
-                if($_command == 'quit' || $_command == 'exit') break;
+                $__command = trim(fgets(STDIN));
+                if($__command == 'quit' || $__command == 'exit') break;
 
                 // Captures the output buffer
                 Buffer::start();
 
+                // Appends semicolon to the command if not an opening bracket
+                if(!Util::endsWith($__command, '(') || !Util::endsWith($__command, '{') || !Util::endsWith($__command, '[') || !Util::endsWith($__command, ';')){
+                    $__command .= ';';
+                }
+
                 // Evaluates the command
-                eval($_command . ';');
+                eval($__command);
 
                 // Flushes the buffer
                 self::print('<color="yellow">>> ' . Buffer::get() . '</color>');
@@ -343,7 +351,7 @@
          * Deletes all files in **app/storage/cache** folder.
          */
         private static function clearCache(){
-            if(!is_writable(self::$appFolder . 'storage/cache')) throw new ConsoleException(self::$command, self::$args, 'Directory "app/storage/cache" is not writable, please check your chmod settings');
+            if(!is_writable(self::$appFolder . 'storage/cache')) throw new FileException('Directory "app/storage/cache" is not writable, please check your chmod settings');
             self::print("<color=\"blue\">Clearing cache...</color>");
             foreach (Util::getFiles(self::$appFolder . 'storage/cache/*.tmp') as $filename) unlink($filename);
             self::print('<color="green">Cache cleared successfully!</color>');
@@ -354,7 +362,7 @@
          * Deletes all files in **app/storage/session** folder.
          */
         private static function clearSession(){
-            if(!is_writable(self::$appFolder . 'storage/session')) throw new ConsoleException(self::$command, self::$args, 'Directory "app/storage/session" is not writable, please check your chmod settings');
+            if(!is_writable(self::$appFolder . 'storage/session')) throw new FileException('Directory "app/storage/session" is not writable, please check your chmod settings');
             self::print("<color=\"blue\">Clearing session data...</color>");
             foreach (Util::getFiles(self::$appFolder . 'storage/session/*') as $filename) unlink($filename);
             self::print('<color="green">Session data cleared successfully!</color>');
@@ -365,7 +373,7 @@
          * Clears the error log.
          */
         private static function clearLog(){
-            if(!is_writable(self::$appFolder . 'storage')) throw new ConsoleException(self::$command, self::$args, 'Directory "app/storage" is not writable, please check your chmod settings');
+            if(!is_writable(self::$appFolder . 'storage')) throw new FileException('Directory "app/storage" is not writable, please check your chmod settings');
             self::print("<color=\"blue\">Clearing error log...</color>");
             file_put_contents(self::$appFolder . 'storage/error.log', '');
             self::print('<color="green">Error log cleared successfully!</color>');
@@ -392,7 +400,7 @@
          */
         private static function createCommand(){
             // Checks permissions
-            if(!is_writable(self::$appFolder . 'commands')) throw new ConsoleException(self::$command, self::$args, 'Directory "app/commands" is not writable, please check your chmod settings');
+            if(!is_writable(self::$appFolder . 'commands')) throw new FileException('Directory "app/commands" is not writable, please check your chmod settings');
 
             // Checks if name was filled
             $name = self::argOrInput('name', 'Command name: ');
@@ -416,7 +424,7 @@
          */
         private static function createController(){
             // Checks permissions
-            if(!is_writable(self::$appFolder . 'controllers')) throw new ConsoleException(self::$command, self::$args, 'Directory "app/controllers" is not writable, please check your chmod settings');
+            if(!is_writable(self::$appFolder . 'controllers')) throw new FileException('Directory "app/controllers" is not writable, please check your chmod settings');
 
             // Checks if name was filled
             $name = self::argOrInput('name', 'Controller name: ');
@@ -440,7 +448,7 @@
          */
         private static function createLanguage(){
             // Checks permissions
-            if(!is_writable(self::$appFolder . 'languages')) throw new ConsoleException(self::$command, self::$args, 'Directory "app/languages" is not writable, please check your chmod settings');
+            if(!is_writable(self::$appFolder . 'languages')) throw new FileException('Directory "app/languages" is not writable, please check your chmod settings');
 
             // Checks if id was filled
             $id = self::argOrInput('id', 'Language id: ');
@@ -450,9 +458,7 @@
 
             // Creates the file
             $id = trim(strtolower($id));
-            $template = file_get_contents(self::$templateFolder . 'Language.php');
-            $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $id, $template);
-            file_put_contents(self::$appFolder . 'languages/' . $id . '.php', $template);
+            copy(self::$templateFolder . 'Language.php', self::$appFolder . 'languages/' . $id . '.php');
 
             // Success message
             self::print("<color=\"green\">Language file {$id} created successfully!</color>");
@@ -464,7 +470,7 @@
          */
         private static function createMiddleware(){
             // Checks permissions
-            if(!is_writable(self::$appFolder . 'middlewares')) throw new ConsoleException(self::$command, self::$args, 'Directory "app/middlewares" is not writable, please check your chmod settings');
+            if(!is_writable(self::$appFolder . 'middlewares')) throw new FileException('Directory "app/middlewares" is not writable, please check your chmod settings');
 
             // Checks if name was filled
             $name = self::argOrInput('name', 'Middleware name: ');
@@ -488,7 +494,7 @@
          */
         private static function createMigration(){
             // Checks permissions
-            if(!is_writable(self::$appFolder . 'migrations')) throw new ConsoleException(self::$command, self::$args, 'Directory "app/migrations" is not writable, please check your chmod settings');
+            if(!is_writable(self::$appFolder . 'migrations')) throw new FileException('Directory "app/migrations" is not writable, please check your chmod settings');
 
             // Checks if name was filled
             $name = self::argOrInput('name', 'Migration name: ');
@@ -513,7 +519,7 @@
          */
         private static function createModel(){
             // Checks permissions
-            if(!is_writable(self::$appFolder . 'models')) throw new ConsoleException(self::$command, self::$args, 'Directory "app/models" is not writable, please check your chmod settings');
+            if(!is_writable(self::$appFolder . 'models')) throw new FileException('Directory "app/models" is not writable, please check your chmod settings');
 
             // Checks if name was filled
             $name = self::argOrInput('name', 'Model name: ');

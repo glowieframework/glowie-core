@@ -1,6 +1,7 @@
 <?php
     namespace Glowie\Core\Database;
 
+    use Exception;
     use stdClass;
     use Glowie\Core\Traits\DatabaseTrait;
     use Glowie\Core\Exception\QueryException;
@@ -17,6 +18,84 @@
      */
     class Skeleton{
         use DatabaseTrait;
+
+        /**
+         * String data type.
+         * @var string
+         */
+        public const TYPE_STRING = 'VARCHAR';
+
+        /**
+         * Text data type.
+         * @var string
+         */
+        public const TYPE_TEXT = 'TEXT';
+
+        /**
+         * Tiny text data type
+         * @var string
+         */
+        public const TYPE_TINY_TEXT = 'TINYTEXT';
+
+        /**
+         * Long text data type.
+         * @var string
+         */
+        public const TYPE_LONG_TEXT = 'LONGTEXT';
+
+        /**
+         * Integer data type.
+         * @var string
+         */
+        public const TYPE_INTEGER = 'INT';
+
+        /**
+         * Tiny integer data type.
+         * @var string
+         */
+        public const TYPE_TINY_INTEGER = 'TINYINT';
+
+        /**
+         * Big integer data type.
+         * @var string
+         */
+        public const TYPE_BIG_INTEGER = 'BIGINT';
+
+        /**
+         * Float data type.
+         * @var string
+         */
+        public const TYPE_FLOAT = 'FLOAT';
+
+        /**
+         * Double data type.
+         * @var string
+         */
+        public const TYPE_DOUBLE = 'DOUBLE';
+
+        /**
+         * Date data type.
+         * @var string
+         */
+        public const TYPE_DATE = 'DATE';
+
+        /**
+         * Time data type.
+         * @var string
+         */
+        public const TYPE_TIME = 'TIME';
+
+        /**
+         * Datetime data type.
+         * @var string
+         */
+        public const TYPE_DATETIME = 'DATETIME';
+
+        /**
+         * Timestamp data type.
+         * @var string
+         */
+        public const TYPE_TIMESTAMP = 'TIMESTAMP';
 
         /**
          * EXISTS instruction.
@@ -131,11 +210,11 @@
          * @param int|null $size (Optional) Field maximum length.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
-        public function autoIncrement(string $name, string $type = 'INT', $size = null){
+        public function autoIncrement(string $name, string $type = self::TYPE_BIG_INTEGER, $size = null){
             $type = strtoupper($type);
             $field = "`{$name}` {$type}";
             if(!empty($size)) $field .= "({$size})";
-            $this->_autoincrement = "{$field} NOT NULL";
+            $this->_autoincrement = "{$field} UNSIGNED NOT NULL";
             return $this;
         }
 
@@ -379,16 +458,16 @@
         }
 
         /**
-         * Creates a new table.\
-         * **Important:** The table must have at least one column.
+         * Creates a new table.
          * @return bool Returns true on success.
          * @throws QueryException Throws an exception if the query fails.
          */
         public function create(){
+            if(empty($this->_fields)) throw new Exception('Skeleton: You need to create at least one column before creating a table');
             $this->_instruction = 'CREATE TABLE';
             return $this->execute();
         }
-
+        
         /**
          * Updates an existing table structure.
          * @return bool Returns true on success.

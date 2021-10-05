@@ -26,13 +26,19 @@
         private $_content;
 
         /**
+         * Layout original filename.
+         * @var string
+         */
+        private $_filename;
+
+        /**
          * View helpers instance.
          * @var Helpers
          */
         private static $_helpers;
 
         /**
-         * Layout file path.
+         * Layout compiled file path.
          * @var string
          */
         private $_path;
@@ -48,6 +54,7 @@
             $helpers = 'Glowie\Helpers\Helpers';
             if(!self::$_helpers) self::$_helpers = new $helpers;
             $this->_path = $layout;
+            $this->_filename = str_replace(['../views/layouts/', '.phtml'], '', $layout);
             $viewData = Rails::getController()->view->toArray();
             if(!empty($viewData)) foreach ($viewData as $key => $value) $this->{$key} = $value;
             if(!empty($params)) foreach($params as $key => $value) $this->{$key} = $value;
@@ -72,7 +79,7 @@
             if(is_callable([self::$_helpers, $method])){
                 return call_user_func_array([self::$_helpers, $method], $args);
             }else{
-                throw new BadMethodCallException('Layout: Method "' . $method .'" does not exist in "app/views/helpers/Helpers.php"');
+                throw new BadMethodCallException('Helper method "' . $method .'()" is not defined (Layout: "' . $this->_filename . '")');
             }
         }
 

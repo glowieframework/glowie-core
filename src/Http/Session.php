@@ -38,7 +38,7 @@
         public static function register(){
             // Save path
             $sessdir = '../storage/session';
-            if(!is_writable($sessdir)) throw new FileException('Session: Directory "app/storage/session" is not writable, please check your chmod settings');
+            if(!is_writable($sessdir)) throw new FileException('Directory "app/storage/session" is not writable, please check your chmod settings');
             session_save_path($sessdir);
 
             // INI settings

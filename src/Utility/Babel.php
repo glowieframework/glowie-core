@@ -1,5 +1,5 @@
 <?php
-    use Glowie\Core\Exception\FileException;
+    use Glowie\Core\Exception\i18nException;
 
     /**
      * Internationalization helper for Glowie application.
@@ -26,10 +26,22 @@
         private static $languages = [];
 
         /**
+         * Loads the language files.
+         * @param string $appFolder (Optional) Application "app" folder path relative to the running script.
+         */
+        public static function load(string $appFolder = '../'){
+            foreach(Util::getFiles($appFolder . 'languages/*.php') as $file){
+                $lang = pathinfo($file, PATHINFO_FILENAME);
+                self::$languages[$lang] = include_once($file);
+            }
+        }
+
+        /**
          * Sets the current active language configuration.
          * @param string $lang Language identificator to set as active.
          */
         public static function setActiveLanguage(string $lang){
+            if(empty(self::$languages[$lang])) throw new i18nException('Language "' . $lang . '" does not exist in "app/languages"');
             self::$active_language = $lang;
         }
 
@@ -42,48 +54,20 @@
         }
 
         /**
-         * Sets an array of internationalization strings to a language configuration.\
-         * **Warning:** This replaces all current language defined strings.
-         * @param string $lang Language identificator to set strings.
-         * @param array $strings Associative array of strings with key and value.
-         */
-        public static function set(string $lang, array $strings){
-            self::$languages[$lang] = $strings;
-        }
-
-        /**
-         * Sets an internationalization string in a specific key in a language configuration.
-         * @param string $lang Language identificator to set string.
-         * @param string $key String key to set.
-         * @param string $string Internationalization string to set.
-         */
-        public static function setString(string $lang, string $key, string $string){
-            if(empty(self::$languages[$lang])) self::$languages[$lang] = [];
-            self::$languages[$lang][$key] = $string;
-        }
-
-        /**
          * Gets an internalization string from a language configuration.
          * @param string $key String key to get.
          * @param string $lang (Optional) Language identificator to get string from. Leave empty to use the current active language.
          * @return string|null Returns internationalization string or null if not found.
          */
         public static function get(string $key, string $lang = ''){
-            // Checks if languages were defined
-            if(!empty(self::$languages)){
-                // Parses active language
-                if(empty($lang)) $lang = self::$active_language;
+            // Parses active language
+            if(empty($lang)) $lang = self::$active_language;
 
-                // Checks if specified language was defined
-                if(isset(self::$languages[$lang])){
-                    // Returns the value
-                    return self::$languages[$lang][$key] ?? null;
-                }else{
-                    throw new FileException('Babel: Language "'.$lang.'" does not exist in "app/languages"');
-                }
-            }else{
-                throw new FileException('Babel: Language configuration not found in "app/languages"');
-            }
+            // Checks if specified language was defined
+            if(!empty(self::$languages[$lang])) return self::$languages[$lang][$key] ?? null;
+
+            // Language was not found
+            throw new i18nException('Language "' . $lang . '" does not exist in "app/languages"');
         }
 
     }

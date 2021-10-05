@@ -19,6 +19,11 @@
             "homepage": "https://glowie.tk"
         }
     ],
+    "require": {
+        "ext-curl": "*",
+        "ext-mbstring": "*",
+        "ext-openssl": "*"
+    },
     "autoload": {
         "psr-4": {
             "Glowie\\Core\\": "src/"

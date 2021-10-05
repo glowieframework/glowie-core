@@ -3,6 +3,7 @@
 
     use Util;
     use Glowie\Core\Exception\RoutingException;
+    use Glowie\Core\Exception\FileException;
 
     /**
      * Router and starting point for Glowie application.
@@ -53,6 +54,15 @@
         private static $routes = [];
 
         /**
+         * Loads the route configuration file.
+         * @param string $appFolder (Optional) Application "app" folder path relative to the running script.
+         */
+        public static function load(string $appFolder = '../'){
+            if(!file_exists($appFolder . 'config/Routes.php')) throw new FileException('Route configuration file "app/config/Routes.php" was not found');
+            require_once($appFolder . 'config/Routes.php');
+        }
+
+        /**
          * Setup a new route for the application.
          * @param string $route The route URI to setup.
          * @param string $controller (Optional) The namespaced controller name that this route will instantiate.\
@@ -64,8 +74,8 @@
          */
         public static function addRoute(string $route, string $controller = 'Glowie\Controllers\Main', string $action = 'index', $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
-            if(empty($controller)) throw new RoutingException('Controller cannot be empty');
-            if(empty($action)) throw new RoutingException('Action cannot be empty');
+            if(empty($controller)) throw new RoutingException('Route controller cannot be empty');
+            if(empty($action)) throw new RoutingException('Route action cannot be empty');
             self::$routes[$name] = [
                 'uri' => $route,
                 'controller' => $controller,
@@ -89,9 +99,9 @@
          */
         public static function addProtectedRoute(string $route, $middleware = 'Glowie\Middlewares\Authenticate', string $controller = 'Glowie\Controllers\Main', string $action = 'index', $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
-            if(empty($controller)) throw new RoutingException('Controller cannot be empty');
-            if(empty($action)) throw new RoutingException('Action cannot be empty');
-            if(empty($middleware)) throw new RoutingException('Middleware cannot be empty');
+            if(empty($controller)) throw new RoutingException('Route controller cannot be empty');
+            if(empty($action)) throw new RoutingException('Route action cannot be empty');
+            if(empty($middleware)) throw new RoutingException('Route middleware cannot be empty');
             self::$routes[$name] = [
                 'uri' => $route,
                 'controller' => $controller,
@@ -112,7 +122,7 @@
          */
         public static function addRedirect(string $route, string $target, int $code = Response::HTTP_TEMPORARY_REDIRECT, $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
-            if(empty($target)) throw new RoutingException('Redirect target cannot be empty');
+            if(empty($target)) throw new RoutingException('Route redirect target cannot be empty');
             self::$routes[$name] = [
                 'uri' => $route,
                 'redirect' => $target,
@@ -224,7 +234,7 @@
                     $controller = $config['controller'];
 
                     // If the controller class does not exist, trigger an error
-                    if (!class_exists($controller)) throw new RoutingException("Controller \"{$controller}\" not found");
+                    if (!class_exists($controller)) throw new RoutingException("\"{$controller}\" was not found");
 
                     // Instantiates the controller
                     self::$controller = new $controller($routeName, $result);
@@ -234,11 +244,11 @@
                         // Runs each middleware
                         foreach($config['middleware'] as $middleware){
                             // If middleware class does not exist, trigger an error
-                            if (!class_exists($middleware)) throw new RoutingException("Middleware \"{$middleware}\" not found");
+                            if (!class_exists($middleware)) throw new RoutingException("\"{$middleware}\" was not found");
 
                             // Instantiates the middleware
                             self::$middleware = new $middleware($routeName, $result);
-                            if (!is_callable([self::$middleware, 'handle'])) throw new RoutingException("Middleware \"{$middleware}\" does not have a handle() method");
+                            if (!is_callable([self::$middleware, 'handle'])) throw new RoutingException("\"{$middleware}\" does not have a \"handle()\" method");
                             if (is_callable([self::$middleware, 'init'])) self::$middleware->init();
 
                             // Calls middleware handle() method
@@ -269,7 +279,7 @@
                         // Calls action
                         return self::$controller->{$action}();
                     } else {
-                        throw new RoutingException("Action \"{$action}()\" not found in {$controller} controller");
+                        throw new RoutingException("Action \"{$action}()\" not found in \"{$controller}\"");
                     }
                 }else{
                     // Redirects to the target URL

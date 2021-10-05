@@ -171,7 +171,7 @@
          * @throws Exception Throws an exception if a pending transaction is already running.
          */
         public function beginTransaction(){
-            if($this->_transaction) throw new Exception('There is a pending transaction already running');
+            if($this->_transaction) throw new Exception('DB: There is a pending transaction already running');
             $this->_transaction = true;
             return $this->_connection->begin_transaction();
         }
@@ -182,7 +182,7 @@
          * @throws Exception Throws an exception if there is not a running transaction.
          */
         public function commit(){
-            if(!$this->_transaction) throw new Exception('There is not a running transaction');
+            if(!$this->_transaction) throw new Exception('DB: There is not a running transaction');
             $this->_transaction = false;
             return $this->_connection->commit();
         }
@@ -193,7 +193,7 @@
          * @throws Exception Throws an exception if there is not a running transaction.
          */
         public function rollback(){
-            if(!$this->_transaction) throw new Exception('There is not a running transaction');
+            if(!$this->_transaction) throw new Exception('DB: There is not a running transaction');
             $this->_transaction = false;
             return $this->_connection->rollback();
         }

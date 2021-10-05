@@ -4,6 +4,7 @@
     use Glowie\Core\Http\Response;
     use Glowie\Core\Config;
     use Glowie\Core\Buffer;
+    use Glowie\Core\Exception\FileException;
 
     /**
      * Miscellaneous utilities for Glowie application.
@@ -99,6 +100,18 @@
                 // Returns result
                 return self::baseUrl(implode('/', $uri) . (!empty($params) ? '?' . http_build_query($params) : ''));
             }
+        }
+
+        /**
+         * Returns the base URL of an asset file with a token to force cache reloading on browsers.
+         * @param string $filename Asset filename. Must be a path relative to the **app/public/assets** folder.
+         * @param string $token (Optional) Token parameter name to append to the filename.
+         * @return string Returns the absolute URL of the asset file with the token.
+         */
+        public static function asset(string $filename, string $token = 'assetVersion'){
+            $filename = 'assets/' . trim($filename, '/');
+            if(!is_file($filename)) throw new FileException('Asset file "app/public/' . $filename . '" was not found');
+            return self::baseUrl(sprintf('%s?%s=%s', $filename, $token, md5(filemtime($filename))));
         }
 
         /**
