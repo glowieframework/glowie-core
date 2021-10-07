@@ -267,6 +267,17 @@
         }
 
         /**
+         * Checks if an argument has been passed, otherwise throws an exception.
+         * @param string $arg Argument name to check. If passed, its value will be returned.
+         * @return string Returns the value as a string if the argument was passed.
+         * @throws ConsoleException Throws an exception if the argument was not passed.
+         */
+        public static function argOrFail(string $arg){
+            if(!isset(self::$args[$arg])) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "' . $arg . '" for this command');
+            return self::$args[$arg];
+        }
+
+        /**
          * Gets an argument value.
          * @param string $arg Argument key to get.
          * @param mixed $default (Optional) Default value to return if the key does not exist.
@@ -450,18 +461,18 @@
             // Checks permissions
             if(!is_writable(self::$appFolder . 'languages')) throw new FileException('Directory "app/languages" is not writable, please check your chmod settings');
 
-            // Checks if id was filled
-            $id = self::argOrInput('id', 'Language id: ');
+            // Checks if name was filled
+            $name = self::argOrInput('name', 'Language name: ');
 
             // Validates the language id
-            if(empty($id)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "id" for this command');
+            if(empty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
 
             // Creates the file
-            $id = trim(strtolower($id));
-            copy(self::$templateFolder . 'Language.php', self::$appFolder . 'languages/' . $id . '.php');
+            $name = trim(strtolower($name));
+            copy(self::$templateFolder . 'Language.php', self::$appFolder . 'languages/' . $name . '.php');
 
             // Success message
-            self::print("<color=\"green\">Language file {$id} created successfully!</color>");
+            self::print("<color=\"green\">Language file {$name} created successfully!</color>");
             return true;
         }
 
@@ -682,7 +693,7 @@
             self::print('  <color="yellow">test-database</color> | Tests the database connection for the current environment');
             self::print('  <color="yellow">create-command</color> <color="blue">--name</color> | Creates a new command for your application');
             self::print('  <color="yellow">create-controller</color> <color="blue">--name</color> | Creates a new controller for your application');
-            self::print('  <color="yellow">create-language</color> <color="blue">--id</color> | Creates a new language file for your application');
+            self::print('  <color="yellow">create-language</color> <color="blue">--name</color> | Creates a new language file for your application');
             self::print('  <color="yellow">create-middleware</color> <color="blue">--name</color> | Creates a new middleware for your application');
             self::print('  <color="yellow">create-migration</color> <color="blue">--name</color> | Creates a new migration for your application');
             self::print('  <color="yellow">create-model</color> <color="blue">--name --table --primary --timestamps --created --updated</color> | Creates a new model for your application');

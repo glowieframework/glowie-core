@@ -38,7 +38,7 @@
 
         /**
          * Sets the current active language configuration.
-         * @param string $lang Language identificator to set as active.
+         * @param string $lang Language name to set as active.
          */
         public static function setActiveLanguage(string $lang){
             if(empty(self::$languages[$lang])) throw new i18nException('Language "' . $lang . '" does not exist in "app/languages"');
@@ -47,7 +47,7 @@
 
         /**
          * Gets the current active language configuration.
-         * @return string Active language identificator.
+         * @return string Active language name.
          */
         public static function getActiveLanguage(){
             return self::$active_language;
@@ -56,7 +56,7 @@
         /**
          * Gets an internalization string from a language configuration.
          * @param string $key String key to get.
-         * @param string $lang (Optional) Language identificator to get string from. Leave empty to use the current active language.
+         * @param string $lang (Optional) Language name to get string from. Leave empty to use the current active language.
          * @return string|null Returns internationalization string or null if not found.
          */
         public static function get(string $key, string $lang = ''){

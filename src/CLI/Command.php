@@ -100,6 +100,16 @@
         public function argOrInput(string $arg, string $message = '', string $default = ''){
             return Firefly::argOrInput($arg, $message, $default);
         }
+
+        /**
+         * Checks if an argument has been passed, otherwise throws an exception.
+         * @param string $arg Argument name to check. If passed, its value will be returned.
+         * @return string Returns the value as a string if the argument was passed.
+         * @throws ConsoleException Throws an exception if the argument was not passed.
+         */
+        public function argOrFail(string $arg){
+            return Firefly::argOrFail($arg);
+        }
         
         /**
          * Gets an argument value.

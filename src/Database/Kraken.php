@@ -178,7 +178,7 @@
                     $this->_join[] = "(";
                 }
 
-                call_user_func_array($param1, array($this));
+                call_user_func_array($param1, [$this]);
                 $this->_join[] = ')';
                 return $this;
             }
@@ -317,7 +317,7 @@
                     $this->_where[] = "(";
                 }
 
-                call_user_func_array($param1, array($this));
+                call_user_func_array($param1, [$this]);
                 $this->_where[] = ')';
                 return $this;
             }else if(is_array($param1)){
@@ -780,7 +780,7 @@
                     $this->_having[] = "(";
                 }
 
-                call_user_func_array($param1, array($this));
+                call_user_func_array($param1, [$this]);
                 $this->_having[] = ')';
                 return $this;
             }else if(is_array($param1)){
@@ -1219,10 +1219,16 @@
          * @throws QueryException Throws an exception if the query fails.
          */
         public function count(string $column = '*'){
+            // Backup current query state
+            $query = $this->backupQuery();
+
             // Count rows
-            if($this->_instruction != 'SELECT' && $this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
+            if($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "COUNT({$column}) AS count";
-            $result = $this->execute(true, true);
+            $result = $this->fetchRow();
+
+            // Restore query state
+            $this->restoreQuery($query);
 
             // Returns the result
             if($result !== false){
@@ -1239,10 +1245,16 @@
          * @throws QueryException Throws an exception if the query fails.
          */
         public function sum(string $column){
+            // Backup current query state
+            $query = $this->backupQuery();
+
             // Sum rows
-            if($this->_instruction != 'SELECT' && $this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
+            if($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "SUM({$column}) AS sum";
-            $result = $this->execute(true, true);
+            $result = $this->fetchRow();
+
+            // Restore query state
+            $this->restoreQuery($query);
 
             // Returns the result
             if($result !== false){
@@ -1259,10 +1271,16 @@
          * @throws QueryException Throws an exception if the query fails.
          */
         public function max(string $column){
+            // Backup current query state
+            $query = $this->backupQuery();
+
             // Get max value
-            if($this->_instruction != 'SELECT' && $this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
+            if($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "MAX({$column}) AS max";
-            $result = $this->execute(true, true);
+            $result = $this->fetchRow();
+
+            // Restore query state
+            $this->restoreQuery($query);
 
             // Returns the result
             if($result !== false){
@@ -1279,10 +1297,16 @@
          * @throws QueryException Throws an exception if the query fails.
          */
         public function min(string $column){
+            // Backup current query state
+            $query = $this->backupQuery();
+
             // Get min value
-            if($this->_instruction != 'SELECT' && $this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
+            if($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "MIN({$column}) AS min";
-            $result = $this->execute(true, true);
+            $result = $this->fetchRow();
+
+            // Restore query state
+            $this->restoreQuery($query);
 
             // Returns the result
             if($result !== false){
@@ -1299,10 +1323,16 @@
          * @throws QueryException Throws an exception if the query fails.
          */
         public function avg(string $column){
+            // Backup current query state
+            $query = $this->backupQuery();
+
             // Get avg value
-            if($this->_instruction != 'SELECT' && $this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
+            if($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "AVG({$column}) AS avg";
-            $result = $this->execute(true, true);
+            $result = $this->fetchRow();
+
+            // Restore query state
+            $this->restoreQuery($query);
 
             // Returns the result
             if($result !== false){
@@ -1333,36 +1363,68 @@
 
         /**
          * Fetches all results from a SELECT query with pagination.
-         * @param int $currentPage Current page to get results.
+         * @param int $currentPage (Optional) Current page to get results.
          * @param int $resultsPerPage (Optional) Number of results to get per page.
          * @param bool $assoc (Optional) Return each result as an associative array.
          * @return Element Returns an object with the pagination result.
          * @throws QueryException Throws an exception if the query fails.
          */
-        public function paginate(int $currentPage, int $resultsPerPage = 25, bool $assoc = false){
-            // Backup current query state
-            $query = $this->backupQuery();
-
+        public function paginate(int $currentPage = 1, int $resultsPerPage = 25, bool $assoc = false){
             // Counts total pages
+            $this->_limit = [];
             $totalResults = $this->count();
             $totalPages = floor($totalResults / $resultsPerPage);
             if($totalResults % $resultsPerPage != 0) $totalPages++;
 
-            // Restore query state
-            $this->restoreQuery($query);
-
             // Gets paginated results
-            $this->limit(($currentPage - 1) * $resultsPerPage, $resultsPerPage);
-            $results = $this->execute(true, false, $assoc);
+            $offset = ($currentPage - 1) * $resultsPerPage;
+            $this->limit($offset, $resultsPerPage);
+            $results = $this->fetchAll($assoc);
 
             // Parse results
             return new Element([
                 'page' => $currentPage,
                 'data' => $results,
-                'total_pages' => $totalPages,
+                'from' => empty($results) ? 0 : $offset + 1,
+                'to' => empty($results) ? 0 : count($results) + $offset,
+                'total_pages' => (int)$totalPages,
                 'results_per_page' => $resultsPerPage,
                 'total_results' => $totalResults
             ]);
+        }
+
+        /**
+         * Fetches all results from a SELECT query in small chunks of items.
+         * @param int $items Number of items to fetch per chunk.
+         * @param Closure $callback Closure to call in each chunk. Returning `false` from this closure will stop next queries.
+         * @param bool $assoc (Optional) Return each result as an associative array.
+         * @throws QueryException Throws an exception if the query fails.
+         */
+        public function chunk(int $items, Closure $callback, bool $assoc = false){
+            // Backup current query state
+            $query = $this->backupQuery();
+
+            // Counts total chunks
+            $this->_limit = [];
+            $totalResults = $this->count();
+            $totalChunks = floor($totalResults / $items);
+            if($totalResults % $items != 0) $totalChunks++;
+
+            // Performs chunked queries
+            for($i = 0; $i < $totalChunks; $i++){
+                // Restore query state
+                $this->restoreQuery($query);
+
+                // Gets results
+                $this->limit($i * $items, $items);
+                $results = $this->fetchAll($assoc);
+
+                // Calls the closure and stores the return
+                $return = call_user_func_array($callback, [$results]);
+
+                // If the closure returns false, break the loop
+                if($return === false) break;
+            }
         }
 
         /**
