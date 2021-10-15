@@ -44,6 +44,12 @@
         protected $_updatable = [];
 
         /**
+         * Table fields data types to cast.
+         * @var array
+         */
+        protected $_casts = [];
+
+        /**
          * Handle timestamp fields.
          * @var bool
          */
@@ -90,7 +96,7 @@
         public function find($primary, bool $assoc = false){
             $this->clearQuery();
             $fields = !empty($this->_fields) ? $this->_fields : '*';
-            return $this->select($fields)->where($this->_primaryKey, $primary)->limit(1)->fetchRow($assoc);
+            return $this->castData($this->select($fields)->where($this->_primaryKey, $primary)->limit(1)->fetchRow($assoc), true);
         }
 
         /**
@@ -103,7 +109,7 @@
         public function findBy(string $field, $value, bool $assoc = false){
             $this->clearQuery();
             $fields = !empty($this->_fields) ? $this->_fields : '*';
-            return $this->select($fields)->where($field, $value)->limit(1)->fetchRow($assoc);
+            return $this->castData($this->select($fields)->where($field, $value)->limit(1)->fetchRow($assoc), true);
         }
 
         /**
@@ -114,7 +120,7 @@
         public function all(bool $assoc = false){
             $this->clearQuery();
             $fields = !empty($this->_fields) ? $this->_fields : '*';
-            return $this->select($fields)->fetchAll($assoc);
+            return $this->castData($this->select($fields)->fetchAll($assoc));
         }
 
         /**
@@ -126,7 +132,7 @@
             if(!$this->_timestamps) throw new Exception('latest(): This model is not handling timestamp fields');
             $this->clearQuery();
             $fields = !empty($this->_fields) ? $this->_fields : '*';
-            return $this->select($fields)->orderBy($this->_createdField, 'DESC')->fetchAll($assoc);
+            return $this->castData($this->select($fields)->orderBy($this->_createdField, 'DESC')->fetchAll($assoc));
         }
 
         /**
@@ -138,7 +144,7 @@
             if(!$this->_timestamps) throw new Exception('oldest(): This model is not handling timestamp fields');
             $this->clearQuery();
             $fields = !empty($this->_fields) ? $this->_fields : '*';
-            return $this->select($fields)->orderBy($this->_createdField, 'ASC')->fetchAll($assoc);
+            return $this->castData($this->select($fields)->orderBy($this->_createdField, 'ASC')->fetchAll($assoc));
         }
 
         /**
@@ -245,8 +251,52 @@
          * @return array Returns the filtered array.
          */
         private function filterData(array $data){
-            if(empty($this->_updatable)) return $data;
+            if(empty($data) || empty($this->_updatable)) return $data;
             return array_intersect_key($data, array_flip($this->_updatable));
+        }
+
+        /**
+         * Casts data types of fields from a row or an array of rows using `$this->_casts` setting.
+         * @param array|Element $data A single data row as an Element, array or an array of rows.
+         * @param bool $single (Optional) Set to `true` if working with a single row.
+         * @return array|Element Returns the data with the casted fields.
+         */
+        private function castData($data, bool $single = false){
+            // Checks if data or casts property is empty
+            if(empty($data) || empty($this->_casts)) return $data;
+
+            // Checks if is an array of rows
+            if(!$single){
+                $result = [];
+                foreach($data as $item) $result[] = $this->castData($item, true);
+                return $result;
+            }
+
+            // Converts the element to an array
+            $isElement = false;
+            if($data instanceof Element){
+                $isElement = true;
+                $data = $data->toArray();
+            }
+
+            // Performs the castings
+            foreach($this->_casts as $field => $type){
+                if(isset($data[$field])){
+                    if(Util::startsWith(strtolower($type), 'date')){
+                        $params = explode(':', $type, 2);
+                        if(!empty($params[1])){
+                            $data[$field] = date($params[1], strtotime($data[$field]));
+                        }else{
+                            $data[$field] = strtotime($data[$field]);
+                        }
+                    }else{
+                        settype($data[$field], $type);
+                    }
+                }
+            }
+
+            // Returns the result
+            return $isElement ? new Element($data) : $data;
         }
 
     }

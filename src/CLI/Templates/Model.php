@@ -34,6 +34,12 @@
         protected $_fields = [];
 
         /**
+         * Table fields data types to cast.
+         * @var array
+         */
+        protected $_casts = [];
+
+        /**
          * Table updatable fields.
          * @var array
          */
