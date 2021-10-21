@@ -1,6 +1,7 @@
 <?php
     namespace Glowie\Core\Database;
 
+    use BadMethodCallException;
     use Glowie\Core\Element;
     use Glowie\Core\Traits\ElementTrait;
     use Util;
@@ -281,16 +282,33 @@
 
             // Performs the castings
             foreach($this->_casts as $field => $type){
+                // Checks for the field
                 if(isset($data[$field])){
-                    if(Util::startsWith(strtolower($type), 'date')){
-                        $params = explode(':', $type, 2);
-                        if(!empty($params[1])){
-                            $data[$field] = date($params[1], strtotime($data[$field]));
-                        }else{
-                            $data[$field] = strtotime($data[$field]);
-                        }
-                    }else{
-                        settype($data[$field], $type);
+                    $params = explode(':', $type, 2);
+                    $type = strtolower($params[0]);
+
+                    // Gets the rule
+                    switch($type){
+                        case 'callback':
+                            if (empty($params[1])) throw new Exception('Missing function name in callback casting for "' . $field . '" field');
+                            if (is_callable([$this, $params[1]])) {
+                                $data[$field] = call_user_func_array([$this, $params[1]], [$data[$field]]);
+                            } else {
+                                throw new BadMethodCallException('Method "' . $params[1] . '()" is not defined in "' . get_class($this) . '"');
+                            }
+                            break;
+                        
+                        case 'date':
+                            if(!empty($params[1])){
+                                $data[$field] = date($params[1], strtotime($data[$field]));
+                            }else{
+                                $data[$field] = strtotime($data[$field]);
+                            }
+                            break;
+
+                        default:
+                            settype($data[$field], $type);
+                            break;
                     }
                 }
             }

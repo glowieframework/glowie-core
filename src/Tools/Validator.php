@@ -112,9 +112,10 @@
 
                 // Parse rule parameters, if available
                 $rule = explode(':', $rule, 2);
+                $type = strtolower($rule[0]);
 
                 // Check type of rule
-                switch($rule[0]){
+                switch($type){
 
                     // [REQUIRED] - Checks if variable is not empty or null
                     case 'required':
