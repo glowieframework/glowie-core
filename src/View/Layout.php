@@ -56,7 +56,7 @@
             $this->_path = $layout;
             $this->_filename = str_replace(['../views/layouts/', '.phtml'], '', $layout);
             $viewData = Rails::getController()->view->toArray();
-            if(!empty($viewData)) foreach ($viewData as $key => $value) $this->{$key} = $value;
+            $params = array_merge($viewData, $params);
             if(!empty($params)) foreach($params as $key => $value) $this->{$key} = $value;
 
             // Parse view
