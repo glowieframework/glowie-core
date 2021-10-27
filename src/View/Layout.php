@@ -38,10 +38,10 @@
         private static $_helpers;
 
         /**
-         * Layout compiled file path.
-         * @var string
+         * Layout local parameters.
+         * @var array
          */
-        private $_path;
+        private $_params;
 
         /**
          * Instantiates a new Layout object.
@@ -50,24 +50,28 @@
          * @param array $params View parameters to parse.
          */
         public function __construct(string $layout, string $view, array $params){
-            // Parse parameters
+            // Save original filename
+            $this->_filename = str_replace(['../views/layouts/', '.phtml'], '', $layout);
+
+            // Instantiate helpers
             $helpers = 'Glowie\Helpers\Helpers';
             if(!self::$_helpers) self::$_helpers = new $helpers;
-            $this->_path = $layout;
-            $this->_filename = str_replace(['../views/layouts/', '.phtml'], '', $layout);
-            $viewData = Rails::getController()->view->toArray();
-            $params = array_merge($viewData, $params);
+
+            // Parse parameters
+            $this->_params = $params;
+            $globalParams = Rails::getController()->view->toArray();
+            $params = array_merge($globalParams, $this->_params);
             if(!empty($params)) foreach($params as $key => $value) $this->{$key} = $value;
 
             // Parse view
             if(!empty($view)){
-                $view = new View($view, $params, false);
+                $view = new View($view, $this->_params, false);
                 $this->_content = $view->getContent();
             }
 
             // Render layout
-            if(Config::get('skeltch', true)) $this->_path = Skeltch::run($this->_path);
-            include($this->_path);
+            if(Config::get('skeltch', true)) $layout = Skeltch::run($layout);
+            include($layout);
         }
 
         /**
@@ -90,7 +94,7 @@
          * @return void
          */
         public function renderView(string $view, array $params = []){
-            Rails::getController()->renderView($view, $params);
+            return Rails::getController()->renderView($view, array_merge($this->_params, $params));
         }
 
         /**
@@ -102,7 +106,7 @@
          * @return void
          */
         public function renderLayout(string $layout, string $view = '', array $params = []){
-            Rails::getController()->renderLayout($layout, $view, $params);
+            return Rails::getController()->renderLayout($layout, $view, array_merge($this->_params, $params));
         }
 
         /**

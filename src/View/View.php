@@ -27,7 +27,7 @@
         private $_content;
 
         /**
-         * Layout original filename.
+         * View original filename.
          * @var string
          */
         private $_filename;
@@ -39,10 +39,10 @@
         private static $_helpers;
 
         /**
-         * View compiled file path.
-         * @var string
+         * View local parameters.
+         * @var array
          */
-        private $_path;
+        private $_params;
 
         /**
          * Instantiates a new View object.
@@ -51,18 +51,22 @@
          * @param bool $parse Immediately parse view content.
          */
         public function __construct(string $view, array $params, bool $parse){
-            // Parse parameters
+            // Save original filename
+            $this->_filename = str_replace(['../views/', '.phtml'], '', $view);
+
+            // Instantiate helpers
             $helpers = 'Glowie\Helpers\Helpers';
             if(!self::$_helpers) self::$_helpers = new $helpers;
-            $this->_path = $view;
-            $this->_filename = str_replace(['../views/', '.phtml'], '', $view);
-            $viewData = Rails::getController()->view->toArray();
-            $params = array_merge($viewData, $params);
+
+            // Parse parameters
+            $this->_params = $params;
+            $globalParams = Rails::getController()->view->toArray();
+            $params = array_merge($globalParams, $this->_params);
             if(!empty($params)) foreach($params as $key => $value) $this->{$key} = $value;
 
             // Render view
-            if(Config::get('skeltch', true)) $this->_path = Skeltch::run($this->_path);
-            $this->_content = $this->getBuffer();
+            if(Config::get('skeltch', true)) $view = Skeltch::run($view);
+            $this->_content = $this->getBuffer($view);
             if($parse) echo $this->_content;
         }
 
@@ -81,11 +85,12 @@
 
         /**
          * Gets a view buffer.
+         * @param string $path View filename to include.
          * @return string The buffer contents as string.
          */
-        private function getBuffer(){
+        private function getBuffer(string $path){
             Buffer::start();
-            include($this->_path);
+            include($path);
             return Buffer::get();
         }
 
@@ -96,7 +101,7 @@
          * @return void
          */
         public function renderView(string $view, array $params = []){
-            Rails::getController()->renderView($view, $params);
+            return Rails::getController()->renderView($view, array_merge($this->_params, $params));
         }
 
         /**
@@ -108,7 +113,7 @@
          * @return void
          */
         public function renderLayout(string $layout, string $view = '', array $params = []){
-            Rails::getController()->renderLayout($layout, $view, $params);
+            return Rails::getController()->renderLayout($layout, $view, array_merge($this->_params, $params));
         }
 
         /**
