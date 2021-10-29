@@ -104,12 +104,10 @@
          * @param string $table (Optional) Table name to set as default.
          * @param array $database (Optional) Associative array with the database connection settings.\
          * Use an empty array to connect to the environment defined database (from **app/config/Config.php**).
-         * @param string $charset (Optional) Database character set encoding to use.
          */
-        public function __construct(string $table = 'glowie', array $database = [], string $charset = 'utf8'){
-            $this->database($database);
+        public function __construct(string $table = 'glowie', array $database = []){
             $this->table($table);
-            $this->charset($charset);
+            $this->database($database);
         }
 
         /**
@@ -1046,22 +1044,20 @@
 
         /**
          * Fetches the first result from a SELECT query.
-         * @param bool $assoc (Optional) Return the result as an associative array.
          * @return mixed Returns the first resulting row on success or null if not found.
          * @throws QueryException Throws an exception if the query fails.
          */
-        public function fetchRow(bool $assoc = false){
-            return $this->execute(true, true, $assoc);
+        public function fetchRow(){
+            return $this->execute(true, true);
         }
 
         /**
          * Fetches all results from a SELECT query.
-         * @param bool $assoc (Optional) Return each result as an associative array.
          * @return array Returns an array with all resulting rows.
          * @throws QueryException Throws an exception if the query fails.
          */
-        public function fetchAll(bool $assoc = false){
-            return $this->execute(true, false, $assoc);
+        public function fetchAll(){
+            return $this->execute(true, false);
         }
 
         /**
@@ -1365,11 +1361,10 @@
          * Fetches all results from a SELECT query with pagination.
          * @param int $currentPage (Optional) Current page to get results.
          * @param int $resultsPerPage (Optional) Number of results to get per page.
-         * @param bool $assoc (Optional) Return each result as an associative array.
          * @return Element Returns an object with the pagination result.
          * @throws QueryException Throws an exception if the query fails.
          */
-        public function paginate(int $currentPage = 1, int $resultsPerPage = 25, bool $assoc = false){
+        public function paginate(int $currentPage = 1, int $resultsPerPage = 25){
             // Counts total pages
             $this->_limit = [];
             $totalResults = $this->count();
@@ -1379,7 +1374,7 @@
             // Gets paginated results
             $offset = ($currentPage - 1) * $resultsPerPage;
             $this->limit($offset, $resultsPerPage);
-            $results = $this->fetchAll($assoc);
+            $results = $this->fetchAll();
 
             // Parse results
             return new Element([
@@ -1397,10 +1392,9 @@
          * Fetches all results from a SELECT query in small chunks of items.
          * @param int $items Number of items to fetch per chunk.
          * @param Closure $callback Closure to call in each chunk. Returning `false` from this closure will stop next queries.
-         * @param bool $assoc (Optional) Return each result as an associative array.
          * @throws QueryException Throws an exception if the query fails.
          */
-        public function chunk(int $items, Closure $callback, bool $assoc = false){
+        public function chunk(int $items, Closure $callback){
             // Backup current query state
             $query = $this->backupQuery();
 
@@ -1417,7 +1411,7 @@
 
                 // Gets results
                 $this->limit($i * $items, $items);
-                $results = $this->fetchAll($assoc);
+                $results = $this->fetchAll();
 
                 // Calls the closure and stores the return
                 $return = call_user_func_array($callback, [$results]);

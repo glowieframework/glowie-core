@@ -27,6 +27,12 @@
         protected $_table = '';
 
         /**
+         * Model database connection settings.
+         * @var array
+         */
+        protected $_database = [];
+
+        /**
          * Table primary key name.
          * @var string
          */
@@ -85,67 +91,62 @@
             }
 
             // Constructs the query builder
-            Kraken::__construct($this->_table);
+            Kraken::__construct($this->_table, $this->_database);
         }
 
         /**
          * Gets the first row that matches the model primary key value.
          * @param mixed $primary Primary key value to search for.
-         * @param bool $assoc (Optional) Return the result as an associative array.
          * @return mixed Returns the row on success or null if not found.
          */
-        public function find($primary, bool $assoc = false){
+        public function find($primary){
             $this->clearQuery();
             $fields = !empty($this->_fields) ? $this->_fields : '*';
-            return $this->castData($this->select($fields)->where($this->_primaryKey, $primary)->limit(1)->fetchRow($assoc), true);
+            return $this->castData($this->select($fields)->where($this->_primaryKey, $primary)->limit(1)->fetchRow(), true);
         }
 
         /**
          * Gets the first row that matches a field value.
          * @param string $field Field to use while searching.
          * @param mixed $value Value to search for.
-         * @param bool $assoc (Optional) Return the result as an associative array.
          * @return mixed Returns the row on success or null if not found.
          */
-        public function findBy(string $field, $value, bool $assoc = false){
+        public function findBy(string $field, $value){
             $this->clearQuery();
             $fields = !empty($this->_fields) ? $this->_fields : '*';
-            return $this->castData($this->select($fields)->where($field, $value)->limit(1)->fetchRow($assoc), true);
+            return $this->castData($this->select($fields)->where($field, $value)->limit(1)->fetchRow(), true);
         }
 
         /**
          * Gets all rows from the model table.
-         * @param bool $assoc (Optional) Return each result as an associative array.
          * @return array Returns an array with all rows.
          */
-        public function all(bool $assoc = false){
+        public function all(){
             $this->clearQuery();
             $fields = !empty($this->_fields) ? $this->_fields : '*';
-            return $this->castData($this->select($fields)->fetchAll($assoc));
+            return $this->castData($this->select($fields)->fetchAll());
         }
 
         /**
          * Gets all rows from the model table ordering by the newest **created at** field.
-         * @param bool $assoc (Optional) Return each result as an associative array.
          * @return array Returns an array with all rows.
          */
-        public function latest(bool $assoc = false){
+        public function latest(){
             if(!$this->_timestamps) throw new Exception('latest(): This model is not handling timestamp fields');
             $this->clearQuery();
             $fields = !empty($this->_fields) ? $this->_fields : '*';
-            return $this->castData($this->select($fields)->orderBy($this->_createdField, 'DESC')->fetchAll($assoc));
+            return $this->castData($this->select($fields)->orderBy($this->_createdField, 'DESC')->fetchAll());
         }
 
         /**
          * Gets all rows from the model table ordering by the oldest **created at** field.
-         * @param bool $assoc (Optional) Return each result as an associative array.
          * @return array Returns an array with all rows.
          */
-        public function oldest(bool $assoc = false){
+        public function oldest(){
             if(!$this->_timestamps) throw new Exception('oldest(): This model is not handling timestamp fields');
             $this->clearQuery();
             $fields = !empty($this->_fields) ? $this->_fields : '*';
-            return $this->castData($this->select($fields)->orderBy($this->_createdField, 'ASC')->fetchAll($assoc));
+            return $this->castData($this->select($fields)->orderBy($this->_createdField, 'ASC')->fetchAll());
         }
 
         /**
@@ -297,7 +298,7 @@
                                 throw new BadMethodCallException('Method "' . $params[1] . '()" is not defined in "' . get_class($this) . '"');
                             }
                             break;
-                        
+
                         case 'date':
                             if(!empty($params[1])){
                                 $data[$field] = date($params[1], strtotime($data[$field]));

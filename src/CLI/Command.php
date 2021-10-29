@@ -29,12 +29,51 @@
 
         /**
          * Prints a table of data in the console.
-         * @param array $rows Data to parse. Must be an array of associative or numeric indexed arrays.
-         * @param array $headers Column headers to set in the table. When working with associative arrays of data,\
-         * must also contain the key of each column you want to parse.
+         * @param array $rows A multi-dimensional array of data to parse.
+         * @param array $headers Column headers to set in the table.
          */
         public function table(array $rows, array $headers){
-            Firefly::table($rows, $headers);
+            // Remove associative indexes from the arrays
+            $headers = array_values($headers);
+            foreach($rows as $key => $row) $rows[$key] = array_values((array)$row);
+
+            // Parses maximum column sizes
+            $maxSizes = [];
+            $grid = [];
+
+            foreach($headers as $key => $col){
+                $maxSizes[$key] = mb_strlen($col);
+
+                // Find cells
+                foreach(array_column($rows, $key) as $row){
+                    $row = (string)$row;
+                    if(mb_strlen($row) > $maxSizes[$key]) $maxSizes[$key] = mb_strlen($row);
+                }
+
+                // Parse grid
+                $grid[] = '+' . str_repeat('-', $maxSizes[$key] + 2);
+            }
+
+            // Creates the table
+            $table = [];
+            foreach(array_merge([$headers], $rows) as $key => $row){
+                // Fills empty values
+                $row = array_pad($row, count($headers), '');
+                foreach($row as $cellKey => $cell){
+                    if(!isset($maxSizes[$cellKey])) continue;
+                    $table[$key][] = str_pad((string)$cell, $maxSizes[$cellKey], ' ');
+                }
+            }
+
+            // Print top grid
+            $grid = implode('', $grid) . '+';
+            Firefly::print($grid);
+
+            // Print rows
+            foreach($table as $row){
+                Firefly::print('| ' . implode(' | ', $row) . ' |');
+                Firefly::print($grid);
+            }
         }
 
         /**
@@ -46,6 +85,39 @@
         }
 
         /**
+         * Clears the current console line.
+         */
+        public function clear(){
+            Firefly::print("\033[2K\r", false);
+        }
+
+        /**
+         * Clears the whole console screen.
+         */
+        public function clearScreen(){
+            DIRECTORY_SEPARATOR === '\\' ? popen('cls', 'w') : exec('clear');
+        }
+
+        /**
+         * Prints a progress bar in the console.
+         * @param int|bool $step Current step. Set to **false** to clear the whole progress bar.
+         * @param int $total (Optional) Total number of steps.
+         */
+        public function progress($step, int $total = 100){
+            // Check to clear progress bar
+            if($step === false) return $this->clear();
+
+            // Calculate the progress
+            $progress = (int)(($step / $total) * 100);
+            $step = (int)(($progress * 20) / 100);
+
+            // Print the bar
+            $bar = '[' . str_pad(str_repeat('=', $step), 20, ' ') . '] ' . $progress . '%';
+            $this->clear();
+            Firefly::print($bar, false);
+        }
+
+        /**
          * Prints a success text in the console.
          * @param string $text Text to print.
          * @param bool $break (Optional) Break line at the end.
@@ -53,7 +125,7 @@
         public function success(string $text, bool $break = true){
             Firefly::print('<color="green">' . $text . '</color>', $break);
         }
-        
+
         /**
          * Prints a fail text in the console.
          * @param string $text Text to print.
@@ -71,7 +143,7 @@
         public function warning(string $text, bool $break = true){
             Firefly::print('<color="yellow">' . $text . '</color>', $break);
         }
-        
+
         /**
          * Prints an info text in the console.
          * @param string $text Text to print.
@@ -120,7 +192,7 @@
         public function argOrFail(string $arg){
             return Firefly::argOrFail($arg);
         }
-        
+
         /**
          * Gets an argument value.
          * @param string $arg Argument key to get.

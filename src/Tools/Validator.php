@@ -2,7 +2,6 @@
     namespace Glowie\Core\Tools;
 
     use Util;
-    use Exception;
 
     /**
      * Data validator for Glowie application.
@@ -24,7 +23,7 @@
 
         /**
          * Returns an associative array with the latest validation errors.
-         * @param string|int $key (Optional) Item/field key to get errors. Leave blank to get all.
+         * @param mixed $key (Optional) Item/field key to get errors. Leave blank to get all.
          * @return array Returns an array with the fetched errors.
          */
         public function getErrors($key = null){

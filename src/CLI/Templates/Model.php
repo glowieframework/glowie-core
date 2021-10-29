@@ -22,6 +22,12 @@
         protected $_table = '__FIREFLY_TEMPLATE_TABLE__';
 
         /**
+         * Model database connection settings.
+         * @var array
+         */
+        protected $_database = [];
+
+        /**
          * Table primary key name.
          * @var string
          */

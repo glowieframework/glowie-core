@@ -16,6 +16,12 @@
     class __FIREFLY_TEMPLATE_NAME__ extends Migration{
 
         /**
+         * Migration database connection settings.
+         * @var array
+         */
+        protected $database = [];
+
+        /**
          * This method will be called before any other methods from this migration.
          */
         public function init(){

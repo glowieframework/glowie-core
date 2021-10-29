@@ -23,7 +23,7 @@
          * @return string Current Glowie core version.
          */
         public static function getVersion(){
-            return '1.0.4';
+            return '1.0.6';
         }
 
         /**
@@ -42,7 +42,7 @@
             }else{
                 Rails::getResponse()->setContentType(Response::CONTENT_HTML);
             }
-            
+
             // Dump the content
             if(!$plain) echo '<pre style="white-space: pre-wrap; word-wrap: break-all; background-color: black; color: white; padding: 15px; margin: 0;">';
             var_dump($var);
@@ -115,13 +115,13 @@
         }
 
         /**
-         * Reorders an array of associative arrays by a specific key value.
+         * Reorders a multi-dimensional array by a key value.
          * @param array $array Array to reorder.
-         * @param string $key Key to use as the reordering base.
+         * @param mixed $key Key to use as the reordering base.
          * @param int $order (Optional) Ordering direction: `SORT_ASC` (ascending) or `SORT_DESC` (descending).
          * @return array Returns the resulting array.
          */
-        public static function orderArray(array $array, string $key, int $order = SORT_ASC){
+        public static function orderArray(array $array, $key, int $order = SORT_ASC){
             if (!empty($array)) {
                 foreach ($array as $col => $row) $data[$col] = $row[$key];
                 array_multisort($data, $order, $array);
@@ -130,13 +130,13 @@
         }
 
         /**
-         * Filters an array of associative arrays leaving only items that match a specific key value.
+         * Filters a multi-dimensional array leaving only items that match a key value.
          * @param array $array Array to filter.
-         * @param string $key Key to use as the filtering base.
+         * @param mixed $key Key to use as the filtering base.
          * @param mixed $value Value to filter.
          * @return array Returns the resulting array.
          */
-        public static function filterArray(array $array, string $key, $value){
+        public static function filterArray(array $array, $key, $value){
             $result = [];
             if (!empty($array)) {
                 foreach (array_keys($array) as $col) {
@@ -148,13 +148,13 @@
         }
 
         /**
-         * Searches an array of associative arrays for the first item that matches a specific key value.
+         * Searches a multi-dimensional array for the first item that matches a key value.
          * @param array $array Array to search.
-         * @param string $key Key to match value.
+         * @param mixed $key Key to match value.
          * @param mixed $value Value to search.
          * @return array Returns the first array item found.
          */
-        public static function searchArray(array $array, string $key, $value){
+        public static function searchArray(array $array, $key, $value){
             $result = [];
             if (!empty($array)) {
                 $index = array_search($value, array_column($array, $key));
@@ -177,7 +177,7 @@
                     foreach (range(0, $iterator->getDepth()) as $depth) {
                         $keys[] = $iterator->getSubIterator($depth)->key();
                     }
-                    $key = join('.', $keys);
+                    $key = implode('.', $keys);
                     $result[$key] = $item;
                 }
             }
@@ -200,7 +200,7 @@
          * @return bool Returns **true** if haystack begins with needle, **false** otherwise.
          */
         public static function startsWith(string $haystack, string $needle){
-            $length = strlen($needle);
+            $length = mb_strlen($needle);
             return substr($haystack, 0, $length) == $needle;
         }
 
@@ -211,7 +211,7 @@
          * @return bool Returns **true** if haystack ends with needle, **false** otherwise.
          */
         public static function endsWith(string $haystack, string $needle){
-            $length = strlen($needle);
+            $length = mb_strlen($needle);
             if (!$length) return true;
             return substr($haystack, -$length) == $needle;
         }
@@ -235,7 +235,7 @@
          */
         public static function replaceFirst(string $haystack, string $needle, string $replace){
             $pos = strpos($haystack, $needle);
-            if($pos !== false) $haystack = substr_replace($haystack, $replace, $pos, strlen($needle));
+            if($pos !== false) $haystack = substr_replace($haystack, $replace, $pos, mb_strlen($needle));
             return $haystack;
         }
 
@@ -248,7 +248,7 @@
          */
         public static function replaceLast(string $haystack, string $needle, string $replace){
             $pos = strrpos($haystack, $needle);
-            if($pos !== false) $haystack = substr_replace($haystack, $replace, $pos, strlen($needle));
+            if($pos !== false) $haystack = substr_replace($haystack, $replace, $pos, mb_strlen($needle));
             return $haystack;
         }
 

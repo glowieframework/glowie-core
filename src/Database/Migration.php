@@ -26,6 +26,12 @@
         protected $forge;
 
         /**
+         * Migration database connection settings.
+         * @var array
+         */
+        protected $database = [];
+
+        /**
          * Migration name.
          * @var string
          */
@@ -44,8 +50,8 @@
             // Creates the connection and stores the migration name
             $classname = explode('\\', get_class($this));
             $this->name = end($classname);
-            $this->db = new Kraken();
-            $this->forge = new Skeleton();
+            $this->db = new Kraken('glowie', $this->database);
+            $this->forge = new Skeleton('glowie', $this->database);
 
             // Creates the migrations history table if not exists
             if(!self::$tableCreated){

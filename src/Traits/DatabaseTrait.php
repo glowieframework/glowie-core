@@ -61,22 +61,27 @@
         private $_raw;
 
         /**
+         * Return results as associative arrays.
+         * @var bool
+         */
+        private $_returnAssoc = false;
+
+        /**
+         * Returns next results as associative arrays instead of objects.
+         * @param bool $option (Optional) Set to **true** to return as arrays, **false** otherwise.
+         */
+        public function returnArray(bool $option = true){
+            $this->_returnAssoc = $option;
+            return $this;
+        }
+
+        /**
          * Sets the working table.
          * @param string $table Table name to set as the working table.
          * @return $this Current instance for nested calls.
          */
         public function table(string $table){
             $this->_table = $table;
-            return $this;
-        }
-
-        /**
-         * Sets the database character set encoding.
-         * @param string $charset Character set name to apply.
-         * @return $this Current instance for nested calls.
-         */
-        public function charset(string $charset){
-            $this->_connection->set_charset($charset);
             return $this;
         }
 
@@ -95,7 +100,8 @@
                 'username' => 'root',
                 'password' => '',
                 'db' => 'glowie',
-                'port' => 3306
+                'port' => 3306,
+                'charset' => 'utf8'
             ]);
 
             // Validate settings
@@ -103,6 +109,7 @@
             if (empty($database['username'])) throw new DatabaseException($database, 'Database username not defined');
             if (empty($database['db'])) throw new DatabaseException($database, 'Database name not defined');
             if (empty($database['port'])) $database['port'] = 3306;
+            if (empty($database['charset'])) $database['charset'] = 'utf8';
 
             // Saves the database connection
             try {
@@ -112,10 +119,12 @@
                         $connection = DatabaseTrait::$_global;
                     }else{
                         $connection = new mysqli($database['host'], $database['username'], $database['password'], $database['db'], $database['port']);
+                        $connection->set_charset($database['charset']);
                         DatabaseTrait::$_global = $connection;
                     }
                 }else{
                     $connection = new mysqli($database['host'], $database['username'], $database['password'], $database['db'], $database['port']);
+                    $connection->set_charset($database['charset']);
                 }
             } catch (Exception $e) {
                 throw new DatabaseException($database, $e->getMessage(), $e->getCode(), $e);
@@ -223,11 +232,10 @@
          * Run the current built query.
          * @param bool $returns (Optional) If the query should return a result.
          * @param bool $returnsFirst (Optional) If the query should return a single result.
-         * @param bool $returnAssoc (Optional) Return the result as an associative array instead of an object.
          * @return mixed If the query is successful and should return any results, will return an object with the first result or an array of\
          * results. Otherwise returns true on success.
          */
-        private function execute(bool $returns = false, bool $returnsFirst = false, bool $returnAssoc = false){
+        private function execute(bool $returns = false, bool $returnsFirst = false){
             try {
                 // Run query and clear its data
                 $built = $this->getQuery();
@@ -246,7 +254,7 @@
                             if ($query->num_rows > 0) {
                                 $row = $query->fetch_assoc();
                                 $query->close();
-                                $result = $returnAssoc ? $row : new Element($row);
+                                $result = $this->_returnAssoc ? $row : new Element($row);
                             }
                         }else{
                             // Returns all rows
@@ -254,7 +262,7 @@
                             if ($query->num_rows > 0) {
                                 $rows = $query->fetch_all(MYSQLI_ASSOC);
                                 $query->close();
-                                if($returnAssoc){
+                                if($this->_returnAssoc){
                                     $result = $rows;
                                 }else{
                                     foreach ($rows as $row) $result[] = new Element($row);

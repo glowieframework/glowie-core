@@ -156,12 +156,10 @@
          * @param string $table (Optional) Table name to set as default.
          * @param array $database (Optional) Associative array with the database connection settings.\
          * Use an empty array to connect to the environment defined database (from **app/config/Config.php**).
-         * @param string $charset (Optional) Database character set encoding to use.
          */
-        public function __construct(string $table = 'glowie', array $database = [], string $charset = 'utf8'){
-            $this->database($database);
+        public function __construct(string $table = 'glowie', array $database = []){
             $this->table($table);
-            $this->charset($charset);
+            $this->database($database);
         }
 
         /**
@@ -342,7 +340,7 @@
             if($data['operation'] != 'create'){
                 if(!empty($data['after'])) $field .= " AFTER `{$data['after']}`";
             }
-            
+
             // Saves the result
             $this->_fields[] = $field;
             return $this;
@@ -467,7 +465,7 @@
             $this->_instruction = 'CREATE TABLE';
             return $this->execute();
         }
-        
+
         /**
          * Updates an existing table structure.
          * @return bool Returns true on success.
