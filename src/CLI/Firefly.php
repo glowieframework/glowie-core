@@ -242,6 +242,56 @@
         }
 
         /**
+         * Prints a table of data in the console.
+         * @param array $rows Data to parse. Must be an array of associative or numeric indexed arrays.
+         * @param array $headers Column headers to set in the table. When working with associative arrays of data,\
+         * must also contain the key of each column you want to parse.
+         */
+        public static function table(array $rows, array $headers){
+            // Checks if CLI is running
+            if(!self::$isCLI) return;
+
+            // Parses maximum column sizes
+            $maxSizes = [];
+            $grid = [];
+
+            foreach($headers as $key => $col){
+                $maxSizes[$key] = mb_strlen($col);
+
+                // Find cells
+                foreach(array_column($rows, $key) as $row){
+                    $row = (string)$row;
+                    if(mb_strlen($row) > $maxSizes[$key]) $maxSizes[$key] = mb_strlen($row);
+                }
+
+                // Parse grid
+                $grid[] = '+' . str_repeat('-', $maxSizes[$key] + 2);
+            }
+
+            // Creates the table
+            $table = [];
+            foreach(array_merge([$headers], $rows) as $key => $row){
+                // Fills empty values
+                $row = array_pad($row, count($headers), '');
+                
+                foreach((array)$row as $cellKey => $cell){
+                    if(!isset($maxSizes[$cellKey])) continue;
+                    $table[$key][] = str_pad((string)$cell, $maxSizes[$cellKey], ' ');
+                }
+            }
+
+            // Print top grid
+            $grid = join('', $grid) . '+';
+            self::print($grid);
+
+            // Print rows
+            foreach($table as $row){
+                self::print('| ' . join(' | ', $row) . ' |');
+                self::print($grid);
+            }
+        }
+
+        /**
          * Asks for the user input in the console.
          * @param string $message (Optional) Message to prompt to the user.
          * @param string $default (Optional) Default value to return if no input is provided.

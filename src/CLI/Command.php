@@ -28,6 +28,16 @@
         }
 
         /**
+         * Prints a table of data in the console.
+         * @param array $rows Data to parse. Must be an array of associative or numeric indexed arrays.
+         * @param array $headers Column headers to set in the table. When working with associative arrays of data,\
+         * must also contain the key of each column you want to parse.
+         */
+        public function table(array $rows, array $headers){
+            Firefly::table($rows, $headers);
+        }
+
+        /**
          * Prints one or more blank lines in the console.
          * @param int $number (Optional) Number of blank lines to print.
          */
