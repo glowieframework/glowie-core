@@ -29,15 +29,15 @@
 
         /**
          * Prints a table of data in the console.
+         * @param array $headers Table headers.
          * @param array $rows A multi-dimensional array of data to parse.
-         * @param array $headers Column headers to set in the table.
          */
-        public function table(array $rows, array $headers){
+        public function table(array $headers, array $rows){
             // Remove associative indexes from the arrays
             $headers = array_values($headers);
             foreach($rows as $key => $row) $rows[$key] = array_values((array)$row);
 
-            // Parses maximum column sizes
+            // Parse maximum column sizes
             $maxSizes = [];
             $grid = [];
 
@@ -54,10 +54,10 @@
                 $grid[] = '+' . str_repeat('-', $maxSizes[$key] + 2);
             }
 
-            // Creates the table
+            // Create the table
             $table = [];
             foreach(array_merge([$headers], $rows) as $key => $row){
-                // Fills empty values
+                // Fill empty values
                 $row = array_pad($row, count($headers), '');
                 foreach($row as $cellKey => $cell){
                     if(!isset($maxSizes[$cellKey])) continue;
@@ -67,12 +67,12 @@
 
             // Print top grid
             $grid = implode('', $grid) . '+';
-            Firefly::print($grid);
+            $this->print($grid);
 
             // Print rows
             foreach($table as $row){
-                Firefly::print('| ' . implode(' | ', $row) . ' |');
-                Firefly::print($grid);
+                $this->print('| ' . implode(' | ', $row) . ' |');
+                $this->print($grid);
             }
         }
 
@@ -81,14 +81,14 @@
          * @param int $number (Optional) Number of blank lines to print.
          */
         public function line(int $number = 1){
-            for($i = 0; $i < $number; $i++) Firefly::print('');
+            $this->print(str_repeat(PHP_EOL, $number), false);
         }
 
         /**
          * Clears the current console line.
          */
         public function clear(){
-            Firefly::print("\033[2K\r", false);
+            $this->print("\033[2K\r", false);
         }
 
         /**
@@ -102,19 +102,20 @@
          * Prints a progress bar in the console.
          * @param int|bool $step Current step. Set to **false** to clear the whole progress bar.
          * @param int $total (Optional) Total number of steps.
+         * @param int $size (Optional) Progress bar size.
          */
-        public function progress($step, int $total = 100){
+        public function progress($step, int $total = 100, int $size = 30){
             // Check to clear progress bar
             if($step === false) return $this->clear();
 
             // Calculate the progress
             $progress = (int)(($step / $total) * 100);
-            $step = (int)(($progress * 20) / 100);
+            $step = (int)(($progress * $size) / 100);
 
             // Print the bar
-            $bar = '[' . str_pad(str_repeat('=', $step), 20, ' ') . '] ' . $progress . '%';
+            $bar = '[' . str_pad(str_repeat('=', $step), $size, ' ') . '] ' . $progress . '%';
             $this->clear();
-            Firefly::print($bar, false);
+            $this->print($bar, false);
         }
 
         /**
@@ -123,7 +124,7 @@
          * @param bool $break (Optional) Break line at the end.
          */
         public function success(string $text, bool $break = true){
-            Firefly::print('<color="green">' . $text . '</color>', $break);
+            $this->print('<color="green">' . $text . '</color>', $break);
         }
 
         /**
@@ -132,7 +133,7 @@
          * @param bool $break (Optional) Break line at the end.
          */
         public function fail(string $text, bool $break = true){
-            Firefly::print('<color="red">' . $text . '</color>', $break);
+            $this->print('<color="red">' . $text . '</color>', $break);
         }
 
         /**
@@ -141,7 +142,7 @@
          * @param bool $break (Optional) Break line at the end.
          */
         public function warning(string $text, bool $break = true){
-            Firefly::print('<color="yellow">' . $text . '</color>', $break);
+            $this->print('<color="yellow">' . $text . '</color>', $break);
         }
 
         /**
@@ -150,7 +151,7 @@
          * @param bool $break (Optional) Break line at the end.
          */
         public function info(string $text, bool $break = true){
-            Firefly::print('<color="cyan">' . $text . '</color>', $break);
+            $this->print('<color="cyan">' . $text . '</color>', $break);
         }
 
         /**
@@ -159,7 +160,7 @@
          * @param bool $break (Optional) Break line at the end.
          */
         public function error(string $text, bool $break = true){
-            Firefly::print('<bg="red"><color="black">' . $text . '</color></bg>', $break);
+            $this->print('<bg="red"><color="black">' . $text . '</color></bg>', $break);
         }
 
         /**

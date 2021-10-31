@@ -229,15 +229,21 @@
          * @param bool $break (Optional) Break line at the end.
          */
         public static function print(string $text, bool $break = true){
-            // Checks if CLI is running
-            if(!self::$isCLI) return;
+            if(self::$isCLI){
+                // Replace color codes
+                foreach(self::COLORS as $key => $value) $text = preg_replace('/<color="' . $key . '">/i', $value, $text);
+                foreach(self::BACKGROUNDS as $key => $value) $text = preg_replace('/<bg="' . $key . '">/i', $value, $text);
+    
+                // Replace closing brackets
+                $text = preg_replace(['/<\/color>/i', '/<\/bg>/i'], [self::COLORS['default'], self::BACKGROUNDS['default']], $text);
+            }else{
+                $text = preg_replace(['/<\/color>/i', '/<\/bg>/i'], '', $text);
+            }
+            
+            // Replace unknown colors
+            $text = preg_replace(['/<color="(.+)">/i', '/<bg="(.+)">/i'], '', $text);
 
-            // Replace color codes
-            foreach(self::COLORS as $key => $value) $text = preg_replace('/<color="' . $key . '">/', $value, $text);
-            foreach(self::BACKGROUNDS as $key => $value) $text = preg_replace('/<bg="' . $key . '">/', $value, $text);
-
-            // Replace closing brackets
-            $text = preg_replace(['/<\/color>/', '/<\/bg>/'], [self::COLORS['default'], self::BACKGROUNDS['default']], $text);
+            // Prints the text
             echo $text . ($break ? PHP_EOL : '');
         }
 
