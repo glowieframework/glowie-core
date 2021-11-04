@@ -194,6 +194,48 @@
         }
 
         /**
+         * Returns a value from a multi-dimensional array in dot notation.
+         * @param array $array Array to get the value.
+         * @param mixed $key Key to get in dot notation.
+         * @param mixed $default (Optional) Default value to return if the key does not exist.
+         * @return mixed Returns the value if exists or the default if not.
+         */
+        public static function arrayGet(array $array, $key, $default = null){
+            // Checks if the key does not exist already
+            if(isset($array[$key])) return $array[$key];
+
+            // Loops through each key
+            foreach(explode('.', $key) as $segment){
+                if(!is_array($array) || !isset($array[$segment])) return $default;
+                $array = $array[$segment];
+            }
+
+            // Returns the value
+            return $array;
+        }
+
+        /**
+         * Returns a value from a multi-dimensional object in dot notation.
+         * @param object $object Object to get the value.
+         * @param string $key Key to get in dot notation.
+         * @param mixed $default (Optional) Default value to return if the key does not exist.
+         * @return mixed Returns the value if exists or the default if not.
+         */
+        public static function objectGet(object $object, string $key, $default = null){
+            // Checks if the key does not exist already
+            if(isset($object->{$key})) return $object->{$key};
+
+            // Loops through each property
+            foreach(explode('.', $key) as $segment){
+                if(!is_object($object) || !isset($object->{$segment})) return $default;
+                $object = $object->{$segment};
+            }
+
+            // Returns the value
+            return $object;
+        }
+
+        /**
          * Checks if a string starts with a given substring.
          * @param string $haystack The string to search in.
          * @param string $needle The substring to search for in the haystack.
@@ -397,6 +439,30 @@
          */
         public static function sanitizeFilename(string $filename){
             return trim(str_replace(['../', '..\\', './', '.\\'], '', urldecode($filename)), '/');
+        }
+
+        /**
+         * Checks if a variable is empty.\
+         * A numeric/bool safe version of PHP `empty()` function.
+         * @var mixed $variable Variable to be checked.
+         * @return bool Returns true if the variable is empty, false otherwise.
+         */
+        public static function isEmpty($variable){
+            if(is_null($variable)) return true;
+            if(is_string($variable)) return trim($variable) === '';
+            if(is_numeric($variable) || is_bool($variable)) return false;
+            if($variable instanceof Countable) return count($variable) === 0;
+            return empty($variable);
+        }
+
+        /**
+         * Returns the basename from a class (without its namespace).
+         * @param string|object $class Classname or an object to get the class.
+         * @return string Returns the class basename.
+         */
+        public static function classname($class){
+            $class = is_object($class) ? get_class($class) : $class;
+            return basename(str_replace('\\', '/', $class));
         }
 
     }

@@ -24,46 +24,67 @@
     class Firefly{
 
         /**
-         * Console foreground color codes.
+         * Console regex replacements.
          * @var array
          */
-        private const COLORS = ['default' => "\033[0m", 'red' => "\033[91m", 'green' => "\033[92m", 'yellow' => "\033[93m", 'blue' => "\033[94m", 'magenta' => "\033[95m", 'cyan' => "\033[96m", 'gray' => "\033[37m", 'black' => "\033[30m"];
-
-        /**
-         * Console background color codes.
-         * @var array
-         */
-        private const BACKGROUNDS = ['default' => "\033[49m", 'red' => "\033[101m", 'green' => "\033[42m", 'yellow' => "\033[103m", 'blue' => "\033[104m", 'magenta' => "\033[45m", 'cyan' => "\033[106m", 'gray' => "\033[47m", 'black' => "\033[40m"];
-
-        /**
-         * Current command.
-         * @var string
-         */
-        private static $command = '';
-
-        /**
-         * Command arguments.
-         * @var array
-         */
-        private static $args = [];
-
-        /**
-         * Stores if Firefly is running through CLI.
-         * @var bool
-         */
-        private static $isCLI = true;
+        private const REGEX = [
+            '/<color="default">/i' => "\033[0m",
+            '/<color="red">/i' => "\033[91m",
+            '/<color="green">/i' => "\033[92m",
+            '/<color="yellow">/i' => "\033[93m",
+            '/<color="blue">/i' => "\033[94m",
+            '/<color="magenta">/i' => "\033[95m",
+            '/<color="cyan">/i' => "\033[96m",
+            '/<color="gray">/i' => "\033[37m",
+            '/<color="black">/i' => "\033[30m",
+            '/<bg="default">/i' => "\033[49m",
+            '/<bg="red">/i' => "\033[101m",
+            '/<bg="green">/i' => "\033[42m",
+            '/<bg="yellow">/i' => "\033[103m",
+            '/<bg="blue">/i' => "\033[104m",
+            '/<bg="magenta">/i' => "\033[45m",
+            '/<bg="cyan">/i' => "\033[106m",
+            '/<bg="gray">/i' => "\033[47m",
+            '/<bg="black">/i' => "\033[40m",
+            '/<\/color>/i' => "\033[0m",
+            '/<\/bg>/i' => "\033[49m"
+        ];
 
         /**
          * Firefly templates folder.
          * @var string
          */
-        private static $templateFolder = __DIR__ . '/Templates/';
+        private const TEMPLATES_FOLDER = __DIR__ . '/Templates/';
+
+        /**
+         * Current command.
+         * @var string
+         */
+        private static $command;
+
+        /**
+         * Command arguments.
+         * @var array
+         */
+        private static $args;
+
+        /**
+         * Stores if Firefly is running through CLI.
+         * @var bool
+         */
+        private static $isCLI;
 
         /**
          * Firefly current working folder path.
          * @var string
          */
-        private static $appFolder = '';
+        private static $appFolder;
+
+        /**
+         * Enable silent print mode.
+         * @var bool
+         */
+        private static $silent;
 
         /**
          * Runs the command line tool and bootstraps Glowie modules.
@@ -75,6 +96,7 @@
             self::$args = $argv;
             self::$isCLI = true;
             self::$appFolder = 'app/';
+            self::$silent = false;
 
             // Store application start time
             define('APP_START_TIME', microtime(true));
@@ -123,13 +145,15 @@
          * Calls a Firefly command outside the terminal.
          * @param string $command Firefly command to call.
          * @param array $args (Optional) Associative array of arguments to pass with the command.
+         * @param bool $silent (Optional) Disable any output from the command.
          */
-        public static function call(string $command, array $args = []){
+        public static function call(string $command, array $args = [], bool $silent = false){
             // Register settings
             self::$command = '';
             self::$args = $args;
             self::$isCLI = false;
             self::$appFolder = '../';
+            self::$silent = $silent;
 
             // Runs the command
             self::triggerCommand($command);
@@ -230,21 +254,18 @@
          */
         public static function print(string $text, bool $break = true){
             if(self::$isCLI){
-                // Replace color codes
-                foreach(self::COLORS as $key => $value) $text = preg_replace('/<color="' . $key . '">/i', $value, $text);
-                foreach(self::BACKGROUNDS as $key => $value) $text = preg_replace('/<bg="' . $key . '">/i', $value, $text);
-    
-                // Replace closing brackets
-                $text = preg_replace(['/<\/color>/i', '/<\/bg>/i'], [self::COLORS['default'], self::BACKGROUNDS['default']], $text);
+                // If running in console, replace colors, backgrounds and closing tags
+                $text = preg_replace(array_keys(self::REGEX), array_values(self::REGEX), $text);
             }else{
+                // If outside the console, remove closing tags
                 $text = preg_replace(['/<\/color>/i', '/<\/bg>/i'], '', $text);
             }
             
-            // Replace unknown colors
+            // Remove remaining colors or backgrounds
             $text = preg_replace(['/<color="(.+)">/i', '/<bg="(.+)">/i'], '', $text);
 
             // Prints the text
-            echo $text . ($break ? PHP_EOL : '');
+            if(!self::$silent) echo $text . ($break ? PHP_EOL : '');
         }
 
         /**
@@ -352,7 +373,7 @@
                 Buffer::start();
 
                 // Appends semicolon to the command if not an opening bracket
-                if(!Util::endsWith($__command, '(') || !Util::endsWith($__command, '{') || !Util::endsWith($__command, '[') || !Util::endsWith($__command, ';')){
+                if(!Util::endsWith($__command, '(') && !Util::endsWith($__command, '{') && !Util::endsWith($__command, '[') && !Util::endsWith($__command, ';')){
                     $__command .= ';';
                 }
 
@@ -427,7 +448,7 @@
 
             // Creates the file
             $name = Util::pascalCase($name);
-            $template = file_get_contents(self::$templateFolder . 'Command.php');
+            $template = file_get_contents(self::TEMPLATES_FOLDER . 'Command.php');
             $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
             file_put_contents(self::$appFolder . 'commands/' . $name . '.php', $template);
 
@@ -451,7 +472,7 @@
 
             // Creates the file
             $name = Util::pascalCase($name);
-            $template = file_get_contents(self::$templateFolder . 'Controller.php');
+            $template = file_get_contents(self::TEMPLATES_FOLDER . 'Controller.php');
             $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
             file_put_contents(self::$appFolder . 'controllers/' . $name . '.php', $template);
 
@@ -475,7 +496,7 @@
 
             // Creates the file
             $name = trim(strtolower($name));
-            copy(self::$templateFolder . 'Language.php', self::$appFolder . 'languages/' . $name . '.php');
+            copy(self::TEMPLATES_FOLDER . 'Language.php', self::$appFolder . 'languages/' . $name . '.php');
 
             // Success message
             self::print("<color=\"green\">Language file {$name} created successfully!</color>");
@@ -497,7 +518,7 @@
 
             // Creates the file
             $name = Util::pascalCase($name);
-            $template = file_get_contents(self::$templateFolder . 'Middleware.php');
+            $template = file_get_contents(self::TEMPLATES_FOLDER . 'Middleware.php');
             $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
             file_put_contents(self::$appFolder . 'middlewares/' . $name . '.php', $template);
 
@@ -522,7 +543,7 @@
             // Creates the file
             $cleanName = Util::pascalCase($name);
             $name = 'm' . date('Y_m_d_His_') . $cleanName;
-            $template = file_get_contents(self::$templateFolder . 'Migration.php');
+            $template = file_get_contents(self::TEMPLATES_FOLDER . 'Migration.php');
             $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
             file_put_contents(self::$appFolder . 'migrations/' . $name . '.php', $template);
 
@@ -567,7 +588,7 @@
 
             // Creates the file
             $name = Util::pascalCase($name);
-            $template = file_get_contents(self::$templateFolder . 'Model.php');
+            $template = file_get_contents(self::TEMPLATES_FOLDER . 'Model.php');
             $template = str_replace(['__FIREFLY_TEMPLATE_NAME__', '__FIREFLY_TEMPLATE_TABLE__', '__FIREFLY_TEMPLATE_PRIMARY__', '__FIREFLY_TEMPLATE_TIMESTAMPS__', '__FIREFLY_TEMPLATE_CREATED__', '__FIREFLY_TEMPLATE_UPDATED__'], [$name, $table, $primary, $timestamps, $created_at, $updated_at], $template);
             file_put_contents(self::$appFolder . 'models/' . $name . '.php', $template);
 

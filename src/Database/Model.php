@@ -86,8 +86,8 @@
         final public function __construct(){
             // Gets the table name
             if(empty($this->_table)){
-                $classname = explode('\\', get_class($this));
-                $this->_table = Util::snakeCase(end($classname));
+                $classname = Util::classname($this);
+                $this->_table = Util::snakeCase($classname);
             }
 
             // Constructs the query builder

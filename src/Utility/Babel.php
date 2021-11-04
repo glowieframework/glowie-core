@@ -55,7 +55,7 @@
 
         /**
          * Gets an internalization string from a language configuration.
-         * @param string $key String key to get.
+         * @param string $key String key to get (accepts dot notation keys).
          * @param string $lang (Optional) Language name to get string from. Leave empty to use the current active language.
          * @return string|null Returns internationalization string or null if not found.
          */
@@ -64,7 +64,7 @@
             if(empty($lang)) $lang = self::$active_language;
 
             // Checks if specified language was defined
-            if(!empty(self::$languages[$lang])) return self::$languages[$lang][$key] ?? null;
+            if(!empty(self::$languages[$lang])) return Util::arrayGet(self::$languages[$lang], $key, '');
 
             // Language was not found
             throw new i18nException('Language "' . $lang . '" does not exist in "app/languages"');

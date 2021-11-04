@@ -1,6 +1,8 @@
 <?php
     namespace Glowie\Core\Database;
 
+    use Util;
+
     /**
      * Migration core for Glowie application.
      * @category Migrations
@@ -48,8 +50,7 @@
          */
         final public function __construct(){
             // Creates the connection and stores the migration name
-            $classname = explode('\\', get_class($this));
-            $this->name = end($classname);
+            $this->name = Util::classname($this);
             $this->db = new Kraken('glowie', $this->database);
             $this->forge = new Skeleton('glowie', $this->database);
 

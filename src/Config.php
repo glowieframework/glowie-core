@@ -1,5 +1,7 @@
 <?php
     namespace Glowie\Core;
+
+    use Util;
     
     /**
      * Glowie configuration handler.
@@ -36,12 +38,12 @@
 
         /**
          * Gets a configuration variable.
-         * @param string $key Key to get value.
+         * @param string $key Key to get value (accepts dot notation keys).
          * @param mixed $default (Optional) Default value to return if the key does not exist.
          * @return mixed Returns the value if exists or the default if not.
          */
         public static function get(string $key, $default = null){
-            return self::$config[$key] ?? $default;
+            return Util::arrayGet(self::$config, $key, $default);
         }
 
         /**
@@ -50,7 +52,8 @@
          * @return bool Returns true or false.
          */
         public static function has(string $key){
-            return isset(self::$config[$key]);
+            $value = Util::arrayGet(self::$config, $key);
+            return !is_null($value);
         }
 
         /**
