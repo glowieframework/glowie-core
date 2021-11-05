@@ -21,7 +21,7 @@
          * Registers the error handlers for CLI.
          */
         public static function register(){
-            $level = Config::get('error_reporting', E_ALL);
+            $level = Config::get('error_reporting.level', E_ALL);
             error_reporting($level);
             mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
             set_exception_handler([self::class, 'exceptionHandler']);
@@ -95,7 +95,7 @@
          * @param string $content Content to append to the file.
          */
         private static function log(string $content){
-            if(!Config::get('error_log', true)) return;
+            if(!Config::get('error_reporting.log', true)) return;
             if(!is_writable(Firefly::getAppFolder() . 'storage')){
                 Firefly::print('<bg="red"><color="black">Unable to log errors!</color></bg>');
                 Firefly::print('<color="red">Directory "app/storage" is not writable, please check your chmod settings</color>');

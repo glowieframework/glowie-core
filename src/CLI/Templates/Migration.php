@@ -16,10 +16,10 @@
     class __FIREFLY_TEMPLATE_NAME__ extends Migration{
 
         /**
-         * Migration database connection settings.
-         * @var array
+         * Migration database connection name (from your app configuration).
+         * @var string
          */
-        protected $database = [];
+        protected $database = 'default';
 
         /**
          * This method will be called before any other methods from this migration.

@@ -2,7 +2,7 @@
     namespace Glowie\Core;
 
     use Util;
-    
+
     /**
      * Glowie configuration handler.
      * @category Configuration
@@ -20,7 +20,7 @@
          * @var array
          */
         private static $config = [];
-        
+
         /**
          * Loads the configuration file.
          * @param string $appFolder (Optional) Application "app" folder path relative to the running script.
@@ -52,8 +52,7 @@
          * @return bool Returns true or false.
          */
         public static function has(string $key){
-            $value = Util::arrayGet(self::$config, $key);
-            return !is_null($value);
+            return !is_null(self::get($key));
         }
 
         /**

@@ -185,6 +185,25 @@
         }
 
         /**
+         * Unflattens a single level array in dot notation to a multi-dimensional array.
+         * @param array $array Array to unflatten.
+         * @return array Returns the resulting array.
+         */
+        public static function undotArray(array $array){
+            $result = [];
+            foreach ($array as $key => $value) {
+                $parts = explode('.', $key);
+                $nested = &$result;
+                while (count($parts) > 1) {
+                    $nested = &$nested[array_shift($parts)];
+                    if (!is_array($nested)) $nested = [];
+                }
+                $nested[array_shift($parts)] = $value;
+            }
+            return $result;
+        }
+
+        /**
          * Returns a random item from an array.
          * @param array $array Array to pick a random item.
          * @return mixed Returns the random item value.
@@ -313,8 +332,8 @@
          * @return string|bool Returns the encrypted string on success or false on errors.
          */
         public static function encryptString(string $string, string $method = 'sha256'){
-            $key = hash($method, Config::get('app_key', 'f08e8ba131c7abab97dba275fab5a85e'));
-            $iv = substr(hash($method, Config::get('app_token', 'd147723d9e91340d9dd28fbd5a0b6651')), 0, 16);
+            $key = hash($method, Config::get('secret.app_key', 'f08e8ba131c7abab97dba275fab5a85e'));
+            $iv = substr(hash($method, Config::get('secret.app_token', 'd147723d9e91340d9dd28fbd5a0b6651')), 0, 16);
             $hash = openssl_encrypt($string, "AES-256-CBC", $key, 0, $iv);
             if(!$hash) return false;
             return base64_encode($hash);
@@ -327,8 +346,8 @@
          * @return string|bool Returns the decrypted string on success or false on errors.
          */
         public static function decryptString(string $string, string $method = 'sha256'){
-            $key = hash($method, Config::get('app_key', 'f08e8ba131c7abab97dba275fab5a85e'));
-            $iv = substr(hash($method, Config::get('app_token', 'd147723d9e91340d9dd28fbd5a0b6651')), 0, 16);
+            $key = hash($method, Config::get('secret.app_key', 'f08e8ba131c7abab97dba275fab5a85e'));
+            $iv = substr(hash($method, Config::get('secret.app_token', 'd147723d9e91340d9dd28fbd5a0b6651')), 0, 16);
             $hash = base64_decode($string);
             if(!$hash) return false;
             return openssl_decrypt($hash, "AES-256-CBC", $key, 0, $iv);;

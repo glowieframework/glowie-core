@@ -28,10 +28,10 @@
         protected $forge;
 
         /**
-         * Migration database connection settings.
-         * @var array
+         * Migration database connection name (from your app configuration).
+         * @var string
          */
-        protected $database = [];
+        protected $database = 'default';
 
         /**
          * Migration name.

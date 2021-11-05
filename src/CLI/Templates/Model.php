@@ -22,10 +22,10 @@
         protected $_table = '__FIREFLY_TEMPLATE_TABLE__';
 
         /**
-         * Model database connection settings.
-         * @var array
+         * Model database connection name (from your app configuration).
+         * @var string
          */
-        protected $_database = [];
+        protected $_database = 'default';
 
         /**
          * Table primary key name.

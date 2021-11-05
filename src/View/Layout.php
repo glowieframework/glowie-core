@@ -70,7 +70,7 @@
             }
 
             // Render layout
-            if(Config::get('skeltch', true)) $layout = Skeltch::run($layout);
+            if(Config::get('skeltch.enabled', true)) $layout = Skeltch::run($layout);
             include($layout);
         }
 

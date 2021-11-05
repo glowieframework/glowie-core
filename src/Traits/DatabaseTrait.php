@@ -49,12 +49,6 @@
         private $_connection;
 
         /**
-         * Global connection handler.
-         * @var mysqli
-         */
-        public static $_global;
-
-        /**
          * Raw query.
          * @var string
          */
@@ -86,50 +80,33 @@
         }
 
         /**
-         * Sets the database connection settings.
-         * @param array $database Associative array with the database connection settings.\
-         * Use an empty array to connect to the environment defined database (from **app/config/Config.php**).
+         * Sets the database connection.
+         * @param string $database Database connection name (from your app configuration).
          * @return $this Current instance for nested calls.
          * @throws DatabaseException Throws an exception if the connection fails.
          */
-        public function database(array $database){
-            // Checks for the global database setting
-            $global = empty($database);
-            if ($global) $database = Config::get('database', [
-                'host' => 'localhost',
-                'username' => 'root',
-                'password' => '',
-                'db' => 'glowie',
-                'port' => 3306,
-                'charset' => 'utf8'
-            ]);
+        public function database(string $database){
+            // Gets the database configuration
+            $name = $database;
+            $database = Config::get("database.$database");
+            if(!$database) throw new DatabaseException([], 'Database connection setting "' . $name . '" not found in your app configuration');
 
             // Validate settings
-            if (empty($database['host'])) throw new DatabaseException($database, 'Database host not defined');
-            if (empty($database['username'])) throw new DatabaseException($database, 'Database username not defined');
-            if (empty($database['db'])) throw new DatabaseException($database, 'Database name not defined');
+            if (empty($database['host'])) throw new DatabaseException($database, 'Database connection "' . $name . '" host not defined');
+            if (empty($database['username'])) throw new DatabaseException($database, 'Database connection "' . $name . '" username not defined');
+            if (empty($database['db'])) throw new DatabaseException($database, 'Database connection "' . $name . '" name not defined');
             if (empty($database['port'])) $database['port'] = 3306;
             if (empty($database['charset'])) $database['charset'] = 'utf8';
 
             // Saves the database connection
             try {
-                if($global){
-                    // Checks if the global database is already connected
-                    if(DatabaseTrait::$_global){
-                        $connection = DatabaseTrait::$_global;
-                    }else{
-                        $connection = new mysqli($database['host'], $database['username'], $database['password'], $database['db'], $database['port']);
-                        $connection->set_charset($database['charset']);
-                        DatabaseTrait::$_global = $connection;
-                    }
-                }else{
-                    $connection = new mysqli($database['host'], $database['username'], $database['password'], $database['db'], $database['port']);
-                    $connection->set_charset($database['charset']);
-                }
+                $this->_connection = new mysqli($database['host'], $database['username'], $database['password'], $database['db'], $database['port']);
+                $this->_connection->set_charset($database['charset']);
             } catch (Exception $e) {
                 throw new DatabaseException($database, $e->getMessage(), $e->getCode(), $e);
             }
-            $this->_connection = $connection;
+
+            // Returns the current instance
             return $this;
         }
 
@@ -218,7 +195,7 @@
 
             try {
                 // Run operations
-                call_user_func_array($operations, array($this));
+                call_user_func_array($operations, [$this]);
             } catch (Exception $e) {
                 // If something fails, rolls back the transaction
                 return $this->rollback();

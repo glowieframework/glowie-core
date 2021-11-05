@@ -3,6 +3,7 @@
 
     use Util;
     use Glowie\Core\Exception\RoutingException;
+    use Glowie\Core\Config;
     use Glowie\Core\Exception\FileException;
 
     /**
@@ -192,6 +193,22 @@
             $route = self::$request->getURI();
             if(empty($route)) $route = '/';
 
+            // Checks for maintenance mode
+            if(Config::get('maintenance.enabled', false)){
+                // Validates secret bypass route
+                $cookies = new Cookies();
+                $key = Config::get('maintenance.bypass_key', '470c054cfc6780df66bf3922eddbd883');
+
+                // Saves the maintenance key in the cookies
+                if($route == $key){
+                    $cookies->set('MAINTENANCE_KEY', $key);
+                    return self::$response->redirectBase();
+                }
+
+                // Validates the cookie
+                if($cookies->get('MAINTENANCE_KEY') != $key) return self::callServiceUnavailable($route);
+            }
+
             // Stores current route configuration
             $config = null;
             $routeName = $route;
@@ -370,6 +387,21 @@
                 self::$controller = new $controller($route, $params);
                 if (is_callable([self::$controller, 'init'])) self::$controller->init();
                 if (is_callable([self::$controller, 'methodNotAllowed'])) self::$controller->methodNotAllowed();
+            }
+        }
+
+        /**
+         * Calls `serviceUnavailable()` action in Error controller.
+         * @param string $route Request route.
+         * @param array $params (Optional) Route parameters.
+         */
+        private static function callServiceUnavailable(string $route, array $params = []){
+            self::$response->setStatusCode(Response::HTTP_SERVICE_UNAVAILABLE);
+            $controller = 'Glowie\Controllers\Error';
+            if (class_exists($controller)) {
+                self::$controller = new $controller($route, $params);
+                if (is_callable([self::$controller, 'init'])) self::$controller->init();
+                if (is_callable([self::$controller, 'serviceUnavailable'])) self::$controller->serviceUnavailable();
             }
         }
 

@@ -65,7 +65,7 @@
             if(!empty($params)) foreach($params as $key => $value) $this->{$key} = $value;
 
             // Render view
-            if(Config::get('skeltch', true)) $view = Skeltch::run($view);
+            if(Config::get('skeltch.enabled', true)) $view = Skeltch::run($view);
             $this->_content = $this->getBuffer($view);
             if($parse) echo $this->_content;
         }

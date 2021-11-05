@@ -43,7 +43,7 @@
             Session::register();
 
             // Timezone configuration
-            date_default_timezone_set(Config::get('timezone', 'America/Sao_Paulo'));
+            date_default_timezone_set(Config::get('other.timezone', 'America/Sao_Paulo'));
 
             // Load route configuration file
             Rails::load();

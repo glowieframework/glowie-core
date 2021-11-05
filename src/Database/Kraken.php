@@ -102,10 +102,9 @@
         /**
          * Creates a new Kraken database instance.
          * @param string $table (Optional) Table name to set as default.
-         * @param array $database (Optional) Associative array with the database connection settings.\
-         * Use an empty array to connect to the environment defined database (from **app/config/Config.php**).
+         * @param string $database (Optional) Database connection name (from your app configuration).
          */
-        public function __construct(string $table = 'glowie', array $database = []){
+        public function __construct(string $table = 'glowie', string $database = 'default'){
             $this->table($table);
             $this->database($database);
         }

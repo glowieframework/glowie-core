@@ -122,7 +122,7 @@
             Babel::load(self::$appFolder);
 
             // Timezone configuration
-            date_default_timezone_set(Config::get('timezone', 'America/Sao_Paulo'));
+            date_default_timezone_set(Config::get('other.timezone', 'America/Sao_Paulo'));
 
             // Load route configuration file
             Rails::load(self::$appFolder);
@@ -260,7 +260,7 @@
                 // If outside the console, remove closing tags
                 $text = preg_replace(['/<\/color>/i', '/<\/bg>/i'], '', $text);
             }
-            
+
             // Remove remaining colors or backgrounds
             $text = preg_replace(['/<color="(.+)">/i', '/<bg="(.+)">/i'], '', $text);
 
@@ -372,12 +372,8 @@
                 // Captures the output buffer
                 Buffer::start();
 
-                // Appends semicolon to the command if not an opening bracket
-                if(!Util::endsWith($__command, '(') && !Util::endsWith($__command, '{') && !Util::endsWith($__command, '[') && !Util::endsWith($__command, ';')){
-                    $__command .= ';';
-                }
-
                 // Evaluates the command
+                $__command .= ';';
                 eval($__command);
 
                 // Flushes the buffer
@@ -419,17 +415,21 @@
         }
 
         /**
-         * Tests the database connection for the current environment.
+         * Tests a database connection.
          */
         private static function testDatabase(){
+            // Checks if name was filled
+            $name = self::argOrInput('name', "Database connection (default): ", 'default');
+            $name = trim($name);
+
             // Attempts to create the connection
-            self::print('<color="blue">Connecting to the database...</color>');
+            self::print('<color="blue">Connecting to "' . $name . '" database...</color>');
             $time = microtime(true);
-            new Kraken();
+            new Kraken('glowie', $name);
 
             // Prints the result
             $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
-            self::print('<color="green">Database connected successfully in ' . $time . '!</color>');
+            self::print('<color="green">Database "' . $name . '" connected successfully in ' . $time . '!</color>');
             return true;
         }
 
@@ -717,7 +717,7 @@
             self::print('  <color="yellow">clear-cache</color> | Clears the application cache folder');
             self::print('  <color="yellow">clear-session</color> | Clears the application session folder');
             self::print('  <color="yellow">clear-log</color> | Clears the application error log');
-            self::print('  <color="yellow">test-database</color> | Tests the database connection for the current environment');
+            self::print('  <color="yellow">test-database</color> <color="blue">--name</color> | Tests a database connection');
             self::print('  <color="yellow">create-command</color> <color="blue">--name</color> | Creates a new command for your application');
             self::print('  <color="yellow">create-controller</color> <color="blue">--name</color> | Creates a new controller for your application');
             self::print('  <color="yellow">create-language</color> <color="blue">--name</color> | Creates a new language file for your application');

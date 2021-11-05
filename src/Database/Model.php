@@ -27,10 +27,10 @@
         protected $_table = '';
 
         /**
-         * Model database connection settings.
-         * @var array
+         * Model database connection name (from your app configuration).
+         * @var string
          */
-        protected $_database = [];
+        protected $_database = 'default';
 
         /**
          * Table primary key name.
