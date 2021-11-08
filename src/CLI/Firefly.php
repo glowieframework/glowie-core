@@ -4,6 +4,7 @@
     use Glowie\Core\Database\Kraken;
     use Glowie\Core\Exception\FileException;
     use Glowie\Core\Exception\ConsoleException;
+    use Glowie\Core\Exception\TestException;
     use Glowie\Core\Error\HandlerCLI;
     use Glowie\Core\Config;
     use Glowie\Core\Http\Rails;
@@ -131,7 +132,7 @@
             array_shift(self::$args);
             if(!isset(self::$args[0])){
                 self::print('<bg="magenta"><color="black">Welcome to Firefly!</color></bg>');
-                self::print('<color="yellow">To view a list of valid commands, use php firefly help</color>');
+                self::print('<color="yellow">To see the commands list, use php firefly help</color>');
                 return;
             }
 
@@ -221,11 +222,17 @@
                 case 'create-model':
                     self::createModel();
                     break;
+                case 'create-test':
+                    self::createTest();
+                    break;
                 case 'migrate':
                     self::migrate();
                     break;
                 case 'rollback':
                     self::rollback();
+                    break;
+                case 'test':
+                    self::test();
                     break;
                 case 'version':
                     self::version();
@@ -241,7 +248,7 @@
                         if (is_callable([$class, 'init'])) $class->init();
                         $class->run();
                     }else{
-                        throw new ConsoleException($command, self::$args, 'Unknown command ' . $command);
+                        throw new ConsoleException($command, self::$args, "Unknown command \"{$command}\"");
                     }
                     break;
             }
@@ -598,6 +605,30 @@
         }
 
         /**
+         * Creates a new unit test.
+         */
+        private static function createTest(){
+            // Checks permissions
+            if(!is_writable(self::$appFolder . 'tests')) throw new FileException('Directory "app/tests" is not writable, please check your chmod settings');
+
+            // Checks if name was filled
+            $name = self::argOrInput('name', 'Test name: ');
+
+            // Validates the test name
+            if(empty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
+
+            // Creates the file
+            $name = Util::pascalCase($name);
+            $template = file_get_contents(self::TEMPLATES_FOLDER . 'Test.php');
+            $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
+            file_put_contents(self::$appFolder . 'tests/' . $name . '.php', $template);
+
+            // Success message
+            self::print("<color=\"green\">Test {$name} created successfully!</color>");
+            return true;
+        }
+
+        /**
          * Runs pending migrations.
          */
         private static function migrate(){
@@ -642,7 +673,7 @@
                 self::print('<color="yellow">There are no new migrations to apply.</color>');
                 return true;
             }else{
-                self::print('<color="yellow">All new migrations were applied successfully.</color>');
+                self::print('<color="yellow">' . $stepsDone . ' migrations were applied successfully.</color>');
                 return true;
             }
         }
@@ -692,9 +723,94 @@
                 self::print('<color="yellow">There are no migrations to rollback.</color>');
                 return true;
             }else{
-                self::print('<color="yellow">Migrations were rolled back successfully.</color>');
+                self::print('<color="yellow">' . $stepsDone . ' migrations were rolled back successfully.</color>');
                 return true;
             }
+        }
+
+        /**
+         * Runs the application unit tests.
+         */
+        private static function test(){
+            // Checks if name was filled
+            $name = self::getArg('name');
+            
+            // Validates the test name
+            if(!empty($name)){
+                $filename = self::$appFolder . 'tests/' . $name . '.php';
+                if(!file_exists($filename)) throw new FileException('Test "' . $name . '" does not exist in "app/tests"');
+                $files = [$filename];
+            }else{
+                $files = glob(self::$appFolder . 'tests/*.php');
+            }
+
+            // Checks for empty tests folder
+            if(empty($files)){
+                self::print('<color="yellow">There are no tests to run.</color>');
+                return false;
+            }
+
+            // Gets the bail option
+            $bail = (bool)self::getArg('bail', false);
+
+            // Stores the core class methods
+            $excludes = get_class_methods('Glowie\Core\UnitTest');
+
+            // Loops through all the test files
+            foreach ($files as $file){
+                // Gets the test class name
+                $name = pathinfo($file, PATHINFO_FILENAME);
+                $classname = 'Glowie\Tests\\' . $name;
+                if(!class_exists($classname)) continue;
+
+                // Prints the classname
+                self::print('<color="blue">Running ' . $name . ' tests...</color>');
+
+                // Gets the class methods
+                $tests = array_diff(get_class_methods($classname), $excludes);
+
+                // Instantiates the test class
+                $testClass = new $classname;
+
+                // Run init method if any
+                if (is_callable([$testClass, 'init'])) $testClass->init();
+                
+                // Run each test
+                $result = ['success' => 0, 'fail' => 0];
+                foreach($tests as $test){
+                    // Stores the execution start time
+                    $time = microtime(true);
+
+                    // Runs the test
+                    try {
+                        $testClass->{$test}();
+                        $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
+                        $result['success']++;
+                        self::print("<color=\"green\">Test {$name}->{$test}() passed in {$time}!</color>");
+                    } catch (TestException $e) {
+                        $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
+                        self::print("<bg=\"red\"><color=\"black\">Test failed:</color></bg> <color=\"red\">{$name}->{$test}() in {$time}!</color>");
+                        self::print('<color="red">' . $e->getMessage() . '</color>');
+                        $result['fail']++;
+
+                        // Stop tests after failure
+                        if($bail){
+                            if (is_callable([$testClass, 'finish'])) $testClass->finish();
+                            self::print('');
+                            self::print("<color=\"yellow\">Partial tests were done: {$result['success']} successful, {$result['fail']} failed.</color>");
+                            return false;
+                        }
+                    }
+                };
+
+                // Run finish method if any
+                if (is_callable([$testClass, 'finish'])) $testClass->finish();
+            }
+            
+            // Prints result message
+            self::print('');
+            self::print("<color=\"yellow\">All tests were done: {$result['success']} successful, {$result['fail']} failed.</color>");
+            return true;
         }
 
         /**
@@ -724,8 +840,10 @@
             self::print('  <color="yellow">create-middleware</color> <color="blue">--name</color> | Creates a new middleware for your application');
             self::print('  <color="yellow">create-migration</color> <color="blue">--name</color> | Creates a new migration for your application');
             self::print('  <color="yellow">create-model</color> <color="blue">--name --table --primary --timestamps --created --updated</color> | Creates a new model for your application');
+            self::print('  <color="yellow">create-test</color> <color="blue">--name</color> | Creates a new unit test for your application');
             self::print('  <color="yellow">migrate</color> <color="blue">--steps</color> | Applies pending migrations from your application');
             self::print('  <color="yellow">rollback</color> <color="blue">--steps</color> | Rolls back the last applied migration');
+            self::print('  <color="yellow">test</color> <color="blue">--name --bail</color> | Runs the application unit tests');
             self::print('  <color="yellow">version</color> | Displays current Firefly version');
             self::print('  <color="yellow">help</color> | Displays this help message');
         }

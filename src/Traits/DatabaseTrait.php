@@ -43,10 +43,16 @@
         private $_table;
 
         /**
-         * Current connection handler.
-         * @var mysqli
+         * Current connection name.
+         * @var string
          */
         private $_connection;
+
+        /**
+         * Database connection handlers.
+         * @var array
+         */
+        public static $_handlers = [];
 
         /**
          * Raw query.
@@ -87,23 +93,30 @@
          */
         public function database(string $database){
             // Gets the database configuration
-            $name = $database;
-            $database = Config::get("database.$database");
-            if(!$database) throw new DatabaseException([], 'Database connection setting "' . $name . '" not found in your app configuration');
+            $this->_connection = $database;
 
-            // Validate settings
-            if (empty($database['host'])) throw new DatabaseException($database, 'Database connection "' . $name . '" host not defined');
-            if (empty($database['username'])) throw new DatabaseException($database, 'Database connection "' . $name . '" username not defined');
-            if (empty($database['db'])) throw new DatabaseException($database, 'Database connection "' . $name . '" name not defined');
-            if (empty($database['port'])) $database['port'] = 3306;
-            if (empty($database['charset'])) $database['charset'] = 'utf8';
+            // Checks if there is not an active handler for this connection
+            if(!isset(DatabaseTrait::$_handlers[$this->_connection])){
+                $database = Config::get("database.$database");
+                if(!$database) throw new DatabaseException([], 'Database connection setting "' . $this->_connection . '" not found in your app configuration');
+    
+                // Validate settings
+                if (empty($database['host'])) throw new DatabaseException($database, 'Database connection "' . $this->_connection . '" host not defined');
+                if (empty($database['username'])) throw new DatabaseException($database, 'Database connection "' . $this->_connection . '" username not defined');
+                if (empty($database['db'])) throw new DatabaseException($database, 'Database connection "' . $this->_connection . '" name not defined');
+                if (empty($database['port'])) $database['port'] = 3306;
+                if (empty($database['charset'])) $database['charset'] = 'utf8';
+    
+                // Saves the database connection
+                try {
+                    // Creates the connection
+                    DatabaseTrait::$_handlers[$this->_connection] = new mysqli($database['host'], $database['username'], $database['password'], $database['db'], $database['port']);
 
-            // Saves the database connection
-            try {
-                $this->_connection = new mysqli($database['host'], $database['username'], $database['password'], $database['db'], $database['port']);
-                $this->_connection->set_charset($database['charset']);
-            } catch (Exception $e) {
-                throw new DatabaseException($database, $e->getMessage(), $e->getCode(), $e);
+                    // Sets the charset
+                    $this->getConnection()->set_charset($database['charset']);
+                } catch (Exception $e) {
+                    throw new DatabaseException($database, $e->getMessage(), $e->getCode(), $e);
+                }
             }
 
             // Returns the current instance
@@ -115,7 +128,7 @@
          * @return mysqli The connection object.
          */
         public function getConnection(){
-            return $this->_connection;
+            return DatabaseTrait::$_handlers[$this->_connection];
         }
 
         /**
@@ -124,7 +137,7 @@
          * @return string Escaped string.
          */
         public function escape($string){
-            return $this->_connection->escape_string((string)$string);
+            return $this->getConnection()->escape_string((string)$string);
         }
 
         /**
@@ -159,7 +172,7 @@
         public function beginTransaction(){
             if($this->_transaction) throw new Exception('DB: There is a pending transaction already running');
             $this->_transaction = true;
-            return $this->_connection->begin_transaction();
+            return $this->getConnection()->begin_transaction();
         }
 
         /**
@@ -170,7 +183,7 @@
         public function commit(){
             if(!$this->_transaction) throw new Exception('DB: There is not a running transaction');
             $this->_transaction = false;
-            return $this->_connection->commit();
+            return $this->getConnection()->commit();
         }
 
         /**
@@ -181,7 +194,7 @@
         public function rollback(){
             if(!$this->_transaction) throw new Exception('DB: There is not a running transaction');
             $this->_transaction = false;
-            return $this->_connection->rollback();
+            return $this->getConnection()->rollback();
         }
 
         /**
@@ -216,7 +229,7 @@
             try {
                 // Run query and clear its data
                 $built = $this->getQuery();
-                $query = $this->_connection->query($built);
+                $query = $this->getConnection()->query($built);
                 $this->clearQuery();
 
                 // Checks for query result
@@ -249,7 +262,7 @@
                     }
 
                     // Stores the last insert ID and returns the result
-                    $this->_lastInsertId = $this->_connection->insert_id;
+                    $this->_lastInsertId = $this->getConnection()->insert_id;
                     return $result;
                 }else{
                     // Query failed

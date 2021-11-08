@@ -1,7 +1,6 @@
 <?php
     namespace Glowie\Core;
 
-    use Util;
     use Babel;
     use Glowie\Core\Http\Session;
     use Glowie\Core\Error\Handler;

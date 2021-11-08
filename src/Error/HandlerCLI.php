@@ -95,7 +95,7 @@
          * @param string $content Content to append to the file.
          */
         private static function log(string $content){
-            if(!Config::get('error_reporting.log', true)) return;
+            if(!Config::get('error_reporting.logging', true)) return;
             if(!is_writable(Firefly::getAppFolder() . 'storage')){
                 Firefly::print('<bg="red"><color="black">Unable to log errors!</color></bg>');
                 Firefly::print('<color="red">Directory "app/storage" is not writable, please check your chmod settings</color>');

@@ -118,11 +118,7 @@
 
                     // [REQUIRED] - Checks if variable is not empty or null
                     case 'required':
-                        if(!isset($data) || $data == []){
-                            $result['required'] = true;
-                        }else{
-                            if(is_string($data) && trim($data) == '') $result['required'] = true;
-                        }
+                        if (Util::isEmpty($data)) $result['required'] = true;
                         break;
 
                     // [MIN] - Checks if variable is bigger or equal than min
@@ -265,13 +261,7 @@
 
                     // [EMPTY] - Check if variable is empty
                     case 'empty':
-                        if (is_string($data)){
-                            if(trim($data) != '') $result['empty'] = true;
-                        }else{
-                            if (isset($data)){
-                                if(!empty($data)) $result['empty'] = true;
-                            }
-                        }
+                        if (!Util::isEmpty($data)) $result['empty'] = true;
                         break;
 
                     // [ENDSWITH] - Check if variable ends with string

@@ -150,7 +150,7 @@
          * @param string $content Content to append to the file.
          */
         private static function log(string $content){
-            if(!Config::get('error_reporting.log', true)) return;
+            if(!Config::get('error_reporting.logging', true)) return;
             if(!is_writable('../storage')) die('Error: Directory "app/storage" is not writable, please check your chmod settings');
             file_put_contents('../storage/error.log', $content, FILE_APPEND);
         }

@@ -1433,7 +1433,7 @@
          * @return int Number of affected rows.
          */
         public function affectedRows(){
-            return $this->_connection->affected_rows;
+            return $this->getConnection()->affected_rows;
         }
 
         /**
@@ -1465,6 +1465,7 @@
             unset($params['_table']);
             unset($params['_connection']);
             unset($params['_transaction']);
+            unset($params['_returnAssoc']);
             return $params;
         }
 

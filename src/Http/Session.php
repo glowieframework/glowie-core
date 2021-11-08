@@ -44,7 +44,7 @@
             // INI settings
             ini_set('session.name', 'app_session');
             ini_set('session.gc_probability', '1');
-            ini_set('session.gc_divisor', (string)Config::get('session.clean', 50));
+            ini_set('session.gc_divisor', (string)Config::get('session.gc_cleaning', 50));
             ini_set('session.gc_maxlifetime', (string)Config::get('session.lifetime', 120));
             ini_set('session.cookie_httponly', '1');
             ini_set('session.use_cookies', '1');
