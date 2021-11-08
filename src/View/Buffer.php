@@ -1,5 +1,5 @@
 <?php
-    namespace Glowie\Core;
+    namespace Glowie\Core\View;
 
     /**
      * Output buffer handler for Glowie application.

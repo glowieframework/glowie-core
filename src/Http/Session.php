@@ -2,7 +2,7 @@
     namespace Glowie\Core\Http;
 
     use Glowie\Core\Exception\FileException;
-    use Glowie\Core\Config;
+    use Config;
 
     /**
      * Session manager for Glowie application.

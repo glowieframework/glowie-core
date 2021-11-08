@@ -2,8 +2,8 @@
     namespace Glowie\Core\Http;
 
     use Util;
+    use Config;
     use Glowie\Core\Exception\RoutingException;
-    use Glowie\Core\Config;
     use Glowie\Core\Exception\FileException;
 
     /**

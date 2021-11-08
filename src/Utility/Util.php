@@ -2,8 +2,7 @@
     use Glowie\Core\Http\Rails;
     use Glowie\Core\Http\Session;
     use Glowie\Core\Http\Response;
-    use Glowie\Core\Config;
-    use Glowie\Core\Buffer;
+    use Glowie\Core\View\Buffer;
     use Glowie\Core\Exception\FileException;
 
     /**
@@ -23,7 +22,7 @@
          * @return string Current Glowie core version.
          */
         public static function getVersion(){
-            return '1.0.6';
+            return '1.0.7';
         }
 
         /**

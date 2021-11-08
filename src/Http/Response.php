@@ -4,7 +4,7 @@
     use Util;
     use SimpleXMLElement;
     use Glowie\Core\Element;
-    use Glowie\Core\Buffer;
+    use Glowie\Core\View\Buffer;
 
     /**
      * Response handler for Glowie application.

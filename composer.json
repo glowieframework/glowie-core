@@ -30,6 +30,7 @@
         },
         "files": [
             "src/Utility/Babel.php",
+            "src/Utility/Config.php",
             "src/Utility/Util.php"
         ]
     },

@@ -2,7 +2,7 @@
     namespace Glowie\Core\View;
 
     use Glowie\Core\Exception\FileException;
-    use Glowie\Core\Config;
+    use Config;
 
     /**
      * Templating engine for Glowie application.

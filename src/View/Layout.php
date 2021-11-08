@@ -3,7 +3,7 @@
 
     use Glowie\Core\Http\Rails;
     use Glowie\Core\Traits\ElementTrait;
-    use Glowie\Core\Config;
+    use Config;
     use BadMethodCallException;
 
     /**

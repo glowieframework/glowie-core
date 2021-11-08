@@ -1,7 +1,4 @@
 <?php
-    namespace Glowie\Core;
-
-    use Util;
 
     /**
      * Glowie configuration handler.

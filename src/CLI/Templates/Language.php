@@ -9,7 +9,15 @@
     */
 
     return [
-        'hello' => 'This is my first internationalization string'
+
+        'hello' => 'This is my first internationalization string',
+
+        'nested' => [
+
+            'sample' => 'You can also create nested strings'
+
+        ]
+
     ];
 
 ?>

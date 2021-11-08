@@ -6,10 +6,10 @@
     use Glowie\Core\Exception\ConsoleException;
     use Glowie\Core\Exception\TestException;
     use Glowie\Core\Error\HandlerCLI;
-    use Glowie\Core\Config;
     use Glowie\Core\Http\Rails;
-    use Glowie\Core\Buffer;
+    use Glowie\Core\View\Buffer;
     use Util;
+    use Config;
     use Babel;
 
     /**
@@ -244,8 +244,6 @@
                     $classname = 'Glowie\Commands\\' . Util::pascalCase($command);
                     if(class_exists($classname)){
                         $class = new $classname;
-                        if (!is_callable([$class, 'run'])) throw new ConsoleException($command, self::$args, "Command \"{$classname}\" does not have a run() method");
-                        if (is_callable([$class, 'init'])) $class->init();
                         $class->run();
                     }else{
                         throw new ConsoleException($command, self::$args, "Unknown command \"{$command}\"");
@@ -582,8 +580,8 @@
             $primary = trim($primary);
 
             // Checks if timestamps was filled
-            $timestamps = self::argOrInput('timestamps', 'Handle timestamp fields (true): ', 'true');
-            $timestamps = filter_var($timestamps, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
+            $timestamps = (bool)self::argOrInput('timestamps', 'Handle timestamp fields (true): ', true);
+            $timestamps = $timestamps ? 'true' : 'false';
 
             // Checks if created field was filled
             $created_at = self::argOrInput('created', 'Created at field name (created_at): ', 'created_at');
@@ -673,6 +671,7 @@
                 self::print('<color="yellow">There are no new migrations to apply.</color>');
                 return true;
             }else{
+                self::print('');
                 self::print('<color="yellow">' . $stepsDone . ' migrations were applied successfully.</color>');
                 return true;
             }
@@ -723,6 +722,7 @@
                 self::print('<color="yellow">There are no migrations to rollback.</color>');
                 return true;
             }else{
+                self::print('');
                 self::print('<color="yellow">' . $stepsDone . ' migrations were rolled back successfully.</color>');
                 return true;
             }
@@ -734,7 +734,7 @@
         private static function test(){
             // Checks if name was filled
             $name = self::getArg('name');
-            
+
             // Validates the test name
             if(!empty($name)){
                 $filename = self::$appFolder . 'tests/' . $name . '.php';
@@ -754,7 +754,11 @@
             $bail = (bool)self::getArg('bail', false);
 
             // Stores the core class methods
-            $excludes = get_class_methods('Glowie\Core\UnitTest');
+            $excludes = get_class_methods('Glowie\Core\Tests\UnitTest');
+            array_push($excludes, 'init', 'cleanup');
+
+            // Stores the result
+            $result = ['success' => 0, 'fail' => 0];
 
             // Loops through all the test files
             foreach ($files as $file){
@@ -763,20 +767,22 @@
                 $classname = 'Glowie\Tests\\' . $name;
                 if(!class_exists($classname)) continue;
 
-                // Prints the classname
-                self::print('<color="blue">Running ' . $name . ' tests...</color>');
-
                 // Gets the class methods
                 $tests = array_diff(get_class_methods($classname), $excludes);
+
+                // Checks if there are any tests
+                if(empty($tests)) continue;
+
+                // Prints the classname
+                self::print('<color="blue">Running ' . $name . ' tests...</color>');
 
                 // Instantiates the test class
                 $testClass = new $classname;
 
-                // Run init method if any
+                // Run init method if exists
                 if (is_callable([$testClass, 'init'])) $testClass->init();
-                
+
                 // Run each test
-                $result = ['success' => 0, 'fail' => 0];
                 foreach($tests as $test){
                     // Stores the execution start time
                     $time = microtime(true);
@@ -789,8 +795,7 @@
                         self::print("<color=\"green\">Test {$name}->{$test}() passed in {$time}!</color>");
                     } catch (TestException $e) {
                         $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
-                        self::print("<bg=\"red\"><color=\"black\">Test failed:</color></bg> <color=\"red\">{$name}->{$test}() in {$time}!</color>");
-                        self::print('<color="red">' . $e->getMessage() . '</color>');
+                        self::print("<bg=\"red\"><color=\"black\">Test failed:</color></bg> <color=\"red\">{$name}->{$test}() in {$time}. {$e->getMessage()}</color>");
                         $result['fail']++;
 
                         // Stop tests after failure
@@ -803,10 +808,10 @@
                     }
                 };
 
-                // Run finish method if any
-                if (is_callable([$testClass, 'finish'])) $testClass->finish();
+                // Run cleanup method if exists
+                if (is_callable([$testClass, 'cleanup'])) $testClass->cleanup();
             }
-            
+
             // Prints result message
             self::print('');
             self::print("<color=\"yellow\">All tests were done: {$result['success']} successful, {$result['fail']} failed.</color>");

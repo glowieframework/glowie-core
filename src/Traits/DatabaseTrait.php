@@ -7,9 +7,9 @@
     use Closure;
     use mysqli_sql_exception;
     use mysqli_result;
+    use Config;
     use Glowie\Core\Exception\QueryException;
     use Glowie\Core\Element;
-    use Glowie\Core\Config;
     use Glowie\Core\Exception\DatabaseException;
 
     /**
@@ -99,14 +99,14 @@
             if(!isset(DatabaseTrait::$_handlers[$this->_connection])){
                 $database = Config::get("database.$database");
                 if(!$database) throw new DatabaseException([], 'Database connection setting "' . $this->_connection . '" not found in your app configuration');
-    
+
                 // Validate settings
                 if (empty($database['host'])) throw new DatabaseException($database, 'Database connection "' . $this->_connection . '" host not defined');
                 if (empty($database['username'])) throw new DatabaseException($database, 'Database connection "' . $this->_connection . '" username not defined');
                 if (empty($database['db'])) throw new DatabaseException($database, 'Database connection "' . $this->_connection . '" name not defined');
                 if (empty($database['port'])) $database['port'] = 3306;
                 if (empty($database['charset'])) $database['charset'] = 'utf8';
-    
+
                 // Saves the database connection
                 try {
                     // Creates the connection

@@ -1,9 +1,9 @@
 <?php
     namespace Glowie\Core\Error;
 
-    use Glowie\Core\Config;
+    use Config;
     use Glowie\Core\Http\Response;
-    use Glowie\Core\Buffer;
+    use Glowie\Core\View\Buffer;
     use ErrorException;
 
     /**

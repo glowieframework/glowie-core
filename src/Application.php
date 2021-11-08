@@ -2,8 +2,10 @@
     namespace Glowie\Core;
 
     use Babel;
+    use Config;
     use Glowie\Core\Http\Session;
     use Glowie\Core\Error\Handler;
+    use Glowie\Core\View\Buffer;
     use Glowie\Core\Http\Rails;
 
     /**

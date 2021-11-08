@@ -2,7 +2,7 @@
     namespace Glowie\Core\Error;
 
     use Glowie\Core\CLI\Firefly;
-    use Glowie\Core\Config;
+    use Config;
     use ErrorException;
 
     /**

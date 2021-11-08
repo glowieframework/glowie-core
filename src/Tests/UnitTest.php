@@ -1,5 +1,5 @@
 <?php
-    namespace Glowie\Core;
+    namespace Glowie\Core\Tests;
 
     use Glowie\Core\Exception\TestException;
     use Util;

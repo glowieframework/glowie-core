@@ -1,7 +1,7 @@
 <?php
     namespace Glowie\Tests;
 
-    use Glowie\Core\UnitTest;
+    use Glowie\Core\Tests\UnitTest;
 
     /**
      * __FIREFLY_TEMPLATE_NAME__ test for Glowie application.
@@ -14,8 +14,20 @@
      * @version 1.0
      */
     class __FIREFLY_TEMPLATE_NAME__ extends UnitTest{
-        
-        // Create your test methods here
+
+        /**
+         * This method will be called before any other methods from this test.
+         */
+        public function init(){
+            //
+        }
+
+        /**
+         * This method will be called after all tests were done.
+         */
+        public function cleanup(){
+            //
+        }
 
     }
 
