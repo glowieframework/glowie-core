@@ -4,11 +4,11 @@
     use Glowie\Core\Database\Kraken;
     use Glowie\Core\Exception\FileException;
     use Glowie\Core\Exception\ConsoleException;
-    use Glowie\Core\Exception\TestException;
     use Glowie\Core\Error\HandlerCLI;
     use Glowie\Core\Http\Rails;
     use Glowie\Core\View\Buffer;
     use Util;
+    use Throwable;
     use Config;
     use Babel;
 
@@ -775,16 +775,27 @@
 
                 // Prints the classname
                 self::print('<color="blue">Running ' . $name . ' tests...</color>');
-
-                // Instantiates the test class
-                $testClass = new $classname;
-
+                
                 // Run init method if exists
-                if (is_callable([$testClass, 'init'])) $testClass->init();
+                try {
+                    $time = microtime(true);
+                    $testClass = new $classname;
+                    if (is_callable([$testClass, 'init'])) $testClass->init();
+                } catch (Throwable $e){
+                    $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
+                    self::print("<bg=\"red\"><color=\"black\">Test initialization failed:</color></bg> <color=\"red\">{$name} in {$time}. {$e->getMessage()}</color>");
+
+                    // Stop tests after failure
+                    if($bail){
+                        self::print('');
+                        self::print("<color=\"yellow\">Partial tests were done: {$result['success']} successful, {$result['fail']} failed.</color>");
+                        return false;
+                    }
+                }
 
                 // Run each test
                 foreach($tests as $test){
-                    // Stores the execution start time
+                    // Stores the test execution start time
                     $time = microtime(true);
 
                     // Runs the test
@@ -793,14 +804,13 @@
                         $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
                         $result['success']++;
                         self::print("<color=\"green\">Test {$name}->{$test}() passed in {$time}!</color>");
-                    } catch (TestException $e) {
+                    } catch (Throwable $e) {
                         $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
                         self::print("<bg=\"red\"><color=\"black\">Test failed:</color></bg> <color=\"red\">{$name}->{$test}() in {$time}. {$e->getMessage()}</color>");
                         $result['fail']++;
 
                         // Stop tests after failure
                         if($bail){
-                            if (is_callable([$testClass, 'finish'])) $testClass->finish();
                             self::print('');
                             self::print("<color=\"yellow\">Partial tests were done: {$result['success']} successful, {$result['fail']} failed.</color>");
                             return false;
@@ -809,7 +819,20 @@
                 };
 
                 // Run cleanup method if exists
-                if (is_callable([$testClass, 'cleanup'])) $testClass->cleanup();
+                try {
+                    $time = microtime(true);
+                    if (is_callable([$testClass, 'cleanup'])) $testClass->cleanup();
+                } catch(Throwable $e) {
+                    $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
+                    self::print("<bg=\"red\"><color=\"black\">Test cleanup failed:</color></bg> <color=\"red\">{$name} in {$time}. {$e->getMessage()}</color>");
+
+                    // Stop tests after failure
+                    if($bail){
+                        self::print('');
+                        self::print("<color=\"yellow\">Partial tests were done: {$result['success']} successful, {$result['fail']} failed.</color>");
+                        return false;
+                    }
+                }
             }
 
             // Prints result message

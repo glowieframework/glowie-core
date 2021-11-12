@@ -2,6 +2,7 @@
     namespace Glowie\Core\Traits;
 
     use Exception;
+    use Throwable;
     use mysqli;
     use stdClass;
     use Closure;
@@ -114,7 +115,7 @@
 
                     // Sets the charset
                     $this->getConnection()->set_charset($database['charset']);
-                } catch (Exception $e) {
+                } catch (Throwable $e) {
                     throw new DatabaseException($database, $e->getMessage(), $e->getCode(), $e);
                 }
             }
@@ -209,7 +210,7 @@
             try {
                 // Run operations
                 call_user_func_array($operations, [$this]);
-            } catch (Exception $e) {
+            } catch (Throwable $e) {
                 // If something fails, rolls back the transaction
                 return $this->rollback();
             }
