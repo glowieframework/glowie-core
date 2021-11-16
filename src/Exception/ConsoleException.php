@@ -17,7 +17,7 @@
     class ConsoleException extends Exception{
 
         /**
-         * Command that triggered the error.
+         * Command that thrown the exception.
          * @var string
          */
         private $command;
@@ -30,7 +30,7 @@
 
         /**
          * Creates a new instance of ConsoleException.
-         * @param string $command Command that triggered the error.
+         * @param string $command Command that thrown the exception.
          * @param array $args Array of arguments used in the command.
          * @param string $message (Optional) The exception message.
          * @param int $code (Optional) The exception code.
@@ -43,7 +43,7 @@
         }
 
         /**
-         * Gets the command that triggered the error.
+         * Gets the command that thrown the exception.
          * @return string Console command.
          */
         public function getCommand(){

@@ -24,7 +24,7 @@
 
         /**
          * Creates a new instance of QueryException.
-         * @param string $query SQL query.
+         * @param string $query SQL query that thrown the exception.
          * @param string $message (Optional) The exception message.
          * @param int $code (Optional) The exception code.
          * @param null|Throwable $previous (Optional) Previous throwable used for exception chaining.

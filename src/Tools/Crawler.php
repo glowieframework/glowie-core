@@ -1,7 +1,8 @@
 <?php
     namespace Glowie\Core\Tools;
 
-    use Glowie\Core\Http\Response;
+    use Glowie\Core\Element;
+    use Glowie\Core\Exception\RequestException;
 
     /**
      * HTTP client for Glowie application.
@@ -52,14 +53,25 @@
         private $cookies = [];
 
         /**
+         * Throw exception on failure.
+         * @var bool
+         */
+        private $throw = false;
+
+        /**
+         * Request maximum time.
+         * @var int
+         */
+        private $timeout = 30;
+
+        /**
          * Creates a new HTTP client instance.
          * @param array $headers (Optional) Custom headers to send in the request. Must be an associative array with the key being the name of the header\
          * and the value the header value (can be a string or an array of strings).
          * @param array $cookies (Optional) Custom cookies to send in the request. Must be an associative array with the key being the name of the cookie\
          * and the value the cookie value.
-         * @param int $timeout (Optional) Maximum number of seconds that the request can wait for a response. Default is 30 seconds. Use `0` for unlimited.
          */
-        public function __construct(array $headers = [], array $cookies = [], int $timeout = 30){
+        public function __construct(array $headers = [], array $cookies = []){
             // Set headers
             if(!empty($headers)){
                 foreach($headers as $key => $value) $this->addHeader($key, $value);
@@ -69,9 +81,6 @@
             if(!empty($cookies)){
                 foreach($cookies as $key => $value) $this->addCookie($key, $value);
             }
-
-            // Set timeout
-            $this->timeout = $timeout;
         }
 
         /**
@@ -108,6 +117,22 @@
         }
 
         /**
+         * Sets the `Content-Type` header to JSON format.
+         * @return Crawler Current Crawler instance for nested calls.
+         */
+        public function asJSON(){
+            return $this->setContentType(self::CONTENT_JSON);
+        }
+
+        /**
+         * Sets the `Content-Type` header to form format.
+         * @return Crawler Current Crawler instance for nested calls.
+         */
+        public function asForm(){
+            return $this->setContentType(self::CONTENT_FORM);
+        }
+
+        /**
          * Sets a basic Authorization header with username and password.
          * @param string $username Username to set.
          * @param string $password Password to set.
@@ -129,10 +154,20 @@
         }
 
         /**
+         * Throws an exception if the status code is greater than 400.
+         * @param bool $option (Optional) Set to **true** to throw on error, **false** otherwise.
+         * @return Crawler Current Crawler instance for nested calls.
+         */
+        public function throwOnError(bool $option = true){
+            $this->throw = $option;
+            return $this;
+        }
+
+        /**
          * Performs a GET request.
          * @param string $url URL to perform request.
          * @param array $data (Optional) Associative array of data to send in the request.
-         * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on failure.
+         * @return Element|bool Returns the response as an object on success or false on failure.
          */
         public function get(string $url, array $data = []){
             return $this->request($url, 'GET', $data);
@@ -142,7 +177,7 @@
          * Performs a POST request.
          * @param string $url URL to perform request.
          * @param array $data (Optional) Associative array of data to send in the request.
-         * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on failure.
+         * @return Element|bool Returns the response as an object on success or false on failure.
          */
         public function post(string $url, array $data = []){
             return $this->request($url, 'POST', $data);
@@ -152,7 +187,7 @@
          * Performs a PUT request.
          * @param string $url URL to perform request.
          * @param array $data (Optional) Associative array of data to send in the request.
-         * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on failure.
+         * @return Element|bool Returns the response as an object on success or false on failure.
          */
         public function put(string $url, array $data = []){
             return $this->request($url, 'PUT', $data);
@@ -162,7 +197,7 @@
          * Performs a PATCH request.
          * @param string $url URL to perform request.
          * @param array $data (Optional) Associative array of data to send in the request.
-         * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on failure.
+         * @return Element|bool Returns the response as an object on success or false on failure.
          */
         public function patch(string $url, array $data = []){
             return $this->request($url, 'PATCH', $data);
@@ -172,10 +207,30 @@
          * Performs a DELETE request.
          * @param string $url URL to perform request.
          * @param array $data (Optional) Associative array of data to send in the request.
-         * @return string|bool Returns the response as a string on success (HTTP 200 status code) or false on failure.
+         * @return Element|bool Returns the response as an object on success or false on failure.
          */
         public function delete(string $url, array $data = []){
             return $this->request($url, 'DELETE', $data);
+        }
+
+        /**
+         * Performs a HEAD request.
+         * @param string $url URL to perform request.
+         * @param array $data (Optional) Associative array of data to send in the request.
+         * @return Element|bool Returns the response as an object on success or false on failure.
+         */
+        public function head(string $url, array $data = []){
+            return $this->request($url, 'HEAD', $data);
+        }
+
+        /**
+         * Performs an OPTIONS request.
+         * @param string $url URL to perform request.
+         * @param array $data (Optional) Associative array of data to send in the request.
+         * @return Element|bool Returns the response as an object on success or false on failure.
+         */
+        public function options(string $url, array $data = []){
+            return $this->request($url, 'OPTIONS', $data);
         }
 
         /**
@@ -183,7 +238,8 @@
          * @param string $url URL to perform request.
          * @param string $method (Optional) Method to use in the request. Default is `GET`.
          * @param array $data (Optional) Associative array of data to send in the request.
-         * @return string|bool Returns the response body as a string on success (HTTP 200 status code) or false on failure.
+         * @return Element|bool Returns the response as an object on success or false on failure.
+         * @throws Exception Throws an exception if the status code is greater than 400 and `throwOnError()` is set to **true**.
          */
         public function request(string $url, string $method = 'GET', array $data = []){
             // Initializes cURL
@@ -194,15 +250,17 @@
                 CURLOPT_AUTOREFERER => true,
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYSTATUS => false,
                 CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_CONNECTTIMEOUT => $this->timeout
+                CURLOPT_CONNECTTIMEOUT => $this->timeout,
+                CURLOPT_FAILONERROR => $this->throw
             ]);
 
             // Sets headers
             if (!empty($this->headers)) curl_setopt($curl, CURLOPT_HTTPHEADER, $this->headers);
-            
+
             // Sets cookies
-            if (!empty($this->headers)) curl_setopt($curl, CURLOPT_COOKIE, implode('; ', $this->cookies));
+            if (!empty($this->cookies)) curl_setopt($curl, CURLOPT_COOKIE, implode('; ', $this->cookies));
 
             // Sets method
             $method = strtoupper(trim($method));
@@ -232,19 +290,44 @@
             // Sets the URL
             curl_setopt($curl, CURLOPT_URL, $url);
 
+            // Ensure to retrieve the response headers
+            $headers = [];
+            curl_setopt($curl, CURLOPT_HEADERFUNCTION, function($ch, $header) use (&$headers){
+                $len = strlen($header);
+                $header = explode(':', $header, 2);
+                if(count($header) < 2) return $len;
+                $key = trim($header[0]);
+                if(isset($headers[$key])){
+                    $headers[$key] = implode(', ', [$headers[$key], trim($header[1])]);
+                }else{
+                    $headers[$key] = trim($header[1]);
+                }
+                return $len;
+            });
+
             // Fetches the request
             $response = curl_exec($curl);
-            $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+            // Error handling
+            if($this->throw && curl_errno($curl)) throw new RequestException($url, curl_error($curl), curl_errno($curl));
+
+            // Return false if request fails without throwing enabled
+            if($response === false) return false;
+
+            // Gets the request info
+            $info = curl_getinfo($curl);
 
             // Closes current connection
             curl_close($curl);
 
-            // Returns result on HTTP 200 status code
-            if ($status === Response::HTTP_OK) {
-                return $response;
-            } else {
-                return false;
-            }
+            // Returns resulting object
+            return new Element([
+                'status' => $info['http_code'],
+                'type' => $info['content_type'] ?? null,
+                'body' => $response,
+                'redirects' => $info['redirect_count'],
+                'headers' => $headers
+            ]);
         }
 
     }

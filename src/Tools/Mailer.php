@@ -57,7 +57,7 @@
          * @return Mailer Current Mailer instance for nested calls.
          */
         public function setFrom($from){
-            if(is_array($from)) $from = "{$from[0]} <{$from[1]}>";
+            if(is_array($from) && count($from) >= 2) $from = "{$from[0]} <{$from[1]}>";
             $this->from = $from;
             return $this;
         }
@@ -69,7 +69,7 @@
          * @return Mailer Current Mailer instance for nested calls.
          */
         public function setTo($to){
-            if(is_array($to)) $to = "{$to[0]} <{$to[1]}>";
+            if(is_array($to) && count($to) >= 2) $to = "{$to[0]} <{$to[1]}>";
             $this->to = $to;
             return $this;
         }
@@ -82,7 +82,7 @@
          * @return Mailer Current Mailer instance for nested calls.
          */
         public function addCc($address){
-            if(is_array($address)){
+            if(is_array($address) && count($address) >= 2){
                 $this->addHeader('Cc', "{$address[0]} <{$address[1]}>");
             }else{
                 $this->addHeader('Cc', $address);
@@ -98,7 +98,7 @@
          * @return Mailer Current Mailer instance for nested calls.
          */
         public function addBcc($address){
-            if(is_array($address)){
+            if(is_array($address) && count($address) >= 2){
                 $this->addHeader('Bcc', "{$address[0]} <{$address[1]}>");
             }else{
                 $this->addHeader('Bcc', $address);
