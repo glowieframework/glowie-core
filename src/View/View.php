@@ -61,8 +61,7 @@
             // Parse parameters
             $this->_params = $params;
             $globalParams = Rails::getController()->view->toArray();
-            $params = array_merge($globalParams, $this->_params);
-            if(!empty($params)) foreach($params as $key => $value) $this->{$key} = $value;
+            $this->__constructTrait(array_merge($globalParams, $this->_params));
 
             // Render view
             if(Config::get('skeltch.enabled', true)) $view = Skeltch::run($view);

@@ -26,26 +26,25 @@
         }
 
         /**
-         * Prints a variable in a human-readable way and ends the script execution.
-         * @param mixed $var Variable to be printed.
-         * @param bool $plain (Optional) Print variable as plain text instead of HTML.
+         * Dumps a variable in a human-readable way and ends the script execution.
+         * @param mixed $var Variable to be dumped.
+         * @param bool $plain (Optional) Dump variable as plain text instead of HTML.
          * @return void
          */
-        public static function log($var, bool $plain = false){
+        public static function dump($var, bool $plain = false){
             // Clean output buffer
             Buffer::clean();
 
-            // Set content type
+            // Dumps the content
             if($plain){
                 Rails::getResponse()->setContentType(Response::CONTENT_PLAIN);
+                var_dump($var);
             }else{
                 Rails::getResponse()->setContentType(Response::CONTENT_HTML);
+                include(__DIR__ . '/Views/dump.phtml');
             }
 
-            // Dump the content
-            if(!$plain) echo '<pre style="white-space: pre-wrap; word-wrap: break-all; background-color: black; color: white; padding: 15px; margin: 0;">';
-            var_dump($var);
-            if(!$plain) echo '</pre>';
+            // Stop script
             die();
         }
 
@@ -422,7 +421,7 @@
          * @return string Returns the resulting string.
          */
         public static function camelCase(string $string){
-            $string = self::stripAccents(strtolower($string));
+            $string = self::stripAccents($string);
             $string = preg_replace('/[^a-zA-Z0-9_]/', ' ', $string);
             return str_replace(' ', '', lcfirst(ucwords($string)));
         }

@@ -17,14 +17,14 @@
          * Element data.
          * @var array
          */
-        private $_data = [];
+        private $__data = [];
 
         /**
          * Constructs the Element trait data.
          * @param array $data (Optional) An associative array with the initial data to parse.
          */
         private function __constructTrait(array $data = []){
-            if(!empty($data)) $this->_data = $data;
+            if(!empty($data)) $this->__data = $data;
         }
 
         /**
@@ -43,7 +43,7 @@
          * @return mixed Returns the value if exists or the default if not.
          */
         public function get(string $key, $default = null){
-            return $this->_data[$key] ?? $default;
+            return $this->__data[$key] ?? $default;
         }
 
         /**
@@ -52,7 +52,7 @@
          * @param mixed $value Value to set.
          */
         public function __set(string $key, $value){
-            $this->_data[$key] = $value;
+            $this->__data[$key] = $value;
         }
 
         /**
@@ -69,8 +69,8 @@
          * @param string $key Key to delete value.
          */
         public function __unset(string $key){
-            if (isset($this->_data[$key])) {
-                unset($this->_data[$key]);
+            if (isset($this->__data[$key])) {
+                unset($this->__data[$key]);
             }
         }
 
@@ -88,7 +88,7 @@
          * @return bool Returns true or false.
          */
         public function __isset(string $key){
-            return isset($this->_data[$key]);
+            return isset($this->__data[$key]);
         }
 
         /**
@@ -104,7 +104,7 @@
          * Deletes all data from the current Element.
          */
         public function flush(){
-            $this->_data = [];
+            $this->__data = [];
         }
 
         /**
@@ -112,7 +112,7 @@
          * @return array The resulting array.
          */
         public function toArray(){
-            return $this->_data;
+            return $this->__data;
         }
 
         /**
@@ -122,7 +122,7 @@
          * @return string The resulting JSON string.
          */
         public function toJson(int $flags = 0, int $depth = 512){
-            return json_encode($this->_data, $flags, $depth);
+            return json_encode($this->__data, $flags, $depth);
         }
 
         /**

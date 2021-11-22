@@ -24,6 +24,13 @@
             $this->__constructTrait($data);
         }
 
+        /**
+         * Element debugging information.
+         */
+        public function __debugInfo(){
+            return $this->__data;
+        }
+
     }
 
 ?>
