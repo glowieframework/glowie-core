@@ -133,6 +133,13 @@
             return $this->toJson();
         }
 
+        /**
+         * Element debugging information.
+         */
+        public function __debugInfo(){
+            return $this->__data;
+        }
+
     }
 
 ?>

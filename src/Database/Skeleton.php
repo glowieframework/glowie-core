@@ -188,7 +188,7 @@
          * @param mixed $default (Optional) Default field value.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
-        public function createNullableColumn(string $name, string $type, $size = null, $default = null){
+        public function createNullableColumn(string $name, string $type, ?int $size = null, $default = null){
             return $this->modifyColumns([
                 'operation' => 'create',
                 'name' => $name,
@@ -207,7 +207,7 @@
          * @param int|null $size (Optional) Field maximum length.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
-        public function autoIncrement(string $name, string $type = self::TYPE_BIG_INTEGER, $size = null){
+        public function autoIncrement(string $name, string $type = self::TYPE_BIG_INTEGER, ?int $size = null){
             $type = strtoupper($type);
             $field = "`{$name}` {$type}";
             if(!empty($size)) $field .= "({$size})";
@@ -224,7 +224,7 @@
          * @param string|null $after (Optional) Name of other column to place this column after it.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
-        public function addColumn(string $name, string $type, $size = null, $default = null, $after = null){
+        public function addColumn(string $name, string $type, ?int $size = null, $default = null, ?string $after = null){
             return $this->modifyColumns([
                 'operation' => 'add',
                 'name' => $name,
@@ -245,7 +245,7 @@
          * @param string|null $after (Optional) Name of other column to place this column after it.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
-        public function addNullableColumn(string $name, string $type, $size = null, $default = null, $after = null){
+        public function addNullableColumn(string $name, string $type, ?int $size = null, $default = null, ?string $after = null){
             return $this->modifyColumns([
                 'operation' => 'add',
                 'name' => $name,
@@ -268,7 +268,7 @@
          * @param string|null $after (Optional) Name of other column to move this column below it.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
-        public function changeColumn(string $name, string $new_name, string $type, $size = null, bool $nullable = true, $default = null, $after = null){
+        public function changeColumn(string $name, string $new_name, string $type, ?int $size = null, bool $nullable = true, $default = null, ?string $after = null){
             return $this->modifyColumns([
                 'operation' => 'change',
                 'name' => $name,

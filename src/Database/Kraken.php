@@ -162,7 +162,7 @@
          * @param string $type (Optional) JOIN type (INNER, LEFT, RIGHT or FULL).
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function join(string $table, $param1, $param2 = null, $param3 = null, string $type = 'INNER'){
+        public function join(string $table, $param1, ?string $param2 = null, ?string $param3 = null, string $type = 'INNER'){
             // Adds the join
             $this->_join[] = "{$type} JOIN {$table}";
 
@@ -208,7 +208,7 @@
          * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function innerJoin(string $table, $param1, $param2 = null, $param3 = null){
+        public function innerJoin(string $table, $param1, ?string $param2 = null, ?string $param3 = null){
             return $this->join($table, $param1, $param2, $param3);
         }
 
@@ -220,7 +220,7 @@
          * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function leftJoin(string $table, $param1, $param2 = null, $param3 = null){
+        public function leftJoin(string $table, $param1, ?string $param2 = null, ?string $param3 = null){
             return $this->join($table, $param1, $param2, $param3, 'LEFT');
         }
 
@@ -232,7 +232,7 @@
          * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function rightJoin(string $table, $param1, $param2 = null, $param3 = null){
+        public function rightJoin(string $table, $param1, ?string $param2 = null, ?string $param3 = null){
             return $this->join($table, $param1, $param2, $param3, 'RIGHT');
         }
 
@@ -244,7 +244,7 @@
          * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function fullJoin(string $table, $param1, $param2 = null, $param3 = null){
+        public function fullJoin(string $table, $param1, ?string $param2 = null, ?string $param3 = null){
             return $this->join($table, $param1, $param2, $param3, 'FULL');
         }
 
@@ -256,7 +256,7 @@
          * @param string $type (Optional) Chaining type (AND or OR).
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function on(string $param1, string $param2, $param3 = null, string $type = 'AND'){
+        public function on(string $param1, string $param2, ?string $param3 = null, string $type = 'AND'){
             // Checks for empty joins
             if(empty($this->_join)) throw new Exception('Kraken: There are no JOIN statements in the query yet');
 
@@ -280,7 +280,7 @@
          * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function orOn(string $param1, string $param2, $param3 = null){
+        public function orOn(string $param1, string $param2, ?string $param3 = null){
             return $this->on($param1, $param2, $param3, 'OR');
         }
 
@@ -1032,7 +1032,7 @@
          * @param int|null $param2 (Optional) Limit setting if `$param1` is the offset.
          * @return Kraken Current Kraken instance for nested calls.
          */
-        public function limit(int $param1, $param2 = null){
+        public function limit(int $param1, ?int $param2 = null){
             if(is_null($param2)){
                 $this->_limit = [0, $param1];
             }else{

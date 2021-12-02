@@ -161,6 +161,14 @@
         }
 
         /**
+         * Returns if the application is running through console.
+         * @return bool True if application is running in CLI mode, false otherwise.
+         */
+        public static function isCLI(){
+            return self::$isCLI;
+        }
+
+        /**
          * Parses the CLI arguments.
          */
         private static function parseArgs(){
@@ -775,7 +783,7 @@
 
                 // Prints the classname
                 self::print('<color="blue">Running ' . $name . ' tests...</color>');
-                
+
                 // Run init method if exists
                 try {
                     $time = microtime(true);

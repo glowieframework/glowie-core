@@ -27,7 +27,7 @@
          * @param array $database Database connection settings.
          * @param string $message (Optional) The exception message.
          * @param int $code (Optional) The exception code.
-         * @param null|Throwable $previous (Optional) Previous throwable used for exception chaining.
+         * @param Throwable|null $previous (Optional) Previous throwable used for exception chaining.
          */
         public function __construct(array $database, string $message = "", int $code = 0, ?Throwable $previous = null){
             parent::__construct(sprintf('Database: [SQL %s] %s', $code, $message), $code, $previous);

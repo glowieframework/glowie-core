@@ -88,14 +88,16 @@
          * Clears the current console line.
          */
         public function clear(){
-            $this->print("\033[2K\r", false);
+            if(Firefly::isCLI()) $this->print("\033[2K\r", false);
         }
 
         /**
          * Clears the whole console screen.
          */
         public function clearScreen(){
-            DIRECTORY_SEPARATOR === '\\' ? popen('cls', 'w') : exec('clear');
+            if(Firefly::isCLI()){
+                DIRECTORY_SEPARATOR === '\\' ? popen('cls', 'w') : exec('clear');
+            }
         }
 
         /**

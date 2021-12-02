@@ -4,6 +4,7 @@
     use Glowie\Core\Http\Response;
     use Glowie\Core\View\Buffer;
     use Glowie\Core\Exception\FileException;
+    use Glowie\Core\CLI\Firefly;
 
     /**
      * Miscellaneous utilities for Glowie application.
@@ -36,7 +37,9 @@
             Buffer::clean();
 
             // Dumps the content
-            if($plain){
+            if(Firefly::isCLI()){
+                var_dump($var);
+            }else if($plain){
                 Rails::getResponse()->setContentType(Response::CONTENT_PLAIN);
                 var_dump($var);
             }else{

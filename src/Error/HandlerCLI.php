@@ -34,8 +34,8 @@
          * Default CLI error handler. Throws an exception based in a given error.
          * @param int $level Error level.
          * @param string $message Error message.
-         * @param string $file (Optional) Filename where the error occurred.
-         * @param int $line (Optional) Line number where the error was triggered.
+         * @param string|null $file (Optional) Filename where the error occurred.
+         * @param int|null $line (Optional) Line number where the error was triggered.
          */
         public static function errorHandler(int $level, string $message, ?string $file = '', ?int $line = 0){
             throw new ErrorException($message, 0, $level, $file, $line);
