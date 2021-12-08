@@ -761,10 +761,6 @@
             // Gets the bail option
             $bail = (bool)self::getArg('bail', false);
 
-            // Stores the core class methods
-            $excludes = get_class_methods('Glowie\Core\Tests\UnitTest');
-            array_push($excludes, 'init', 'cleanup');
-
             // Stores the result
             $result = ['success' => 0, 'fail' => 0];
 
@@ -775,8 +771,10 @@
                 $classname = 'Glowie\Tests\\' . $name;
                 if(!class_exists($classname)) continue;
 
-                // Gets the class methods
-                $tests = array_diff(get_class_methods($classname), $excludes);
+                // Gets the test methods
+                $tests = array_filter(get_class_methods($classname), function($name){
+                    return Util::startsWith($name, 'test');
+                });
 
                 // Checks if there are any tests
                 if(empty($tests)) continue;

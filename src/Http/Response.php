@@ -160,6 +160,14 @@
         }
 
         /**
+         * Sets a **500 Internal Server Error** HTTP response code.
+         * @return Response Current Response instance for nested calls.
+         */
+        public function fail(){
+            return $this->setStatusCode(self::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        /**
          * Sets a new header value or replaces the existing one.
          * @param string $name Header name to set.
          * @param string|array $value Header value to set.
@@ -190,8 +198,16 @@
          * @return Response Current Response instance for nested calls.
          */
         public function setAuthorization(string $username, string $password){
-            $this->setHeader('Authorization', 'Basic ' . base64_encode("{$username}:{$password}"));
-            return $this;
+            return $this->setHeader('Authorization', 'Basic ' . base64_encode("{$username}:{$password}"));
+        }
+
+        /**
+         * Sets a bearer `Authorization` header with a token.
+         * @param string $token Token to set.
+         * @return Response Current Response instance for nested calls.
+         */
+        public function setBearer(string $token){
+            return $this->setHeader('Authorization', 'Bearer ' . $token);
         }
 
         /**
@@ -200,8 +216,7 @@
          * @return Response Current Response instance for nested calls.
          */
         public function setContentType(string $type){
-            $this->setHeader('Content-Type', $type);
-            return $this;
+            return $this->setHeader('Content-Type', $type);
         }
 
         /**

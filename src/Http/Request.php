@@ -143,11 +143,30 @@
         }
 
         /**
+         * Gets a bearer token from the `Authorization` header.
+         * @return string|null Returns the token if exists or null if there is none.
+         */
+        public function getBearer(){
+            $value = $this->getHeader('Authorization');
+            if(!$value) return null;
+            if(!Util::startsWith($value, 'Bearer ')) return null;
+            return substr($value, 7);
+        }
+
+        /**
          * Gets the `Content-Type` header.
          * @return string|null Returns the header value if exists or null if there is none.
          */
         public function getContentType(){
             return $this->getHeader('Content-Type');
+        }
+
+        /**
+         * Gets the `Accept` header.
+         * @return string|null Returns the header value if exists or null if there is none.
+         */
+        public function getAccept(){
+            return $this->getHeader('Accept');
         }
 
         /**

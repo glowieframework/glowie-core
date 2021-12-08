@@ -41,6 +41,12 @@
         public const CONTENT_MULTIPART = 'multipart/form-data';
 
         /**
+         * Current content type.
+         * @var string
+         */
+        private $type = self::CONTENT_MULTIPART;
+
+        /**
          * Custom request headers.
          * @var array
          */
@@ -57,6 +63,18 @@
          * @var bool
          */
         private $throw = false;
+
+        /**
+         * Verify SSL certificate.
+         * @var bool
+         */
+        private $verify = true;
+
+        /**
+         * Enable redirects.
+         * @var bool
+         */
+        private $redirect = true;
 
         /**
          * Request maximum time.
@@ -112,15 +130,34 @@
          * @return Crawler Current Crawler instance for nested calls.
          */
         public function setContentType(string $type){
+            $this->type = $type;
             $this->addHeader('Content-Type', $type);
             return $this;
+        }
+
+        /**
+         * Sets the `Accept` header.
+         * @param string $type Accepted type to set.
+         * @return Crawler Current Crawler instance for nested calls.
+         */
+        public function setAccept(string $type){
+            $this->addHeader('Accept', $type);
+            return $this;
+        }
+
+        /**
+         * Sets the `Accept` header to JSON format.
+         * @return Crawler Current Crawler instance for nested calls.
+         */
+        public function acceptJson(){
+            return $this->setAccept(self::CONTENT_JSON);
         }
 
         /**
          * Sets the `Content-Type` header to JSON format.
          * @return Crawler Current Crawler instance for nested calls.
          */
-        public function asJSON(){
+        public function asJson(){
             return $this->setContentType(self::CONTENT_JSON);
         }
 
@@ -133,13 +170,23 @@
         }
 
         /**
-         * Sets a basic Authorization header with username and password.
+         * Sets a basic `Authorization` header with username and password.
          * @param string $username Username to set.
          * @param string $password Password to set.
          * @return Crawler Current Crawler instance for nested calls.
          */
         public function setAuthorization(string $username, string $password){
             $this->addHeader('Authorization', 'Basic ' . base64_encode("{$username}:{$password}"));
+            return $this;
+        }
+
+        /**
+         * Sets a bearer `Authorization` header with a token.
+         * @param string $token Token to set.
+         * @return Crawler Current Crawler instance for nested calls.
+         */
+        public function setBearer(string $token){
+            $this->addHeader('Authorization', 'Bearer ' . $token);
             return $this;
         }
 
@@ -164,72 +211,92 @@
         }
 
         /**
+         * Disables the SSL certificate verification in the request.
+         * @param bool $option (Optional) Set to **true** to bypass the verification, **false** otherwise.
+         * @return Crawler Current Crawler instance for nested calls.
+         */
+        public function bypassVerification(bool $option = true){
+            $this->verify = !$option;
+            return $this;
+        }
+
+        /**
+         * Disables redirects in the request.
+         * @param bool $option (Optional) Set to **true** to disable redirects, **false** otherwise.
+         * @return Crawler Current Crawler instance for nested calls.
+         */
+        public function noRedirects(bool $option = true){
+            $this->redirect = !$option;
+            return $this;
+        }
+
+        /**
          * Performs a GET request.
          * @param string $url URL to perform request.
-         * @param array $data (Optional) Associative array of data to send in the request.
+         * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
          * @return Element|bool Returns the response as an object on success or false on failure.
          */
-        public function get(string $url, array $data = []){
+        public function get(string $url, $data = ''){
             return $this->request($url, 'GET', $data);
         }
 
         /**
          * Performs a POST request.
          * @param string $url URL to perform request.
-         * @param array $data (Optional) Associative array of data to send in the request.
+         * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
          * @return Element|bool Returns the response as an object on success or false on failure.
          */
-        public function post(string $url, array $data = []){
+        public function post(string $url, $data = ''){
             return $this->request($url, 'POST', $data);
         }
 
         /**
          * Performs a PUT request.
          * @param string $url URL to perform request.
-         * @param array $data (Optional) Associative array of data to send in the request.
+         * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
          * @return Element|bool Returns the response as an object on success or false on failure.
          */
-        public function put(string $url, array $data = []){
+        public function put(string $url, $data = ''){
             return $this->request($url, 'PUT', $data);
         }
 
         /**
          * Performs a PATCH request.
          * @param string $url URL to perform request.
-         * @param array $data (Optional) Associative array of data to send in the request.
+         * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
          * @return Element|bool Returns the response as an object on success or false on failure.
          */
-        public function patch(string $url, array $data = []){
+        public function patch(string $url, $data = ''){
             return $this->request($url, 'PATCH', $data);
         }
 
         /**
          * Performs a DELETE request.
          * @param string $url URL to perform request.
-         * @param array $data (Optional) Associative array of data to send in the request.
+         * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
          * @return Element|bool Returns the response as an object on success or false on failure.
          */
-        public function delete(string $url, array $data = []){
+        public function delete(string $url, $data = ''){
             return $this->request($url, 'DELETE', $data);
         }
 
         /**
          * Performs a HEAD request.
          * @param string $url URL to perform request.
-         * @param array $data (Optional) Associative array of data to send in the request.
+         * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
          * @return Element|bool Returns the response as an object on success or false on failure.
          */
-        public function head(string $url, array $data = []){
+        public function head(string $url, $data = ''){
             return $this->request($url, 'HEAD', $data);
         }
 
         /**
          * Performs an OPTIONS request.
          * @param string $url URL to perform request.
-         * @param array $data (Optional) Associative array of data to send in the request.
+         * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
          * @return Element|bool Returns the response as an object on success or false on failure.
          */
-        public function options(string $url, array $data = []){
+        public function options(string $url, $data = ''){
             return $this->request($url, 'OPTIONS', $data);
         }
 
@@ -237,21 +304,21 @@
          * Performs an HTTP request.
          * @param string $url URL to perform request.
          * @param string $method (Optional) Method to use in the request. Default is `GET`.
-         * @param array $data (Optional) Associative array of data to send in the request.
+         * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
          * @return Element|bool Returns the response as an object on success or false on failure.
          * @throws Exception Throws an exception if the status code is greater than 400 and `throwOnError()` is set to **true**.
          */
-        public function request(string $url, string $method = 'GET', array $data = []){
+        public function request(string $url, string $method = 'GET', $data = ''){
             // Initializes cURL
             $curl = curl_init();
 
             // Sets cURL options
             curl_setopt_array($curl, [
-                CURLOPT_AUTOREFERER => true,
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_SSL_VERIFYPEER => false,
-                CURLOPT_SSL_VERIFYSTATUS => false,
-                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_AUTOREFERER => $this->redirect,
+                CURLOPT_FOLLOWLOCATION => $this->redirect,
+                CURLOPT_SSL_VERIFYPEER => $this->verify,
+                CURLOPT_SSL_VERIFYSTATUS => $this->verify,
                 CURLOPT_CONNECTTIMEOUT => $this->timeout,
                 CURLOPT_FAILONERROR => $this->throw
             ]);
@@ -281,8 +348,14 @@
             // Sets the data
             if(!empty($data)){
                 if($method == 'GET'){
-                    $url = $url . '?' . http_build_query($data);
+                    if(is_array($data)){
+                        $url = $url . '?' . http_build_query($data);
+                    }else{
+                        $url = $url . '?' . $data;
+                    }
                 }else{
+                    if($this->type == self::CONTENT_JSON && is_array($data)) $data = json_encode($data);
+                    if($this->type == self::CONTENT_FORM && is_array($data)) $data = http_build_query($data);
                     curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
                 }
             }
