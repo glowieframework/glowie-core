@@ -14,7 +14,7 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 1.0
+     * @version 1.1
      */
     class Util{
 
@@ -23,7 +23,7 @@
          * @return string Current Glowie core version.
          */
         public static function getVersion(){
-            return '1.0.7';
+            return '1.1.1';
         }
 
         /**

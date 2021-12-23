@@ -3,7 +3,7 @@
 
     use Util;
     use Glowie\Core\Element;
-    use Exception;
+    use Glowie\Core\Traits\ElementTrait;
 
     /**
      * Request handler for Glowie application.
@@ -13,23 +13,24 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 1.0
+     * @version 1.1
      */
     class Request{
+        use ElementTrait;
 
         /**
          * Current Request headers.
          * @var array
          */
-        private static $headers;
+        private $__headers;
 
         /**
          * Creates a new Request handler instance.
          */
         public function __construct(){
             $headers = getallheaders();
-            if(!$headers) throw new Exception('Request: Error retrieving request headers');
-            self::$headers = array_change_key_case($headers, CASE_LOWER);
+            $this->__headers = array_change_key_case($headers, CASE_LOWER);
+            $this->__constructTrait($_REQUEST);
         }
 
         /**
@@ -117,7 +118,7 @@
          * @return string|null Returns the header value if exists or null if there is none.
          */
         public function getHeader(string $name){
-            return self::$headers[strtolower($name)] ?? null;
+            return $this->__headers[strtolower($name)] ?? null;
         }
 
         /**
@@ -167,24 +168,6 @@
          */
         public function getAccept(){
             return $this->getHeader('Accept');
-        }
-
-        /**
-         * Gets the value of a variable from the request.
-         * @param string $key Variable key to get.
-         * @param mixed $default (Optional) Default value to return if the key does not exist.
-         * @return mixed Returns the value if exists or the default if not.
-         */
-        public function getVar(string $key, $default = null){
-            return $_REQUEST[$key] ?? $default;
-        }
-
-        /**
-         * Gets all variables from the request as an associative array.
-         * @return array Returns an associative array with all variables.
-         */
-        public function getVars(){
-            return $_REQUEST;
         }
 
         /**

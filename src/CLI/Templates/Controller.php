@@ -9,10 +9,10 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 1.0
+     * @version 1.1
      */
     class __FIREFLY_TEMPLATE_NAME__ extends BaseController{
-        
+
         /**
          * This method will be called before any other methods from this controller.
          */
@@ -20,7 +20,7 @@
             // Calls the BaseController init() method
             parent::init();
         }
-        
+
         /**
          * Index action.
          */

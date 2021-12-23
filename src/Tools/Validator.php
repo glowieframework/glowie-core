@@ -11,7 +11,7 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 1.0
+     * @version 1.1
      */
     class Validator{
 

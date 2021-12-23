@@ -20,7 +20,7 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 1.0
+     * @version 1.1
      */
     class Firefly{
 
@@ -191,72 +191,23 @@
          * @param string $command Command to trigger.
          */
         private static function triggerCommand(string $command){
+            // Saves the command
             $command = strtolower($command);
             self::$command = $command;
-            switch ($command) {
-                case 'shine':
-                    self::shine();
-                    break;
-                case 'sandbox':
-                    self::sandbox();
-                    break;
-                case 'clear-cache':
-                    self::clearCache();
-                    break;
-                case 'clear-session':
-                    self::clearSession();
-                    break;
-                case 'clear-log':
-                    self::clearLog();
-                    break;
-                case 'test-database':
-                    self::testDatabase();
-                    break;
-                case 'create-command':
-                    self::createCommand();
-                    break;
-                case 'create-controller':
-                    self::createController();
-                    break;
-                case 'create-language':
-                    self::createLanguage();
-                    break;
-                case 'create-middleware':
-                    self::createMiddleware();
-                    break;
-                case 'create-migration':
-                    self::createMigration();
-                    break;
-                case 'create-model':
-                    self::createModel();
-                    break;
-                case 'create-test':
-                    self::createTest();
-                    break;
-                case 'migrate':
-                    self::migrate();
-                    break;
-                case 'rollback':
-                    self::rollback();
-                    break;
-                case 'test':
-                    self::test();
-                    break;
-                case 'version':
-                    self::version();
-                    break;
-                case 'help':
-                    self::help();
-                    break;
-                default:
-                    $classname = 'Glowie\Commands\\' . Util::pascalCase($command);
-                    if(class_exists($classname)){
-                        $class = new $classname;
-                        $class->run();
-                    }else{
-                        throw new ConsoleException($command, self::$args, "Unknown command \"{$command}\"");
-                    }
-                    break;
+
+            // Finds a valid command
+            $name = Util::pascalCase($command);
+            if(is_callable([self::class, '__' . $name])){
+                $name = '__' . $name;
+                self::$name();
+            }else{
+                $name = 'Glowie\Commands\\' . $name;
+                if(class_exists($name)){
+                    $class = new $name;
+                    $class->run();
+                }else{
+                    throw new ConsoleException($command, self::$args, "Unknown command \"{$command}\"");
+                }
             }
         }
 
@@ -346,7 +297,7 @@
         /**
          * Starts the local development server.
          */
-        private static function shine(){
+        private static function __shine(){
             // Checks if CLI is running
             if(!self::$isCLI) throw new ConsoleException(self::$command, self::$args, 'This command cannot be used from outside the console');
 
@@ -365,7 +316,7 @@
         /**
          * Starts the REPL interactive mode.
          */
-        private static function sandbox(){
+        private static function __sandbox(){
             // Checks if CLI is running
             if(!self::$isCLI) throw new ConsoleException(self::$command, self::$args, 'This command cannot be used from outside the console');
 
@@ -397,7 +348,7 @@
         /**
          * Deletes all files in **app/storage/cache** folder.
          */
-        private static function clearCache(){
+        private static function __clearCache(){
             if(!is_writable(self::$appFolder . 'storage/cache')) throw new FileException('Directory "app/storage/cache" is not writable, please check your chmod settings');
             self::print("<color=\"blue\">Clearing cache...</color>");
             foreach (Util::getFiles(self::$appFolder . 'storage/cache/*.tmp') as $filename) unlink($filename);
@@ -408,7 +359,7 @@
         /**
          * Deletes all files in **app/storage/session** folder.
          */
-        private static function clearSession(){
+        private static function __clearSession(){
             if(!is_writable(self::$appFolder . 'storage/session')) throw new FileException('Directory "app/storage/session" is not writable, please check your chmod settings');
             self::print("<color=\"blue\">Clearing session data...</color>");
             foreach (Util::getFiles(self::$appFolder . 'storage/session/*') as $filename) unlink($filename);
@@ -419,7 +370,7 @@
         /**
          * Clears the error log.
          */
-        private static function clearLog(){
+        private static function __clearLog(){
             if(!is_writable(self::$appFolder . 'storage')) throw new FileException('Directory "app/storage" is not writable, please check your chmod settings');
             self::print("<color=\"blue\">Clearing error log...</color>");
             file_put_contents(self::$appFolder . 'storage/error.log', '');
@@ -430,7 +381,7 @@
         /**
          * Tests a database connection.
          */
-        private static function testDatabase(){
+        private static function __testDatabase(){
             // Checks if name was filled
             $name = self::argOrInput('name', "Database connection (default): ", 'default');
             $name = trim($name);
@@ -449,8 +400,9 @@
         /**
          * Creates a new command.
          */
-        private static function createCommand(){
+        private static function __createCommand(){
             // Checks permissions
+            if(!is_dir(self::$appFolder . 'commands')) mkdir(self::$appFolder . 'commands');
             if(!is_writable(self::$appFolder . 'commands')) throw new FileException('Directory "app/commands" is not writable, please check your chmod settings');
 
             // Checks if name was filled
@@ -473,8 +425,9 @@
         /**
          * Creates a new controller.
          */
-        private static function createController(){
+        private static function __createController(){
             // Checks permissions
+            if(!is_dir(self::$appFolder . 'controllers')) mkdir(self::$appFolder . 'controllers');
             if(!is_writable(self::$appFolder . 'controllers')) throw new FileException('Directory "app/controllers" is not writable, please check your chmod settings');
 
             // Checks if name was filled
@@ -497,8 +450,9 @@
         /**
          * Creates a new language file.
          */
-        private static function createLanguage(){
+        private static function __createLanguage(){
             // Checks permissions
+            if(!is_dir(self::$appFolder . 'languages')) mkdir(self::$appFolder . 'languages');
             if(!is_writable(self::$appFolder . 'languages')) throw new FileException('Directory "app/languages" is not writable, please check your chmod settings');
 
             // Checks if name was filled
@@ -519,8 +473,9 @@
         /**
          * Creates a new middleware.
          */
-        private static function createMiddleware(){
+        private static function __createMiddleware(){
             // Checks permissions
+            if(!is_dir(self::$appFolder . 'middlewares')) mkdir(self::$appFolder . 'middlewares');
             if(!is_writable(self::$appFolder . 'middlewares')) throw new FileException('Directory "app/middlewares" is not writable, please check your chmod settings');
 
             // Checks if name was filled
@@ -543,8 +498,9 @@
         /**
          * Creates a new migration.
          */
-        private static function createMigration(){
+        private static function __createMigration(){
             // Checks permissions
+            if(!is_dir(self::$appFolder . 'migrations')) mkdir(self::$appFolder . 'migrations');
             if(!is_writable(self::$appFolder . 'migrations')) throw new FileException('Directory "app/migrations" is not writable, please check your chmod settings');
 
             // Checks if name was filled
@@ -568,8 +524,9 @@
         /**
          * Creates a new model.
          */
-        private static function createModel(){
+        private static function __createModel(){
             // Checks permissions
+            if(!is_dir(self::$appFolder . 'models')) mkdir(self::$appFolder . 'models');
             if(!is_writable(self::$appFolder . 'models')) throw new FileException('Directory "app/models" is not writable, please check your chmod settings');
 
             // Checks if name was filled
@@ -613,8 +570,9 @@
         /**
          * Creates a new unit test.
          */
-        private static function createTest(){
+        private static function __createTest(){
             // Checks permissions
+            if(!is_dir(self::$appFolder . 'tests')) mkdir(self::$appFolder . 'tests');
             if(!is_writable(self::$appFolder . 'tests')) throw new FileException('Directory "app/tests" is not writable, please check your chmod settings');
 
             // Checks if name was filled
@@ -637,7 +595,7 @@
         /**
          * Runs pending migrations.
          */
-        private static function migrate(){
+        private static function __migrate(){
             // Checks if steps were filled
             $steps = self::getArg('steps', 'all');
 
@@ -688,7 +646,7 @@
         /**
          * Rolls back applied migrations.
          */
-        private static function rollback(){
+        private static function __rollback(){
             // Checks if steps were filled
             $steps = self::getArg('steps', 1);
 
@@ -739,7 +697,7 @@
         /**
          * Runs the application unit tests.
          */
-        private static function test(){
+        private static function __test(){
             // Checks if name was filled
             $name = self::getArg('name');
 
@@ -850,7 +808,7 @@
         /**
          * Prints the current Glowie and PHP CLI versions.
          */
-        private static function version(){
+        private static function __version(){
             self::print('<color="magenta">Firefly | Glowie ' . Util::getVersion() . '</color>');
             self::print('<color="blue">Running in PHP CLI ' . phpversion() . '</color>');
             return 'Firefly | Glowie ' . Util::getVersion();
@@ -859,7 +817,7 @@
         /**
          * Prints the help message.
          */
-        private static function help(){
+        private static function __help(){
             self::print('<color="magenta">Firefly commands:</color>');
             self::print('');
             self::print('  <color="yellow">shine</color> <color="blue">--host --port</color> | Starts the local development server');

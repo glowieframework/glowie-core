@@ -2,6 +2,7 @@
     namespace Glowie\Core\Database;
 
     use Util;
+    use Config;
 
     /**
      * Migration core for Glowie application.
@@ -11,7 +12,7 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 1.0
+     * @version 1.1
      */
     abstract class Migration{
 
@@ -40,6 +41,12 @@
         private $name;
 
         /**
+         * Migrations history table name.
+         * @var string
+         */
+        private $table;
+
+        /**
          * Stores if the migrations history table was created.
          * @var bool
          */
@@ -53,11 +60,12 @@
             $this->name = Util::classname($this);
             $this->db = new Kraken('glowie', $this->database);
             $this->forge = new Skeleton('glowie', $this->database);
+            $this->table = Config::get('migrations.table', 'migrations');
 
             // Creates the migrations history table if not exists
             if(!self::$tableCreated){
-                if(!$this->forge->tableExists('migrations')){
-                    $this->forge->table('migrations')
+                if(!$this->forge->tableExists($this->table)){
+                    $this->forge->table($this->table)
                                 ->createColumn('name', 'VARCHAR', 255)
                                 ->createColumn('applied_at', 'DATETIME', null, Skeleton::raw('CURRENT_TIMESTAMP()'))
                                 ->create();
@@ -72,7 +80,7 @@
          */
         final public function isApplied(){
             $this->db->clearQuery();
-            return $this->db->table('migrations')->where('name', $this->name)->exists();
+            return $this->db->table($this->table)->where('name', $this->name)->exists();
         }
 
         /**
@@ -81,7 +89,7 @@
          */
         final public function saveMigration(){
             $this->db->clearQuery();
-            return $this->db->table('migrations')->insert(['name' => $this->name]);
+            return $this->db->table($this->table)->insert(['name' => $this->name]);
         }
 
         /**
@@ -90,7 +98,7 @@
          */
         final public function deleteMigration(){
             $this->db->clearQuery();
-            return $this->db->table('migrations')->where('name', $this->name)->delete();
+            return $this->db->table($this->table)->where('name', $this->name)->delete();
         }
 
         /**
