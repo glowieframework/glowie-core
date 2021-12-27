@@ -379,6 +379,35 @@
         }
 
         /**
+         * Regenerates the application secret keys.
+         */
+        private static function __generateKeys(){
+            // Checks permissions
+            $file = self::$appFolder . 'config/Config.php';
+            if(!is_writable($file)) throw new FileException('File "app/config/Config.php" is not writable, please check your chmod settings');
+
+            // Reads the config file content
+            $content = file_get_contents($file);
+
+            // Generates the new keys
+            $bypassKey = "'bypass_key' => '" . Util::randomToken() . "'";
+            $appKey = "'app_key' => '" . Util::randomToken() . "'";
+            $appToken = "'app_token' => '" . Util::randomToken() . "'";
+
+            // Replaces the new keys
+            $content = preg_replace([
+                '/\'bypass_key\'\s*=>\s*\'(.+)\'/',
+                '/\'app_key\'\s*=>\s*\'(.+)\'/',
+                '/\'app_token\'\s*=>\s*\'(.+)\'/'
+            ], [$bypassKey, $appKey, $appToken], $content, 1);
+
+            // Saves the new content
+            self::print('<color="green">Application secret keys generated successfully!</color>');
+            file_put_contents($file, $content);
+            return true;
+        }
+
+        /**
          * Tests a database connection.
          */
         private static function __testDatabase(){
@@ -545,8 +574,8 @@
             $primary = trim($primary);
 
             // Checks if timestamps was filled
-            $timestamps = (bool)self::argOrInput('timestamps', 'Handle timestamp fields (true): ', true);
-            $timestamps = $timestamps ? 'true' : 'false';
+            $timestamps = self::argOrInput('timestamps', 'Handle timestamp fields (true): ', true);
+            $timestamps = filter_var($timestamps, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
 
             // Checks if created field was filled
             $created_at = self::argOrInput('created', 'Created at field name (created_at): ', 'created_at');
@@ -825,6 +854,7 @@
             self::print('  <color="yellow">clear-cache</color> | Clears the application cache folder');
             self::print('  <color="yellow">clear-session</color> | Clears the application session folder');
             self::print('  <color="yellow">clear-log</color> | Clears the application error log');
+            self::print('  <color="yellow">generate-keys</color> | Regenerates the application secret keys');
             self::print('  <color="yellow">test-database</color> <color="blue">--name</color> | Tests a database connection');
             self::print('  <color="yellow">create-command</color> <color="blue">--name</color> | Creates a new command for your application');
             self::print('  <color="yellow">create-controller</color> <color="blue">--name</color> | Creates a new controller for your application');
