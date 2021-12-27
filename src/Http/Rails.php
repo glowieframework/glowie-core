@@ -68,15 +68,15 @@
          * @param string $route The route URI to setup.
          * @param string $controller (Optional) The namespaced controller name that this route will instantiate.\
          * You can use `ControllerName::class` to get this property correctly.
-         * @param string $action (Optional) The action name from the controller that this route will instantiate.
+         * @param string|null $action (Optional) The action name from the controller that this route will instantiate.
          * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or\
          * an array of methods. Leave empty for all.
          * @param string $name (Optional) Route name.
          */
-        public static function addRoute(string $route, string $controller = 'Glowie\Controllers\Main', string $action = 'index', $methods = [], string $name = ''){
+        public static function addRoute(string $route, string $controller = 'Glowie\Controllers\Main', ?string $action = null, $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
+            if(empty($action)) $action = Util::camelCase($name);
             if(empty($controller)) throw new RoutingException('Route controller cannot be empty');
-            if(empty($action)) throw new RoutingException('Route action cannot be empty');
             self::$routes[$name] = [
                 'uri' => $route,
                 'controller' => $controller,
@@ -93,15 +93,15 @@
          * You can also use an array of multiple middlewares.
          * @param string $controller (Optional) The namespaced controller name that this route will instantiate.\
          * You can use `ControllerName::class` to get this property correctly.
-         * @param string $action (Optional) The action name from the controller that this route will instantiate.
+         * @param string|null $action (Optional) The action name from the controller that this route will instantiate.
          * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or\
          * an array of methods. Leave empty for all.
          * @param string $name (Optional) Route name.
          */
-        public static function addProtectedRoute(string $route, $middleware = 'Glowie\Middlewares\Authenticate', string $controller = 'Glowie\Controllers\Main', string $action = 'index', $methods = [], string $name = ''){
+        public static function addProtectedRoute(string $route, $middleware = 'Glowie\Middlewares\Authenticate', string $controller = 'Glowie\Controllers\Main', ?string $action = null, $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
+            if(empty($action)) $action = Util::camelCase($name);
             if(empty($controller)) throw new RoutingException('Route controller cannot be empty');
-            if(empty($action)) throw new RoutingException('Route action cannot be empty');
             if(empty($middleware)) throw new RoutingException('Route middleware cannot be empty');
             self::$routes[$name] = [
                 'uri' => $route,

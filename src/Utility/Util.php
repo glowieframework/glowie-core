@@ -361,9 +361,18 @@
         public static function csrfToken(){
             $session = new Session();
             if($session->has('CSRF_TOKEN')) return $session->get('CSRF_TOKEN');
-            $token = bin2hex(random_bytes(32));
+            $token = self::randomToken();
             $session->set('CSRF_TOKEN', $token);
             return $token;
+        }
+
+        /**
+         * Generates a random hash token.
+         * @param int $length (Optional) Lenght of the token to generate.
+         * @return string Returns the resulting token.
+         */
+        public static function randomToken(int $length = 32){
+            return bin2hex(random_bytes(floor($length / 2)));
         }
 
         /**
