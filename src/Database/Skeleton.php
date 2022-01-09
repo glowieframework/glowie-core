@@ -140,6 +140,12 @@
         private $_index;
 
         /**
+         * Table foreign keys.
+         * @var array
+         */
+        private $_foreign;
+
+        /**
          * Key drops.
          * @var array
          */
@@ -388,6 +394,26 @@
         }
 
         /**
+         * Adds a FOREIGN KEY constraint to the table.
+         * @param string|array $column A single column name or an array of columns to add to the constraint.
+         * @param string $table The referenced table name.
+         * @param string|array $reference A single referenced column name or an array of referenced columns.
+         * @param string|null $name (Optional) Constraint name. If defined, **must be unique in the database**.
+         * @param string $update (Optional) Referential action on parent table UPDATE queries.\
+         * Valid options are: `CASCADE`, `SET NULL`, `RESTRICT`, `NO ACTION` or `SET DEFAULT`.
+         * @param string $delete (Optional) Referential action on parent table DELETE queries.\
+         * Valid options are: `CASCADE`, `SET NULL`, `RESTRICT`, `NO ACTION` or `SET DEFAULT`.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function foreignKey($column, string $table, $reference, ?string $name = null, string $update = 'RESTRICT', string $delete = 'RESTRICT'){
+            if(!empty($name)) $name = "CONSTRAINT `{$name}` ";
+            $column = implode('`, `', (array)$column);
+            $reference = implode('`, `', (array)$reference);
+            $this->_foreign[] = "{$name}FOREIGN KEY (`{$column}`) REFERENCES `{$table}` (`{$reference}`) ON UPDATE {$update} ON DELETE {$delete}";
+            return $this;
+        }
+
+        /**
          * Deletes an existing primary key from the table.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
@@ -413,6 +439,16 @@
          */
         public function dropUnique(string $name){
             return $this->dropIndex($name);
+        }
+
+        /**
+         * Deletes an existing FOREIGN KEY constraint from the table.
+         * @param string $name The key name to drop.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function dropForeignKey(string $name){
+            $this->_drops[] = "DROP FOREIGN KEY `{$name}`";
+            return $this;
         }
 
         /**
@@ -542,6 +578,7 @@
             $this->_primary = [];
             $this->_unique = [];
             $this->_index = [];
+            $this->_foreign = [];
             $this->_drops = [];
             $this->_rename = '';
             $this->_raw = '';
@@ -604,6 +641,9 @@
                     }
                 }
 
+                // Foreign keys
+                if(!empty($this->_foreign)) $instructions = array_merge($instructions, $this->_foreign);
+
                 // Creates the instruction
                 $query .= implode(', ', $instructions);
 
@@ -630,9 +670,7 @@
                 if(!empty($this->_fields)) $instructions = array_merge($instructions, $this->_fields);
 
                 // Key drops
-                if(!empty($this->_drops)){
-                    $instructions[] = implode(', ', $this->_drops);
-                }
+                if(!empty($this->_drops)) $instructions = array_merge($instructions, $this->_drops);
 
                 // Primary keys
                 if(!empty($this->_primary)){
@@ -653,6 +691,13 @@
                     foreach($this->_index as $name => $key){
                         $fields = implode(', ', $key);
                         $instructions[] = "ADD INDEX `{$name}` ({$fields})";
+                    }
+                }
+
+                // Foreign keys
+                if(!empty($this->_foreign)){
+                    foreach($this->_foreign as $foreign){
+                        $instructions[] = "ADD {$foreign}";
                     }
                 }
 

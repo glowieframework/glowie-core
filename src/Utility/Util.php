@@ -235,6 +235,21 @@
         }
 
         /**
+         * Sets a value to a key in a multi-dimensional array using dot notation.
+         * @param array $array Array to set the value.
+         * @param mixed $key Key to set in dot notation.
+         * @param mixed $value Value to set.
+         */
+        public static function arraySet(array &$array, $key, $value){
+            $item = &$array;
+            foreach(explode('.', $key) as $segment){
+                if(isset($item[$segment]) && !is_array($item[$segment])) $item[$segment] = [];
+                $item = &$item[$segment];
+            }
+            $item = $value;
+        }
+
+        /**
          * Returns a value from a multi-dimensional object in dot notation.
          * @param object $object Object to get the value.
          * @param string $key Key to get in dot notation.

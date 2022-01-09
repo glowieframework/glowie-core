@@ -235,7 +235,7 @@
          * @param int $flags (Optional) JSON encoding flags (same as in `json_encode()` function).
          * @param int $depth (Optional) JSON encoding maximum depth (same as in `json_encode()` function).
          */
-        public function setJson(array $data, int $flags = 0, int $depth = 512){
+        public function setJson($data, int $flags = 0, int $depth = 512){
             Buffer::clean();
             $this->setContentType(self::CONTENT_JSON);
             if($data instanceof Element) $data = $data->toArray();
@@ -247,7 +247,7 @@
          * @param array|Element $data Associative array with data to encode to XML. You can also use an Element object.
          * @param string $root (Optional) Name of the XML root element.
          */
-        public function setXML(array $data, string $root = 'data'){
+        public function setXML($data, string $root = 'data'){
             Buffer::clean();
             $this->setContentType(self::CONTENT_XML);
             $xml = new SimpleXMLElement("<?xml version=\"1.0\"?><{$root}></{$root}>");

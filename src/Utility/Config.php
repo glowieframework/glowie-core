@@ -44,6 +44,15 @@
         }
 
         /**
+         * Sets a runtime configuration variable.
+         * @param string $key Key to set value (accepts dot notation keys).
+         * @param mixed $value Value to set.
+         */
+        public static function set(string $key, $value){
+            return Util::arraySet(self::$config, $key, $value);
+        }
+
+        /**
          * Checks if a configuration exists.
          * @param string $key Key to check.
          * @return bool Returns true or false.
