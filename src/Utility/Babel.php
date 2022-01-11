@@ -27,10 +27,9 @@
 
         /**
          * Loads the language files.
-         * @param string $appFolder (Optional) Application "app" folder path relative to the running script.
          */
-        public static function load(string $appFolder = '../'){
-            foreach(Util::getFiles($appFolder . 'languages/*.php') as $file){
+        public static function load(){
+            foreach(Util::getFiles(Util::location('languages/*.php')) as $file){
                 $lang = pathinfo($file, PATHINFO_FILENAME);
                 self::$languages[$lang] = include_once($file);
             }

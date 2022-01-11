@@ -56,11 +56,11 @@
 
         /**
          * Loads the route configuration file.
-         * @param string $appFolder (Optional) Application "app" folder path relative to the running script.
          */
-        public static function load(string $appFolder = '../'){
-            if(!file_exists($appFolder . 'config/Routes.php')) throw new FileException('Route configuration file "app/config/Routes.php" was not found');
-            require_once($appFolder . 'config/Routes.php');
+        public static function load(){
+            $file = Util::location('config/Routes.php');
+            if(!file_exists($file)) throw new FileException('Route configuration file "app/config/Routes.php" was not found');
+            require_once($file);
         }
 
         /**

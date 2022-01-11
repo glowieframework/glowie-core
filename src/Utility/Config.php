@@ -20,15 +20,15 @@
 
         /**
          * Loads the configuration file.
-         * @param string $appFolder (Optional) Application "app" folder path relative to the running script.
          */
-        public static function load(string $appFolder = '../'){
+        public static function load(){
+            $file = Util::location('config/Config.php');
             if(!self::hasLoaded()){
-                if (!file_exists($appFolder . 'config/Config.php')) {
+                if (!file_exists($file)) {
                     die('<strong>Configuration file was not found!</strong><br>
                     Please copy "app/config/Config.example.php" to "app/config/Config.php".');
                 } else {
-                    self::$config = require_once($appFolder . 'config/Config.php');
+                    self::$config = require_once($file);
                 }
             }
         }

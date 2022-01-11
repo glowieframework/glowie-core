@@ -1382,6 +1382,8 @@
                 'from' => empty($results) ? 0 : $offset + 1,
                 'to' => empty($results) ? 0 : count($results) + $offset,
                 'total_pages' => (int)$totalPages,
+                'previous_page' => $currentPage == 1 ? $currentPage : $currentPage - 1,
+                'next_page' => $currentPage == $totalPages ? $currentPage : $currentPage + 1,
                 'results_per_page' => $resultsPerPage,
                 'total_results' => $totalResults
             ]);

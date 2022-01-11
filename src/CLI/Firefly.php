@@ -114,19 +114,19 @@
             }
 
             // Loads the configuration file
-            Config::load(self::$appFolder);
+            Config::load();
 
             // Register error handling
             HandlerCLI::register();
 
             // Load language files
-            Babel::load(self::$appFolder);
+            Babel::load();
 
             // Timezone configuration
             date_default_timezone_set(Config::get('other.timezone', 'America/Sao_Paulo'));
 
             // Load route configuration file
-            Rails::load(self::$appFolder);
+            Rails::load();
 
             // Gets the command
             array_shift(self::$args);

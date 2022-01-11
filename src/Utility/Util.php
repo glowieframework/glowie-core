@@ -5,6 +5,7 @@
     use Glowie\Core\View\Buffer;
     use Glowie\Core\Exception\FileException;
     use Glowie\Core\CLI\Firefly;
+    use Glowie\Core\Element;
 
     /**
      * Miscellaneous utilities for Glowie application.
@@ -58,6 +59,15 @@
          */
         public static function baseUrl(string $path = ''){
             return APP_BASE_URL . trim($path, '/');
+        }
+
+        /**
+         * Returns the real application location in the file system.
+         * @param string $path (Optional) Relative path to append to the location.
+         * @return string Full location.
+         */
+        public static function location(string $path = ''){
+            return APP_LOCATION . trim($path, '/');
         }
 
         /**
@@ -211,6 +221,37 @@
          */
         public static function randomArray(array $array){
             return $array[array_rand($array)];
+        }
+
+        /**
+         * Returns a paginated version of an array.
+         * @param array $array Array to be paginated.
+         * @param int $currentPage (Optional) Current page to get results.
+         * @param int $resultsPerPage (Optional) Number of results to get per page.
+         * @return Element Returns an object with the pagination result.
+         */
+        public static function paginateArray(array $array, int $currentPage = 1, int $resultsPerPage = 25){
+            // Counts total pages
+            $totalResults = count($array);
+            $totalPages = floor($totalResults / $resultsPerPage);
+            if($totalResults % $resultsPerPage != 0) $totalPages++;
+
+            // Gets paginated results
+            $offset = ($currentPage - 1) * $resultsPerPage;
+            $results = array_slice($array, $offset, $resultsPerPage);
+
+            // Parse results
+            return new Element([
+                'page' => $currentPage,
+                'data' => $results,
+                'from' => empty($results) ? 0 : $offset + 1,
+                'to' => empty($results) ? 0 : count($results) + $offset,
+                'total_pages' => (int)$totalPages,
+                'previous_page' => $currentPage == 1 ? $currentPage : $currentPage - 1,
+                'next_page' => $currentPage == $totalPages ? $currentPage : $currentPage + 1,
+                'results_per_page' => $resultsPerPage,
+                'total_results' => $totalResults
+            ]);
         }
 
         /**
