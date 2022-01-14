@@ -2,6 +2,7 @@
     namespace Glowie\Core\Error;
 
     use Config;
+    use Util;
     use Glowie\Core\Http\Response;
     use Glowie\Core\View\Buffer;
     use ErrorException;
@@ -151,8 +152,7 @@
          */
         private static function log(string $content){
             if(!Config::get('error_reporting.logging', true)) return;
-            if(!is_writable('../storage')) die('Error: Directory "app/storage" is not writable, please check your chmod settings');
-            file_put_contents('../storage/error.log', $content, FILE_APPEND);
+            file_put_contents(Config::get('error_reporting.file', Util::location('storage/error.log')), $content, FILE_APPEND);
         }
 
         /**

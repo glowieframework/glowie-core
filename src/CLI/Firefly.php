@@ -76,12 +76,6 @@
         private static $isCLI;
 
         /**
-         * Firefly current working folder path.
-         * @var string
-         */
-        private static $appFolder;
-
-        /**
          * Enable silent print mode.
          * @var bool
          */
@@ -96,22 +90,15 @@
             self::$command = '';
             self::$args = $argv;
             self::$isCLI = true;
-            self::$appFolder = 'app/';
             self::$silent = false;
 
             // Store application start time
             define('APP_START_TIME', microtime(true));
 
             // Store application folder and base URL
-            define('APP_FOLDER', trim(getcwd(), '/'));
-            define('APP_BASE_URL', APP_FOLDER . '/');
-
-            // Load configuration
-            if (!file_exists(self::$appFolder . 'config/Config.php')) {
-                self::print('<bg="red"><color="black">Configuration file not found!</color></bg>');
-                self::print('<color="red">Please copy "app/config/Config.example.php" to "app/config/Config.php"</color>');
-                die();
-            }
+            define('APP_FOLDER', '');
+            define('APP_BASE_URL', '');
+            define('APP_LOCATION', getcwd() . '/app/');
 
             // Loads the configuration file
             Config::load();
@@ -153,7 +140,6 @@
             self::$command = '';
             self::$args = $args;
             self::$isCLI = false;
-            self::$appFolder = '../';
             self::$silent = $silent;
 
             // Runs the command
@@ -287,14 +273,6 @@
         }
 
         /**
-         * Returns the application working folder.
-         * @return string App folder as string.
-         */
-        public static function getAppFolder(){
-            return self::$appFolder;
-        }
-
-        /**
          * Starts the local development server.
          */
         private static function __shine(){
@@ -308,7 +286,7 @@
             $port = self::getArg('port', 8080);
 
             // Starts the server
-            self::print('<color="green">Starting local development server...</color>');
+            self::print('<color="green">Local development server started!</color>');
             self::print('<color="yellow">To shutdown the server press Ctrl+C</color>');
             system('php -S ' . $host . ':' . $port .' -t app/public ' . __DIR__ . '/Server.php');
         }
@@ -349,9 +327,9 @@
          * Deletes all files in **app/storage/cache** folder.
          */
         private static function __clearCache(){
-            if(!is_writable(self::$appFolder . 'storage/cache')) throw new FileException('Directory "app/storage/cache" is not writable, please check your chmod settings');
-            self::print("<color=\"blue\">Clearing cache...</color>");
-            foreach (Util::getFiles(self::$appFolder . 'storage/cache/*.tmp') as $filename) unlink($filename);
+            $dir = Config::get('skeltch.path', Util::location('storage/cache'));
+            if(!is_writable($dir)) throw new FileException('Directory "' . $dir . '" is not writable, please check your chmod settings');
+            foreach (Util::getFiles($dir . '/*.tmp') as $filename) unlink($filename);
             self::print('<color="green">Cache cleared successfully!</color>');
             return true;
         }
@@ -360,9 +338,9 @@
          * Deletes all files in **app/storage/session** folder.
          */
         private static function __clearSession(){
-            if(!is_writable(self::$appFolder . 'storage/session')) throw new FileException('Directory "app/storage/session" is not writable, please check your chmod settings');
-            self::print("<color=\"blue\">Clearing session data...</color>");
-            foreach (Util::getFiles(self::$appFolder . 'storage/session/*') as $filename) unlink($filename);
+            $dir = Config::get('session.path', Util::location('storage/session'));
+            if(!is_writable($dir)) throw new FileException('Directory "' . $dir . '" is not writable, please check your chmod settings');
+            foreach (Util::getFiles($dir . '/*') as $filename) unlink($filename);
             self::print('<color="green">Session data cleared successfully!</color>');
             return true;
         }
@@ -371,9 +349,8 @@
          * Clears the error log.
          */
         private static function __clearLog(){
-            if(!is_writable(self::$appFolder . 'storage')) throw new FileException('Directory "app/storage" is not writable, please check your chmod settings');
-            self::print("<color=\"blue\">Clearing error log...</color>");
-            file_put_contents(self::$appFolder . 'storage/error.log', '');
+            $file = Config::get('error_reporting.file', Util::location('storage/error.log'));
+            file_put_contents($file, '');
             self::print('<color="green">Error log cleared successfully!</color>');
             return true;
         }
@@ -383,7 +360,7 @@
          */
         private static function __generateKeys(){
             // Checks permissions
-            $file = self::$appFolder . 'config/Config.php';
+            $file = Util::location('config/Config.php');
             if(!is_writable($file)) throw new FileException('File "app/config/Config.php" is not writable, please check your chmod settings');
 
             // Reads the config file content
@@ -431,8 +408,8 @@
          */
         private static function __createCommand(){
             // Checks permissions
-            if(!is_dir(self::$appFolder . 'commands')) mkdir(self::$appFolder . 'commands');
-            if(!is_writable(self::$appFolder . 'commands')) throw new FileException('Directory "app/commands" is not writable, please check your chmod settings');
+            if(!is_dir(Util::location('commands'))) mkdir(Util::location('commands'));
+            if(!is_writable(Util::location('commands'))) throw new FileException('Directory "app/commands" is not writable, please check your chmod settings');
 
             // Checks if name was filled
             $name = self::argOrInput('name', 'Command name: ');
@@ -444,7 +421,7 @@
             $name = Util::pascalCase($name);
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Command.php');
             $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
-            file_put_contents(self::$appFolder . 'commands/' . $name . '.php', $template);
+            file_put_contents(Util::location('commands/' . $name . '.php'), $template);
 
             // Success message
             self::print("<color=\"green\">Command {$name} created successfully!</color>");
@@ -456,8 +433,8 @@
          */
         private static function __createController(){
             // Checks permissions
-            if(!is_dir(self::$appFolder . 'controllers')) mkdir(self::$appFolder . 'controllers');
-            if(!is_writable(self::$appFolder . 'controllers')) throw new FileException('Directory "app/controllers" is not writable, please check your chmod settings');
+            if(!is_dir(Util::location('controllers'))) mkdir(Util::location('controllers'));
+            if(!is_writable(Util::location('controllers'))) throw new FileException('Directory "app/controllers" is not writable, please check your chmod settings');
 
             // Checks if name was filled
             $name = self::argOrInput('name', 'Controller name: ');
@@ -469,7 +446,7 @@
             $name = Util::pascalCase($name);
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Controller.php');
             $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
-            file_put_contents(self::$appFolder . 'controllers/' . $name . '.php', $template);
+            file_put_contents(Util::location('controllers/' . $name . '.php'), $template);
 
             // Success message
             self::print("<color=\"green\">Controller {$name} created successfully!</color>");
@@ -481,8 +458,8 @@
          */
         private static function __createLanguage(){
             // Checks permissions
-            if(!is_dir(self::$appFolder . 'languages')) mkdir(self::$appFolder . 'languages');
-            if(!is_writable(self::$appFolder . 'languages')) throw new FileException('Directory "app/languages" is not writable, please check your chmod settings');
+            if(!is_dir(Util::location('languages'))) mkdir(Util::location('languages'));
+            if(!is_writable(Util::location('languages'))) throw new FileException('Directory "app/languages" is not writable, please check your chmod settings');
 
             // Checks if name was filled
             $name = self::argOrInput('name', 'Language name: ');
@@ -492,7 +469,7 @@
 
             // Creates the file
             $name = trim(strtolower($name));
-            copy(self::TEMPLATES_FOLDER . 'Language.php', self::$appFolder . 'languages/' . $name . '.php');
+            copy(self::TEMPLATES_FOLDER . 'Language.php', Util::location('languages/' . $name . '.php'));
 
             // Success message
             self::print("<color=\"green\">Language file {$name} created successfully!</color>");
@@ -504,8 +481,8 @@
          */
         private static function __createMiddleware(){
             // Checks permissions
-            if(!is_dir(self::$appFolder . 'middlewares')) mkdir(self::$appFolder . 'middlewares');
-            if(!is_writable(self::$appFolder . 'middlewares')) throw new FileException('Directory "app/middlewares" is not writable, please check your chmod settings');
+            if(!is_dir(Util::location('middlewares'))) mkdir(Util::location('middlewares'));
+            if(!is_writable(Util::location('middlewares'))) throw new FileException('Directory "app/middlewares" is not writable, please check your chmod settings');
 
             // Checks if name was filled
             $name = self::argOrInput('name', 'Middleware name: ');
@@ -517,7 +494,7 @@
             $name = Util::pascalCase($name);
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Middleware.php');
             $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
-            file_put_contents(self::$appFolder . 'middlewares/' . $name . '.php', $template);
+            file_put_contents(Util::location('middlewares/' . $name . '.php'), $template);
 
             // Success message
             self::print("<color=\"green\">Middleware {$name} created successfully!</color>");
@@ -529,8 +506,8 @@
          */
         private static function __createMigration(){
             // Checks permissions
-            if(!is_dir(self::$appFolder . 'migrations')) mkdir(self::$appFolder . 'migrations');
-            if(!is_writable(self::$appFolder . 'migrations')) throw new FileException('Directory "app/migrations" is not writable, please check your chmod settings');
+            if(!is_dir(Util::location('migrations'))) mkdir(Util::location('migrations'));
+            if(!is_writable(Util::location('migrations'))) throw new FileException('Directory "app/migrations" is not writable, please check your chmod settings');
 
             // Checks if name was filled
             $name = self::argOrInput('name', 'Migration name: ');
@@ -543,7 +520,7 @@
             $name = 'm' . date('Y_m_d_His_') . $cleanName;
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Migration.php');
             $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
-            file_put_contents(self::$appFolder . 'migrations/' . $name . '.php', $template);
+            file_put_contents(Util::location('migrations/' . $name . '.php'), $template);
 
             // Success message
             self::print("<color=\"green\">Migration {$cleanName} created successfully!</color>");
@@ -555,8 +532,8 @@
          */
         private static function __createModel(){
             // Checks permissions
-            if(!is_dir(self::$appFolder . 'models')) mkdir(self::$appFolder . 'models');
-            if(!is_writable(self::$appFolder . 'models')) throw new FileException('Directory "app/models" is not writable, please check your chmod settings');
+            if(!is_dir(Util::location('models'))) mkdir(Util::location('models'));
+            if(!is_writable(Util::location('models'))) throw new FileException('Directory "app/models" is not writable, please check your chmod settings');
 
             // Checks if name was filled
             $name = self::argOrInput('name', 'Model name: ');
@@ -589,7 +566,7 @@
             $name = Util::pascalCase($name);
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Model.php');
             $template = str_replace(['__FIREFLY_TEMPLATE_NAME__', '__FIREFLY_TEMPLATE_TABLE__', '__FIREFLY_TEMPLATE_PRIMARY__', '__FIREFLY_TEMPLATE_TIMESTAMPS__', '__FIREFLY_TEMPLATE_CREATED__', '__FIREFLY_TEMPLATE_UPDATED__'], [$name, $table, $primary, $timestamps, $created_at, $updated_at], $template);
-            file_put_contents(self::$appFolder . 'models/' . $name . '.php', $template);
+            file_put_contents(Util::location('models/' . $name . '.php'), $template);
 
             // Success message
             self::print("<color=\"green\">Model {$name} created successfully!</color>");
@@ -601,8 +578,8 @@
          */
         private static function __createTest(){
             // Checks permissions
-            if(!is_dir(self::$appFolder . 'tests')) mkdir(self::$appFolder . 'tests');
-            if(!is_writable(self::$appFolder . 'tests')) throw new FileException('Directory "app/tests" is not writable, please check your chmod settings');
+            if(!is_dir(Util::location('tests'))) mkdir(Util::location('tests'));
+            if(!is_writable(Util::location('tests'))) throw new FileException('Directory "app/tests" is not writable, please check your chmod settings');
 
             // Checks if name was filled
             $name = self::argOrInput('name', 'Test name: ');
@@ -614,7 +591,7 @@
             $name = Util::pascalCase($name);
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Test.php');
             $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
-            file_put_contents(self::$appFolder . 'tests/' . $name . '.php', $template);
+            file_put_contents(Util::location('tests/' . $name . '.php'), $template);
 
             // Success message
             self::print("<color=\"green\">Test {$name} created successfully!</color>");
@@ -633,7 +610,7 @@
             $stepsDone = 0;
 
             // Loops through all the migration files
-            foreach (glob(self::$appFolder . 'migrations/*.php') as $filename){
+            foreach (glob(Util::location('migrations/*.php')) as $filename){
                 // Checks current state
                 if($steps != 'all' && $stepsDone == (int)$steps) break;
 
@@ -684,7 +661,7 @@
             $stepsDone = 0;
 
             // Loops through all the migration files
-            foreach (array_reverse(glob(self::$appFolder . 'migrations/*.php')) as $filename) {
+            foreach (array_reverse(glob(Util::location('migrations/*.php'))) as $filename) {
                 // Checks current state
                 if($steps != 'all' && $stepsDone == (int)$steps) break;
 
@@ -732,11 +709,11 @@
 
             // Validates the test name
             if(!empty($name)){
-                $filename = self::$appFolder . 'tests/' . $name . '.php';
+                $filename = Util::location('tests/' . $name . '.php');
                 if(!file_exists($filename)) throw new FileException('Test "' . $name . '" does not exist in "app/tests"');
                 $files = [$filename];
             }else{
-                $files = glob(self::$appFolder . 'tests/*.php');
+                $files = glob(Util::location('tests/*.php'));
             }
 
             // Checks for empty tests folder

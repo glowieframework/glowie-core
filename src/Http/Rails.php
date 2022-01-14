@@ -59,7 +59,7 @@
          */
         public static function load(){
             $file = Util::location('config/Routes.php');
-            if(!file_exists($file)) throw new FileException('Route configuration file "app/config/Routes.php" was not found');
+            if(!file_exists($file)) throw new FileException('Route configuration file "' . $file . '" was not found');
             require_once($file);
         }
 

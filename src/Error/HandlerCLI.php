@@ -4,6 +4,7 @@
     use Glowie\Core\CLI\Firefly;
     use Config;
     use ErrorException;
+    use Util;
 
     /**
      * CLI error handler for Glowie application.
@@ -96,12 +97,7 @@
          */
         private static function log(string $content){
             if(!Config::get('error_reporting.logging', true)) return;
-            if(!is_writable(Firefly::getAppFolder() . 'storage')){
-                Firefly::print('<bg="red"><color="black">Unable to log errors!</color></bg>');
-                Firefly::print('<color="red">Directory "app/storage" is not writable, please check your chmod settings</color>');
-                die();
-            }
-            file_put_contents(Firefly::getAppFolder() . 'storage/error.log', $content, FILE_APPEND);
+            file_put_contents(Config::get('error_reporting.file', Util::location('storage/error.log')), $content, FILE_APPEND);
         }
 
     }

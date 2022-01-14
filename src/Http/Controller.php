@@ -4,8 +4,6 @@
     use Glowie\Core\Element;
     use Glowie\Core\View\View;
     use Glowie\Core\View\Layout;
-    use Glowie\Core\Exception\FileException;
-    use Util;
 
     /**
      * Controller core for Glowie application.
@@ -90,42 +88,19 @@
          * @return void
          */
         final public function renderView(string $view, array $params = []){
-            $view = '../views/' . $view . (!Util::endsWith($view, '.phtml') ? '.phtml' : '');
-            if(file_exists($view)){
-                return new View($view, $params, true);
-            }else{
-                throw new FileException(sprintf('View file "%s" not found', str_replace('../', 'app/', $view)));
-            }
+            return new View($view, $params);
         }
 
         /**
          * Renders a layout file.
          * @param string $layout Layout filename. Must be a **.phtml** file inside **app/views/layouts** folder, extension is not needed.
-         * @param string $view (Optional) View filename to render within layout. You can place its content by using `$this->getContent()`\
+         * @param string|null $view (Optional) View filename to render within layout. You can place its content by using `$this->getContent()`\
          * inside the layout file. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
          * @param array $params (Optional) Parameters to pass into the rendered view and layout. Should be an associative array with each variable name and value.
          * @return void
          */
-        final public function renderLayout(string $layout, string $view = '', array $params = []){
-            $layout = '../views/layouts/' . $layout . (!Util::endsWith($layout, '.phtml') ? '.phtml' : '');
-            if(!empty($view)){
-                $view = '../views/' . $view . (!Util::endsWith($view, '.phtml') ? '.phtml' : '');
-                if (file_exists($layout)) {
-                    if(file_exists($view)){
-                        return new Layout($layout, $view, $params);
-                    }else{
-                        throw new FileException(sprintf('View file "%s" not found', str_replace('../', 'app/', $view)));
-                    }
-                } else {
-                    throw new FileException(sprintf('Layout file "%s" not found', str_replace('../', 'app/', $layout)));
-                }
-            }else{
-                if (file_exists($layout)) {
-                    return new Layout($layout, '', $params);
-                } else {
-                    throw new FileException(sprintf('Layout file "%s" not found', str_replace('../', 'app/', $layout)));
-                }
-            }
+        final public function renderLayout(string $layout, ?string $view = null, array $params = []){
+            return new Layout($layout, $view, $params);
         }
 
     }

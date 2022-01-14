@@ -4,7 +4,9 @@
     use Glowie\Core\Http\Rails;
     use Glowie\Core\Traits\ElementTrait;
     use Glowie\Core\View\Buffer;
+    use Glowie\Core\Exception\FileException;
     use Config;
+    use Util;
     use BadMethodCallException;
 
     /**
@@ -47,16 +49,18 @@
         /**
          * Instantiates a new View object.
          * @param string $view View filename to instantiate.
-         * @param array $params View parameters to parse.
-         * @param bool $parse Immediately parse view content.
+         * @param array $params (Optional) View parameters to parse.
+         * @param bool $parse (Optional) Immediately parse view content.
          */
-        public function __construct(string $view, array $params, bool $parse){
-            // Save original filename
-            $this->_filename = str_replace(['../views/', '.phtml'], '', $view);
+        public function __construct(string $view, array $params = [], bool $parse = true){
+            // Validate file
+            $this->_filename = $view;
+            $view = Util::location('views/' . $view . (!Util::endsWith($view, '.phtml') ? '.phtml' : ''));
+            if(!file_exists($view)) throw new FileException(sprintf('View file "%s" not found', $this->_filename));
 
             // Instantiate helpers
             $helpers = 'Glowie\Helpers\Helpers';
-            if(!self::$_helpers) self::$_helpers = new $helpers;
+            if(!self::$_helpers && class_exists($helpers)) self::$_helpers = new $helpers;
 
             // Parse parameters
             $this->_params = $params;
@@ -106,12 +110,12 @@
         /**
          * Renders a layout file.
          * @param string $layout Layout filename. Must be a **.phtml** file inside **app/views/layouts** folder, extension is not needed.
-         * @param string $view (Optional) View filename to render within layout. You can place its content by using `$this->getContent()`\
+         * @param string|null $view (Optional) View filename to render within layout. You can place its content by using `$this->getContent()`\
          * inside the layout file. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
          * @param array $params (Optional) Parameters to pass into the rendered view and layout. Should be an associative array with each variable name and value.
          * @return void
          */
-        public function renderLayout(string $layout, string $view = '', array $params = []){
+        public function renderLayout(string $layout, ?string $view = null, array $params = []){
             return Rails::getController()->renderLayout($layout, $view, array_merge($this->_params, $params));
         }
 

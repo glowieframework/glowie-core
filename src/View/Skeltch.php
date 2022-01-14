@@ -3,6 +3,7 @@
 
     use Glowie\Core\Exception\FileException;
     use Config;
+    use Util;
 
     /**
      * Templating engine for Glowie application.
@@ -23,11 +24,11 @@
          */
         public static function run(string $filename){
             // Checks for file and cache folder permissions
-            $tmpdir = '../storage/cache/';
-            if(!is_writable($tmpdir)) throw new FileException('Directory "app/storage/cache" is not writable, please check your chmod settings');
+            $tmpdir = Config::get('skeltch.path', Util::location('storage/cache'));
+            if(!is_writable($tmpdir)) throw new FileException('Directory "' . $tmpdir . '" is not writable, please check your chmod settings');
 
             // Checks if cache is enabled or should be recompiled
-            $tmpfile = $tmpdir . md5($filename) . '.tmp';
+            $tmpfile = $tmpdir . '/' . md5($filename) . '.tmp';
             if(!Config::get('skeltch.cache', true) || !file_exists($tmpfile) || filemtime($tmpfile) < filemtime($filename)) self::compile($filename, $tmpfile);
 
             // Returns the processed file location

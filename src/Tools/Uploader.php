@@ -99,9 +99,8 @@
          * @return Uploader Current Uploader instance for nested calls.
          */
         public function setDirectory(string $directory){
-            if(empty($directory) || trim($directory) == '') throw new Exception('Uploader: $directory should not be empty');
-            $directory = trim($directory, '/');
-            if(!is_dir($directory) || !is_writable($directory)) throw new FileException('Directory "app/public/' . $directory . '" is invalid or not writable');
+            $directory = Util::location('public/' . $directory);
+            if(!is_dir($directory) || !is_writable($directory)) throw new FileException('Directory "' . $directory . '" is invalid or not writable');
             $this->directory = $directory;
             return $this;
         }
