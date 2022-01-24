@@ -1,7 +1,6 @@
 <?php
     namespace Glowie\Core\Database;
 
-    use Exception;
     use stdClass;
     use Glowie\Core\Traits\DatabaseTrait;
     use Glowie\Core\Exception\QueryException;
@@ -156,6 +155,12 @@
          * @var string
          */
         private $_rename;
+
+        /**
+         * LIKE statement.
+         * @var string
+         */
+        private $_like;
 
         /**
          * Creates a new Skeleton database instance.
@@ -491,13 +496,32 @@
         }
 
         /**
+         * Adds a LIKE statement to the query.
+         * @param string $table Table name to copy.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function like(string $table){
+            $this->_like = $table;
+            return $this;
+        }
+
+        /**
          * Creates a new table.
          * @return bool Returns true on success.
          * @throws QueryException Throws an exception if the query fails.
          */
         public function create(){
-            if(empty($this->_fields)) throw new Exception('Skeleton: You need to create at least one column before creating a table');
             $this->_instruction = 'CREATE TABLE';
+            return $this->execute();
+        }
+
+        /**
+         * Creates a new temporary table.
+         * @return bool Returns true on success.
+         * @throws QueryException Throws an exception if the query fails.
+         */
+        public function createTemporary(){
+            $this->_instruction = 'CREATE TEMPORARY TABLE';
             return $this->execute();
         }
 
@@ -581,6 +605,7 @@
             $this->_foreign = [];
             $this->_drops = [];
             $this->_rename = '';
+            $this->_like = '';
             $this->_raw = '';
         }
 
@@ -596,25 +621,24 @@
             $query = $this->_instruction;
 
             // Gets EXISTS
-            if($this->_instruction == 'CREATE TABLE' || $this->_instruction == 'TRUNCATE TABLE' || $this->_instruction == 'DROP TABLE'){
-                if(!empty($this->_exists)){
-                    $query .= $this->_exists;
-                }
+            if(in_array($this->_instruction, ['CREATE TABLE', 'CREATE TEMPORARY TABLE', 'TRUNCATE TABLE', 'DROP TABLE'])){
+                if(!empty($this->_exists)) $query .= $this->_exists;
             }
 
             // Gets the table
             $query .= " `{$this->_table}`";
 
             // Gets CREATE TABLE parameters
-            if($this->_instruction == 'CREATE TABLE'){
+            if($this->_instruction == 'CREATE TABLE' || $this->_instruction == 'CREATE TEMPORARY TABLE'){
                 // Opening parenthesis
                 $instructions = [];
                 $query .= ' (';
 
+                // Like
+                if(!empty($this->_like)) $instructions[] = "LIKE `{$this->_like}`";
+
                 // Auto increment
-                if(!empty($this->_autoincrement)){
-                    $instructions[] = "{$this->_autoincrement} AUTO_INCREMENT";
-                }
+                if(!empty($this->_autoincrement)) $instructions[] = "{$this->_autoincrement} AUTO_INCREMENT";
 
                 // Fields
                 if (!empty($this->_fields)) $instructions = array_merge($instructions, $this->_fields);

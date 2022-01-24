@@ -47,7 +47,7 @@
         private $_params;
 
         /**
-         * Instantiates a new View object.
+         * Instantiates a new View instance.
          * @param string $view View filename to instantiate.
          * @param array $params (Optional) View parameters to parse.
          * @param bool $parse (Optional) Immediately parse view content.

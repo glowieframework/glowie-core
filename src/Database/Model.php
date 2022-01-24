@@ -107,14 +107,19 @@
 
         /**
          * Gets the first row that matches a field value.
-         * @param string $field Field to use while searching.
-         * @param mixed $value Value to search for.
+         * @param string|array $field Field name to use while searching or an associative array relating fields and values to search.
+         * @param mixed $value (Optional) Value to search for.
          * @return mixed Returns the row on success or null if not found.
          */
-        public function findBy(string $field, $value){
+        public function findBy($field, $value = null){
             $this->clearQuery();
+            if(is_array($field)){
+                foreach($field as $key => $value) $this->where($key, $value);
+            }else{
+                $this->where($field, $value);
+            }
             $fields = !empty($this->_fields) ? $this->_fields : '*';
-            return $this->castData($this->select($fields)->where($field, $value)->limit(1)->fetchRow(), true);
+            return $this->castData($this->select($fields)->limit(1)->fetchRow(), true);
         }
 
         /**
@@ -151,24 +156,26 @@
 
         /**
          * Deletes the first row that matches the model primary key value.
-         * @param mixed $primary Primary key value to search for.
+         * @param mixed $primary Primary key value or an array of values to search for.
          * @return bool Returns true on success.
          */
         public function drop($primary){
             $this->clearQuery();
-            return $this->where($this->_primaryKey, $primary)->delete();
+            $this->whereIn($this->_primaryKey, (array)$primary);
+            return $this->delete();
         }
 
         /**
          * Inserts a new row in the model table.
-         * @param array $data An associative array relating fields and values to insert.
+         * @param Element|array $data An Element or associative array relating fields and values to insert.
          * @return bool Returns true on success.
          */
-        public function create(array $data){
+        public function create($data){
             // Clears the current built query
             $this->clearQuery();
 
             // Parse data and timestamps
+            if($data instanceof Element) $data = $data->toArray();
             $data = $this->filterData($data);
             if($this->_timestamps){
                 $data[$this->_createdField] = Kraken::raw('NOW()');
@@ -182,14 +189,15 @@
         /**
          * Checks if a row matches the primary key value in the data. If so, updates the row. Otherwise,\
          * inserts a new record in the model table.
-         * @param array $data An associative array relating fields and values to upsert. **Must include the primary key field.**
+         * @param array $data An Element or associative array relating fields and values to upsert. **Must include the primary key field.**
          * @return bool Returns true on success.
          */
-        public function updateOrCreate(array $data){
+        public function updateOrCreate($data){
             // Clears the current built query
             $this->clearQuery();
 
             // Checks if the primary key was passed and matches an existing row
+            if($data instanceof Element) $data = $data->toArray();
             if(isset($data[$this->_primaryKey]) && $this->find($data[$this->_primaryKey])){
                 // Parse data and timestamps
                 $updatedData = $this->filterData($data);
@@ -205,7 +213,7 @@
 
         /**
          * Fills the model entity with a row data.
-         * @param Element|array $row Row to retrieve data.
+         * @param Element|array $row An Element or associative array with the row data.
          * @return Model Current Model instance for nested calls.
          */
         public function fill($row){
@@ -290,6 +298,15 @@
 
                     // Gets the rule
                     switch($type){
+                        case 'json':
+                            $json = json_decode($data[$field], true);
+                            if($json){
+                                $data[$field] = new Element($json);
+                            }else{
+                                $data[$field] = null;
+                            }
+                            break;
+
                         case 'callback':
                             if (empty($params[1])) throw new Exception('Missing function name in callback casting for "' . $field . '" field');
                             if (is_callable([$this, $params[1]])) {

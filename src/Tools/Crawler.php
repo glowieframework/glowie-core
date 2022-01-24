@@ -234,7 +234,7 @@
          * Performs a GET request.
          * @param string $url URL to perform request.
          * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
-         * @return Element|bool Returns the response as an object on success or false on failure.
+         * @return Element|bool Returns the response as an Element on success or false on failure.
          */
         public function get(string $url, $data = ''){
             return $this->request($url, 'GET', $data);
@@ -244,7 +244,7 @@
          * Performs a POST request.
          * @param string $url URL to perform request.
          * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
-         * @return Element|bool Returns the response as an object on success or false on failure.
+         * @return Element|bool Returns the response as an Element on success or false on failure.
          */
         public function post(string $url, $data = ''){
             return $this->request($url, 'POST', $data);
@@ -254,7 +254,7 @@
          * Performs a PUT request.
          * @param string $url URL to perform request.
          * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
-         * @return Element|bool Returns the response as an object on success or false on failure.
+         * @return Element|bool Returns the response as an Element on success or false on failure.
          */
         public function put(string $url, $data = ''){
             return $this->request($url, 'PUT', $data);
@@ -264,7 +264,7 @@
          * Performs a PATCH request.
          * @param string $url URL to perform request.
          * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
-         * @return Element|bool Returns the response as an object on success or false on failure.
+         * @return Element|bool Returns the response as an Element on success or false on failure.
          */
         public function patch(string $url, $data = ''){
             return $this->request($url, 'PATCH', $data);
@@ -274,7 +274,7 @@
          * Performs a DELETE request.
          * @param string $url URL to perform request.
          * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
-         * @return Element|bool Returns the response as an object on success or false on failure.
+         * @return Element|bool Returns the response as an Element on success or false on failure.
          */
         public function delete(string $url, $data = ''){
             return $this->request($url, 'DELETE', $data);
@@ -284,7 +284,7 @@
          * Performs a HEAD request.
          * @param string $url URL to perform request.
          * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
-         * @return Element|bool Returns the response as an object on success or false on failure.
+         * @return Element|bool Returns the response as an Element on success or false on failure.
          */
         public function head(string $url, $data = ''){
             return $this->request($url, 'HEAD', $data);
@@ -294,7 +294,7 @@
          * Performs an OPTIONS request.
          * @param string $url URL to perform request.
          * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
-         * @return Element|bool Returns the response as an object on success or false on failure.
+         * @return Element|bool Returns the response as an Element on success or false on failure.
          */
         public function options(string $url, $data = ''){
             return $this->request($url, 'OPTIONS', $data);
@@ -305,7 +305,7 @@
          * @param string $url URL to perform request.
          * @param string $method (Optional) Method to use in the request. Default is `GET`.
          * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
-         * @return Element|bool Returns the response as an object on success or false on failure.
+         * @return Element|bool Returns the response as an Element on success or false on failure.
          * @throws Exception Throws an exception if the status code is greater than 400 and `throwOnError()` is set to **true**.
          */
         public function request(string $url, string $method = 'GET', $data = ''){
@@ -393,7 +393,7 @@
             // Closes current connection
             curl_close($curl);
 
-            // Returns resulting object
+            // Returns resulting Element
             return new Element([
                 'status' => $info['http_code'],
                 'type' => $info['content_type'] ?? null,

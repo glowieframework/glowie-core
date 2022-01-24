@@ -228,7 +228,7 @@
          * @param array $array Array to be paginated.
          * @param int $currentPage (Optional) Current page to get results.
          * @param int $resultsPerPage (Optional) Number of results to get per page.
-         * @return Element Returns an object with the pagination result.
+         * @return Element Returns an Element with the pagination result.
          */
         public static function paginateArray(array $array, int $currentPage = 1, int $resultsPerPage = 25){
             // Counts total pages

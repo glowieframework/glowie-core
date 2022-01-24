@@ -2,6 +2,7 @@
     namespace Glowie\Core\Http;
 
     use Util;
+    use Config;
     use Glowie\Core\Element;
     use Glowie\Core\Traits\ElementTrait;
 
@@ -19,18 +20,34 @@
         use ElementTrait;
 
         /**
-         * Current Request headers.
+         * Request headers.
          * @var array
          */
-        private $__headers;
+        private static $headers;
+
+        /**
+         * Request JSON data.
+         * @var Element
+         */
+        private static $json;
 
         /**
          * Creates a new Request handler instance.
          */
         public function __construct(){
-            $headers = getallheaders();
-            $this->__headers = array_change_key_case($headers, CASE_LOWER);
-            $this->__constructTrait($_REQUEST);
+            self::$headers = array_change_key_case(getallheaders(), CASE_LOWER);
+            self::$json = new Element(json_decode($this->getBody(), true) ?? []);
+
+            // Request variables parsing
+            switch(Config::get('other.request_vars', 'GET_POST')){
+                case 'POST_GET':
+                    $this->__constructTrait(array_merge($_POST, $_GET));
+                    break;
+
+                default:
+                    $this->__constructTrait(array_merge($_GET, $_POST));
+                    break;
+            }
         }
 
         /**
@@ -86,13 +103,14 @@
         }
 
         /**
-         * Returns the request JSON data as an object.
-         * @return Element|null The object containing the JSON data if valid or null if not.
+         * Returns a JSON key from the request.
+         * @param string|null $key (Optional) Key to get value. Leave empty to get the whole JSON Element.
+         * @param mixed $default (Optional) Default value to return if the key does not exist.
+         * @return mixed Returns the value if the key exists (or the default if not) or the JSON Element if a key is not provided.
          */
-        public function getJson(){
-            $json = json_decode($this->getBody(), true);
-            if(!$json) return null;
-            return new Element($json);
+        public function getJson(?string $key = '', $default = null){
+            if(empty($key)) return self::$json;
+            return self::$json->get($key, $default);
         }
 
         /**
@@ -115,10 +133,11 @@
         /**
          * Gets the value of a header.
          * @param string $name Header name to get.
-         * @return string|null Returns the header value if exists or null if there is none.
+         * @param mixed $default (Optional) Default value to return if the header does not exist.
+         * @return mixed Returns the value if exists or the default if not.
          */
-        public function getHeader(string $name){
-            return $this->__headers[strtolower($name)] ?? null;
+        public function getHeader(string $name, $default = null){
+            return self::$headers[strtolower($name)] ?? $default;
         }
 
         /**
@@ -131,7 +150,7 @@
 
         /**
          * Gets a basic `Authorization` header.
-         * @return Element|null Returns an object with the username and password if exists or null if there is none.
+         * @return Element|null Returns an Element with the username and password if exists or null if there is none.
          */
         public function getAuthorization(){
             $value = $this->getHeader('Authorization');

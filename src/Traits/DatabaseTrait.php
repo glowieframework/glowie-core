@@ -68,7 +68,7 @@
         private $_returnAssoc = false;
 
         /**
-         * Returns next results as associative arrays instead of objects.
+         * Returns next results as associative arrays instead of Elements.
          * @param bool $option (Optional) Set to **true** to return as arrays, **false** otherwise.
          */
         public function returnArray(bool $option = true){
@@ -223,7 +223,7 @@
          * Run the current built query.
          * @param bool $returns (Optional) If the query should return a result.
          * @param bool $returnsFirst (Optional) If the query should return a single result.
-         * @return mixed If the query is successful and should return any results, will return an object with the first result or an array of\
+         * @return mixed If the query is successful and should return any results, will return an Element with the first result or an array of\
          * results. Otherwise returns true on success.
          */
         private function execute(bool $returns = false, bool $returnsFirst = false){

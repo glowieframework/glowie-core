@@ -1360,7 +1360,7 @@
          * Fetches all results from a SELECT query with pagination.
          * @param int $currentPage (Optional) Current page to get results.
          * @param int $resultsPerPage (Optional) Number of results to get per page.
-         * @return Element Returns an object with the pagination result.
+         * @return Element Returns an Element with the pagination result.
          * @throws QueryException Throws an exception if the query fails.
          */
         public function paginate(int $currentPage = 1, int $resultsPerPage = 25){

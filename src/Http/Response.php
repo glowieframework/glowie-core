@@ -231,7 +231,7 @@
 
         /**
          * Sends a JSON output to the response.
-         * @param array|Element $data Associative array with data to encode to JSON. You can also use an Element object.
+         * @param array|Element $data Associative array with data to encode to JSON. You can also use an Element.
          * @param int $flags (Optional) JSON encoding flags (same as in `json_encode()` function).
          * @param int $depth (Optional) JSON encoding maximum depth (same as in `json_encode()` function).
          */
@@ -244,7 +244,7 @@
 
         /**
          * Sends a XML output to the response.
-         * @param array|Element $data Associative array with data to encode to XML. You can also use an Element object.
+         * @param array|Element $data Associative array with data to encode to XML. You can also use an Element.
          * @param string $root (Optional) Name of the XML root element.
          */
         public function setXML($data, string $root = 'data'){

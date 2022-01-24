@@ -46,7 +46,7 @@
         private $_params;
 
         /**
-         * Instantiates a new Layout object.
+         * Instantiates a new Layout instance.
          * @param string $layout Layout filename to instantiate.
          * @param string|null $view (Optional) View filename to parse inside the layout.
          * @param array $params (Optional) View parameters to parse.
