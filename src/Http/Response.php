@@ -220,6 +220,23 @@
         }
 
         /**
+         * Forces the download of the content by setting the `Content-Disposition` header.
+         * @param string $filename Filename to download including extension.
+         * @return Response Current Response instance for nested calls.
+         */
+        public function setDownload(string $filename){
+            return $this->setHeader('Content-Disposition', "filename=\"{$filename}\"");
+        }
+
+        /**
+         * Disables the browser caching by setting the `Cache-Control` header.
+         * @return Response Current Response instance for nested calls.
+         */
+        public function disableCache(){
+            return $this->setHeader('Cache-Control', 'no-store, max-age=0, no-cache');
+        }
+
+        /**
          * Sends a raw plain text body to the response.
          * @param string $content Content to set as the body.
          */

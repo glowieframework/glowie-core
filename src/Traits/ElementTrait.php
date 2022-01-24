@@ -1,6 +1,8 @@
 <?php
     namespace Glowie\Core\Traits;
 
+    use Util;
+
     /**
      * Generic safe object trait for Glowie application.
      * @category Object
@@ -38,12 +40,12 @@
 
         /**
          * Gets the value associated to a key in the Element data.
-         * @param string $key Key to get value.
+         * @param string $key Key to get value (accepts dot notation keys).
          * @param mixed $default (Optional) Default value to return if the key does not exist.
          * @return mixed Returns the value if exists or the default if not.
          */
         public function get(string $key, $default = null){
-            return $this->__data[$key] ?? $default;
+            return Util::arrayGet($this->__data, $key, $default);
         }
 
         /**
@@ -52,16 +54,21 @@
          * @param mixed $value Value to set.
          */
         public function __set(string $key, $value){
-            $this->__data[$key] = $value;
+            $this->set($key, $value, true);
         }
 
         /**
          * Sets the value for a key in the Element data.
-         * @param string $key Key to set value.
+         * @param string $key Key to set value (accepts dot notation keys).
          * @param mixed $value Value to set.
+         * @param bool $ignoreDot (Optional) Ignore dot notation keys.
          */
-        public function set(string $key, $value){
-            $this->__set($key, $value);
+        public function set(string $key, $value, bool $ignoreDot = false){
+            if($ignoreDot){
+                $this->__data[$key] = $value;
+            }else{
+                Util::arraySet($this->__data, $key, $value);
+            }
         }
 
         /**
@@ -88,16 +95,16 @@
          * @return bool Returns true or false.
          */
         public function __isset(string $key){
-            return isset($this->__data[$key]);
+            return $this->has($key);
         }
 
         /**
          * Checks if any value has been associated to a key in the Element data.
-         * @param string $key Key to check.
+         * @param string $key Key to check (accepts dot notation keys).
          * @return bool Returns true or false.
          */
         public function has(string $key){
-            return $this->__isset($key);
+            return Util::arrayGet($this->__data, $key) !== null;
         }
 
         /**

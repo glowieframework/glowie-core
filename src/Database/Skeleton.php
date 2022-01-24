@@ -163,6 +163,12 @@
         private $_like;
 
         /**
+         * Database name.
+         * @var string
+         */
+        private $_database;
+
+        /**
          * Creates a new Skeleton database instance.
          * @param string $table (Optional) Table name to set as default.
          * @param string $database (Optional) Database connection name (from your app configuration).
@@ -222,12 +228,36 @@
             $type = strtoupper($type);
             $field = "`{$name}` {$type}";
             if(!empty($size)) $field .= "({$size})";
-            $this->_autoincrement = "{$field} UNSIGNED NOT NULL";
+            $this->_autoincrement = "{$field} NOT NULL";
             return $this;
         }
 
         /**
-         * Adds a column to an existing table.
+         * Creates timestamp fields in the table.
+         * @param string $createdField (Optional) **Created at** field name.
+         * @param string $updatedField (Optional) **Updated at** field name.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function createTimestamps(string $createdField = 'created_at', string $updatedField = 'updated_at'){
+            $this->createColumn($createdField, self::TYPE_DATETIME, null, self::raw('CURRENT_TIMESTAMP()'));
+            $this->createColumn($updatedField, self::TYPE_DATETIME, null, self::raw('CURRENT_TIMESTAMP()'));
+            return $this;
+        }
+
+        /**
+         * Adds timestamp fields into an existing table.
+         * @param string $createdField (Optional) **Created at** field name.
+         * @param string $updatedField (Optional) **Updated at** field name.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function addTimestamps(string $createdField = 'created_at', string $updatedField = 'updated_at'){
+            $this->addColumn($createdField, self::TYPE_DATETIME, null, self::raw('CURRENT_TIMESTAMP()'));
+            $this->addColumn($updatedField, self::TYPE_DATETIME, null, self::raw('CURRENT_TIMESTAMP()'));
+            return $this;
+        }
+
+        /**
+         * Adds a column into an existing table.
          * @param string $name Column name to add.
          * @param string $type Column data type. Must be a valid type supported by your current MySQL version.
          * @param int|null $size (Optional) Field maximum length.
@@ -302,6 +332,18 @@
                 'operation' => 'drop',
                 'name' => $name
             ]);
+        }
+
+        /**
+         * Deletes timestamp fields from a table.
+         * @param string $createdField (Optional) **Created at** field name.
+         * @param string $updatedField (Optional) **Updated at** field name.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function dropTimestamps(string $createdField = 'created_at', string $updatedField = 'updated_at'){
+            $this->dropColumn($createdField);
+            $this->dropColumn($updatedField);
+            return $this;
         }
 
         /**
@@ -516,7 +558,7 @@
         }
 
         /**
-         * Creates a new temporary table.
+         * Creates a new temporary table for the current session.
          * @return bool Returns true on success.
          * @throws QueryException Throws an exception if the query fails.
          */
@@ -568,6 +610,30 @@
         }
 
         /**
+         * Creates a new database.
+         * @param string $name Database name to create.
+         * @return bool Returns true on success.
+         * @throws QueryException Throws an exception if the query fails.
+         */
+        public function createDatabase(string $name){
+            $this->_instruction = 'CREATE DATABASE';
+            $this->_database = $name;
+            return $this->execute();
+        }
+
+        /**
+         * Deletes a database.
+         * @param string $name Database name to delete.
+         * @return bool Returns true on success.
+         * @throws QueryException Throws an exception if the query fails.
+         */
+        public function dropDatabase(string $name){
+            $this->_instruction = 'DROP DATABASE';
+            $this->_database = $name;
+            return $this->execute();
+        }
+
+        /**
          * Checks if a column exists in the current table.
          * @param string $column Column name to check.
          * @return bool Returns true if the column exists, false otherwise.
@@ -606,6 +672,7 @@
             $this->_drops = [];
             $this->_rename = '';
             $this->_like = '';
+            $this->_database = '';
             $this->_raw = '';
         }
 
@@ -621,8 +688,14 @@
             $query = $this->_instruction;
 
             // Gets EXISTS
-            if(in_array($this->_instruction, ['CREATE TABLE', 'CREATE TEMPORARY TABLE', 'TRUNCATE TABLE', 'DROP TABLE'])){
+            if(in_array($this->_instruction, ['CREATE TABLE', 'CREATE TEMPORARY TABLE', 'TRUNCATE TABLE', 'DROP TABLE', 'CREATE DATABASE', 'DROP DATABASE'])){
                 if(!empty($this->_exists)) $query .= $this->_exists;
+            }
+
+            // Gets DATABASE statements
+            if($this->_instruction == 'CREATE DATABASE' || $this->_instruction == 'DROP DATABASE'){
+                $query .= " `{$this->_database}`";
+                return $query;
             }
 
             // Gets the table

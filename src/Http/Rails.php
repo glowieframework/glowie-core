@@ -69,8 +69,8 @@
          * @param string $controller (Optional) The namespaced controller name that this route will instantiate.\
          * You can use `ControllerName::class` to get this property correctly.
          * @param string|null $action (Optional) The action name from the controller that this route will instantiate.
-         * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or\
-         * an array of methods. Leave empty for all.
+         * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods.\
+         * Leave empty for all.
          * @param string $name (Optional) Route name.
          */
         public static function addRoute(string $route, string $controller = 'Glowie\Controllers\Main', ?string $action = null, $methods = [], string $name = ''){
@@ -89,13 +89,12 @@
          * Setup a new protected route for the application.
          * @param string $route The route URI to setup.
          * @param string|array $middleware (Optional) The namespaced middleware name that this route will use to protect itself.\
-         * You can use `MiddlewareName::class` to get this property correctly.\
-         * You can also use an array of multiple middlewares.
+         * You can use `MiddlewareName::class` to get this property correctly. You can also use an array of multiple middlewares.
          * @param string $controller (Optional) The namespaced controller name that this route will instantiate.\
          * You can use `ControllerName::class` to get this property correctly.
          * @param string|null $action (Optional) The action name from the controller that this route will instantiate.
-         * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or\
-         * an array of methods. Leave empty for all.
+         * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods.\
+         * Leave empty for all.
          * @param string $name (Optional) Route name.
          */
         public static function addProtectedRoute(string $route, $middleware = 'Glowie\Middlewares\Authenticate', string $controller = 'Glowie\Controllers\Main', ?string $action = null, $methods = [], string $name = ''){
@@ -117,8 +116,8 @@
          * @param string $route The route URI to redirect.
          * @param string $target The target URl to redirect this route to.
          * @param int $code (Optional) HTTP status code to pass with the redirect.
-         * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or\
-         * an array of methods. Leave empty for all.
+         * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods.\
+         * Leave empty for all.
          * @param string $name (Optional) Route name.
          */
         public static function addRedirect(string $route, string $target, int $code = Response::HTTP_TEMPORARY_REDIRECT, $methods = [], string $name = ''){
@@ -130,6 +129,36 @@
                 'code' => $code,
                 'methods' => (array)$methods
             ];
+        }
+
+        /**
+         * Maps multiple routes at once.
+         * @param array $routes Associative array of routes to map. The key must be the route URI and the value must be an array\
+         * with the **controller, action and name** (in this order). Parameters are optional.
+         * @param string|array $methods (Optional) HTTP methods that these routes accept. Can be a single method or an array of methods.\
+         * Leave empty for all.
+         */
+        public static function mapRoutes(array $routes, array $methods = []){
+            foreach($routes as $route => $config){
+                $config = (array)$config;
+                self::addRoute($route, $config[0] ?? 'Glowie\Controllers\Main', $config[1] ?? null, $methods, $config[2] ?? '');
+            }
+        }
+
+        /**
+         * Maps multiple protected routes at once.
+         * @param array $routes Associative array of routes to map. The key must be the route URI and the value must be an array\
+         * with the **controller, action and name** (in this order). Parameters are optional.
+         * @param string|array $middleware (Optional) The namespaced middleware name that these routes will use to protect themself.\
+         * You can use `MiddlewareName::class` to get this property correctly. You can also use an array of multiple middlewares.
+         * @param string|array $methods (Optional) HTTP methods that these routes accept. Can be a single method or an array of methods.\
+         * Leave empty for all.
+         */
+        public static function mapProtectedRoutes(array $routes, $middleware = 'Glowie\Middlewares\Authenticate', array $methods = []){
+            foreach($routes as $route => $config){
+                $config = (array)$config;
+                self::addProtectedRoute($route, $middleware, $config[0] ?? 'Glowie\Controllers\Main', $config[1] ?? null, $methods, $config[2] ?? '');
+            }
         }
 
         /**

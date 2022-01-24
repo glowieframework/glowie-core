@@ -202,6 +202,7 @@
          * Enclosures a set of operations in a transaction.
          * @param Closure $operations Set of operations to run inside the transaction.
          * @return bool Returns true on success or false on failure.
+         * @throws QueryException Throws an exception if the query fails.
          */
         public function transaction(Closure $operations){
             // Begins the transaction
@@ -220,11 +221,30 @@
         }
 
         /**
+         * Disables FOREIGN KEY checks for the current session.
+         * @return bool Returns true on success or false on failure.
+         * @throws QueryException Throws an exception if the query fails.
+         */
+        public function disableFkChecks(){
+            return $this->query('SET FOREIGN_KEY_CHECKS = 0');
+        }
+
+        /**
+         * Enables FOREIGN KEY checks for the current session.
+         * @return bool Returns true on success or false on failure.
+         * @throws QueryException Throws an exception if the query fails.
+         */
+        public function enableFkChecks(){
+            return $this->query('SET FOREIGN_KEY_CHECKS = 1');
+        }
+
+        /**
          * Run the current built query.
          * @param bool $returns (Optional) If the query should return a result.
          * @param bool $returnsFirst (Optional) If the query should return a single result.
          * @return mixed If the query is successful and should return any results, will return an Element with the first result or an array of\
          * results. Otherwise returns true on success.
+         * @throws QueryException Throws an exception if the query fails.
          */
         private function execute(bool $returns = false, bool $returnsFirst = false){
             try {

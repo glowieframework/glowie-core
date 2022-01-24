@@ -104,7 +104,7 @@
 
         /**
          * Returns a JSON key from the request.
-         * @param string|null $key (Optional) Key to get value. Leave empty to get the whole JSON Element.
+         * @param string|null $key (Optional) Key to get value (accepts dot notation keys). Leave empty to get the whole JSON Element.
          * @param mixed $default (Optional) Default value to return if the key does not exist.
          * @return mixed Returns the value if the key exists (or the default if not) or the JSON Element if a key is not provided.
          */
@@ -146,31 +146,6 @@
          */
         public function getHeaders(){
             return getallheaders();
-        }
-
-        /**
-         * Gets a basic `Authorization` header.
-         * @return Element|null Returns an Element with the username and password if exists or null if there is none.
-         */
-        public function getAuthorization(){
-            $value = $this->getHeader('Authorization');
-            if(!$value) return null;
-            if(!Util::startsWith($value, 'Basic ')) return null;
-            $value = base64_decode(substr($value, 6));
-            if(!$value) return null;
-            $value = explode(':', $value, 2);
-            return new Element(['username' => $value[0] ?? null, 'password' => $value[1] ?? null]);
-        }
-
-        /**
-         * Gets a bearer token from the `Authorization` header.
-         * @return string|null Returns the token if exists or null if there is none.
-         */
-        public function getBearer(){
-            $value = $this->getHeader('Authorization');
-            if(!$value) return null;
-            if(!Util::startsWith($value, 'Bearer ')) return null;
-            return substr($value, 7);
         }
 
         /**
