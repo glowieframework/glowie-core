@@ -389,8 +389,21 @@
          * @return string|bool Returns the encrypted string on success or false on errors.
          */
         public static function encryptString(string $string, string $method = 'sha256'){
-            $key = hash($method, Config::get('secret.app_key', 'f08e8ba131c7abab97dba275fab5a85e'));
-            $iv = substr(hash($method, Config::get('secret.app_token', 'd147723d9e91340d9dd28fbd5a0b6651')), 0, 16);
+            // Validate method
+            if(!in_array($method, hash_algos())) throw new Exception('encryptString(): Invalid hashing algorithm');
+
+            // Get app key and hash it
+            $key = Config::get('secret.app_key');
+            if(empty($key)) throw new Exception('encryptString(): Application key was not defined');
+            $key = hash($method, $key);
+
+            // Get app token and hash it
+            $token = Config::get('secret.app_token');
+            if(empty($token)) throw new Exception('encryptString(): Application token was not defined');
+            $token = hash($method, $token);
+
+            // Encrypts the string
+            $iv = substr($token, 0, 16);
             $hash = openssl_encrypt($string, "AES-256-CBC", $key, 0, $iv);
             if(!$hash) return false;
             return base64_encode($hash);
@@ -403,11 +416,24 @@
          * @return string|bool Returns the decrypted string on success or false on errors.
          */
         public static function decryptString(string $string, string $method = 'sha256'){
-            $key = hash($method, Config::get('secret.app_key', 'f08e8ba131c7abab97dba275fab5a85e'));
-            $iv = substr(hash($method, Config::get('secret.app_token', 'd147723d9e91340d9dd28fbd5a0b6651')), 0, 16);
+            // Validate method
+            if(!in_array($method, hash_algos())) throw new Exception('decryptString(): Invalid hashing algorithm');
+
+            // Get app key and hash it
+            $key = Config::get('secret.app_key');
+            if(empty($key)) throw new Exception('decryptString(): Application key was not defined');
+            $key = hash($method, $key);
+
+            // Get app token and hash it
+            $token = Config::get('secret.app_token');
+            if(empty($token)) throw new Exception('decryptString(): Application token was not defined');
+            $token = hash($method, $token);
+
+            // Decrypts the string
+            $iv = substr($token, 0, 16);
             $hash = base64_decode($string);
             if(!$hash) return false;
-            return openssl_decrypt($hash, "AES-256-CBC", $key, 0, $iv);;
+            return openssl_decrypt($hash, "AES-256-CBC", $key, 0, $iv);
         }
 
         /**

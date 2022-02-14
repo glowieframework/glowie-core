@@ -64,13 +64,13 @@
 
         /**
          * Gets the value associated to a key in the session data.
-         * @param string $key Key to get value.
+         * @param string $key Key to get value (accepts dot notation keys).
          * @param mixed $default (Optional) Default value to return if the key does not exist.
          * @return mixed Returns the value if exists or the default if not.
          */
         public function get(string $key, $default = null){
             if (!isset($_SESSION)) session_start();
-            return $_SESSION[$key] ?? $default;
+            return Util::arrayGet($_SESSION, $key, $default);
         }
 
         /**
@@ -79,17 +79,22 @@
          * @param mixed $value Value to set.
          */
         public function __set(string $key, $value){
-            if(!isset($_SESSION)) session_start();
-            $_SESSION[$key] = $value;
+            $this->set($key, $value, true);
         }
 
         /**
          * Sets the value for a key in the session data.
-         * @param string $key Key to set value.
+         * @param string $key Key to set value (accepts dot notation keys).
          * @param mixed $value Value to set.
+         * @param bool $ignoreDot (Optional) Ignore dot notation keys.
          */
-        public function set(string $key, $value){
-            $this->__set($key, $value);
+        public function set(string $key, $value, bool $ignoreDot = false){
+            if(!isset($_SESSION)) session_start();
+            if($ignoreDot){
+                $_SESSION[$key] = $value;
+            }else{
+                Util::arraySet($_SESSION, $key, $value);
+            }
         }
 
         /**
@@ -97,18 +102,18 @@
          * @param string $key Key to delete value.
          */
         public function __unset(string $key){
-            if(!isset($_SESSION)) session_start();
-            if (isset($_SESSION[$key])) {
-                unset($_SESSION[$key]);
-            }
+            $this->remove($key);
         }
 
-         /**
+        /**
          * Removes the associated key value from the session data.
-         * @param string $key Key to delete value.
+         * @param string|array $key Key to delete value. You can also use an array of keys to remove.
          */
-        public function remove(string $key){
-            $this->__unset($key);
+        public function remove($key){
+            if(!isset($_SESSION)) session_start();
+            foreach((array)$key as $item){
+                if (isset($_SESSION[$item])) unset($_SESSION[$item]);
+            }
         }
 
         /**
@@ -117,17 +122,17 @@
          * @return bool Returns true or false.
          */
         public function __isset(string $key){
-            if(!isset($_SESSION)) session_start();
-            return isset($_SESSION[$key]);
+            return $this->has($key);
         }
 
         /**
          * Checks if any value has been associated to a key in the session data.
-         * @param string $key Key to check.
+         * @param string $key Key to check (accepts dot notation keys).
          * @return bool Returns true or false.
          */
         public function has(string $key){
-            return $this->__isset($key);
+            if(!isset($_SESSION)) session_start();
+            return Util::arrayGet($_SESSION, $key) !== null;
         }
 
         /**
@@ -165,6 +170,13 @@
          */
         public function __toString(){
             return $this->toJson();
+        }
+
+        /**
+         * Session debugging information.
+         */
+        public function __debugInfo(){
+            return $_SESSION;
         }
 
         /**

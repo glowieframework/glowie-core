@@ -76,17 +76,17 @@
          * @param string $key Key to delete value.
          */
         public function __unset(string $key){
-            if (isset($this->__data[$key])) {
-                unset($this->__data[$key]);
-            }
+            $this->remove($key);
         }
 
         /**
          * Removes the associated key value from the Element data.
-         * @param string $key Key to delete value.
+         * @param string|array $key Key to delete value. You can also use an array of keys to remove.
          */
-        public function remove(string $key){
-            $this->__unset($key);
+        public function remove($key){
+            foreach((array)$key as $item){
+                if (isset($this->__data[$item])) unset($this->__data[$item]);
+            }
         }
 
         /**

@@ -3,6 +3,7 @@
 
     use Babel;
     use Config;
+    use Env;
     use Glowie\Core\Http\Session;
     use Glowie\Core\Error\Handler;
     use Glowie\Core\View\Buffer;
@@ -31,6 +32,9 @@
             define('APP_FOLDER', trim(substr($_SERVER['PHP_SELF'], 0, strpos($_SERVER['PHP_SELF'], '/app/public/index.php')), '/'));
             define('APP_LOCATION', trim(substr($_SERVER['SCRIPT_FILENAME'], 0, strpos($_SERVER['SCRIPT_FILENAME'], '/app/public/index.php')), '/') . '/app/');
             define('APP_BASE_URL', (isset($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/' . APP_FOLDER . (!empty(APP_FOLDER) ? '/' : ''));
+
+            // Load environment configuration
+            Env::load();
 
             // Load configuration file
             Config::load();

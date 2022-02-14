@@ -10,6 +10,7 @@
     use Util;
     use Throwable;
     use Config;
+    use Env;
     use Babel;
 
     /**
@@ -99,6 +100,9 @@
             define('APP_FOLDER', '');
             define('APP_BASE_URL', '');
             define('APP_LOCATION', getcwd() . '/app/');
+
+            // Load environment configuration
+            Env::load();
 
             // Loads the configuration file
             Config::load();
@@ -360,23 +364,23 @@
          */
         private static function __generateKeys(){
             // Checks permissions
-            $file = Util::location('config/Config.php');
-            if(!is_writable($file)) throw new FileException('File "app/config/Config.php" is not writable, please check your chmod settings');
+            $file = Util::location('../.env');
+            if(!is_writable($file)) throw new FileException('File ".env" is not writable, please check your chmod settings');
 
             // Reads the config file content
             $content = file_get_contents($file);
 
             // Generates the new keys
-            $bypassKey = "'bypass_key' => '" . Util::randomToken() . "'";
-            $appKey = "'app_key' => '" . Util::randomToken() . "'";
-            $appToken = "'app_token' => '" . Util::randomToken() . "'";
+            $appKey = 'APP_KEY=' . Util::randomToken();
+            $appToken = 'APP_TOKEN=' . Util::randomToken();
+            $maintenanceKey = 'MAINTENANCE_KEY=' . Util::randomToken();
 
             // Replaces the new keys
             $content = preg_replace([
-                '/\'bypass_key\'\s*=>\s*\'(.+)\'/',
-                '/\'app_key\'\s*=>\s*\'(.+)\'/',
-                '/\'app_token\'\s*=>\s*\'(.+)\'/'
-            ], [$bypassKey, $appKey, $appToken], $content, 1);
+                '/APP_KEY=(.*)/',
+                '/APP_TOKEN=(.*)/',
+                '/MAINTENANCE_KEY=(.*)/'
+            ], [$appKey, $appToken, $maintenanceKey], $content, 1);
 
             // Saves the new content
             self::print('<color="green">Application secret keys generated successfully!</color>');

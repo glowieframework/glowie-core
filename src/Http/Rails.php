@@ -3,6 +3,7 @@
 
     use Util;
     use Config;
+    use Exception;
     use Glowie\Core\Exception\RoutingException;
     use Glowie\Core\Exception\FileException;
 
@@ -226,7 +227,8 @@
             if(Config::get('maintenance.enabled', false)){
                 // Validates secret bypass route
                 $cookies = new Cookies();
-                $key = Config::get('maintenance.bypass_key', '470c054cfc6780df66bf3922eddbd883');
+                $key = Config::get('maintenance.bypass_key');
+                if(empty($key)) throw new Exception('Application maintenance bypass key was not defined');
 
                 // Saves the maintenance key in the cookies
                 if($route == $key){

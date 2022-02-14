@@ -1,5 +1,7 @@
 <?php
 
+    use Glowie\Core\Exception\FileException;
+
     /**
      * Glowie configuration handler.
      * @category Configuration
@@ -23,14 +25,8 @@
          */
         public static function load(){
             $file = Util::location('config/Config.php');
-            if(!self::hasLoaded()){
-                if (!file_exists($file)) {
-                    die('<strong>Configuration file was not found!</strong><br>
-                    Please copy "app/config/Config.example.php" to "app/config/Config.php".');
-                } else {
-                    self::$config = require_once($file);
-                }
-            }
+            if(!file_exists($file)) throw new FileException('Config file "' . $file . '" was not found');
+            self::$config = require_once($file);
         }
 
         /**
@@ -59,14 +55,6 @@
          */
         public static function has(string $key){
             return !is_null(self::get($key));
-        }
-
-        /**
-         * Checks if the configuration file was already loaded.
-         * @return bool Returns true if yes, false otherwise.
-         */
-        public static function hasLoaded(){
-            return !empty(self::$config);
         }
 
     }

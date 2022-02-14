@@ -7,7 +7,27 @@
     use Util;
     use Config;
 
+    /**
+     * Auth handler for Glowie application.
+     * @category Authenticator
+     * @package glowieframework/glowie-core
+     * @author Glowie
+     * @copyright Copyright (c) 2021
+     * @license MIT
+     * @link https://glowie.tk
+     * @version 1.1
+     */
     class Authenticator{
+
+        /**
+         * JWT hashing methods.
+         * @var array
+         */
+        private const METHODS = [
+            'HS256' => 'sha256',
+            'HS384' => 'sha384',
+            'HS512' => 'sha512'
+        ];
 
         /**
          * Gets a basic `Authorization` header.
@@ -41,12 +61,16 @@
          * @return string Returns the JWT token as a string.
          */
         public function generateJwt(array $payload, string $alg = 'HS256'){
-            $methods = ['HS256' => 'sha256', 'HS384' => 'sha384', 'HS512' => 'sha512'];
-            if(!isset($methods[$alg])) throw new Exception('generateJwt(): Invalid hashing algorithm.');
-            $method = $methods[$alg];
+            // Get app key
+            $key = Config::get('secret.app_key');
+            if(empty($key)) throw new Exception('generateJwt(): Application key was not defined');
+
+            // Generate token
+            if(!isset(self::METHODS[$alg])) throw new Exception('generateJwt(): Invalid hashing algorithm');
+            $method = self::METHODS[$alg];
             $header = $this->base64UrlEncode(json_encode(['alg' => $alg, 'typ' => 'JWT']));
             $payload = $this->base64UrlEncode(json_encode($payload));
-            $signature = $this->base64UrlEncode(hash_hmac($method, "{$header}.{$payload}", Config::get('app_key', 'f08e8ba131c7abab97dba275fab5a85e'), true));
+            $signature = $this->base64UrlEncode(hash_hmac($method, "{$header}.{$payload}", $key, true));
             return "{$header}.{$payload}.{$signature}";
         }
 

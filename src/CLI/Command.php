@@ -214,6 +214,10 @@
             return Firefly::getArgs();
         }
 
+        public function wait(int $ms){
+            usleep(ceil($ms) * 1000);
+        }
+
     }
 
 ?>

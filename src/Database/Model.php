@@ -51,6 +51,12 @@
         protected $_updatable = [];
 
         /**
+         * Initial model attributes.
+         * @var array
+         */
+        protected $_attributes = [];
+
+        /**
          * Table fields data types to cast.
          * @var array
          */
@@ -82,8 +88,9 @@
 
         /**
          * Creates a new instance of the model.
+         * @param Element|array $data An Element or associative array with the initial data to fill the model entity.
          */
-        final public function __construct(){
+        final public function __construct($data = []){
             // Gets the table name
             if(empty($this->_table)){
                 $classname = Util::classname($this);
@@ -92,6 +99,13 @@
 
             // Constructs the query builder
             Kraken::__construct($this->_table, $this->_database);
+
+            // Sets the initial data
+            if(!empty($data)){
+                $this->fill($data);
+            }else if(!empty($this->_attributes)){
+                $this->fill($this->_attributes);
+            }
         }
 
         /**
@@ -224,7 +238,7 @@
         }
 
         /**
-         * Checks if the row data has been modified in the model entity.
+         * Checks if the initial row data has been modified in the model entity.
          * @param string $field (Optional) Field to check. Leave empty to compare everything.
          * @return bool Returns true if the row data has been modified or false otherwise.
          */
@@ -238,7 +252,7 @@
         }
 
         /**
-         * Checks if the row data has not been modified in the model entity.
+         * Checks if the initial row data has not been modified in the model entity.
          * @param string $field (Optional) Field to check. Leave empty to compare everything.
          * @return bool Returns true if the row data has not been modified or false otherwise.
          */
@@ -248,11 +262,21 @@
         }
 
         /**
-         * Saves the model entity data to a row using `updateOrCreate()` method.
+         * Saves the model entity data to the database.
          * @return bool Returns true on success.
          */
         public function save(){
             return $this->updateOrCreate($this->toArray());
+        }
+
+        /**
+         * Deletes the database row matching the model entity primary key value.
+         * @return bool Returns true on success.
+         */
+        public function destroy(){
+            $primary = $this->get($this->_primaryKey);
+            if (empty($primary)) throw new Exception('destroy(): Model entity primary key was not filled');
+            return $this->drop($primary);
         }
 
         /**

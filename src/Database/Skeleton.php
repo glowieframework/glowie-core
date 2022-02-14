@@ -217,7 +217,7 @@
         }
 
         /**
-         * Creates an AUTO_INCREMENT column in the table.\
+         * Creates/adds an AUTO_INCREMENT column in the table.\
          * **Important:** This column must also be set as a key.
          * @param string $name Column name to create.
          * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
@@ -253,6 +253,17 @@
         public function addTimestamps(string $createdField = 'created_at', string $updatedField = 'updated_at'){
             $this->addColumn($createdField, self::TYPE_DATETIME, null, self::raw('CURRENT_TIMESTAMP()'));
             $this->addColumn($updatedField, self::TYPE_DATETIME, null, self::raw('CURRENT_TIMESTAMP()'));
+            return $this;
+        }
+
+        /**
+         * Creates/adds an **id** column (auto increment) in the table and set it as the primary key.
+         * @param string $name (Optional) Column name.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function id(string $name = 'id'){
+            $this->autoIncrement($name);
+            $this->primaryKey($name);
             return $this;
         }
 
