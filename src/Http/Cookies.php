@@ -37,7 +37,11 @@
          * **(default expire time is 1 hour)**.
          */
         public function __construct(array $data = []){
-            if(!empty($data)) foreach($data as $key => $value) $this->set($key, $value);
+            if(!empty($data)){
+                foreach($data as $key => $value){
+                    $this->set($key, $value);
+                }
+            }
         }
 
         /**
@@ -75,10 +79,12 @@
          * @param int $expires (Optional) Cookie expiration time in seconds.
          * @param string $path (Optional) Path on the application that the cookie will be available (use `'/'` for the entire application).
          * @param bool $restrict (Optional) Restrict the cookie access only through HTTP protocol.
+         * @return Cookies Current Cookies instance for nested calls.
          */
         public function set(string $key, $value, int $expires = self::EXPIRES_HOUR, string $path = '/', bool $restrict = false){
             $_COOKIE[$key] = $value;
             setcookie($key, $value, time() + $expires, $path, '', false, $restrict);
+            return $this;
         }
 
         /**
@@ -86,17 +92,19 @@
          * @param string $key Key to delete value.
          */
         public function __unset(string $key){
-            if (isset($_COOKIE[$key])) {
-                $this->set($key, null, -self::EXPIRES_HOUR);
-            }
+            $this->remove($key);
         }
 
          /**
          * Removes the associated key value from the cookies data.
-         * @param string $key Key to delete value.
+         * @param string|array $key Key to delete value. You can also use an array of keys to remove.
+         * @return Cookies Current Cookies instance for nested calls.
          */
-        public function remove(string $key){
-            $this->__unset($key);
+        public function remove($key){
+            foreach((array)$key as $item){
+                if (isset($_COOKIE[$item])) $this->set($item, null, -self::EXPIRES_HOUR);
+            }
+            return $this;
         }
 
         /**
@@ -119,11 +127,10 @@
 
         /**
          * Deletes all data from the cookies.
+         * @return Cookies Current Cookies instance for nested calls.
          */
         public function flush(){
-            if(!empty($_COOKIE)){
-                foreach($_COOKIE as $key => $value) $this->remove($key);
-            }
+            return $this->remove(array_keys($_COOKIE));
         }
 
         /**
@@ -150,6 +157,13 @@
          */
         public function __toString(){
             return $this->toJson();
+        }
+
+        /**
+         * Cookies debugging information.
+         */
+        public function __debugInfo(){
+            return $_COOKIE;
         }
 
     }

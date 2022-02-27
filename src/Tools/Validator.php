@@ -2,6 +2,8 @@
     namespace Glowie\Core\Tools;
 
     use Util;
+    use Exception;
+    use Glowie\Core\Element;
 
     /**
      * Data validator for Glowie application.
@@ -28,22 +30,25 @@
          */
         public function getErrors($key = null){
             if(!is_null($key)){
-                return !empty($this->errors[$key]) ? $this->errors[$key] : [];
+                return $this->errors[$key] ?? [];
             }else{
                 return $this->errors;
             }
         }
 
         /**
-         * Validates an associative array of multiple fields with unique rules for each of them.
-         * @param array $data Associative array of fields to be validated.
+         * Validates multiple fields with unique validation rules for each one of them.
+         * @param array|Element $data An Element or associative array of fields to be validated.
          * @param array $rules Associative array with validation rules for each field.
          * @param bool $bail (Optional) Stop validation of each field after first failure found.
          * @param bool $bailAll (Optional) Stop validation of all fields after first failure found.
          * @return bool Returns true if all rules passed for all fields, false otherwise.
          */
-        public function validateFields(array $data, array $rules, bool $bail = false, bool $bailAll = false){
-            // Loops throug field list
+        public function validateFields($data, array $rules, bool $bail = false, bool $bailAll = false){
+            // Converts Element data to array
+            if($data instanceof Element) $data = $data->toArray();
+
+            // Loops through field list
             $result = true;
             $errors = [];
             foreach($data as $key => $item){
@@ -67,14 +72,20 @@
         }
 
         /**
-         * Validates an array of multiple values with the same rules for all of them.
-         * @param array $data Array of values to be validated.
+         * Validates multiple values with the same rules for all of them.
+         * @param array|Element $data Array of values to be validated. You can also use an Element.
          * @param string|array $rules Validation rules for the data. Can be a single rule or an array of rules.
          * @param bool $bail (Optional) Stop validation of each value after first failure found.
          * @param bool $bailAll (Optional) Stop validation of all values after first failure found.
          * @return bool Returns true if all rules passed for all values, false otherwise.
          */
         public function validateMultiple(array $data, $rules, bool $bail = false, bool $bailAll = false){
+            // Converts Element data to array
+            if($data instanceof Element) $data = $data->toArray();
+
+            // Get array values only
+            $data = array_values($data);
+
             // Loops through data array
             $errors = [];
             $result = true;
@@ -123,6 +134,7 @@
 
                     // [MIN] - Checks if variable is bigger or equal than min
                     case 'min':
+                        if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "min" rule');
                         if(is_array($data)){
                             if(count($data) < $rule[1]) $result['min'] = true;
                         }else if(is_string($data)){
@@ -134,6 +146,7 @@
 
                     // [MAX] - Checks if variable is lower or equal than max
                     case 'max':
+                        if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "max" rule');
                         if (is_array($data)) {
                             if (count($data) > $rule[1]) $result['max'] = true;
                         } else if (is_string($data)) {
@@ -145,6 +158,7 @@
 
                     // [SIZE] - Checks if variable size equals to size
                     case 'size':
+                        if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "size" rule');
                         if (is_array($data)) {
                             if (count($data) != $rule[1]) $result['size'] = true;
                         } else if (is_string($data)) {
@@ -186,6 +200,7 @@
 
                     // [REGEX] - Checks if variable matches a regex pattern
                     case 'regex':
+                        if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "regex" rule');
                         if(!preg_match($rule[1], $data)) $result['regex'] = true;
                         break;
 
@@ -251,11 +266,13 @@
 
                     // [VALUE] - Checks if variable matches value
                     case 'value':
+                        if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "value" rule');
                         if($data != $rule[1]) $result['value'] = true;
                         break;
 
                     // [NOT] - Checks if variable does not match value
                     case 'not':
+                        if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "not" rule');
                         if ($data == $rule[1]) $result['not'] = true;
                         break;
 
@@ -266,11 +283,13 @@
 
                     // [ENDSWITH] - Check if variable ends with string
                     case 'endswith':
+                        if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "endswith" rule');
                         if (Util::endsWith($data, $rule[1])) $result['endswith'] = true;
                         break;
 
                     // [STARTSWITH] - Check if variable starts with string
                     case 'startswith':
+                        if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "startswith" rule');
                         if (Util::startsWith($data, $rule[1])) $result['startswith'] = true;
                         break;
                 }

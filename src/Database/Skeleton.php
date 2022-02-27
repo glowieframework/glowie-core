@@ -239,8 +239,8 @@
          * @return Skeleton Current Skeleton instance for nested calls.
          */
         public function createTimestamps(string $createdField = 'created_at', string $updatedField = 'updated_at'){
-            $this->createColumn($createdField, self::TYPE_DATETIME, null, self::raw('CURRENT_TIMESTAMP()'));
-            $this->createColumn($updatedField, self::TYPE_DATETIME, null, self::raw('CURRENT_TIMESTAMP()'));
+            $this->createColumn($createdField, self::TYPE_DATETIME, null, self::raw('NOW()'));
+            $this->createColumn($updatedField, self::TYPE_DATETIME, null, self::raw('NOW()'));
             return $this;
         }
 
@@ -251,8 +251,8 @@
          * @return Skeleton Current Skeleton instance for nested calls.
          */
         public function addTimestamps(string $createdField = 'created_at', string $updatedField = 'updated_at'){
-            $this->addColumn($createdField, self::TYPE_DATETIME, null, self::raw('CURRENT_TIMESTAMP()'));
-            $this->addColumn($updatedField, self::TYPE_DATETIME, null, self::raw('CURRENT_TIMESTAMP()'));
+            $this->addColumn($createdField, self::TYPE_DATETIME, null, self::raw('NOW()'));
+            $this->addColumn($updatedField, self::TYPE_DATETIME, null, self::raw('NOW()'));
             return $this;
         }
 

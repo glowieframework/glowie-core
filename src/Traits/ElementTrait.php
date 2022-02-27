@@ -62,6 +62,7 @@
          * @param string $key Key to set value (accepts dot notation keys).
          * @param mixed $value Value to set.
          * @param bool $ignoreDot (Optional) Ignore dot notation keys.
+         * @return Element Current Element instance for nested calls.
          */
         public function set(string $key, $value, bool $ignoreDot = false){
             if($ignoreDot){
@@ -69,6 +70,7 @@
             }else{
                 Util::arraySet($this->__data, $key, $value);
             }
+            return $this;
         }
 
         /**
@@ -82,11 +84,13 @@
         /**
          * Removes the associated key value from the Element data.
          * @param string|array $key Key to delete value. You can also use an array of keys to remove.
+         * @return Element Current Element instance for nested calls.
          */
         public function remove($key){
             foreach((array)$key as $item){
                 if (isset($this->__data[$item])) unset($this->__data[$item]);
             }
+            return $this;
         }
 
         /**
@@ -109,9 +113,11 @@
 
         /**
          * Deletes all data from the current Element.
+         * @return Element Current Element instance for nested calls.
          */
         public function flush(){
             $this->__data = [];
+            return $this;
         }
 
         /**

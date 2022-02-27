@@ -273,7 +273,7 @@
                 // Checks if there is a request method configuration
                 if(!empty($config['methods'])){
                     $config['methods'] = array_map('strtoupper', $config['methods']);
-                    if(!in_array(self::$request->getMethod(), $config['methods'])) return self::callMethodNotAllowed($route, $result);
+                    if(!in_array(self::$request->getMethod(), $config['methods'])) return self::callMethodNotAllowed($route, $result ?? []);
                 }
 
                 // Checks if there is not a redirect configuration
@@ -285,7 +285,7 @@
                     if (!class_exists($controller)) throw new RoutingException("\"{$controller}\" was not found");
 
                     // Instantiates the controller
-                    self::$controller = new $controller($routeName, $result);
+                    self::$controller = new $controller($routeName, $result ?? []);
 
                     // Checks for the route middlewares
                     if(!empty($config['middleware'])){
@@ -295,7 +295,7 @@
                             if (!class_exists($middleware)) throw new RoutingException("\"{$middleware}\" was not found");
 
                             // Instantiates the middleware
-                            self::$middleware = new $middleware($routeName, $result);
+                            self::$middleware = new $middleware($routeName, $result ?? []);
                             if (!is_callable([self::$middleware, 'handle'])) throw new RoutingException("\"{$middleware}\" does not have a \"handle()\" method");
                             if (is_callable([self::$middleware, 'init'])) self::$middleware->init();
 
@@ -310,7 +310,7 @@
                                     self::$response->setStatusCode(Response::HTTP_FORBIDDEN);
                                     return self::$middleware->fail();
                                 } else {
-                                    return self::callForbidden($routeName, $result);
+                                    return self::callForbidden($routeName, $result ?? []);
                                 };
                             }
                         }

@@ -66,12 +66,31 @@
             if(empty($key)) throw new Exception('generateJwt(): Application key was not defined');
 
             // Generate token
-            if(!isset(self::METHODS[$alg])) throw new Exception('generateJwt(): Invalid hashing algorithm');
+            if(!isset(self::METHODS[$alg])) throw new Exception('generateJwt(): Unsupported hashing algorithm');
             $method = self::METHODS[$alg];
             $header = $this->base64UrlEncode(json_encode(['alg' => $alg, 'typ' => 'JWT']));
             $payload = $this->base64UrlEncode(json_encode($payload));
             $signature = $this->base64UrlEncode(hash_hmac($method, "{$header}.{$payload}", $key, true));
             return "{$header}.{$payload}.{$signature}";
+        }
+
+        /**
+         * Decodes a JSON Web Token.
+         * @param string $token JWT token to decode.
+         * @return array|null Returns the JWT payload as an array or null if the token is invalid.
+         */
+        public function decodeJwt(string $token){
+            // Split token into parts
+            $token = explode('.', $token);
+            if(count($token) !== 3) return null;
+
+            // Validate the header
+            $header = json_decode($this->base64UrlDecode($token[0]), true);
+            if(empty($header['typ']) || $header['typ'] !== 'JWT') return null;
+
+            // Decode the payload
+            $payload = json_decode($this->base64UrlDecode($token[1]));
+            return $payload ?? null;
         }
 
         /**

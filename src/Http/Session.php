@@ -87,6 +87,7 @@
          * @param string $key Key to set value (accepts dot notation keys).
          * @param mixed $value Value to set.
          * @param bool $ignoreDot (Optional) Ignore dot notation keys.
+         * @return Session Current Session instance for nested calls.
          */
         public function set(string $key, $value, bool $ignoreDot = false){
             if(!isset($_SESSION)) session_start();
@@ -95,6 +96,7 @@
             }else{
                 Util::arraySet($_SESSION, $key, $value);
             }
+            return $this;
         }
 
         /**
@@ -108,12 +110,14 @@
         /**
          * Removes the associated key value from the session data.
          * @param string|array $key Key to delete value. You can also use an array of keys to remove.
+         * @return Session Current Session instance for nested calls.
          */
         public function remove($key){
             if(!isset($_SESSION)) session_start();
             foreach((array)$key as $item){
                 if (isset($_SESSION[$item])) unset($_SESSION[$item]);
             }
+            return $this;
         }
 
         /**
@@ -137,11 +141,13 @@
 
         /**
          * Deletes all data from the session.
+         * @return Session Current Session instance for nested calls.
          */
         public function flush(){
             if(!isset($_SESSION)) session_start();
             $_SESSION = [];
             self::$flash = [];
+            return $this;
         }
 
         /**
@@ -183,11 +189,12 @@
          * Sets the value for a key in the session flash data.
          * @param string $key Key to set value.
          * @param mixed $value Value to set.
+         * @return Session Current Session instance for nested calls.
          */
         public function setFlash(string $key, $value){
             self::$flash = $this->get('app_flash_data') ?? [];
             self::$flash[$key] = $value;
-            $this->set('app_flash_data', self::$flash);
+            return $this->set('app_flash_data', self::$flash);
         }
 
         /**

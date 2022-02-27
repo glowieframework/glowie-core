@@ -47,10 +47,10 @@
         private $table;
 
         /**
-         * Stores if the migrations history table was created.
-         * @var bool
+         * Stores if the migrations history table was created (in the current database).
+         * @var array
          */
-        private static $tableCreated = false;
+        private static $tableCreated = [];
 
         /**
          * Instantiates a new migration.
@@ -63,14 +63,14 @@
             $this->table = Config::get('migrations.table', 'migrations');
 
             // Creates the migrations history table if not exists
-            if(!self::$tableCreated){
+            if(!isset(self::$tableCreated[$this->database])){
                 if(!$this->forge->tableExists($this->table)){
                     $this->forge->table($this->table)
                                 ->createColumn('name', 'VARCHAR', 255)
-                                ->createColumn('applied_at', 'DATETIME', null, Skeleton::raw('CURRENT_TIMESTAMP()'))
+                                ->createColumn('applied_at', 'DATETIME', null, Skeleton::raw('NOW()'))
                                 ->create();
-                    self::$tableCreated = true;
                 };
+                self::$tableCreated[$this->database] = true;
             }
         }
 

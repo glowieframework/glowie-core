@@ -71,7 +71,7 @@
          * Returns next results as associative arrays instead of Elements.
          * @param bool $option (Optional) Set to **true** to return as arrays, **false** otherwise.
          */
-        public function returnArray(bool $option = true){
+        public function asArray(bool $option = true){
             $this->_returnAssoc = $option;
             return $this;
         }
