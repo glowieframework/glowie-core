@@ -88,7 +88,8 @@
 
         /**
          * Creates a new instance of the model.
-         * @param Element|array $data An Element or associative array with the initial data to fill the model entity.
+         * @param Element|array $data An Element or associative array with the initial data to fill the model entity.\
+         * This data will be merged into the initial model attributes, if filled.
          */
         final public function __construct($data = []){
             // Gets the table name
@@ -101,11 +102,8 @@
             Kraken::__construct($this->_table, $this->_database);
 
             // Sets the initial data
-            if(!empty($data)){
-                $this->fill($data);
-            }else if(!empty($this->_attributes)){
-                $this->fill($this->_attributes);
-            }
+            $data = array_merge($this->_attributes, $data);
+            if(!empty($data)) $this->fill($data);
         }
 
         /**
@@ -151,7 +149,7 @@
          * @return array Returns an array with all rows.
          */
         public function latest(){
-            if(!$this->_timestamps) throw new Exception('latest(): This model is not handling timestamp fields');
+            if(!$this->_timestamps) throw new Exception('latest(): Model "' . get_class($this) . '" is not handling timestamp fields');
             $this->clearQuery();
             $fields = !empty($this->_fields) ? $this->_fields : '*';
             return $this->castData($this->select($fields)->orderBy($this->_createdField, 'DESC')->fetchAll());
@@ -162,7 +160,7 @@
          * @return array Returns an array with all rows.
          */
         public function oldest(){
-            if(!$this->_timestamps) throw new Exception('oldest(): This model is not handling timestamp fields');
+            if(!$this->_timestamps) throw new Exception('oldest(): Model "' . get_class($this) . '" is not handling timestamp fields');
             $this->clearQuery();
             $fields = !empty($this->_fields) ? $this->_fields : '*';
             return $this->castData($this->select($fields)->orderBy($this->_createdField, 'ASC')->fetchAll());
@@ -203,7 +201,7 @@
         /**
          * Checks if a row matches the primary key value in the data. If so, updates the row. Otherwise,\
          * inserts a new record in the model table.
-         * @param array $data An Element or associative array relating fields and values to upsert. **Must include the primary key field.**
+         * @param Element|array $data An Element or associative array relating fields and values to upsert. **Must include the primary key field.**
          * @return bool Returns true on success.
          */
         public function updateOrCreate($data){
@@ -226,7 +224,7 @@
         }
 
         /**
-         * Fills the model entity with a row data.
+         * Fills the model entity with a row data. Existing data will be overwritten!
          * @param Element|array $row An Element or associative array with the row data.
          * @return Model Current Model instance for nested calls.
          */
@@ -243,7 +241,7 @@
          * @return bool Returns true if the row data has been modified or false otherwise.
          */
         public function isDirty(string $field = ''){
-            if(!$this->_initialData instanceof Element) throw new Exception('isDirty(): Model entity was not filled with a row data');
+            if(!$this->_initialData instanceof Element) throw new Exception('isDirty(): Model "' . get_class($this) . '" entity was not filled with a row data');
             if(!empty($field)){
                 return ($this->_initialData->get($field) !== $this->get($field));
             }else{
@@ -257,7 +255,7 @@
          * @return bool Returns true if the row data has not been modified or false otherwise.
          */
         public function isPristine(string $field = ''){
-            if(!$this->_initialData instanceof Element) throw new Exception('isPristine(): Model entity was not filled with a row data');
+            if(!$this->_initialData instanceof Element) throw new Exception('isPristine(): Model "' . get_class($this) . '" entity was not filled with a row data');
             return !$this->isDirty($field);
         }
 
@@ -275,27 +273,17 @@
          */
         public function destroy(){
             $primary = $this->get($this->_primaryKey);
-            if (empty($primary)) throw new Exception('destroy(): Model entity primary key was not filled');
+            if (is_null($primary)) throw new Exception('destroy(): Model "' . get_class($this) . '" entity primary key was not filled');
             return $this->drop($primary);
         }
 
         /**
-         * Filters an array of data returning only the fields in `$this->_updatable` setting.
-         * @param array $data An associative array of fields and values to filter.
-         * @return array Returns the filtered array.
-         */
-        private function filterData(array $data){
-            if(empty($data) || empty($this->_updatable)) return $data;
-            return array_intersect_key($data, array_flip($this->_updatable));
-        }
-
-        /**
          * Casts data types of fields from a row or an array of rows using `$this->_casts` setting.
-         * @param array|Element $data A single data row as an Element, array or an array of rows.
+         * @param array|Element $data A single row as an Element or associative array or an array of rows.
          * @param bool $single (Optional) Set to `true` if working with a single row.
          * @return array|Element Returns the data with the casted fields.
          */
-        private function castData($data, bool $single = false){
+        public function castData($data, bool $single = false){
             // Checks if data or casts property is empty
             if(empty($data) || empty($this->_casts)) return $data;
 
@@ -332,7 +320,7 @@
                             break;
 
                         case 'callback':
-                            if (empty($params[1])) throw new Exception('Missing function name in callback casting for "' . $field . '" field');
+                            if (empty($params[1])) throw new Exception('Missing function name in callback casting for "' . $field . '" field in "' . get_class($this) . '"');
                             if (is_callable([$this, $params[1]])) {
                                 $data[$field] = call_user_func_array([$this, $params[1]], [$data[$field]]);
                             } else {
@@ -357,6 +345,16 @@
 
             // Returns the result
             return $isElement ? new Element($data) : $data;
+        }
+
+        /**
+         * Filters an array of data returning only the fields in `$this->_updatable` setting.
+         * @param array $data An associative array of fields and values to filter.
+         * @return array Returns the filtered array.
+         */
+        private function filterData(array $data){
+            if(empty($data) || empty($this->_updatable)) return $data;
+            return array_intersect_key($data, array_flip($this->_updatable));
         }
 
     }

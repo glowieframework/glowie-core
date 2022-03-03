@@ -93,34 +93,8 @@
          * @throws DatabaseException Throws an exception if the connection fails.
          */
         public function database(string $database){
-            // Gets the database configuration
             $this->_connection = $database;
-
-            // Checks if there is not an active handler for this connection
-            if(!isset(DatabaseTrait::$_handlers[$this->_connection])){
-                $database = Config::get("database.$database");
-                if(!$database) throw new DatabaseException([], 'Database connection setting "' . $this->_connection . '" not found in your app configuration');
-
-                // Validate settings
-                if (empty($database['host'])) throw new DatabaseException($database, 'Database connection "' . $this->_connection . '" host not defined');
-                if (empty($database['username'])) throw new DatabaseException($database, 'Database connection "' . $this->_connection . '" username not defined');
-                if (empty($database['db'])) throw new DatabaseException($database, 'Database connection "' . $this->_connection . '" name not defined');
-                if (empty($database['port'])) $database['port'] = 3306;
-                if (empty($database['charset'])) $database['charset'] = 'utf8';
-
-                // Saves the database connection
-                try {
-                    // Creates the connection
-                    DatabaseTrait::$_handlers[$this->_connection] = new mysqli($database['host'], $database['username'], $database['password'], $database['db'], $database['port']);
-
-                    // Sets the charset
-                    $this->getConnection()->set_charset($database['charset']);
-                } catch (Throwable $e) {
-                    throw new DatabaseException($database, $e->getMessage(), $e->getCode(), $e);
-                }
-            }
-
-            // Returns the current instance
+            if(!isset(DatabaseTrait::$_handlers[$this->_connection])) $this->reconnect();
             return $this;
         }
 
@@ -130,6 +104,33 @@
          */
         public function getConnection(){
             return DatabaseTrait::$_handlers[$this->_connection];
+        }
+
+        /**
+         * Refreshes the database connection.
+         */
+        public function reconnect(){
+            // Gets connection configuration
+            $database = Config::get("database.{$this->_connection}");
+            if(!$database) throw new DatabaseException([], 'Database connection setting "' . $this->_connection . '" not found in your app configuration');
+
+            // Validate settings
+            if (empty($database['host'])) throw new DatabaseException($database, 'Database connection "' . $this->_connection . '" host not defined');
+            if (empty($database['username'])) throw new DatabaseException($database, 'Database connection "' . $this->_connection . '" username not defined');
+            if (empty($database['db'])) throw new DatabaseException($database, 'Database connection "' . $this->_connection . '" name not defined');
+            if (empty($database['port'])) $database['port'] = 3306;
+            if (empty($database['charset'])) $database['charset'] = 'utf8';
+
+            // Saves the database connection
+            try {
+                // Creates the connection
+                DatabaseTrait::$_handlers[$this->_connection] = new mysqli($database['host'], $database['username'], $database['password'], $database['db'], $database['port']);
+
+                // Sets the charset
+                $this->getConnection()->set_charset($database['charset']);
+            } catch (Throwable $e) {
+                throw new DatabaseException($database, $e->getMessage(), $e->getCode(), $e);
+            }
         }
 
         /**

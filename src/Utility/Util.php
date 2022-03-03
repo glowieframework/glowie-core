@@ -67,7 +67,7 @@
          * @return string Full location.
          */
         public static function location(string $path = ''){
-            return APP_LOCATION . trim($path, '/');
+            return Util::directorySeparator(APP_LOCATION . trim($path, DIRECTORY_SEPARATOR));
         }
 
         /**
@@ -574,6 +574,15 @@
         public static function classname($class){
             $class = is_object($class) ? get_class($class) : $class;
             return basename(str_replace('\\', '/', $class));
+        }
+
+        /**
+         * Replaces the correct OS directory separator in a path.
+         * @param string $path Path to replace.
+         * @return string Returns the path with the correct separator.
+         */
+        public static function directorySeparator(string $path){
+            return str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
         }
 
     }

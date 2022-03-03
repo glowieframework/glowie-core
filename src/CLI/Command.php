@@ -214,6 +214,10 @@
             return Firefly::getArgs();
         }
 
+        /**
+         * Halts the execution in milliseconds.
+         * @param int $ms Time to wait in ms.
+         */
         public function wait(int $ms){
             usleep(ceil($ms) * 1000);
         }

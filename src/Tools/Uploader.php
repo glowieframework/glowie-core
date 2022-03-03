@@ -1,7 +1,6 @@
 <?php
     namespace Glowie\Core\Tools;
 
-    use Exception;
     use Util;
     use Glowie\Core\Exception\FileException;
 
@@ -95,12 +94,12 @@
 
         /**
          * Sets the target directory to store the uploaded files. Must be an existing directory with write permissions.
-         * @param string $directory Directory location to store files (relative to the **app/public** folder).
+         * @param string $directory Directory location to store files (absolute path or relative to the **app/public** folder).
          * @return Uploader Current Uploader instance for nested calls.
          */
         public function setDirectory(string $directory){
-            $directory = Util::location('public/' . $directory);
-            if(!is_dir($directory) || !is_writable($directory)) throw new FileException('Directory "' . $directory . '" is invalid or not writable');
+            $directory = trim($directory, '/\\');
+            if(!is_dir($directory) || !is_writable($directory)) throw new FileException('Directory "' . Util::location($directory) . '" is invalid or not writable');
             $this->directory = $directory;
             return $this;
         }

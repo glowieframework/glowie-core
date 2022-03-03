@@ -2,8 +2,6 @@
     namespace Glowie\Migrations;
 
     use Glowie\Core\Database\Migration;
-    use Glowie\Core\Database\Skeleton;
-    use Glowie\Core\Database\Kraken;
 
     /**
      * __FIREFLY_TEMPLATE_NAME__ migration for Glowie application.
