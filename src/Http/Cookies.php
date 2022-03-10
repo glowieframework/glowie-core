@@ -9,7 +9,7 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 1.1
+     * @version 1.2
      */
     class Cookies{
 
@@ -147,7 +147,7 @@
          * @param int $depth (Optional) JSON encoding maximum depth (same as in `json_encode()` function).
          * @return string The resulting JSON string.
          */
-        public function toJson(int $flags = 0, int $depth = 512){
+        public function toJson(int $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK, int $depth = 512){
             return json_encode($_COOKIE, $flags, $depth);
         }
 

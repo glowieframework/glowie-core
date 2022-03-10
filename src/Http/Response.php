@@ -14,7 +14,7 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 1.1
+     * @version 1.2
      */
     class Response{
 
@@ -252,7 +252,7 @@
          * @param int $flags (Optional) JSON encoding flags (same as in `json_encode()` function).
          * @param int $depth (Optional) JSON encoding maximum depth (same as in `json_encode()` function).
          */
-        public function setJson($data, int $flags = 0, int $depth = 512){
+        public function setJson($data, int $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK, int $depth = 512){
             Buffer::clean();
             $this->setContentType(self::CONTENT_JSON);
             if($data instanceof Element) $data = $data->toArray();

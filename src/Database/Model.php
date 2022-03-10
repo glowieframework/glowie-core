@@ -15,7 +15,7 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 1.1
+     * @version 1.2
      */
     class Model extends Kraken{
         use ElementTrait;
@@ -310,6 +310,10 @@
 
                     // Gets the rule
                     switch($type){
+                        case 'array':
+                            $data[$field] = json_decode($data[$field], true) ?? null;
+                            break;
+
                         case 'json':
                             $json = json_decode($data[$field], true);
                             if($json){

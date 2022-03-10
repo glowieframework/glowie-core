@@ -15,7 +15,7 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 1.1
+     * @version 1.2
      */
     class Authenticator{
 
@@ -58,28 +58,32 @@
          * Generates a JSON Web Token using your application secret keys.
          * @param array $payload Data to store in the token.
          * @param string $alg (Optional) Hashing algorithm to use in the signature.
+         * @param array $headers (Optional) Additional headers to attach to the token.
          * @return string Returns the JWT token as a string.
          */
-        public function generateJwt(array $payload, string $alg = 'HS256'){
+        public function generateJwt(array $payload, string $alg = 'HS256', array $headers = []){
             // Get app key
             $key = Config::get('secret.app_key');
             if(empty($key)) throw new Exception('generateJwt(): Application key was not defined');
 
             // Generate token
             if(!isset(self::METHODS[$alg])) throw new Exception('generateJwt(): Unsupported hashing algorithm');
-            $method = self::METHODS[$alg];
-            $header = $this->base64UrlEncode(json_encode(['alg' => $alg, 'typ' => 'JWT']));
+            $header = $this->base64UrlEncode(json_encode(array_merge($headers, ['alg' => $alg, 'typ' => 'JWT'])));
             $payload = $this->base64UrlEncode(json_encode($payload));
-            $signature = $this->base64UrlEncode(hash_hmac($method, "{$header}.{$payload}", $key, true));
+            $signature = $this->base64UrlEncode(hash_hmac(self::METHODS[$alg], "{$header}.{$payload}", $key, true));
             return "{$header}.{$payload}.{$signature}";
         }
 
         /**
          * Decodes a JSON Web Token.
          * @param string $token JWT token to decode.
-         * @return array|null Returns the JWT payload as an array or null if the token is invalid.
+         * @param bool $validate (Optional) Validate the token signature before decoding.
+         * @return array|null Returns the JWT payload as an associative array or null if the token is invalid.
          */
-        public function decodeJwt(string $token){
+        public function decodeJwt(string $token, bool $validate = true){
+            // Validate data
+            if(empty($token)) return null;
+
             // Split token into parts
             $token = explode('.', $token);
             if(count($token) !== 3) return null;
@@ -88,9 +92,39 @@
             $header = json_decode($this->base64UrlDecode($token[0]), true);
             if(empty($header['typ']) || $header['typ'] !== 'JWT') return null;
 
+            // Validate the signature
+            if($validate && !$this->validateJwt($token)) return null;
+
             // Decode the payload
-            $payload = json_decode($this->base64UrlDecode($token[1]));
-            return $payload ?? null;
+            $payload = json_decode($this->base64UrlDecode($token[1]), true);
+            return $payload ?? [];
+        }
+
+        /**
+         * Validates a JSON Web Token using your application secret keys.
+         * @param $token JWT token to validate.
+         * @return bool Returns true if the token signature is valid, false otherwise.
+         */
+        public function validateJwt(string $token){
+            // Validate data
+            if(empty($token)) return false;
+
+            // Get app key
+            $key = Config::get('secret.app_key');
+            if(empty($key)) throw new Exception('generateJwt(): Application key was not defined');
+
+            // Split token into parts
+            $parsed = explode('.', $token);
+            if(count($parsed) !== 3) return false;
+
+            // Validate the header
+            $header = json_decode($this->base64UrlDecode($parsed[0]), true);
+            if(empty($header['typ']) || $header['typ'] !== 'JWT' || empty($header['alg']) || !isset(self::METHODS[$header['alg']])) return false;
+
+            // Generate a valid token to compare the signature
+            $payload = json_decode($this->base64UrlDecode($parsed[1]), true);
+            $validToken = $this->generateJwt($payload ?? [], $header['alg'], $header);
+            return $validToken == $token;
         }
 
         /**

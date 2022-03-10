@@ -16,7 +16,7 @@
      * @copyright Copyright (c) 2021
      * @license MIT
      * @link https://glowie.tk
-     * @version 1.1
+     * @version 1.2
      */
     class Kraken{
         use DatabaseTrait;
@@ -258,7 +258,7 @@
          */
         public function on(string $param1, string $param2, ?string $param3 = null, string $type = 'AND'){
             // Checks for empty joins
-            if(empty($this->_join)) throw new Exception('Kraken: There are no JOIN statements in the query yet');
+            if(empty($this->_join)) throw new Exception('on(): There are no JOIN statements in the query yet');
 
             // Checks for the condition type
             if(end($this->_join) == '(') $type = "";
@@ -319,7 +319,7 @@
                 return $this;
             }else if(is_array($param1)){
                 foreach($param1 as $condition){
-                    if(!is_array($condition) || count($condition) < 2) throw new Exception('Kraken: Multiple WHERE conditions must be an array with at least two parameters');
+                    if(!is_array($condition) || count($condition) < 2) throw new Exception('where(): Multiple WHERE conditions must be an array with at least two parameters');
                     $this->where($condition[0], $condition[1], $condition[2] ?? null);
                 }
                 return $this;
@@ -782,7 +782,7 @@
                 return $this;
             }else if(is_array($param1)){
                 foreach($param1 as $condition){
-                    if(!is_array($condition) || count($condition) < 2) throw new Exception('Kraken: Multiple HAVING conditions must be an array with at least two parameters');
+                    if(!is_array($condition) || count($condition) < 2) throw new Exception('having(): Multiple HAVING conditions must be an array with at least two parameters');
                     $this->having($condition[0], $condition[1], $condition[2] ?? null);
                 }
                 return $this;
