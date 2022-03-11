@@ -20,6 +20,24 @@
     class Authenticator{
 
         /**
+         * Expiration time for **1 minute**.
+         * @var int
+         */
+        public const EXPIRES_MINUTE = 60;
+
+        /**
+         * Expiration time for **1 hour**.
+         * @var int
+         */
+        public const EXPIRES_HOUR = 3600;
+
+        /**
+         * Expiration time for **1 day**.
+         * @var int
+         */
+        public const EXPIRES_DAY = 86400;
+
+        /**
          * JWT hashing methods.
          * @var array
          */
@@ -56,17 +74,23 @@
 
         /**
          * Generates a JSON Web Token using your application secret keys.
-         * @param array $payload Data to store in the token.
+         * @param Element|array $payload An Element or associative array with the data to store in the token.
+         * @param int|null $expires (Optional) Token expiration time in seconds, leave empty for no expiration.
          * @param string $alg (Optional) Hashing algorithm to use in the signature.
-         * @param array $headers (Optional) Additional headers to attach to the token.
-         * @return string Returns the JWT token as a string.
+         * @param array $headers (Optional) Associative array with additional headers to attach to the token.
+         * @return string Returns the token as a string.
          */
-        public function generateJwt(array $payload, string $alg = 'HS256', array $headers = []){
+        public function generateJwt($payload, ?int $expires = self::EXPIRES_DAY, string $alg = 'HS256', array $headers = []){
             // Get app key
             $key = Config::get('secret.app_key');
             if(empty($key)) throw new Exception('generateJwt(): Application key was not defined');
 
+            // Parse payload
+            if($payload instanceof Element) $payload = $payload->toArray();
+            if(!empty($expires)) $payload['exp'] = time() + $expires;
+
             // Generate token
+            $alg = strtoupper($alg);
             if(!isset(self::METHODS[$alg])) throw new Exception('generateJwt(): Unsupported hashing algorithm');
             $header = $this->base64UrlEncode(json_encode(array_merge($headers, ['alg' => $alg, 'typ' => 'JWT'])));
             $payload = $this->base64UrlEncode(json_encode($payload));
@@ -76,33 +100,34 @@
 
         /**
          * Decodes a JSON Web Token.
-         * @param string $token JWT token to decode.
-         * @param bool $validate (Optional) Validate the token signature before decoding.
-         * @return array|null Returns the JWT payload as an associative array or null if the token is invalid.
+         * @param string $token Token to decode.
+         * @param bool $validate (Optional) Validate the token signature and expiration time (if available) before decoding.
+         * @return Element|null Returns the JWT payload as an Element or null if the token is invalid.
          */
         public function decodeJwt(string $token, bool $validate = true){
             // Validate data
             if(empty($token)) return null;
 
             // Split token into parts
-            $token = explode('.', $token);
-            if(count($token) !== 3) return null;
+            $parsed = explode('.', $token);
+            if(count($parsed) !== 3) return null;
 
             // Validate the header
-            $header = json_decode($this->base64UrlDecode($token[0]), true);
+            $header = json_decode($this->base64UrlDecode($parsed[0]), true);
             if(empty($header['typ']) || $header['typ'] !== 'JWT') return null;
 
-            // Validate the signature
+            // Validate the signature and expiration time
             if($validate && !$this->validateJwt($token)) return null;
 
             // Decode the payload
-            $payload = json_decode($this->base64UrlDecode($token[1]), true);
-            return $payload ?? [];
+            $payload = json_decode($this->base64UrlDecode($parsed[1]), true);
+            if(!$payload) return null;
+            return new Element($payload);
         }
 
         /**
          * Validates a JSON Web Token using your application secret keys.
-         * @param $token JWT token to validate.
+         * @param $token Token to validate.
          * @return bool Returns true if the token signature is valid, false otherwise.
          */
         public function validateJwt(string $token){
@@ -119,12 +144,19 @@
 
             // Validate the header
             $header = json_decode($this->base64UrlDecode($parsed[0]), true);
-            if(empty($header['typ']) || $header['typ'] !== 'JWT' || empty($header['alg']) || !isset(self::METHODS[$header['alg']])) return false;
+            if(empty($header['typ']) || $header['typ'] !== 'JWT' || empty($header['alg']) || !isset(self::METHODS[strtoupper($header['alg'])])) return false;
+            $alg = strtoupper($header['alg']);
 
-            // Generate a valid token to compare the signature
+            // Decode the payload
             $payload = json_decode($this->base64UrlDecode($parsed[1]), true);
-            $validToken = $this->generateJwt($payload ?? [], $header['alg'], $header);
-            return $validToken == $token;
+            if(!$payload) return false;
+
+            // Validate the expiration time if available
+            if(!empty($payload['exp']) && $payload['exp'] < time()) return false;
+
+            // Generate a valid signature to compare
+            $signature = $this->base64UrlEncode(hash_hmac(self::METHODS[$alg], "{$parsed[0]}.{$parsed[1]}", $key, true));
+            return $signature == $parsed[2];
         }
 
         /**

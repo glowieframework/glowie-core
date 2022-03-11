@@ -25,7 +25,8 @@
 
         /**
          * Starts a new session or resumes the existing one.
-         * @param array $data (Optional) An associative array with the initial data to store in the session.
+         * @param array $data (Optional) An associative array with the initial data to store in the session.\
+         * **This replaces the existing session data!**
          */
         public function __construct(array $data = []){
             if(!isset($_SESSION)) session_start();
@@ -43,11 +44,12 @@
             session_save_path($sessdir);
 
             // INI settings
-            ini_set('session.name', 'app_session');
-            ini_set('session.gc_probability', '1');
+            ini_set('session.name', Config::get('session.name', 'app_session'));
             ini_set('session.gc_divisor', (string)Config::get('session.gc_cleaning', 50));
             ini_set('session.gc_maxlifetime', (string)Config::get('session.lifetime', 120));
-            ini_set('session.cookie_httponly', '1');
+            ini_set('session.cookie_httponly', (string)Config::get('session.restrict', true));
+            ini_set('session.cookie_secure', (string)Config::get('session.secure', false));
+            ini_set('session.gc_probability', '1');
             ini_set('session.use_cookies', '1');
             ini_set('session.use_only_cookies', '1');
             ini_set('session.use_strict_mode', '1');
@@ -69,7 +71,6 @@
          * @return mixed Returns the value if exists or the default if not.
          */
         public function get(string $key, $default = null){
-            if (!isset($_SESSION)) session_start();
             return Util::arrayGet($_SESSION, $key, $default);
         }
 
@@ -90,7 +91,6 @@
          * @return Session Current Session instance for nested calls.
          */
         public function set(string $key, $value, bool $ignoreDot = false){
-            if(!isset($_SESSION)) session_start();
             if($ignoreDot){
                 $_SESSION[$key] = $value;
             }else{
@@ -113,7 +113,6 @@
          * @return Session Current Session instance for nested calls.
          */
         public function remove($key){
-            if(!isset($_SESSION)) session_start();
             foreach((array)$key as $item){
                 if (isset($_SESSION[$item])) unset($_SESSION[$item]);
             }
@@ -135,7 +134,6 @@
          * @return bool Returns true or false.
          */
         public function has(string $key){
-            if(!isset($_SESSION)) session_start();
             return Util::arrayGet($_SESSION, $key) !== null;
         }
 
@@ -144,7 +142,6 @@
          * @return Session Current Session instance for nested calls.
          */
         public function flush(){
-            if(!isset($_SESSION)) session_start();
             $_SESSION = [];
             self::$flash = [];
             return $this;
@@ -155,7 +152,6 @@
          * @return array The resulting array.
          */
         public function toArray(){
-            if(!isset($_SESSION)) session_start();
             return $_SESSION;
         }
 
@@ -166,7 +162,6 @@
          * @return string The resulting JSON string.
          */
         public function toJson(int $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK, int $depth = 512){
-            if(!isset($_SESSION)) session_start();
             return json_encode($_SESSION, $flags, $depth);
         }
 

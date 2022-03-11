@@ -2,6 +2,7 @@
     namespace Glowie\Core\Http;
 
     use Util;
+    use Config;
     use SimpleXMLElement;
     use Glowie\Core\Element;
     use Glowie\Core\View\Buffer;
@@ -170,7 +171,7 @@
         /**
          * Sets a new header value or replaces the existing one.
          * @param string $name Header name to set.
-         * @param string|array $value Header value to set.
+         * @param string|array $value Header value to set. Can also be an array of values.
          * @return Response Current Response instance for nested calls.
          */
         public function setHeader(string $name, $value){

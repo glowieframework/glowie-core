@@ -1,6 +1,8 @@
 <?php
     namespace Glowie\Core\Http;
 
+    use Config;
+
     /**
      * Cookie manager for Glowie application.
      * @category Cookie manager
@@ -14,27 +16,26 @@
     class Cookies{
 
         /**
-         * Expire time for 1 minute.
+         * Expiration time for **1 minute**.
          * @var int
          */
         public const EXPIRES_MINUTE = 60;
 
         /**
-         * Expire time for 1 hour.
+         * Expiration time for **1 hour**.
          * @var int
          */
         public const EXPIRES_HOUR = 3600;
 
         /**
-         * Expire time for 1 day.
+         * Expiration time for **1 day**.
          * @var int
          */
         public const EXPIRES_DAY = 86400;
 
         /**
          * Creates a new instance of the cookie manager.
-         * @param array $data (Optional) An associative array with the initial data to store in the cookies\
-         * **(default expire time is 1 hour)**.
+         * @param array $data (Optional) An associative array with the initial data to store in the cookies.
          */
         public function __construct(array $data = []){
             if(!empty($data)){
@@ -77,13 +78,11 @@
          * @param string $key Key to set value.
          * @param mixed $value Value to set.
          * @param int $expires (Optional) Cookie expiration time in seconds.
-         * @param string $path (Optional) Path on the application that the cookie will be available (use `'/'` for the entire application).
-         * @param bool $restrict (Optional) Restrict the cookie access only through HTTP protocol.
          * @return Cookies Current Cookies instance for nested calls.
          */
-        public function set(string $key, $value, int $expires = self::EXPIRES_HOUR, string $path = '/', bool $restrict = false){
+        public function set(string $key, $value, int $expires = self::EXPIRES_DAY){
             $_COOKIE[$key] = $value;
-            setcookie($key, $value, time() + $expires, $path, '', false, $restrict);
+            setcookie($key, $value, time() + $expires, '/', '', Config::get('cookies.secure', false), Config::get('cookies.restrict', false));
             return $this;
         }
 
@@ -102,7 +101,10 @@
          */
         public function remove($key){
             foreach((array)$key as $item){
-                if (isset($_COOKIE[$item])) $this->set($item, null, -self::EXPIRES_HOUR);
+                if (isset($_COOKIE[$item])){
+                    $this->set($item, null, -self::EXPIRES_HOUR);
+                    unset($_COOKIE[$item]);
+                }
             }
             return $this;
         }
