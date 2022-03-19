@@ -99,7 +99,7 @@
          */
         public function setDirectory(string $directory){
             $directory = trim($directory, '/\\');
-            if(!is_dir($directory) || !is_writable($directory))  FileException('Directory "' . Util::location($directory) . '" is invalid or not writable');
+            if(!is_dir($directory) || !is_writable($directory)) throw new FileException('Directory "' . Util::location($directory) . '" is invalid or not writable');
             $this->directory = $directory;
             return $this;
         }
