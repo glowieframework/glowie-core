@@ -139,7 +139,7 @@
          * @param string|array $methods (Optional) HTTP methods that these routes accept. Can be a single method or an array of methods.\
          * Leave empty for all.
          */
-        public static function mapRoutes(array $routes, array $methods = []){
+        public static function mapRoutes(array $routes, $methods = []){
             foreach($routes as $route => $config){
                 $config = (array)$config;
                 self::addRoute($route, $config[0] ?? 'Glowie\Controllers\Main', $config[1] ?? null, $methods, $config[2] ?? '');
@@ -155,7 +155,7 @@
          * @param string|array $methods (Optional) HTTP methods that these routes accept. Can be a single method or an array of methods.\
          * Leave empty for all.
          */
-        public static function mapProtectedRoutes(array $routes, $middleware = 'Glowie\Middlewares\Authenticate', array $methods = []){
+        public static function mapProtectedRoutes(array $routes, $middleware = 'Glowie\Middlewares\Authenticate', $methods = []){
             foreach($routes as $route => $config){
                 $config = (array)$config;
                 self::addProtectedRoute($route, $middleware, $config[0] ?? 'Glowie\Controllers\Main', $config[1] ?? null, $methods, $config[2] ?? '');

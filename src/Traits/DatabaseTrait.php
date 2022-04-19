@@ -70,6 +70,7 @@
         /**
          * Returns next results as associative arrays instead of Elements.
          * @param bool $option (Optional) Set to **true** to return as arrays, **false** otherwise.
+         * @return $this Current instance for nested calls.
          */
         public function asArray(bool $option = true){
             $this->_returnAssoc = $option;
@@ -158,7 +159,7 @@
          * @param string $query Full raw query to run.
          * @param bool $return (Optional) Set to **true** if the query should return any results.
          * @return array|bool If the query is successful and should return results, will return an array with\
-         * the results. Otherwise returns true on success.
+         * the results. Otherwise returns true on success or false on failure.
          * @throws QueryException Throws an exception if the query fails.
          */
         public function query(string $query, bool $return = false){
@@ -243,8 +244,8 @@
          * Run the current built query.
          * @param bool $returns (Optional) If the query should return a result.
          * @param bool $returnsFirst (Optional) If the query should return a single result.
-         * @return mixed If the query is successful and should return any results, will return an Element with the first result or an array of\
-         * results. Otherwise returns true on success.
+         * @return mixed If the query is successful and should return any results, will return an Element/associative array with the\
+         * first result or an array of results. Otherwise returns true on success or false on failure.
          * @throws QueryException Throws an exception if the query fails.
          */
         private function execute(bool $returns = false, bool $returnsFirst = false){

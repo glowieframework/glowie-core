@@ -113,7 +113,7 @@
          * Prepares a SELECT query.
          * @param string|array $columns (Optional) Columns to select in the query. Can be a single column name or an array of columns.\
          * You can also use a raw SELECT query.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function select($columns = '*'){
             $this->_instruction = 'SELECT';
@@ -125,7 +125,7 @@
          * Appends a SELECT statement to the existing one in the query.
          * @param string|array $columns (Optional) Columns to select in the query. Can be a single column name or an array of columns.\
          * You can also use a raw SELECT query.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function addSelect($columns = '*'){
             $this->_instruction = 'SELECT';
@@ -136,7 +136,7 @@
 
         /**
          * Sets the current SELECT query as DISTINCT.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function distinct(){
             $this->_instruction = 'SELECT DISTINCT';
@@ -146,7 +146,7 @@
         /**
          * Sets the query FROM statement.
          * @param string $table Table name or a raw FROM query.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function from(string $table){
             $this->_from = $table;
@@ -160,7 +160,7 @@
          * @param string|null $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
          * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
          * @param string $type (Optional) JOIN type (INNER, LEFT, RIGHT or FULL).
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function join(string $table, $param1, ?string $param2 = null, ?string $param3 = null, string $type = 'INNER'){
             // Adds the join
@@ -193,7 +193,7 @@
         /**
          * Adds a raw table JOIN in the query.
          * @param string $join Full JOIN clause.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function rawJoin(string $join){
             $this->_join[] = $join;
@@ -206,7 +206,7 @@
          * @param string|Closure $param1 First condition parameter or a grouped ON closure.
          * @param string|null $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
          * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function innerJoin(string $table, $param1, ?string $param2 = null, ?string $param3 = null){
             return $this->join($table, $param1, $param2, $param3);
@@ -218,7 +218,7 @@
          * @param string|Closure $param1 First condition parameter or a grouped ON closure.
          * @param string|null $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
          * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function leftJoin(string $table, $param1, ?string $param2 = null, ?string $param3 = null){
             return $this->join($table, $param1, $param2, $param3, 'LEFT');
@@ -230,7 +230,7 @@
          * @param string|Closure $param1 First condition parameter or a grouped ON closure.
          * @param string|null $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
          * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function rightJoin(string $table, $param1, ?string $param2 = null, ?string $param3 = null){
             return $this->join($table, $param1, $param2, $param3, 'RIGHT');
@@ -242,7 +242,7 @@
          * @param string|Closure $param1 First condition parameter or a grouped ON closure.
          * @param string|null $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
          * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function fullJoin(string $table, $param1, ?string $param2 = null, ?string $param3 = null){
             return $this->join($table, $param1, $param2, $param3, 'FULL');
@@ -254,7 +254,7 @@
          * @param string $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
          * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
          * @param string $type (Optional) Chaining type (AND or OR).
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function on(string $param1, string $param2, ?string $param3 = null, string $type = 'AND'){
             // Checks for empty joins
@@ -278,7 +278,7 @@
          * @param string $param1 First condition parameter.
          * @param string $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
          * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orOn(string $param1, string $param2, ?string $param3 = null){
             return $this->on($param1, $param2, $param3, 'OR');
@@ -290,7 +290,7 @@
          * @param mixed $param2 (Optional) If `$param3` isset, the operator used in the condition. Otherwise, the value to check to.
          * @param mixed $param3 (Optional) Value if `$param2` is the operator.
          * @param string $type (Optional) Chaining type (AND or OR).
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function where($param1, $param2 = null, $param3 = null, string $type = 'AND'){
             // Checks for the condition type
@@ -384,7 +384,7 @@
          * @param string|array|Closure $param1 Column name, array of WHERE conditions or a grouped WHERE closure.
          * @param mixed $param2 (Optional) If `$param3` isset, the operator used in the condition. Otherwise, the value to check to.
          * @param mixed $param3 (Optional) Value if `$param2` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orWhere($param1, $param2 = null, $param3 = null){
             return $this->where($param1, $param2, $param3, 'OR');
@@ -395,7 +395,7 @@
          * **Note: This does not prevent SQL injection attacks.**
          * @param string $condition Full WHERE condition.
          * @param string $type (Optional) Chaining type (AND or OR).
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function rawWhere(string $condition, string $type = 'AND'){
             $this->_where[] = (!empty($this->_where) ? "{$type} " : "") . $condition;
@@ -406,7 +406,7 @@
          * Adds a raw OR WHERE condition to the query.\
          * **Note: This does not prevent SQL injection attacks.**
          * @param string $condition Full WHERE condition.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orRawWhere(string $condition){
             return $this->rawWhere($condition, 'OR');
@@ -416,7 +416,7 @@
          * Adds a WHERE IN condition to the query.
          * @param string $column Column name.
          * @param array $values Array of values to check to.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function whereIn(string $column, array $values){
             return $this->where($column, $values);
@@ -426,7 +426,7 @@
          * Adds an OR WHERE IN condition to the query.
          * @param string $column Column name.
          * @param array $values Array of values to check to.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orWhereIn(string $column, array $values){
             return $this->where($column, 'IN', $values, 'OR');
@@ -436,7 +436,7 @@
          * Adds a WHERE NOT IN condition to the query.
          * @param string $column Column name.
          * @param array $values Array of values to check to.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function whereNotIn(string $column, array $values){
             return $this->where($column, 'NOT IN', $values);
@@ -446,7 +446,7 @@
          * Adds an OR WHERE NOT IN condition to the query.
          * @param string $column Column name.
          * @param array $values Array of values to check to.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orWhereNotIn(string $column, array $values){
             return $this->where($column, 'NOT IN', $values, 'OR');
@@ -457,7 +457,7 @@
          * @param string $column Column name.
          * @param mixed $value1 First value in the range.
          * @param mixed $value2 Last value in the range.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function whereBetween(string $column, $value1, $value2){
             return $this->where($column, 'BETWEEN', [$value1, $value2]);
@@ -468,7 +468,7 @@
          * @param string $column Column name.
          * @param mixed $value1 First value in the range.
          * @param mixed $value2 Last value in the range.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orWhereBetween(string $column, $value1, $value2){
             return $this->where($column, 'BETWEEN', [$value1, $value2], 'OR');
@@ -479,7 +479,7 @@
          * @param string $column Column name.
          * @param mixed $value1 First value in the range.
          * @param mixed $value2 Last value in the range.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function whereNotBetween(string $column, $value1, $value2){
             return $this->where($column, 'NOT BETWEEN', [$value1, $value2]);
@@ -490,7 +490,7 @@
          * @param string $column Column name.
          * @param mixed $value1 First value in the range.
          * @param mixed $value2 Last value in the range.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orWhereNotBetween(string $column, $value1, $value2){
             return $this->where($column, 'NOT BETWEEN', [$value1, $value2], 'OR');
@@ -499,7 +499,7 @@
         /**
          * Adds a WHERE NULL condition to the query.
          * @param string $column Column name.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function whereNull(string $column){
             return $this->where($column, 'NULL');
@@ -508,7 +508,7 @@
         /**
          * Adds an OR WHERE NULL condition to the query.
          * @param string $column Column name.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orWhereNull(string $column){
             return $this->where($column, 'IS', 'NULL', 'OR');
@@ -517,7 +517,7 @@
         /**
          * Adds a WHERE NOT NULL condition to the query.
          * @param string $column Column name.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function whereNotNull(string $column){
             return $this->where($column, 'IS NOT', 'NULL');
@@ -526,7 +526,7 @@
         /**
          * Adds an OR WHERE NOT NULL condition to the query.
          * @param string $column Column name.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orWhereNotNull(string $column){
             return $this->where($column, 'IS NOT', 'NULL', 'OR');
@@ -537,7 +537,7 @@
          * @param string $column Column name **(must be a DATE or DATETIME column)**.
          * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the date value to check to.
          * @param mixed $param2 (Optional) Value if `$param1` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function whereDate(string $column, $param1, $param2 = null){
             return $this->where("DATE({$column})", $param1, $param2);
@@ -548,7 +548,7 @@
          * @param string $column Column name **(must be a DATE or DATETIME column)**.
          * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the date value to check to.
          * @param mixed $param2 (Optional) Value if `$param1` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orWhereDate(string $column, $param1, $param2 = null){
             return $this->where("DATE({$column})", $param1, $param2, 'OR');
@@ -559,7 +559,7 @@
          * @param string $column Column name **(must be a DATE or DATETIME column)**.
          * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the day value to check to.
          * @param mixed $param2 (Optional) Value if `$param1` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function whereDay(string $column, $param1, $param2 = null){
             return $this->where("DAY({$column})", $param1, $param2);
@@ -570,7 +570,7 @@
          * @param string $column Column name **(must be a DATE or DATETIME column)**.
          * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the day value to check to.
          * @param mixed $param2 (Optional) Value if `$param1` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orWhereDay(string $column, $param1, $param2 = null){
             return $this->where("DAY({$column})", $param1, $param2, 'OR');
@@ -581,7 +581,7 @@
          * @param string $column Column name **(must be a DATE or DATETIME column)**.
          * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the month value to check to.
          * @param mixed $param2 (Optional) Value if `$param1` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function whereMonth(string $column, $param1, $param2 = null){
             return $this->where("MONTH({$column})", $param1, $param2);
@@ -592,7 +592,7 @@
          * @param string $column Column name **(must be a DATE or DATETIME column)**.
          * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the month value to check to.
          * @param mixed $param2 (Optional) Value if `$param1` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orWhereMonth(string $column, $param1, $param2 = null){
             return $this->where("MONTH({$column})", $param1, $param2, 'OR');
@@ -603,7 +603,7 @@
          * @param string $column Column name **(must be a DATE, DATETIME or YEAR column)**.
          * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the year value to check to.
          * @param mixed $param2 (Optional) Value if `$param1` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function whereYear(string $column, $param1, $param2 = null){
             return $this->where("YEAR({$column})", $param1, $param2);
@@ -614,7 +614,7 @@
          * @param string $column Column name **(must be a DATE, DATETIME or YEAR column)**.
          * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the year value to check to.
          * @param mixed $param2 (Optional) Value if `$param1` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orWhereYear(string $column, $param1, $param2 = null){
             return $this->where("YEAR({$column})", $param1, $param2, 'OR');
@@ -625,7 +625,7 @@
          * @param string $column Column name **(must be a TIME or DATETIME column)**.
          * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the time value to check to.
          * @param mixed $param2 (Optional) Value if `$param1` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function whereTime(string $column, $param1, $param2 = null){
             return $this->where("TIME({$column})", $param1, $param2);
@@ -636,7 +636,7 @@
          * @param string $column Column name **(must be a TIME or DATETIME column)**.
          * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the time value to check to.
          * @param mixed $param2 (Optional) Value if `$param1` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orWhereTime(string $column, $param1, $param2 = null){
             return $this->where("TIME({$column})", $param1, $param2, 'OR');
@@ -647,7 +647,7 @@
          * @param string $column Column name **(must be a TIME or DATETIME column)**.
          * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the hours value to check to.
          * @param mixed $param2 (Optional) Value if `$param1` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function whereHour(string $column, $param1, $param2 = null){
             return $this->where("HOUR({$column})", $param1, $param2);
@@ -658,7 +658,7 @@
          * @param string $column Column name **(must be a TIME or DATETIME column)**.
          * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the hours value to check to.
          * @param mixed $param2 (Optional) Value if `$param1` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orWhereHour(string $column, $param1, $param2 = null){
             return $this->where("HOUR({$column})", $param1, $param2, 'OR');
@@ -669,7 +669,7 @@
          * @param string $column Column name **(must be a TIME or DATETIME column)**.
          * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the minutes value to check to.
          * @param mixed $param2 (Optional) Value if `$param1` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function whereMinute(string $column, $param1, $param2 = null){
             return $this->where("MINUTE({$column})", $param1, $param2);
@@ -680,7 +680,7 @@
          * @param string $column Column name **(must be a TIME or DATETIME column)**.
          * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the minutes value to check to.
          * @param mixed $param2 (Optional) Value if `$param1` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orWhereMinute(string $column, $param1, $param2 = null){
             return $this->where("MINUTE({$column})", $param1, $param2, 'OR');
@@ -691,7 +691,7 @@
          * @param string $column Column name **(must be a TIME or DATETIME column)**.
          * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the seconds value to check to.
          * @param mixed $param2 (Optional) Value if `$param1` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function whereSecond(string $column, $param1, $param2 = null){
             return $this->where("SECOND({$column})", $param1, $param2);
@@ -702,7 +702,7 @@
          * @param string $column Column name **(must be a TIME or DATETIME column)**.
          * @param mixed $param1 If `$param2` isset, the operator used in the condition. Otherwise, the seconds value to check to.
          * @param mixed $param2 (Optional) Value if `$param1` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orWhereSecond(string $column, $param1, $param2 = null){
             return $this->where("SECOND({$column})", $param1, $param2, 'OR');
@@ -740,7 +740,7 @@
          * Adds a GROUP BY statement to the query.
          * @param string|array $column Column name to group. Can be a single column name or an array of columns.\
          * You can also use a raw GROUP BY statement.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function groupBy($column){
             $this->_group[] = implode(', ', (array)$column);
@@ -753,7 +753,7 @@
          * @param mixed $param2 (Optional) If `$param3` isset, the operator used in the condition. Otherwise, the value to check to.
          * @param mixed $param3 (Optional) Value if `$param2` is the operator.
          * @param string $type (Optional) Chaining type (AND or OR).
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function having($param1, $param2 = null, $param3 = null, string $type = 'AND'){
             // Checks for the condition type
@@ -847,7 +847,7 @@
          * @param string|array|Closure $param1 Column name, array of HAVING conditions or a grouped HAVING closure.
          * @param mixed $param2 (Optional) If `$param3` isset, the operator used in the condition. Otherwise, the value to check to.
          * @param mixed $param3 (Optional) Value if `$param2` is the operator.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orHaving($param1, $param2 = null, $param3 = null){
             return $this->having($param1, $param2, $param3, 'OR');
@@ -858,7 +858,7 @@
          * **Note: This does not prevent SQL injection attacks.**
          * @param string $condition Full HAVING condition.
          * @param string $type (Optional) Chaining type (AND or OR).
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function rawHaving(string $condition, string $type = 'AND'){
             $this->_having[] = (!empty($this->_having) ? "{$type} " : "") . $condition;
@@ -869,7 +869,7 @@
          * Adds a raw OR HAVING condition to the query.\
          * **Note: This does not prevent SQL injection attacks.**
          * @param string $condition Full HAVING condition.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orRawHaving(string $condition){
             return $this->rawHaving($condition, 'OR');
@@ -879,7 +879,7 @@
          * Adds a HAVING IN condition to the query.
          * @param string $column Column name.
          * @param array $values Array of values to check to.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function havingIn(string $column, array $values){
             return $this->having($column, $values);
@@ -889,7 +889,7 @@
          * Adds an OR HAVING IN condition to the query.
          * @param string $column Column name.
          * @param array $values Array of values to check to.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orHavingIn(string $column, array $values){
             return $this->having($column, 'IN', $values, 'OR');
@@ -899,7 +899,7 @@
          * Adds a HAVING NOT IN condition to the query.
          * @param string $column Column name.
          * @param array $values Array of values to check to.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function havingNotIn(string $column, array $values){
             return $this->having($column, 'NOT IN', $values);
@@ -909,7 +909,7 @@
          * Adds an OR HAVING NOT IN condition to the query.
          * @param string $column Column name.
          * @param array $values Array of values to check to.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orHavingNotIn(string $column, array $values){
             return $this->having($column, 'NOT IN', $values, 'OR');
@@ -920,7 +920,7 @@
          * @param string $column Column name.
          * @param mixed $value1 First value in the range.
          * @param mixed $value2 Last value in the range.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function havingBetween(string $column, $value1, $value2){
             return $this->having($column, 'BETWEEN', [$value1, $value2]);
@@ -931,7 +931,7 @@
          * @param string $column Column name.
          * @param mixed $value1 First value in the range.
          * @param mixed $value2 Last value in the range.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orHavingBetween(string $column, $value1, $value2){
             return $this->having($column, 'BETWEEN', [$value1, $value2], 'OR');
@@ -942,7 +942,7 @@
          * @param string $column Column name.
          * @param mixed $value1 First value in the range.
          * @param mixed $value2 Last value in the range.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function havingNotBetween(string $column, $value1, $value2){
             return $this->having($column, 'NOT BETWEEN', [$value1, $value2]);
@@ -953,7 +953,7 @@
          * @param string $column Column name.
          * @param mixed $value1 First value in the range.
          * @param mixed $value2 Last value in the range.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orHavingNotBetween(string $column, $value1, $value2){
             return $this->having($column, 'NOT BETWEEN', [$value1, $value2], 'OR');
@@ -962,7 +962,7 @@
         /**
          * Adds a HAVING NULL condition to the query.
          * @param string $column Column name.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function havingNull(string $column){
             return $this->having($column, 'NULL');
@@ -971,7 +971,7 @@
         /**
          * Adds an OR HAVING NULL condition to the query.
          * @param string $column Column name.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orHavingNull(string $column){
             return $this->having($column, 'IS', 'NULL', 'OR');
@@ -980,7 +980,7 @@
         /**
          * Adds a HAVING NOT NULL condition to the query.
          * @param string $column Column name.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function havingNotNull(string $column){
             return $this->having($column, 'IS NOT', 'NULL');
@@ -989,7 +989,7 @@
         /**
          * Adds an OR HAVING NOT NULL condition to the query.
          * @param string $column Column name.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orHavingNotNull(string $column){
             return $this->having($column, 'IS NOT', 'NULL', 'OR');
@@ -999,7 +999,7 @@
          * Adds an ORDER BY statement to the query.
          * @param string $column Column name.
          * @param string $direction (Optional) Sorting direction **(ASC or DESC)**.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orderBy(string $column, string $direction = 'ASC'){
             $direction = strtoupper($direction);
@@ -1009,7 +1009,7 @@
 
         /**
          * Adds a random ORDER BY statement to the query.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function orderByRandom(){
             $this->_order[] = "RAND()";
@@ -1019,7 +1019,7 @@
         /**
          * Adds a raw ORDER BY statement to the query.
          * @param string $statement Full ORDER BY statement.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function rawOrderBy(string $statement){
             $this->_order[] = $statement;
@@ -1030,7 +1030,7 @@
          * Sets the query LIMIT statement.
          * @param int $param1 If `$param2` isset, the offset setting. Otherwise, the limit setting.
          * @param int|null $param2 (Optional) Limit setting if `$param1` is the offset.
-         * @return Kraken Current Kraken instance for nested calls.
+         * @return $this Current instance for nested calls.
          */
         public function limit(int $param1, ?int $param2 = null){
             if(is_null($param2)){
@@ -1065,7 +1065,7 @@
          * @param bool $ignore (Optional) Ignore failing or existing rows while inserting data (INSERT IGNORE).
          * @param bool $replace (Optional) Replace existing rows matching the primary key or unique indexes (REPLACE).
          * @param array $onDuplicate (Optional) Associative array with fields and values to update on existing rows (ON DUPLICATE KEY).
-         * @return bool Returns true on success.
+         * @return bool Returns true on success or false on failure.
          * @throws QueryException Throws an exception if the query fails.
          */
         public function insert(array $data, bool $ignore = false, bool $replace = false, array $onDuplicate = []){
@@ -1142,7 +1142,7 @@
         /**
          * Inserts data into the table ignoring failing or existing rows.
          * @param array $data An associative array relating fields and values to insert. Also accepts an array of multiple insert arrays.
-         * @return bool Returns true on success.
+         * @return bool Returns true on success or false on failure.
          * @throws QueryException Throws an exception if the query fails.
          */
         public function insertIgnore(array $data){
@@ -1152,7 +1152,7 @@
         /**
          * Inserts data into the table replacing existing rows matching the primary key or unique indexes.
          * @param array $data An associative array relating fields and values to insert. Also accepts an array of multiple insert arrays.
-         * @return bool Returns true on success.
+         * @return bool Returns true on success or false on failure.
          * @throws QueryException Throws an exception if the query fails.
          */
         public function replace(array $data){
@@ -1163,7 +1163,7 @@
          * Inserts data into the table or updates if a primary key or unique index already exists.
          * @param array $data An associative array relating fields and values to insert.
          * @param array $update An associative array relating fields and values to update if the row already exists.
-         * @return bool Returns true on success.
+         * @return bool Returns true on success or false on failure.
          * @throws QueryException Throws an exception if the query fails.
          */
         public function upsert(array $data, array $update){
@@ -1174,7 +1174,7 @@
          * Updates data in the table.\
          * **Do not forget to use WHERE statements before calling this function.**
          * @param array $data An associative array relating fields and values to update.
-         * @return bool Returns true on success.
+         * @return bool Returns true on success or false on failure.
          * @throws QueryException Throws an exception if the query fails.
          */
         public function update(array $data){
@@ -1198,7 +1198,7 @@
         /**
          * Deletes data from the table.\
          * **Do not forget to use WHERE statements before calling this function.**
-         * @return bool Returns true on success.
+         * @return bool Returns true on success or false on failure.
          * @throws QueryException Throws an exception if the query fails.
          */
         public function delete(){
