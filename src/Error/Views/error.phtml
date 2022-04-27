@@ -7,20 +7,23 @@
         <link rel="shortcut icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABNUlEQVQ4jZ3Tv0pcQRQG8N8Ml2CV6tYiEmwMksInMD6AjY9grAbyp0wZxC4Wt9H4CGnyALL4DEEsLMQi5TSBIBbL3hQ7K3cvdxX3g4HhfN/5zuGcmaCHtm7WcIBdrJXwHUY4DznddvWhk1jhGz7jVd+4YIzv+BpyGj8alOSf2OuIHzCrto6VDvcL+yGncSyBo14y3IScNkNOm7jpcXs4htjWzZvS9kvxsa2bjYhDVEsYVDiIptNeFrvRdEDLYj0+r3kSsTJ9JFtDZFs3r2f3BQZ3FS4XGLzF32c6GEWcYTJA3uN9Of8G+AnOY8jpGqcDgquQ0yjkNML1AH8acrqa7f8LNsyvdLutm+NSabvfesmZ+0wrOMEHi4c2wQ98Cjk9zBl0jN6ZfucdrJbwH1zgLOT0u6v/D0mmTb6gKDocAAAAAElFTkSuQmCC" />
         <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
         <style>
-            body{background-color:#f3f3f3}.wrapper{font-family:'Segoe UI',sans-serif;font-size:18px;background-color:#fff;color:#000;margin:10px;border:1px solid #d04978}.wrapper .title{background:linear-gradient(90deg,#ed578b 0,#ed576a 100%);color:#fff;padding:10px 20px}.wrapper .details{padding:20px}.wrapper .details h3{margin:0;font-weight:400;color:#696969;font-size:18px;margin-bottom:10px}.wrapper .details i{word-wrap:break-word;color:#696969;display:block;font-size:16px}.wrapper .details i b{color:#ed578b}.wrapper .details .time{font-size:14px;color:gray;display:block}.wrapper .details code{white-space:wrap;word-wrap:break-word;font-size:16px;display:block;border:1px solid #dcdcdc;margin:15px 0;background-color:#f5f5f5;padding:15px}.wrapper .details .args-toggle{font-size:14px;font-weight:500;text-decoration:none;background-color:#ed578b;padding:5px 15px;display:block;width:-moz-fit-content;width:fit-content;color:#fff;margin-top:10px}.wrapper .details .args-toggle:hover{background-color:#ed576a}.wrapper .details .args{white-space:pre-wrap;word-wrap:break-all;background-color:#f1f1f1;border:1px solid #dcdcdc;padding:15px;margin:0;margin-top:10px;display:none}.wrapper .details .args.show{display:block}.wrapper .details table{width:100%;table-layout:fixed;margin-top:10px}.wrapper .details table th{border:1px solid #d3d3d3;padding:10px;vertical-align:top;text-align:center;font-weight:700;color:#ed578b;width:40px}.wrapper .details table td{border:1px solid #d3d3d3;padding:10px;word-break:break-all}.wrapper .details table td i{color:#696969;display:block;font-size:14px}.wrapper .details table td .class{color:#d2024a;font-weight:600}.wrapper .details table td .method{color:#ed578b}.wrapper .details table td code{margin:10px 0}
+            body{background-color:#ffdde9}.wrapper{max-width:1350px;font-family:'Segoe UI',sans-serif;font-size:18px;background-color:#fff;color:#000;margin:20px auto;border:1px solid #d04978}.wrapper .title{font-size:22px;font-weight:300;background:linear-gradient(90deg,#ed578b 0,#ed576a 100%);color:#fff;padding:10px 20px}.wrapper .title span{font-size:13px;display:block;text-align:right;}.wrapper .title strong{font-size:18px;display:block;margin-bottom:-3px;}.wrapper .details{padding:20px}.wrapper .details i{word-wrap:break-word;color:#696969;display:block;font-size:16px}.wrapper .details i b{color:#ed578b}.wrapper .details .time{font-size:14px;color:gray;display:block}.wrapper .details code{white-space:wrap;word-wrap:break-word;font-size:16px;display:block;border:1px solid #dcdcdc;margin:15px 0;background-color:#f5f5f5;padding:15px}.wrapper .details .args-toggle{font-size:14px;font-weight:500;text-decoration:none;background-color:#ed578b;padding:5px 15px;display:block;width:-moz-fit-content;width:fit-content;color:#fff;margin-top:10px}.wrapper .details .args-toggle:hover{background-color:#ed576a}.wrapper .details .args{white-space:pre-wrap;word-wrap:break-all;background-color:#f1f1f1;border:1px solid #dcdcdc;padding:15px;margin:0;margin-top:10px;display:none}.wrapper .details .args.show{display:block}.wrapper .details table{width:100%;table-layout:fixed;margin-top:10px}.wrapper .details table th{border:1px solid #d3d3d3;padding:10px;vertical-align:top;text-align:center;font-weight:700;color:#ed578b;width:40px}.wrapper .details table td{border:1px solid #d3d3d3;padding:10px;word-break:break-all}.wrapper .details table td i{color:#696969;display:block;font-size:14px}.wrapper .details table td .class{color:#d2024a;font-weight:600}.wrapper .details table td .method{color:#ed578b}.wrapper .details table td code{margin:10px 0}@media (prefers-color-scheme:dark){body{background:linear-gradient(90deg,#212121 0,#303030 100%)}}
         </style>
     </head>
     <body>
         <div class="wrapper">
             <div class="title">
-                <strong>Oops! An error has ocurred: </strong><?= $e->getMessage(); ?>
+                <strong><?= get_class($e); ?></strong>
+                <?= $e->getMessage(); ?>
             </div>
             <div class="details">
-                <h3><?= get_class($e); ?></h3>
                 <i>File: <b><?= $e->getFile(); ?></b> at line <b><?= $e->getLine(); ?></b>.</i>
                 <span class="time">Exception thrown in <strong><?= self::getExceptionTime(); ?></strong></span>
                 <code><?= self::highlight($e->getFile(), $e->getLine()); ?></code>
                 <?= self::parseTrace($e->getTrace()); ?>
+            </div>
+            <div class="title">
+                <span>Glowie <?= Util::getVersion(); ?> | PHP <?= phpversion(); ?></span>
             </div>
         </div>
         <script>

@@ -61,19 +61,31 @@
          * Handle timestamp fields.
          * @var bool
          */
-        protected $_timestamps = __FIREFLY_TEMPLATE_TIMESTAMPS__;
+        protected $_timestamps = true;
+
+        /**
+         * Use soft deletes in the table.
+         * @var bool
+         */
+        protected $_softDeletes = false;
 
         /**
          * **Created at** field name (if timestamps enabled).
          * @var string
          */
-        protected $_createdField = '__FIREFLY_TEMPLATE_CREATED__';
+        protected $_createdField = 'created_at';
 
         /**
          * **Updated at** field name (if timestamps enabled).
          * @var string
          */
-        protected $_updatedField = '__FIREFLY_TEMPLATE_UPDATED__';
+        protected $_updatedField = 'updated_at';
+
+        /**
+         * **Deleted at** field name (if soft deletes enabled).
+         * @var string
+         */
+        protected $_deletedField = 'deleted_at';
 
     }
 

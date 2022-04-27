@@ -554,22 +554,10 @@
             $primary = self::argOrInput('primary', 'Primary key name (id): ', 'id');
             $primary = trim($primary);
 
-            // Checks if timestamps was filled
-            $timestamps = self::argOrInput('timestamps', 'Handle timestamp fields (true): ', true);
-            $timestamps = filter_var($timestamps, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
-
-            // Checks if created field was filled
-            $created_at = self::argOrInput('created', 'Created at field name (created_at): ', 'created_at');
-            $created_at = trim($created_at);
-
-            // Checks if updated field was filled
-            $updated_at = self::argOrInput('created', 'Created at field name (updated_at): ', 'updated_at');
-            $updated_at = trim($updated_at);
-
             // Creates the file
             $name = Util::pascalCase($name);
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Model.php');
-            $template = str_replace(['__FIREFLY_TEMPLATE_NAME__', '__FIREFLY_TEMPLATE_TABLE__', '__FIREFLY_TEMPLATE_PRIMARY__', '__FIREFLY_TEMPLATE_TIMESTAMPS__', '__FIREFLY_TEMPLATE_CREATED__', '__FIREFLY_TEMPLATE_UPDATED__'], [$name, $table, $primary, $timestamps, $created_at, $updated_at], $template);
+            $template = str_replace(['__FIREFLY_TEMPLATE_NAME__', '__FIREFLY_TEMPLATE_TABLE__', '__FIREFLY_TEMPLATE_PRIMARY__'], [$name, $table, $primary], $template);
             file_put_contents(Util::location('models/' . $name . '.php'), $template);
 
             // Success message
@@ -748,24 +736,13 @@
                 if(empty($tests)) continue;
 
                 // Prints the classname
-                self::print('<color="blue">Running ' . $name . ' tests...</color>');
+                self::print('');
+                self::print('<bg="blue"><color="black">  TEST  </color></bg> <color="blue">Running ' . $name . ' tests...</color>');
 
                 // Run init method if exists
-                try {
-                    $time = microtime(true);
-                    $testClass = new $classname;
-                    if (is_callable([$testClass, 'init'])) $testClass->init();
-                } catch (Throwable $e){
-                    $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
-                    self::print("<bg=\"red\"><color=\"black\">Test initialization failed:</color></bg> <color=\"red\">{$name} in {$time}. {$e->getMessage()}</color>");
-
-                    // Stop tests after failure
-                    if($bail){
-                        self::print('');
-                        self::print("<color=\"yellow\">Partial tests were done: {$result['success']} successful, {$result['fail']} failed.</color>");
-                        return false;
-                    }
-                }
+                $time = microtime(true);
+                $testClass = new $classname;
+                if (is_callable([$testClass, 'init'])) $testClass->init();
 
                 // Run each test
                 foreach($tests as $test){
@@ -777,10 +754,10 @@
                         $testClass->{$test}();
                         $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
                         $result['success']++;
-                        self::print("<color=\"green\">Test {$name}->{$test}() passed in {$time}!</color>");
+                        self::print("<bg=\"green\"><color=\"black\"> PASSED </color></bg> <color=\"green\">{$name}->{$test}() passed in {$time}!</color>");
                     } catch (Throwable $e) {
                         $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
-                        self::print("<bg=\"red\"><color=\"black\">Test failed:</color></bg> <color=\"red\">{$name}->{$test}() in {$time}. {$e->getMessage()}</color>");
+                        self::print("<bg=\"red\"><color=\"black\"> FAILED </color></bg> <color=\"red\">{$name}->{$test}() failed in {$time} => {$e->getMessage()}</color>");
                         $result['fail']++;
 
                         // Stop tests after failure
@@ -793,20 +770,8 @@
                 };
 
                 // Run cleanup method if exists
-                try {
-                    $time = microtime(true);
-                    if (is_callable([$testClass, 'cleanup'])) $testClass->cleanup();
-                } catch(Throwable $e) {
-                    $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
-                    self::print("<bg=\"red\"><color=\"black\">Test cleanup failed:</color></bg> <color=\"red\">{$name} in {$time}. {$e->getMessage()}</color>");
-
-                    // Stop tests after failure
-                    if($bail){
-                        self::print('');
-                        self::print("<color=\"yellow\">Partial tests were done: {$result['success']} successful, {$result['fail']} failed.</color>");
-                        return false;
-                    }
-                }
+                $time = microtime(true);
+                if (is_callable([$testClass, 'cleanup'])) $testClass->cleanup();
             }
 
             // Prints result message
@@ -842,7 +807,7 @@
             self::print('  <color="yellow">create-language</color> <color="blue">--name</color> | Creates a new language file for your application');
             self::print('  <color="yellow">create-middleware</color> <color="blue">--name</color> | Creates a new middleware for your application');
             self::print('  <color="yellow">create-migration</color> <color="blue">--name</color> | Creates a new migration for your application');
-            self::print('  <color="yellow">create-model</color> <color="blue">--name --table --primary --timestamps --created --updated</color> | Creates a new model for your application');
+            self::print('  <color="yellow">create-model</color> <color="blue">--name --table --primary</color> | Creates a new model for your application');
             self::print('  <color="yellow">create-test</color> <color="blue">--name</color> | Creates a new unit test for your application');
             self::print('  <color="yellow">migrate</color> <color="blue">--steps</color> | Applies pending migrations from your application');
             self::print('  <color="yellow">rollback</color> <color="blue">--steps</color> | Rolls back the last applied migration');

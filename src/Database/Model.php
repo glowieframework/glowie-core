@@ -66,7 +66,13 @@
          * Handle timestamp fields.
          * @var bool
          */
-        protected $_timestamps = false;
+        protected $_timestamps = true;
+
+        /**
+         * Use soft deletes in the table.
+         * @var bool
+         */
+        protected $_softDeletes = false;
 
         /**
          * **Created at** field name (if timestamps enabled).
@@ -81,6 +87,12 @@
         protected $_updatedField = 'updated_at';
 
         /**
+         * **Deleted at** field name (if soft deletes enabled).
+         * @var string
+         */
+        protected $_deletedField = 'deleted_at';
+
+        /**
          * The initial data from a filled row.
          * @var Element|null
          */
@@ -93,10 +105,7 @@
          */
         final public function __construct($data = []){
             // Gets the table name
-            if(empty($this->_table)){
-                $classname = Util::classname($this);
-                $this->_table = Util::snakeCase($classname);
-            }
+            if(Util::isEmpty($this->_table)) $this->_table = Util::snakeCase(Util::classname($this));
 
             // Constructs the query builder
             Kraken::__construct($this->_table, $this->_database);
@@ -109,34 +118,37 @@
         /**
          * Gets the first row that matches the model primary key value.
          * @param mixed $primary Primary key value to search for.
+         * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
          * @return mixed Returns the row on success or null if not found.
          */
-        public function find($primary){
-            $this->clearQuery();
+        public function find($primary, bool $deleted = false){
             $fields = !empty($this->_fields) ? $this->_fields : '*';
-            return $this->castData($this->select($fields)->where($this->_primaryKey, $primary)->limit(1)->fetchRow(), true);
+            if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
+            return $this->castData($this->select($fields)->where($this->_primaryKey, $primary)->fetchRow(), true);
         }
 
         /**
          * Gets the first row that matches a field value.
          * @param string|array $field Field name to use while searching or an associative array relating fields and values to search.
          * @param mixed $value (Optional) Value to search for.
+         * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
          * @return mixed Returns the row on success or null if not found.
          */
-        public function findBy($field, $value = null){
-            $this->clearQuery();
+        public function findBy($field, $value = null, bool $deleted = false){
             $this->filterFields($field, $value);
             $fields = !empty($this->_fields) ? $this->_fields : '*';
-            return $this->castData($this->select($fields)->limit(1)->fetchRow(), true);
+            if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
+            return $this->castData($this->select($fields)->fetchRow(), true);
         }
 
         /**
          * Gets all rows from the model table.
+         * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
          * @return array Returns an array with all rows.
          */
-        public function all(){
-            $this->clearQuery();
+        public function all(bool $deleted = false){
             $fields = !empty($this->_fields) ? $this->_fields : '*';
+            if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
             return $this->castData($this->select($fields)->fetchAll());
         }
 
@@ -144,66 +156,89 @@
          * Gets filtered rows matching a field value.
          * @param string|array $field Field name to use while searching or an associative array relating fields and values to search.
          * @param mixed $value (Optional) Value to search for.
+         * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
          * @return array Returns an array with the filtered rows.
          */
-        public function allBy($field, $value = null){
-            $this->clearQuery();
+        public function allBy($field, $value = null, bool $deleted = false){
             $this->filterFields($field, $value);
             $fields = !empty($this->_fields) ? $this->_fields : '*';
+            if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
             return $this->castData($this->select($fields)->fetchAll());
         }
 
         /**
          * Gets all rows from the model table ordering by the newest **created at** field.
+         * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
          * @return array Returns an array with all rows.
          * @throws Exception Throws an exception if the model is not handling timestamp fields.
          */
-        public function latest(){
+        public function latest(bool $deleted = false){
             if(!$this->_timestamps) throw new Exception('latest(): Model "' . get_class($this) . '" is not handling timestamp fields');
-            $this->clearQuery();
             $fields = !empty($this->_fields) ? $this->_fields : '*';
+            if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
             return $this->castData($this->select($fields)->orderBy($this->_createdField, 'DESC')->fetchAll());
         }
 
         /**
          * Gets all rows from the model table ordering by the oldest **created at** field.
+         * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
          * @return array Returns an array with all rows.
          * @throws Exception Throws an exception if the model is not handling timestamp fields.
          */
-        public function oldest(){
+        public function oldest(bool $deleted = false){
             if(!$this->_timestamps) throw new Exception('oldest(): Model "' . get_class($this) . '" is not handling timestamp fields');
-            $this->clearQuery();
             $fields = !empty($this->_fields) ? $this->_fields : '*';
+            if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
             return $this->castData($this->select($fields)->orderBy($this->_createdField, 'ASC')->fetchAll());
         }
 
         /**
          * Deletes the first row that matches the model primary key value.
-         * @param mixed $primary Primary key value to search for.
+         * @param mixed $primary Primary key value to search for. You can also use an array of values.
+         * @param bool $force (Optional) Bypass soft deletes (if enabled) and permanently delete the row.
          * @return bool Returns true on success or false on failure.
          */
-        public function drop($primary){
-            $this->clearQuery();
-            $this->where($this->_primaryKey, $primary);
-            return $this->delete();
+        public function drop($primary, bool $force = false){
+            $this->whereIn($this->_primaryKey, (array)$primary);
+            if($this->_softDeletes && !$force){
+                return $this->update([$this->_deletedField = self::raw('NOW()')]);
+            }else{
+                return $this->delete();
+            }
         }
 
         /**
          * Deletes rows matching a field value.
          * @param string|array $field Field name to use while searching or an associative array relating fields and values to search.
          * @param mixed $value (Optional) Value to search for.
+         * @param bool $force (Optional) Bypass soft deletes (if enabled) and permanently delete the rows.
          * @return bool Returns true on success or false on failure.
          */
-        public function dropBy($field, $value = null){
-            $this->clearQuery();
+        public function dropBy($field, $value = null, bool $force = false){
             $this->filterFields($field, $value);
+            if($this->_softDeletes && !$force){
+                return $this->update([$this->_deletedField = self::raw('NOW()')]);
+            }else{
+                return $this->delete();
+            }
+        }
+
+        /**
+         * Permanently removes soft deleted rows (if enabled).
+         * @return bool Returns true on success or false on failure.
+         * @throws Exception Throws an exception if the model soft deletes are not enabled.
+         */
+        public function purge(){
+            if(!$this->_softDeletes) throw new Exception('purge(): Model "' . get_class($this) . '" soft deletes are not enabled');
+            $this->clearQuery();
+            $this->whereNotNull($this->_deletedField);
             return $this->delete();
         }
 
         /**
          * Inserts a new row in the model table.
          * @param Element|array $data An Element or associative array relating fields and values to insert.
-         * @return mixed Returns the last inserted `AUTO_INCREMENT` value on success or false on failure.
+         * @return mixed Returns the last inserted `AUTO_INCREMENT` value (or true) on success or false on failure.
          */
         public function create($data){
             // Clears the current built query
@@ -218,18 +253,19 @@
             }
 
             // Inserts the element
-            if($this->insert($data)){
+            $result = $this->insert($data);
+            if($result !== false){
                 return $this->lastInsertId();
             }else{
-                return false;
+                return $result;
             }
         }
 
         /**
          * Checks if a row matches the primary key value in the data. If so, updates the row. Otherwise,\
          * inserts a new record in the model table.
-         * @param Element|array $data An Element or associative array relating fields and values to upsert. **Must include the primary key field.**
-         * @return mixed Returns the last inserted `AUTO_INCREMENT` value if the row is created, otherwise returns true on success or false on failure.
+         * @param Element|array $data An Element or associative array relating fields and values to upsert. **Must include the primary key field to update.**
+         * @return mixed Returns the last inserted `AUTO_INCREMENT` value (or true) if the row is created, otherwise returns true on success or false on failure.
          */
         public function updateOrCreate($data){
             // Clears the current built query
@@ -253,11 +289,12 @@
         /**
          * Fills the model entity with a row data. This data will be merged into the existing model data, if any.
          * @param Element|array $row An Element or associative array with the row data to fill.
-         * @return Model Current Model instance for nested calls.
+         * @param bool $overwrite (Optional) Set to `true` to overwrite the existing model data instead of merging.
+         * @return $this Current Model instance for nested calls.
          */
-        public function fill($row){
+        public function fill($row, bool $overwrite = false){
             if($row instanceof Element) $row = $row->toArray();
-            $row = array_merge($this->toArray(), $row);
+            if(!$overwrite) $row = array_merge($this->toArray(), $row);
             $this->_initialData = new Element($row);
             $this->__constructTrait($row);
             return $this;
@@ -270,7 +307,7 @@
          * @throws Exception Throws an exception if the model entity is not filled with a row data.
          */
         public function isDirty(string $field = ''){
-            if(!$this->_initialData instanceof Element) throw new Exception('isDirty(): Model "' . get_class($this) . '" entity was not filled with a row data');
+            if(!$this->_initialData) throw new Exception('isDirty(): Model "' . get_class($this) . '" entity was not filled with a row data');
             if(!empty($field)){
                 return ($this->_initialData->get($field) !== $this->get($field));
             }else{
@@ -285,16 +322,29 @@
          * @throws Exception Throws an exception if the model entity is not filled with a row data.
          */
         public function isPristine(string $field = ''){
-            if(!$this->_initialData instanceof Element) throw new Exception('isPristine(): Model "' . get_class($this) . '" entity was not filled with a row data');
+            if(!$this->_initialData) throw new Exception('isPristine(): Model "' . get_class($this) . '" entity was not filled with a row data');
             return !$this->isDirty($field);
         }
 
         /**
+         * Refreshes the model entity back to the original filled data.\
+         * **Note:** this will delete all modifications made to the model entity data.
+         * @return $this Current Model instance for nested calls.
+         */
+        public function refresh(){
+            if(!$this->_initialData) throw new Exception('refresh(): Model "' . get_class($this) . '" entity was not filled with a row data');
+            return $this->fill($this->_initialData, true);
+        }
+
+        /**
          * Saves the model entity data to the database.
-         * @return mixed Returns the last inserted `AUTO_INCREMENT` value if the row is created, otherwise returns true on success or false on failure.
+         * @return bool Returns true on success or false on failure.
          */
         public function save(){
-            return $this->updateOrCreate($this->toArray());
+            $data = $this->toArray();
+            if(empty($data)) throw new Exception('save(): Model "' . get_class($this) . '" entity cannot be empty while saving');
+            $id = $this->updateOrCreate($data);
+            if(!is_bool($id)) $this->set($this->_primaryKey, $id);
         }
 
         /**
@@ -310,11 +360,11 @@
 
         /**
          * Clones the current model entity removing the primary key and timestamp fields.
-         * @return $this Returns a copy of the current model.
+         * @return $this Returns a copy as a new instance of the current model.
          */
         public function clone(){
             $model = clone $this;
-            $model->remove([$this->_primaryKey, $this->_createdField, $this->_updatedField]);
+            $model->remove([$this->_primaryKey, $this->_createdField, $this->_updatedField, $this->_deletedField]);
             return $model;
         }
 

@@ -3,6 +3,7 @@
 
     use Babel;
     use Config;
+    use Util;
     use Env;
     use Glowie\Core\Http\Session;
     use Glowie\Core\Error\Handler;
@@ -30,7 +31,7 @@
 
             // Store application folder and base URL
             define('APP_FOLDER', trim(substr($_SERVER['PHP_SELF'], 0, strpos($_SERVER['PHP_SELF'], '/app/public/index.php')), '/'));
-            define('APP_LOCATION', trim(substr($_SERVER['SCRIPT_FILENAME'], 0, strpos($_SERVER['SCRIPT_FILENAME'], '/app/public/index.php')), '/') . '/app/');
+            define('APP_LOCATION', trim(substr(Util::directorySeparator($_SERVER['SCRIPT_FILENAME']), 0, strpos(Util::directorySeparator($_SERVER['SCRIPT_FILENAME']), Util::directorySeparator('/app/public/index.php'))), '/') . Util::directorySeparator('/app/'));
             define('APP_BASE_URL', (isset($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/' . APP_FOLDER . (!empty(APP_FOLDER) ? '/' : ''));
 
             // Load environment configuration

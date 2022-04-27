@@ -68,12 +68,20 @@
         private $_returnAssoc = false;
 
         /**
-         * Returns next results as associative arrays instead of Elements.
-         * @param bool $option (Optional) Set to **true** to return as arrays, **false** otherwise.
+         * Returns next results as associative arrays.
          * @return $this Current instance for nested calls.
          */
-        public function asArray(bool $option = true){
-            $this->_returnAssoc = $option;
+        public function asArray(){
+            $this->_returnAssoc = true;
+            return $this;
+        }
+
+        /**
+         * Returns next results as Element objects.
+         * @return $this Current instance for nested calls.
+         */
+        public function asElement(){
+            $this->_returnAssoc = false;
             return $this;
         }
 
@@ -168,7 +176,7 @@
         }
 
         /**
-         * Starts an SQL transaction for the next queries.
+         * Begins an SQL transaction for the next queries.
          * @return bool Returns true on success or false on failure.
          * @throws Exception Throws an exception if a pending transaction is already running.
          */
@@ -241,7 +249,7 @@
         }
 
         /**
-         * Run the current built query.
+         * Runs the current built query.
          * @param bool $returns (Optional) If the query should return a result.
          * @param bool $returnsFirst (Optional) If the query should return a single result.
          * @return mixed If the query is successful and should return any results, will return an Element/associative array with the\
