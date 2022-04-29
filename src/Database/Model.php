@@ -142,6 +142,19 @@
         }
 
         /**
+         * Gets the first row that matches the model primary key value, then fills the model entity with the row data if found.
+         * @param mixed $primary Primary key value to search for.
+         * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
+         * @param bool $overwrite (Optional) Set to `true` to overwrite the existing model data instead of merging.
+         * @return $this Current Model instance for nested calls.
+         */
+        public function findAndFill($primary, bool $deleted = false, bool $overwrite = false){
+            $result = $this->find($primary, $deleted);
+            if($result) $this->fill($result, $overwrite);
+            return $this;
+        }
+
+        /**
          * Gets all rows from the model table.
          * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
          * @return array Returns an array with all rows.
@@ -343,8 +356,7 @@
         public function save(){
             $data = $this->toArray();
             if(empty($data)) throw new Exception('save(): Model "' . get_class($this) . '" entity cannot be empty while saving');
-            $id = $this->updateOrCreate($data);
-            if(!is_bool($id)) $this->set($this->_primaryKey, $id);
+            return $this->updateOrCreate($data);
         }
 
         /**

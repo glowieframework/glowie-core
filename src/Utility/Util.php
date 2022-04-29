@@ -58,7 +58,7 @@
          * @return string Full base URL.
          */
         public static function baseUrl(string $path = ''){
-            return APP_BASE_URL . trim($path, '/');
+            return trim(APP_BASE_URL, '/') . '/' . trim($path, '/');
         }
 
         /**

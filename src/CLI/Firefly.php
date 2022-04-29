@@ -421,11 +421,15 @@
             // Validates the controller name
             if(empty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
 
-            // Creates the file
+            // Checks if the file exists
             $name = Util::pascalCase($name);
+            $targetFile = Util::location('commands/' . $name . '.php');
+            if(file_exists($targetFile)) throw new ConsoleException(self::$command, self::$args, "Command {$name} already exists!");
+
+            // Creates the file
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Command.php');
             $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
-            file_put_contents(Util::location('commands/' . $name . '.php'), $template);
+            file_put_contents($targetFile, $template);
 
             // Success message
             self::print("<color=\"green\">Command {$name} created successfully!</color>");
@@ -446,11 +450,15 @@
             // Validates the controller name
             if(empty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
 
-            // Creates the file
+            // Checks if the file exists
             $name = Util::pascalCase($name);
+            $targetFile = Util::location('controllers/' . $name . '.php');
+            if(file_exists($targetFile)) throw new ConsoleException(self::$command, self::$args, "Controller {$name} already exists!");
+
+            // Creates the file
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Controller.php');
             $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
-            file_put_contents(Util::location('controllers/' . $name . '.php'), $template);
+            file_put_contents($targetFile, $template);
 
             // Success message
             self::print("<color=\"green\">Controller {$name} created successfully!</color>");
@@ -471,9 +479,13 @@
             // Validates the language id
             if(empty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
 
-            // Creates the file
+            // Checks if the file exists
             $name = trim(strtolower($name));
-            copy(self::TEMPLATES_FOLDER . 'Language.php', Util::location('languages/' . $name . '.php'));
+            $targetFile = Util::location('languages/' . $name . '.php');
+            if(file_exists($targetFile)) throw new ConsoleException(self::$command, self::$args, "Language file {$name} already exists!");
+
+            // Creates the file
+            copy(self::TEMPLATES_FOLDER . 'Language.php', $targetFile);
 
             // Success message
             self::print("<color=\"green\">Language file {$name} created successfully!</color>");
@@ -494,11 +506,15 @@
             // Validates the middleware name
             if(empty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
 
-            // Creates the file
+            // Checks if the file exists
             $name = Util::pascalCase($name);
+            $targetFile = Util::location('middlewares/' . $name . '.php');
+            if(file_exists($targetFile)) throw new ConsoleException(self::$command, self::$args, "Middleware {$name} already exists!");
+
+            // Creates the file
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Middleware.php');
             $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
-            file_put_contents(Util::location('middlewares/' . $name . '.php'), $template);
+            file_put_contents($targetFile, $template);
 
             // Success message
             self::print("<color=\"green\">Middleware {$name} created successfully!</color>");
@@ -519,12 +535,16 @@
             // Validates the migration name
             if(empty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
 
-            // Creates the file
+            // Checks if the file exists
             $cleanName = Util::pascalCase($name);
             $name = 'm' . date('Y_m_d_His_') . $cleanName;
+            $targetFile = Util::location('migrations/' . $name . '.php');
+            if(file_exists($targetFile)) throw new ConsoleException(self::$command, self::$args, "Migration {$cleanName} already exists!");
+
+            // Creates the file
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Migration.php');
             $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
-            file_put_contents(Util::location('migrations/' . $name . '.php'), $template);
+            file_put_contents($targetFile, $template);
 
             // Success message
             self::print("<color=\"green\">Migration {$cleanName} created successfully!</color>");
@@ -554,11 +574,15 @@
             $primary = self::argOrInput('primary', 'Primary key name (id): ', 'id');
             $primary = trim($primary);
 
-            // Creates the file
+            // Checks if the file exists
             $name = Util::pascalCase($name);
+            $targetFile = Util::location('models/' . $name . '.php');
+            if(file_exists($targetFile)) throw new ConsoleException(self::$command, self::$args, "Model {$name} already exists!");
+
+            // Creates the file
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Model.php');
             $template = str_replace(['__FIREFLY_TEMPLATE_NAME__', '__FIREFLY_TEMPLATE_TABLE__', '__FIREFLY_TEMPLATE_PRIMARY__'], [$name, $table, $primary], $template);
-            file_put_contents(Util::location('models/' . $name . '.php'), $template);
+            file_put_contents($targetFile, $template);
 
             // Success message
             self::print("<color=\"green\">Model {$name} created successfully!</color>");
@@ -579,11 +603,15 @@
             // Validates the test name
             if(empty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
 
-            // Creates the file
+            // Checks if the file exists
             $name = Util::pascalCase($name);
+            $targetFile = Util::location('tests/' . $name . '.php');
+            if(file_exists($targetFile)) throw new ConsoleException(self::$command, self::$args, "Test {$name} already exists!");
+
+            // Creates the file
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Test.php');
             $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
-            file_put_contents(Util::location('tests/' . $name . '.php'), $template);
+            file_put_contents($targetFile, $template);
 
             // Success message
             self::print("<color=\"green\">Test {$name} created successfully!</color>");
