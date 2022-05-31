@@ -67,7 +67,7 @@
          * @return string Full location.
          */
         public static function location(string $path = ''){
-            return Util::directorySeparator(APP_LOCATION . trim($path, DIRECTORY_SEPARATOR));
+            return Util::directorySeparator(APP_LOCATION . rtrim($path, DIRECTORY_SEPARATOR));
         }
 
         /**

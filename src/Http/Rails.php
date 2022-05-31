@@ -79,7 +79,7 @@
             if(empty($action)) $action = Util::camelCase($name);
             if(empty($controller)) throw new RoutingException('Route controller cannot be empty');
             self::$routes[$name] = [
-                'uri' => $route,
+                'uri' => trim($route, '/'),
                 'controller' => $controller,
                 'action' => $action,
                 'methods' => (array)$methods
@@ -104,7 +104,7 @@
             if(empty($controller)) throw new RoutingException('Route controller cannot be empty');
             if(empty($middleware)) throw new RoutingException('Route middleware cannot be empty');
             self::$routes[$name] = [
-                'uri' => $route,
+                'uri' => trim($route, '/'),
                 'controller' => $controller,
                 'action' => $action,
                 'middleware' => (array)$middleware,
@@ -125,7 +125,7 @@
             if(empty($name)) $name = $route;
             if(empty($target)) throw new RoutingException('Route redirect target cannot be empty');
             self::$routes[$name] = [
-                'uri' => $route,
+                'uri' => trim($route, '/'),
                 'redirect' => $target,
                 'code' => $code,
                 'methods' => (array)$methods
@@ -247,8 +247,8 @@
             // Loops through routes configuration to find a valid route pattern
             foreach (self::$routes as $key => $item) {
                 // Creates a regex replacing dynamic parameters to valid regex patterns
-                $regex = str_replace('/', '\/', preg_replace('(:[^\/]+)', '([^/]+)', ltrim($item['uri'], '/')));
-                if (preg_match_all('/^' . $regex . '$/', rtrim($route, '/'), $params)) {
+                $regex = '~^' . preg_replace('(\\\:[^\/\\\]+)', '([^\/]+)', preg_quote($item['uri'], '/')) . '$~';
+                if (preg_match_all($regex, trim($route, '/'), $params)) {
                     // Fetch route parameters
                     $result = [];
                     foreach(explode('/', $item['uri']) as $segment){
@@ -338,12 +338,7 @@
                 if(self::$auto_routing){
 
                     // Get URI parameters
-                    $autoroute = explode('/', $route);
-
-                    // Cleans empty parameters or trailing slashes
-                    foreach($autoroute as $key => $value){
-                        if(empty($value) || trim($value) == '') unset($autoroute[$key]);
-                    }
+                    $autoroute = explode('/', trim($route, '/'));
 
                     // If no route was specified
                     if($route == '/'){

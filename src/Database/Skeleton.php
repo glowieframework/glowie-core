@@ -186,7 +186,7 @@
          * @param mixed $default (Optional) Default field value.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
-        public function createColumn(string $name, string $type, $size = null, $default = null){
+        public function createColumn(string $name, string $type, ?int $size = null, $default = null){
             return $this->modifyColumns([
                 'operation' => 'create',
                 'name' => $name,
@@ -217,8 +217,8 @@
         }
 
         /**
-         * Creates/adds an AUTO_INCREMENT column in the table.\
-         * **Important:** This column must also be set as a key.
+         * Creates/adds an `AUTO_INCREMENT` column in the table.\
+         * **Important:** This column must also be set as a key. There can be only a single auto increment row in a table.
          * @param string $name Column name to create.
          * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
          * @param int|null $size (Optional) Field maximum length.
@@ -253,6 +253,26 @@
         public function addTimestamps(string $createdField = 'created_at', string $updatedField = 'updated_at'){
             $this->addColumn($createdField, self::TYPE_DATETIME, null, self::raw('NOW()'));
             $this->addColumn($updatedField, self::TYPE_DATETIME, null, self::raw('NOW()'));
+            return $this;
+        }
+
+        /**
+         * Creates soft deletes field in the table.
+         * @param string $field (Optional) **Deleted at** field name.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function createSoftDeletes(string $field = 'deleted_at'){
+            $this->createNullableColumn($field, self::TYPE_DATETIME);
+            return $this;
+        }
+
+        /**
+         * Adds soft deletes field into an existing table.
+         * @param string $field (Optional) **Deleted at** field name.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function addSoftDeletes(string $field = 'deleted_at'){
+            $this->addNullableColumn($field, self::TYPE_DATETIME);
             return $this;
         }
 
@@ -355,6 +375,15 @@
             $this->dropColumn($createdField);
             $this->dropColumn($updatedField);
             return $this;
+        }
+
+        /**
+         * Deletes soft deletes field from a table.
+         * @param string $field (Optional) **Deleted at** field name.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function dropSoftDeletes(string $field = 'deleted_at'){
+            return $this->dropColumn($field);
         }
 
         /**

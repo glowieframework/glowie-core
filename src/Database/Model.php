@@ -103,7 +103,7 @@
          * @param Element|array $data An Element or associative array with the initial data to fill the model entity.\
          * This data will be merged into the initial model attributes, if filled.
          */
-        final public function __construct($data = []){
+        final public function __construct($data = null){
             // Gets the table name
             if(Util::isEmpty($this->_table)) $this->_table = Util::snakeCase(Util::classname($this));
 
@@ -111,6 +111,7 @@
             Kraken::__construct($this->_table, $this->_database);
 
             // Sets the initial data
+            if($data instanceof Element) $data = $data->toArray();
             $data = array_merge($this->_attributes, $data);
             if(!empty($data)) $this->fill($data);
         }
@@ -372,11 +373,12 @@
 
         /**
          * Clones the current model entity removing the primary key and timestamp fields.
+         * @param array $excluded (Optional) Array of aditional fields to delete from the model.
          * @return $this Returns a copy as a new instance of the current model.
          */
-        public function clone(){
+        public function clone(array $fields = []){
             $model = clone $this;
-            $model->remove([$this->_primaryKey, $this->_createdField, $this->_updatedField, $this->_deletedField]);
+            $model->remove([$this->_primaryKey, $this->_createdField, $this->_updatedField, $this->_deletedField, ...$fields]);
             return $model;
         }
 
