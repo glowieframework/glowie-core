@@ -360,6 +360,32 @@
         }
 
         /**
+         * Initializes the project.
+         */
+        private static function __init(){
+            // Creates .env file
+            $file = Util::location('../.env');
+            if(!file_exists($file)){
+                copy(Util::location('../.env.example'), $file);
+                self::$silent = true;
+                self::__generateKeys();
+            }
+
+            // Prints welcome message
+            self::$silent = false;
+            self::print('<color="magenta">
+            __           _
+      ___ _/ /__ _    __(_)__
+     / _ `/ / _ \ |/|/ / / -_)
+     \_, /_/\___/__,__/_/\__/
+    /___/
+    </color>');
+            self::print('        <color="magenta">Welcome to Glowie!</color>');
+            self::print('     <color="green">Your application is ready.</color>');
+            self::print('');
+        }
+
+        /**
          * Regenerates the application secret keys.
          */
         private static function __generateKeys(){
@@ -823,6 +849,7 @@
         private static function __help(){
             self::print('<color="magenta">Firefly commands:</color>');
             self::print('');
+            self::print('  <color="yellow">init</color> | Initializes the project');
             self::print('  <color="yellow">shine</color> <color="blue">--host --port</color> | Starts the local development server');
             self::print('  <color="yellow">sandbox</color> | Starts the REPL interactive mode');
             self::print('  <color="yellow">clear-cache</color> | Clears the application cache folder');

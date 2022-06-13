@@ -103,7 +103,7 @@
          * @param Element|array $data An Element or associative array with the initial data to fill the model entity.\
          * This data will be merged into the initial model attributes, if filled.
          */
-        final public function __construct($data = null){
+        final public function __construct($data = []){
             // Gets the table name
             if(Util::isEmpty($this->_table)) $this->_table = Util::snakeCase(Util::classname($this));
 
@@ -118,14 +118,15 @@
 
         /**
          * Gets the first row that matches the model primary key value.
-         * @param mixed $primary Primary key value to search for.
+         * @param mixed $primary (Optional) Primary key value to search for.
          * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
          * @return mixed Returns the row on success or null if not found.
          */
-        public function find($primary, bool $deleted = false){
+        public function find($primary = null, bool $deleted = false){
             $fields = !empty($this->_fields) ? $this->_fields : '*';
+            if(!is_null($primary)) $this->where($this->_primaryKey, $primary);
             if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->castData($this->select($fields)->where($this->_primaryKey, $primary)->fetchRow(), true);
+            return $this->castData($this->select($fields)->fetchRow(), true);
         }
 
         /**
@@ -144,12 +145,12 @@
 
         /**
          * Gets the first row that matches the model primary key value, then fills the model entity with the row data if found.
-         * @param mixed $primary Primary key value to search for.
+         * @param mixed $primary (Optional) Primary key value to search for.
          * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
          * @param bool $overwrite (Optional) Set to `true` to overwrite the existing model data instead of merging.
          * @return $this Current Model instance for nested calls.
          */
-        public function findAndFill($primary, bool $deleted = false, bool $overwrite = false){
+        public function findAndFill($primary = null, bool $deleted = false, bool $overwrite = false){
             $result = $this->find($primary, $deleted);
             if($result) $this->fill($result, $overwrite);
             return $this;
@@ -208,12 +209,12 @@
 
         /**
          * Deletes the first row that matches the model primary key value.
-         * @param mixed $primary Primary key value to search for. You can also use an array of values.
+         * @param mixed $primary (Optional) Primary key value to search for. You can also use an array of values.
          * @param bool $force (Optional) Bypass soft deletes (if enabled) and permanently delete the row.
          * @return bool Returns true on success or false on failure.
          */
-        public function drop($primary, bool $force = false){
-            $this->whereIn($this->_primaryKey, (array)$primary);
+        public function drop($primary = null, bool $force = false){
+            if(!is_null($primary)) $this->whereIn($this->_primaryKey, (array)$primary);
             if($this->_softDeletes && !$force){
                 return $this->update([$this->_deletedField = self::raw('NOW()')]);
             }else{
@@ -383,12 +384,12 @@
         }
 
         /**
-         * Casts data types of fields from a row or an array of rows using `$this->_casts` setting.
+         * Casts data types of fields from a row or an array of rows using model casts setting.
          * @param array|Element $data A single row as an Element or associative array or an array of rows.
          * @param bool $single (Optional) Set to `true` if working with a single row.
          * @return array|Element Returns the data with the casted fields.
          */
-        private function castData($data, bool $single = false){
+        public function castData($data, bool $single = false){
             // Checks if data or casts property is empty
             if(empty($data) || empty($this->_casts)) return $data;
 

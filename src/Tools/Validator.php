@@ -79,7 +79,7 @@
          * @param bool $bailAll (Optional) Stop validation of all values after first failure found.
          * @return bool Returns true if all rules passed for all values, false otherwise.
          */
-        public function validateMultiple(array $data, $rules, bool $bail = false, bool $bailAll = false){
+        public function validateMultiple($data, $rules, bool $bail = false, bool $bailAll = false){
             // Converts Element data to array
             if($data instanceof Element) $data = $data->toArray();
 

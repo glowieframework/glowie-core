@@ -1220,7 +1220,7 @@
             // Count rows
             if($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "COUNT({$column}) AS count";
-            $result = $this->fetchRow();
+            $result = $this->asElement()->fetchRow();
 
             // Restore query state
             $this->restoreQuery($query);
@@ -1246,7 +1246,7 @@
             // Sum rows
             if($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "SUM({$column}) AS sum";
-            $result = $this->fetchRow();
+            $result = $this->asElement()->fetchRow();
 
             // Restore query state
             $this->restoreQuery($query);
@@ -1272,7 +1272,7 @@
             // Get max value
             if($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "MAX({$column}) AS max";
-            $result = $this->fetchRow();
+            $result = $this->asElement()->fetchRow();
 
             // Restore query state
             $this->restoreQuery($query);
@@ -1298,7 +1298,7 @@
             // Get min value
             if($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "MIN({$column}) AS min";
-            $result = $this->fetchRow();
+            $result = $this->asElement()->fetchRow();
 
             // Restore query state
             $this->restoreQuery($query);
@@ -1324,7 +1324,7 @@
             // Get avg value
             if($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "AVG({$column}) AS avg";
-            $result = $this->fetchRow();
+            $result = $this->asElement()->fetchRow();
 
             // Restore query state
             $this->restoreQuery($query);
@@ -1463,12 +1463,7 @@
          * @return array Array with the current query parameters.
          */
         private function backupQuery(){
-            $params = get_object_vars($this);
-            unset($params['_table']);
-            unset($params['_connection']);
-            unset($params['_transaction']);
-            unset($params['_returnAssoc']);
-            return $params;
+            return get_object_vars($this);
         }
 
         /**
