@@ -2,6 +2,7 @@
     namespace Glowie\Core\Tools;
 
     use Util;
+    use Closure;
     use Glowie\Core\Exception\FileException;
 
     /**
@@ -77,6 +78,12 @@
         private $overwrite;
 
         /**
+         * Custom naming handler function.
+         * @var Closure|null
+         */
+        private $namingHandler = null;
+
+        /**
          * Creates a new file uploader instance.
          * @param string $directory (Optional) Target directory to store the uploaded files. Must be an existing directory with write permissions\
          * relative to the **app/public** folder.
@@ -132,6 +139,11 @@
          */
         public function setOverwrite(bool $overwrite){
             $this->overwrite = $overwrite;
+            return $this;
+        }
+
+        public function setNamingMethod(?Closure $callback){
+            $this->namingHandler = $callback;
             return $this;
         }
 
@@ -255,6 +267,7 @@
          * @return string Returns the new filename.
          */
         private function generateFilename(string $filename){
+            if($this->namingHandler) $filename = call_user_func_array($this->namingHandler, [$filename]);
             if(!$this->overwrite){
                 $ext = $this->getExtension($filename);
                 $name = ($ext == '') ? $name = $filename : $name = substr($filename, 0, strlen($filename) - strlen($ext) - 1);
@@ -295,5 +308,3 @@
         }
 
     }
-
-?>

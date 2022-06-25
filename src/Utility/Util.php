@@ -24,7 +24,7 @@
          * @return string Current Glowie core version.
          */
         public static function getVersion(){
-            return '1.2.0';
+            return '1.2.2';
         }
 
         /**
@@ -134,8 +134,10 @@
          */
         public static function orderArray(array $array, $key, int $order = SORT_ASC){
             if (!empty($array)) {
-                foreach ($array as $col => $row) $data[$col] = $row[$key];
-                array_multisort($data, $order, $array);
+                foreach ($array as $col => $row){
+                    $data[$col] = $row[$key] ?? '';
+                }
+                if(!empty($data)) array_multisort($data, $order, $array);
             }
             return $array;
         }
@@ -143,16 +145,34 @@
         /**
          * Filters a multi-dimensional array leaving only items that match a key value.
          * @param array $array Array to filter.
-         * @param mixed $key Key to use as the filtering base.
-         * @param mixed $value Value to filter.
+         * @param mixed $key Key to use as the filtering base. You can also use an associative array with keys and values to match.
+         * @param mixed $value (Optional) Value to filter if using a single key.
+         * @param bool $strict (Optional) Use strict types while comparing values.
          * @return array Returns the resulting array.
          */
-        public static function filterArray(array $array, $key, $value){
+        public static function filterArray(array $array, $key, $value = null, bool $strict = false){
             $result = [];
             if (!empty($array)) {
-                foreach (array_keys($array) as $col) {
-                    $temp[$col] = $array[$col][$key];
-                    if ($temp[$col] == $value) $result[$col] = $array[$col];
+                if(is_array($key)){
+                    $result = array_filter($array, function($row) use ($key, $strict){
+                        $filterReturn = true;
+
+                        foreach($key as $filterKey => $filterValue){
+                            if(!array_key_exists($filterKey, $row) || $row[$filterKey] != $filterValue || ($strict && $row[$filterKey] !== $filterValue)){
+                                $filterReturn = false;
+                            };
+
+                            if(!$filterReturn) break;
+                        }
+
+                        return $filterReturn;
+                    });
+                }else{
+                    $result = array_filter($array, function($row) use ($key, $value, $strict){
+                        if(!array_key_exists($key, $row)) return false;
+                        if($strict) return $row[$key] === $value;
+                        return $row[$key] == $value;
+                    });
                 }
             }
             return $result;

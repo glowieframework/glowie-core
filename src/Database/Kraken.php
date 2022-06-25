@@ -1172,7 +1172,7 @@
 
         /**
          * Updates data in the table.\
-         * **Do not forget to use WHERE statements before calling this function.**
+         * **Do not forget to use WHERE statements before calling this function, otherwise all records will be updated.**
          * @param array $data An associative array relating fields and values to update.
          * @return bool Returns true on success or false on failure.
          * @throws QueryException Throws an exception if the query fails.
@@ -1197,7 +1197,7 @@
 
         /**
          * Deletes data from the table.\
-         * **Do not forget to use WHERE statements before calling this function.**
+         * **Do not forget to use WHERE statements before calling this function, otherwise all records will be deleted.**
          * @return bool Returns true on success or false on failure.
          * @throws QueryException Throws an exception if the query fails.
          */
@@ -1214,16 +1214,16 @@
          * @throws QueryException Throws an exception if the query fails.
          */
         public function count(string $column = '*'){
-            // Backup current query state
-            $query = $this->backupQuery();
+            // Backup return type
+            $return = $this->_returnAssoc;
 
             // Count rows
             if($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "COUNT({$column}) AS count";
             $result = $this->asElement()->fetchRow();
 
-            // Restore query state
-            $this->restoreQuery($query);
+            // Restore return type
+            $this->_returnAssoc = $return;
 
             // Returns the result
             if($result !== false){
@@ -1240,16 +1240,16 @@
          * @throws QueryException Throws an exception if the query fails.
          */
         public function sum(string $column){
-            // Backup current query state
-            $query = $this->backupQuery();
+            // Backup return type
+            $return = $this->_returnAssoc;
 
             // Sum rows
             if($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "SUM({$column}) AS sum";
             $result = $this->asElement()->fetchRow();
 
-            // Restore query state
-            $this->restoreQuery($query);
+            // Restore return type
+            $this->_returnAssoc = $return;
 
             // Returns the result
             if($result !== false){
@@ -1266,16 +1266,16 @@
          * @throws QueryException Throws an exception if the query fails.
          */
         public function max(string $column){
-            // Backup current query state
-            $query = $this->backupQuery();
+            // Backup return type
+            $return = $this->_returnAssoc;
 
             // Get max value
             if($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "MAX({$column}) AS max";
             $result = $this->asElement()->fetchRow();
 
-            // Restore query state
-            $this->restoreQuery($query);
+            // Restore return type
+            $this->_returnAssoc = $return;
 
             // Returns the result
             if($result !== false){
@@ -1292,16 +1292,16 @@
          * @throws QueryException Throws an exception if the query fails.
          */
         public function min(string $column){
-            // Backup current query state
-            $query = $this->backupQuery();
+            // Backup return type
+            $return = $this->_returnAssoc;
 
             // Get min value
             if($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "MIN({$column}) AS min";
             $result = $this->asElement()->fetchRow();
 
-            // Restore query state
-            $this->restoreQuery($query);
+            // Restore return type
+            $this->_returnAssoc = $return;
 
             // Returns the result
             if($result !== false){
@@ -1318,16 +1318,16 @@
          * @throws QueryException Throws an exception if the query fails.
          */
         public function avg(string $column){
-            // Backup current query state
-            $query = $this->backupQuery();
+            // Backup return type
+            $return = $this->_returnAssoc;
 
             // Get avg value
             if($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
             $this->_select = "AVG({$column}) AS avg";
             $result = $this->asElement()->fetchRow();
 
-            // Restore query state
-            $this->restoreQuery($query);
+            // Restore return type
+            $this->_returnAssoc = $return;
 
             // Returns the result
             if($result !== false){
@@ -1364,11 +1364,17 @@
          * @throws QueryException Throws an exception if the query fails.
          */
         public function paginate(int $currentPage = 1, int $resultsPerPage = 25){
+            // Backup query
+            $query = $this->backupQuery();
+
             // Counts total pages
             $this->_limit = [];
             $totalResults = $this->count();
             $totalPages = floor($totalResults / $resultsPerPage);
             if($totalResults % $resultsPerPage != 0) $totalPages++;
+
+            // Restore query
+            $this->restoreQuery($query);
 
             // Gets paginated results
             $offset = ($currentPage - 1) * $resultsPerPage;
@@ -1440,6 +1446,7 @@
 
         /**
          * Clears the current built query entirely.
+         * @return $this Current instance for nested calls.
          */
         public function clearQuery(){
             $this->_instruction = '';
@@ -1456,6 +1463,7 @@
             $this->_duplicate = '';
             $this->_set = '';
             $this->_raw = '';
+            return $this;
         }
 
          /**

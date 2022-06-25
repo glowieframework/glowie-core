@@ -61,7 +61,7 @@
          * Handle timestamp fields.
          * @var bool
          */
-        protected $_timestamps = true;
+        protected $_timestamps = false;
 
         /**
          * Use soft deletes in the table.

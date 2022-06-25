@@ -66,7 +66,7 @@
          * Handle timestamp fields.
          * @var bool
          */
-        protected $_timestamps = true;
+        protected $_timestamps = false;
 
         /**
          * Use soft deletes in the table.
@@ -386,15 +386,15 @@
         /**
          * Casts data types of fields from a row or an array of rows using model casts setting.
          * @param array|Element $data A single row as an Element or associative array or an array of rows.
-         * @param bool $single (Optional) Set to `true` if working with a single row.
+         * @param bool $multiple (Optional) Set to `true` if working with an array of multiple rows.
          * @return array|Element Returns the data with the casted fields.
          */
-        public function castData($data, bool $single = false){
+        public function castData($data, bool $multiple = false){
             // Checks if data or casts property is empty
             if(empty($data) || empty($this->_casts)) return $data;
 
             // Checks if is an array of rows
-            if(!$single){
+            if($multiple){
                 $result = [];
                 foreach($data as $item) $result[] = $this->castData($item, true);
                 return $result;
@@ -462,7 +462,7 @@
          * @param array $data An associative array of fields and values to filter.
          * @return array Returns the filtered array.
          */
-        private function filterData(array $data){
+        public function filterData(array $data){
             if(empty($data) || empty($this->_updatable)) return $data;
             return array_intersect_key($data, array_flip($this->_updatable));
         }
