@@ -8,10 +8,9 @@
      * @category Middleware
      * @package glowieframework/glowie
      * @author Glowie
-     * @copyright Copyright (c) 2021
+     * @copyright Copyright (c) Glowie
      * @license MIT
      * @link https://glowie.tk
-     * @version 1.2
      */
     class __FIREFLY_TEMPLATE_NAME__ extends Middleware{
 

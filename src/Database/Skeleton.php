@@ -10,10 +10,9 @@
      * @category Database
      * @package glowieframework/glowie-core
      * @author Glowie
-     * @copyright Copyright (c) 2021
+     * @copyright Copyright (c) Glowie
      * @license MIT
      * @link https://glowie.tk
-     * @version 1.2
      */
     class Skeleton{
         use DatabaseTrait;
@@ -23,6 +22,12 @@
          * @var string
          */
         public const TYPE_STRING = 'VARCHAR';
+
+        /**
+         * Char data type.
+         * @var string
+         */
+        public const TYPE_CHAR = 'CHAR';
 
         /**
          * Text data type.
@@ -67,6 +72,12 @@
         public const TYPE_FLOAT = 'FLOAT';
 
         /**
+         * Decimal data type.
+         * @var string
+         */
+        public const TYPE_DECIMAL = 'DECIMAL';
+
+        /**
          * Double data type.
          * @var string
          */
@@ -95,6 +106,12 @@
          * @var string
          */
         public const TYPE_TIMESTAMP = 'TIMESTAMP';
+
+        /**
+         * Blob data type.
+         * @var string
+         */
+        public const TYPE_BLOB = 'BLOB';
 
         /**
          * EXISTS instruction.
@@ -493,7 +510,7 @@
          * @return Skeleton Current Skeleton instance for nested calls.
          */
         public function foreignKey($column, string $table, $reference, ?string $name = null, string $update = 'RESTRICT', string $delete = 'RESTRICT'){
-            if(!empty($name)) $name = "CONSTRAINT `{$name}` ";
+            $name = !empty($name) ? "CONSTRAINT `{$name}` " : '';
             $column = implode('`, `', (array)$column);
             $reference = implode('`, `', (array)$reference);
             $this->_foreign[] = "{$name}FOREIGN KEY (`{$column}`) REFERENCES `{$table}` (`{$reference}`) ON UPDATE {$update} ON DELETE {$delete}";
@@ -686,10 +703,10 @@
 
         /**
          * Checks if a table exists in the current database.
-         * @param string $table (Optional) Table name to check, leave empty to use the current working table.
+         * @param string|null $table (Optional) Table name to check, leave empty to use the current working table.
          * @return bool Returns true if the table exists, false otherwise.
          */
-        public function tableExists(string $table = ''){
+        public function tableExists(?string $table = null){
             if(empty($table)) $table = $this->_table;
             $this->_raw = "SHOW TABLES LIKE \"{$table}\"";
             $result = $this->execute(true, false);
@@ -714,6 +731,7 @@
             $this->_like = '';
             $this->_database = '';
             $this->_raw = '';
+            return $this;
         }
 
         /**

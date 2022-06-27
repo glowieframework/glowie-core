@@ -12,10 +12,9 @@
      * @category Utility
      * @package glowieframework/glowie-core
      * @author Glowie
-     * @copyright Copyright (c) 2021
+     * @copyright Copyright (c) Glowie
      * @license MIT
      * @link https://glowie.tk
-     * @version 1.2
      */
     class Util{
 
@@ -24,7 +23,8 @@
          * @return string Current Glowie core version.
          */
         public static function getVersion(){
-            return '1.2.2';
+            $file = __DIR__ . '/../../version.txt';
+            return file_get_contents($file);
         }
 
         /**
@@ -156,15 +156,12 @@
                 if(is_array($key)){
                     $result = array_filter($array, function($row) use ($key, $strict){
                         $filterReturn = true;
-
                         foreach($key as $filterKey => $filterValue){
                             if(!array_key_exists($filterKey, $row) || $row[$filterKey] != $filterValue || ($strict && $row[$filterKey] !== $filterValue)){
                                 $filterReturn = false;
                             };
-
                             if(!$filterReturn) break;
                         }
-
                         return $filterReturn;
                     });
                 }else{

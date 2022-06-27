@@ -12,10 +12,9 @@
      * @category Response
      * @package glowieframework/glowie-core
      * @author Glowie
-     * @copyright Copyright (c) 2021
+     * @copyright Copyright (c) Glowie
      * @license MIT
      * @link https://glowie.tk
-     * @version 1.2
      */
     class Response{
 
@@ -158,6 +157,22 @@
                 header("HTTP/1.0 {$code} {$message}", true, $code);
             }
             return $this;
+        }
+
+        /**
+         * Sets a **403 Forbidden** HTTP response code.
+         * @return Response Current Response instance for nested calls.
+         */
+        public function deny(){
+            return $this->setStatusCode(self::HTTP_FORBIDDEN);
+        }
+
+        /**
+         * Sets a **404 Not Found** HTTP response code.
+         * @return Response Current Response instance for nested calls.
+         */
+        public function notFound(){
+            return $this->setStatusCode(self::HTTP_NOT_FOUND);
         }
 
         /**

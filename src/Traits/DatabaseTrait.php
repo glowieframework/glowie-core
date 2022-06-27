@@ -18,10 +18,9 @@
      * @category Database
      * @package glowieframework/glowie-core
      * @author Glowie
-     * @copyright Copyright (c) 2021
+     * @copyright Copyright (c) Glowie
      * @license MIT
      * @link https://glowie.tk
-     * @version 1.2
      */
     trait DatabaseTrait{
 
@@ -137,6 +136,13 @@
 
                 // Sets the charset
                 $this->getConnection()->set_charset($database['charset']);
+
+                // Sets the strict mode
+                if(!empty($database['strict'])){
+                    $this->query('SET SESSION sql_mode="ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"');
+                }else{
+                    $this->query('SET SESSION sql_mode="ALLOW_INVALID_DATES,NO_ENGINE_SUBSTITUTION"');
+                }
             } catch (Throwable $e) {
                 throw new DatabaseException($database, $e->getMessage(), $e->getCode(), $e);
             }

@@ -10,10 +10,9 @@
      * @category Request
      * @package glowieframework/glowie-core
      * @author Glowie
-     * @copyright Copyright (c) 2021
+     * @copyright Copyright (c) Glowie
      * @license MIT
      * @link https://glowie.tk
-     * @version 1.2
      */
     class Request{
         use ElementTrait;
@@ -107,7 +106,7 @@
          * @param mixed $default (Optional) Default value to return if the key does not exist.
          * @return mixed Returns the value if the key exists (or the default if not) or the JSON Element if a key is not provided.
          */
-        public function getJson(?string $key = '', $default = null){
+        public function getJson(?string $key = null, $default = null){
             if(empty($key)) return self::$json;
             return self::$json->get($key, $default);
         }

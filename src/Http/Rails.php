@@ -12,10 +12,9 @@
      * @category Router
      * @package glowieframework/glowie-core
      * @author Glowie
-     * @copyright Copyright (c) 2021
+     * @copyright Copyright (c) Glowie
      * @license MIT
      * @link https://glowie.tk
-     * @version 1.2
      */
     class Rails{
 
@@ -77,7 +76,8 @@
         public static function addRoute(string $route, string $controller = 'Glowie\Controllers\Main', ?string $action = null, $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
             if(empty($action)) $action = Util::camelCase($name);
-            if(empty($controller)) throw new RoutingException('Route controller cannot be empty');
+            if(empty($controller)) throw new RoutingException('Controller cannot be empty for route "' . $name . '"');
+            if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
             self::$routes[$name] = [
                 'uri' => trim($route, '/'),
                 'controller' => $controller,
@@ -101,8 +101,9 @@
         public static function addProtectedRoute(string $route, $middleware = 'Glowie\Middlewares\Authenticate', string $controller = 'Glowie\Controllers\Main', ?string $action = null, $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
             if(empty($action)) $action = Util::camelCase($name);
-            if(empty($controller)) throw new RoutingException('Route controller cannot be empty');
-            if(empty($middleware)) throw new RoutingException('Route middleware cannot be empty');
+            if(empty($controller)) throw new RoutingException('Controller cannot be empty for route "' . $name . '"');
+            if(empty($middleware)) throw new RoutingException('Middleware cannot be empty for route "' . $name . '"');
+            if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
             self::$routes[$name] = [
                 'uri' => trim($route, '/'),
                 'controller' => $controller,
@@ -123,7 +124,8 @@
          */
         public static function addRedirect(string $route, string $target, int $code = Response::HTTP_TEMPORARY_REDIRECT, $methods = [], string $name = ''){
             if(empty($name)) $name = $route;
-            if(empty($target)) throw new RoutingException('Route redirect target cannot be empty');
+            if(empty($target)) throw new RoutingException('Redirect target cannot be empty for route "' . $name . '"');
+            if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
             self::$routes[$name] = [
                 'uri' => trim($route, '/'),
                 'redirect' => $target,
@@ -307,7 +309,7 @@
                             } else {
                                 // Middleware blocked
                                 if (is_callable([self::$middleware, 'fail'])) {
-                                    self::$response->setStatusCode(Response::HTTP_FORBIDDEN);
+                                    self::$response->deny();
                                     return self::$middleware->fail();
                                 } else {
                                     return self::callForbidden($routeName, $result ?? []);
@@ -377,7 +379,7 @@
          * @param string $route Request route.
          */
         private static function callNotFound(string $route){
-            self::$response->setStatusCode(Response::HTTP_NOT_FOUND);
+            self::$response->notFound();
             $controller = 'Glowie\Controllers\Error';
             if (class_exists($controller)) {
                 self::$controller = new $controller($route);
@@ -392,7 +394,7 @@
          * @param array $params (Optional) Route parameters.
          */
         private static function callForbidden(string $route, array $params = []){
-            self::$response->setStatusCode(Response::HTTP_FORBIDDEN);
+            self::$response->deny();
             $controller = 'Glowie\Controllers\Error';
             if (class_exists($controller)) {
                 self::$controller = new $controller($route, $params);

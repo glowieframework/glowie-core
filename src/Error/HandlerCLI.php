@@ -11,10 +11,9 @@
      * @category Error handler
      * @package glowieframework/glowie-core
      * @author Glowie
-     * @copyright Copyright (c) 2021
+     * @copyright Copyright (c) Glowie
      * @license MIT
      * @link https://glowie.tk
-     * @version 1.2
      */
     class HandlerCLI{
 
@@ -38,8 +37,8 @@
          * @param string|null $file (Optional) Filename where the error occurred.
          * @param int|null $line (Optional) Line number where the error was triggered.
          */
-        public static function errorHandler(int $level, string $message, ?string $file = '', ?int $line = 0){
-            throw new ErrorException($message, 0, $level, $file, $line);
+        public static function errorHandler(int $level, string $message, ?string $file = null, ?int $line = 0){
+            throw new ErrorException($message, 0, $level, $file ?? '', $line);
             return true;
         }
 
