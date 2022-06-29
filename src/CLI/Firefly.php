@@ -121,6 +121,7 @@
             // Gets the command
             array_shift(self::$args);
             if(!isset(self::$args[0])){
+                self::printAscii();
                 self::print('<bg="magenta"><color="black">Welcome to Firefly!</color></bg>');
                 self::print('<color="yellow">To see the commands list, use php firefly help</color>');
                 return;
@@ -186,17 +187,15 @@
 
             // Finds a valid command
             $name = Util::pascalCase($command);
-            if(is_callable([self::class, '__' . $name])){
+            $classname = 'Glowie\Commands\\' . $name;
+            if(class_exists($classname)){
+                $class = new $classname;
+                $class->run();
+            }else if(is_callable([self::class, '__' . $name])){
                 $name = '__' . $name;
                 self::$name();
             }else{
-                $name = 'Glowie\Commands\\' . $name;
-                if(class_exists($name)){
-                    $class = new $name;
-                    $class->run();
-                }else{
-                    throw new ConsoleException($command, self::$args, "Unknown command \"{$command}\"");
-                }
+                throw new ConsoleException($command, self::$args, "Unknown command \"{$command}\"");
             }
         }
 
@@ -373,15 +372,14 @@
             // Prints welcome message
             self::$silent = false;
             self::print('<color="magenta">
-            __           _
-      ___ _/ /__ _    __(_)__
-     / _ `/ / _ \ |/|/ / / -_)
-     \_, /_/\___/__,__/_/\__/
-    /___/
-    </color>');
-            self::print('        <color="magenta">Welcome to Glowie!</color>');
-            self::print('     <color="green">Your application is ready.</color>');
-            self::print('');
+        __           _
+  ___ _/ /__ _    __(_)__
+ / _ `/ / _ \ |/|/ / / -_)
+ \_, /_/\___/__,__/_/\__/
+/___/
+</color>');
+            self::print('<bg="magenta"><color="black">Welcome to Glowie!</color></bg> <color="magenta">v' . Util::getVersion() . '</color>');
+            self::print('<color="green">Your application is ready.</color>');
         }
 
         /**
@@ -868,6 +866,30 @@
             self::print('  <color="yellow">test</color> <color="blue">--name --bail</color> | Runs the application unit tests');
             self::print('  <color="yellow">version</color> | Displays current Firefly version');
             self::print('  <color="yellow">help</color> | Displays this help message');
+        }
+
+        /**
+         * Prints the Firefly logo in ASCII.
+         */
+        private static function printAscii(){
+            self::print('<color="magenta">
+    -=**********+-.
+:*#*-.          .-*#+.
++%.                 :*#:
+    =%-                  .##.           -++
+    .%#-                  %%#*:       *#.
+    :%+:+%*-              +#  .+@%**######:
+-@:    .=*#*=:.        @:    :@- +# : =@
+@+         .:=+****+==+@      =@ :%+*+%+
+@+          :=+###*+==+@      =@ :%+*+%=
+-@:    .=*#*=:.        @:    :@= +# : =@
+    :%+:=#*-.             *#  .+@%**#%#*##:
+    .%%-                  %%#*-       *#.
+    =%-                  .##.           -*+
++%.                 :*#:
+-*#+-.          .-+#+:
+    .-+**********+-.</color>');
+            self::print('');
         }
 
     }
