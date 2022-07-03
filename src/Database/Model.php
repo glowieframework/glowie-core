@@ -125,7 +125,7 @@
             $fields = !empty($this->_fields) ? $this->_fields : '*';
             if(!is_null($primary)) $this->where($this->_primaryKey, $primary);
             if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->castData($this->select($fields)->fetchRow(), true);
+            return $this->castData($this->select($fields)->fetchRow());
         }
 
         /**
@@ -139,7 +139,7 @@
             $this->filterFields($field, $value);
             $fields = !empty($this->_fields) ? $this->_fields : '*';
             if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->castData($this->select($fields)->fetchRow(), true);
+            return $this->castData($this->select($fields)->fetchRow());
         }
 
         /**
@@ -163,7 +163,7 @@
         public function all(bool $deleted = false){
             $fields = !empty($this->_fields) ? $this->_fields : '*';
             if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->castData($this->select($fields)->fetchAll());
+            return $this->castData($this->select($fields)->fetchAll(), true);
         }
 
         /**
@@ -177,7 +177,7 @@
             $this->filterFields($field, $value);
             $fields = !empty($this->_fields) ? $this->_fields : '*';
             if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->castData($this->select($fields)->fetchAll());
+            return $this->castData($this->select($fields)->fetchAll(), true);
         }
 
         /**
@@ -190,7 +190,7 @@
             if(!$this->_timestamps) throw new Exception('latest(): Model "' . get_class($this) . '" is not handling timestamp fields');
             $fields = !empty($this->_fields) ? $this->_fields : '*';
             if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->castData($this->select($fields)->orderBy($this->_createdField, 'DESC')->fetchAll());
+            return $this->castData($this->select($fields)->orderBy($this->_createdField, 'DESC')->fetchAll(), true);
         }
 
         /**
@@ -203,7 +203,7 @@
             if(!$this->_timestamps) throw new Exception('oldest(): Model "' . get_class($this) . '" is not handling timestamp fields');
             $fields = !empty($this->_fields) ? $this->_fields : '*';
             if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->castData($this->select($fields)->orderBy($this->_createdField, 'ASC')->fetchAll());
+            return $this->castData($this->select($fields)->orderBy($this->_createdField, 'ASC')->fetchAll(), true);
         }
 
         /**
@@ -395,7 +395,7 @@
             // Checks if is an array of rows
             if($multiple){
                 $result = [];
-                foreach($data as $item) $result[] = $this->castData($item, true);
+                foreach($data as $item) $result[] = $this->castData($item);
                 return $result;
             }
 
