@@ -141,7 +141,13 @@
             return $this;
         }
 
-        public function setNamingMethod(?Closure $callback){
+        /**
+         * Sets a custom naming handler function for generating filenames.
+         * @param Closure|null $callback A closure with the naming handler. It receives the original filename as a parameter.\
+         * You can also pass `null` to use the default generator.
+         * @return Uploader Current Uploader instance for nested calls.
+         */
+        public function setNamingHandler(?Closure $callback){
             $this->namingHandler = $callback;
             return $this;
         }

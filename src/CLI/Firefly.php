@@ -302,7 +302,7 @@
 
             // Starts the interactive mode
             self::print('<color="green">Welcome to Firefly Sandbox!</color>');
-            self::print('<color="yellow">Press Ctrl+C to quit the interactive mode</color>');
+            self::print('<color="yellow">Type quit to exit the interactive mode</color>');
 
             // REPL
             while (true) {
@@ -316,12 +316,20 @@
                 // Captures the output buffer
                 Buffer::start();
 
-                // Evaluates the command
-                $__command .= ';';
-                eval($__command);
+                try {
+                    // Evaluates the command
+                    $__command .= ';';
+                    eval($__command);
 
-                // Flushes the buffer
-                self::print('<color="yellow">>> ' . Buffer::get() . '</color>');
+                    // Flushes the buffer
+                    self::print('<color="yellow">>> ' . Buffer::get() . '</color>');
+                } catch (Throwable $e) {
+                    // Clears the output buffer
+                    Buffer::clean();
+
+                    // Prints the error
+                    self::print('<color="red">>></color> <bg="red"><color="black">' . get_class($e) . ':</color></bg><color="red"> ' . $e->getMessage() . '</color>');
+                }
             }
         }
 

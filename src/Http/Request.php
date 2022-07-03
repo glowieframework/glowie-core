@@ -69,27 +69,7 @@
          * @return string Request IP address if valid or `0.0.0.0` if not.
          */
         public function getIPAddress(){
-            if(!empty($_SERVER['HTTP_CLIENT_IP'])){
-                return $_SERVER['HTTP_CLIENT_IP'];
-            }else if(!empty($_SERVER['HTTP_X_CLIENT_IP'])){
-                return $_SERVER['HTTP_X_CLIENT_IP'];
-            }else if(!empty($_SERVER['HTTP_X_FORWARDED_FOR'])){
-                return $_SERVER['HTTP_X_FORWARDED_FOR'];
-            }else if(!empty($_SERVER['HTTP_X_FORWARDED'])){
-                return $_SERVER['HTTP_X_FORWARDED'];
-            }else if(!empty($_SERVER['HTTP_FORWARDED_FOR'])){
-                return $_SERVER['HTTP_FORWARDED_FOR'];
-            }else if(!empty($_SERVER['HTTP_FORWARDED'])){
-                return $_SERVER['HTTP_FORWARDED'];
-            }else if(!empty($_SERVER['HTTP_CLUSTER_CLIENT_IP'])){
-                return $_SERVER['HTTP_CLUSTER_CLIENT_IP'];
-            }else if(!empty($_SERVER['HTTP_X_CLUSTER_CLIENT_IP'])){
-                return $_SERVER['HTTP_X_CLUSTER_CLIENT_IP'];
-            }else if(!empty($_SERVER['REMOTE_ADDR'])){
-                return $_SERVER['REMOTE_ADDR'];
-            }else{
-                return '0.0.0.0';
-            }
+            return $_SERVER['HTTP_CLIENT_IP'] ?? $_SERVER['HTTP_X_CLIENT_IP'] ?? $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['HTTP_X_FORWARDED'] ?? $_SERVER['HTTP_FORWARDED_FOR'] ?? $_SERVER['HTTP_FORWARDED_FOR'] ?? $_SERVER['HTTP_FORWARDED'] ?? $_SERVER['HTTP_CLUSTER_CLIENT_IP'] ?? $_SERVER['HTTP_X_CLUSTER_CLIENT_IP'] ?? $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
         }
 
         /**
@@ -169,6 +149,15 @@
          */
         public function isAjax(){
             return $this->getHeader('X-Requested-With') == 'XMLHttpRequest';
+        }
+
+        /**
+         * Returns if the request was made using a mobile device.\
+         * **Note:** This information relies in the `User-Agent` header.
+         * @return bool True if a mobile device identifier is present in the header, false otherwise or header is not present.
+         */
+        public function isMobile(){
+            return preg_match("/(android|webos|avantgo|iphone|ipad|ipod|blackberry|iemobile|bolt|boost|cricket|docomo|fone|hiptop|mini|opera mini|kitkat|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $this->getHeader('User-Agent', ''));
         }
 
         /**
