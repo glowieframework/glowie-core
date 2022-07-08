@@ -177,8 +177,8 @@
                     // Multiple files upload
                     $result = [];
                     $errors = [];
-                    foreach($files as $file){
-                        $process = $this->processFile($file);
+                    foreach($files as $key => $file){
+                        $process = $this->processFile($file, $key);
                         if($process !== false){
                             $result[] = $process;
                         }else{
@@ -203,12 +203,13 @@
         /**
          * Fetches a file upload.
          * @param array $file Uploaded file array.
+         * @param int $key (Optional) File key in multiple files.
          * @return string|bool Returns the uploaded file relative URL on success or false on error.
          */
-        private function processFile(array $file){
+        private function processFile(array $file, int $key = 0){
             if ($this->checkFileSize($file['size'])) {
                 if ($this->checkExtension($file['name'])) {
-                    $filename = $this->generateFilename($file['name']);
+                    $filename = $this->generateFilename($file['name'], $key);
                     $target = $this->directory . '/' . $filename;
                     if (is_uploaded_file($file['tmp_name']) && move_uploaded_file($file['tmp_name'], $target)) {
                         $this->errors = self::UPLOAD_SUCCESS;
@@ -269,10 +270,11 @@
         /**
          * Checks for an existing file and returns the new filename if overwrite is not enabled.
          * @param string $filename Filename to check.
+         * @param int $key (Optional) File key in multiple files.
          * @return string Returns the new filename.
          */
-        private function generateFilename(string $filename){
-            if($this->namingHandler) $filename = call_user_func_array($this->namingHandler, [$filename]);
+        private function generateFilename(string $filename, int $key = 0){
+            if($this->namingHandler) $filename = call_user_func_array($this->namingHandler, [$filename, $key]);
             if(!$this->overwrite){
                 $ext = $this->getExtension($filename);
                 $name = ($ext == '') ? $name = $filename : $name = substr($filename, 0, strlen($filename) - strlen($ext) - 1);

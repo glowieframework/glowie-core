@@ -62,6 +62,12 @@
         protected $_casts = [];
 
         /**
+         * Table fields data types to mutate.
+         * @var array
+         */
+        protected $_mutators = [];
+
+        /**
          * Handle timestamp fields.
          * @var bool
          */
@@ -260,7 +266,7 @@
 
             // Parse data and timestamps
             if($data instanceof Element) $data = $data->toArray();
-            $data = $this->filterData($data);
+            $data = $this->mutateData($this->filterData($data));
             if($this->_timestamps){
                 $data[$this->_createdField] = Kraken::raw('NOW()');
                 $data[$this->_updatedField] = Kraken::raw('NOW()');
@@ -289,7 +295,7 @@
             if($data instanceof Element) $data = $data->toArray();
             if(isset($data[$this->_primaryKey]) && $this->find($data[$this->_primaryKey])){
                 // Parse data and timestamps
-                $updatedData = $this->filterData($data);
+                $updatedData = $this->mutateData($this->filterData($data));
                 if($this->_timestamps) $updatedData[$this->_updatedField] = Kraken::raw('NOW()');
 
                 // Updates the element
@@ -409,7 +415,7 @@
             // Performs the castings
             foreach($this->_casts as $field => $type){
                 // Checks for the field
-                if(isset($data[$field])){
+                if(array_key_exists($field, $data)){
                     $params = explode(':', $type, 2);
                     $type = strtolower($params[0]);
 
@@ -457,7 +463,52 @@
         }
 
         /**
-         * Filters an array of data returning only the fields in `$this->_updatable` setting.
+         * Mutates data using model mutators setting.
+         * @param array|Element $data An Element or associative array of data to mutate.
+         * @return array|Element Returns the mutated data.
+         */
+        public function mutateData($data){
+            // Checks if data or mutators property is empty
+            if(empty($data) || empty($this->_mutators)) return $data;
+
+            // Converts the element to an array
+            $isElement = false;
+            if($data instanceof Element){
+                $isElement = true;
+                $data = $data->toArray();
+            }
+
+            // Performs mutations
+            foreach($this->_mutators as $field => $mutator){
+                // Checks for the field
+                if(array_key_exists($field, $data)){
+                    $params = explode(':', $mutator, 2);
+                    $mutator = strtolower($params[0]);
+
+                    // Gets the rule
+                    switch($mutator){
+                        case 'json':
+                            $data[$field] = json_encode($data[$field], JSON_NUMERIC_CHECK);
+                            break;
+
+                        case 'callback':
+                            if (empty($params[1])) throw new Exception('Missing function name in callback mutator for "' . $field . '" field in "' . get_class($this) . '"');
+                            if (is_callable([$this, $params[1]])) {
+                                $data[$field] = call_user_func_array([$this, $params[1]], [$data[$field]]);
+                            } else {
+                                throw new BadMethodCallException('Method "' . $params[1] . '()" is not defined in "' . get_class($this) . '"');
+                            }
+                            break;
+                    }
+                }
+            }
+
+            // Returns the result
+            return $isElement ? new Element($data) : $data;
+        }
+
+        /**
+         * Filters an array of data returning only the fields in the model updatable setting.
          * @param array $data An associative array of fields and values to filter.
          * @return array Returns the filtered array.
          */

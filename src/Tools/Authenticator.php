@@ -47,7 +47,7 @@
         ];
 
         /**
-         * Gets a basic `Authorization` header.
+         * Gets a basic request `Authorization` header.
          * @return Element|null Returns an Element with the username and password if exists or null if there is none.
          */
         public function getBasic(){
@@ -61,7 +61,7 @@
         }
 
         /**
-         * Gets a bearer token from the `Authorization` header.
+         * Gets a bearer token from the request `Authorization` header.
          * @return string|null Returns the token if exists or null if there is none.
          */
         public function getBearer(){

@@ -100,6 +100,22 @@
         }
 
         /**
+         * Returns **true** if the request was made using GET method.
+         * @return bool Returns true or false matching the request method.
+         */
+        public function isGet(){
+            return $this->getMethod() == 'GET';
+        }
+
+        /**
+         * Returns **true** if the request was made using POST method.
+         * @return bool Returns true or false matching the request method.
+         */
+        public function isPost(){
+            return $this->getMethod() == 'POST';
+        }
+
+        /**
          * Returns the previous URL where the user was.\
          * **Note:** This information relies in the `Referer` header.
          * @return string|null Returns the URL if the header exists or null if not.
