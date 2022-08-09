@@ -4,7 +4,7 @@
     use Util;
     use Config;
     use SimpleXMLElement;
-    use Glowie\Core\Element;
+    use Glowie\Core\Traits\ElementTrait;
     use Glowie\Core\View\Buffer;
 
     /**
@@ -145,6 +145,19 @@
         public const CONTENT_XML = 'text/xml';
 
         /**
+         * Applies Cross-Origin Resource Sharing (CORS) headers from your app configuration.
+         */
+        public function applyCors(){
+            if(!Config::get('cors.enabled', true)) return;
+            $this->setHeader('Access-Control-Allow-Methods', Config::get('cors.allowed_methods', ['*']));
+            $this->setHeader('Access-Control-Allow-Origin', Config::get('cors.allowed_origins', ['*']));
+            $this->setHeader('Access-Control-Allow-Headers', Config::get('cors.allowed_headers', ['*']));
+            $this->setHeader('Access-Control-Max-Age', Config::get('cors.max_age', 0));
+            if(!empty(Config::get('cors.exposed_headers', []))) $this->setHeader('Access-Control-Expose-Headers', Config::get('cors.exposed_headers', []));
+            if(Config::get('cors.allow_credentials', false)) $this->setHeader('Access-Control-Allow-Credentials', 'true');
+        }
+
+        /**
          * Sets the HTTP status code for the response.
          * @param int $code HTTP status code to set.
          * @param string $message (Optional) Custom reason phrase to set.
@@ -271,7 +284,7 @@
         public function setJson($data, int $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK, int $depth = 512){
             Buffer::clean();
             $this->setContentType(self::CONTENT_JSON);
-            if($data instanceof Element) $data = $data->toArray();
+            if(Util::usesTrait($data, ElementTrait::class)) $data = $data->toArray();
             echo json_encode($data, $flags, $depth);
         }
 
@@ -284,7 +297,7 @@
             Buffer::clean();
             $this->setContentType(self::CONTENT_XML);
             $xml = new SimpleXMLElement("<?xml version=\"1.0\"?><{$root}></{$root}>");
-            if($data instanceof Element) $data = $data->toArray();
+            if(Util::usesTrait($data, ElementTrait::class)) $data = $data->toArray();
             $this->arrayToXML($data, $xml);
             echo $xml->asXML();
         }

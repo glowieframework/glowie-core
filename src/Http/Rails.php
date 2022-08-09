@@ -221,6 +221,9 @@
             self::$request = new Request();
             self::$response = new Response();
 
+            // Sets the response CORS headers
+            self::$response->applyCors();
+
             // Retrieves the request URI
             $route = self::$request->getURI();
             if(empty($route)) $route = '/';

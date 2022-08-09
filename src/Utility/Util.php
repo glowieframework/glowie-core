@@ -594,6 +594,16 @@
         }
 
         /**
+         * Returns if a class uses a trait.
+         * @param string|object $class Classname or an object to get the class.
+         * @param string $trait Trait classname.
+         * @return bool Returns if the class/object uses the trait.
+         */
+        public static function usesTrait($class, string $trait){
+            return in_array($trait, class_uses($class));
+        }
+
+        /**
          * Replaces the correct OS directory separator in a path.
          * @param string $path Path to replace.
          * @return string Returns the path with the correct separator.

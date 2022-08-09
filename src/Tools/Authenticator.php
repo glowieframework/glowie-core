@@ -3,6 +3,7 @@
 
     use Glowie\Core\Http\Rails;
     use Glowie\Core\Element;
+    use Glowie\Core\Traits\ElementTrait;
     use Exception;
     use Util;
     use Config;
@@ -85,7 +86,7 @@
             if(empty($key)) throw new Exception('generateJwt(): Application key was not defined');
 
             // Parse payload
-            if($payload instanceof Element) $payload = $payload->toArray();
+            if(Util::usesTrait($payload, ElementTrait::class)) $payload = $payload->toArray();
             if(!empty($expires)) $payload['exp'] = time() + $expires;
 
             // Generate token

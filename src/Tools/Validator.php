@@ -3,7 +3,7 @@
 
     use Util;
     use Exception;
-    use Glowie\Core\Element;
+    use Glowie\Core\Traits\ElementTrait;
 
     /**
      * Data validator for Glowie application.
@@ -45,7 +45,7 @@
          */
         public function validateFields($data, array $rules, bool $bail = false, bool $bailAll = false){
             // Converts Element data to array
-            if($data instanceof Element) $data = $data->toArray();
+            if(Util::usesTrait($data, ElementTrait::class)) $data = $data->toArray();
 
             // Loops through field list
             $result = true;
@@ -80,7 +80,7 @@
          */
         public function validateMultiple($data, $rules, bool $bail = false, bool $bailAll = false){
             // Converts Element data to array
-            if($data instanceof Element) $data = $data->toArray();
+            if(Util::usesTrait($data, ElementTrait::class)) $data = $data->toArray();
 
             // Get array values only
             $data = array_values($data);
