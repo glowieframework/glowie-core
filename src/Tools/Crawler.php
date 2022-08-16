@@ -395,8 +395,11 @@
             // Returns resulting Element
             return new Element([
                 'status' => $info['http_code'],
+                'success' => (bool)($info['http_code'] >= 200 && $info['http_code'] < 300),
+                'failed' => (bool)($info['http_code'] >= 400),
                 'type' => $info['content_type'] ?? null,
                 'body' => $response,
+                'json' => new Element(json_decode($response, true) ?? []),
                 'redirects' => $info['redirect_count'],
                 'headers' => $headers
             ]);

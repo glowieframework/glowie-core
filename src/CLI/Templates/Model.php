@@ -57,6 +57,12 @@
         protected $_casts = [];
 
         /**
+         * Table fields data types to mutate.
+         * @var array
+         */
+        protected $_mutators = [];
+
+        /**
          * Handle timestamp fields.
          * @var bool
          */

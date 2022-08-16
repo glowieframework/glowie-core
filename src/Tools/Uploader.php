@@ -163,9 +163,10 @@
         /**
          * Performs one or multiple file uploads.
          * @param string $input Valid file input field name.
+         * @param bool $deleteOnFail (Optional) Delete all uploaded files if a upload fails.
          * @return mixed Returns the uploaded file URL (or an array of URLs if multiple files) on success or false on errors.
          */
-        public function upload(string $input){
+        public function upload(string $input, bool $deleteOnFail = true){
             if(!empty($_FILES[$input])){
                 // Rearrange file array
                 $files = $this->arrangeFiles($_FILES[$input]);
@@ -187,10 +188,12 @@
                     }
                     $this->errors = $errors;
                     if(empty($this->errors)){
-                        $this->erorrs = 0;
+                        $this->erorrs = self::UPLOAD_SUCCESS;
                         return $result;
                     }else{
-                        foreach($result as $file) if (is_file($file)) unlink($file);
+                        if($deleteOnFail){
+                            foreach($result as $file) if (is_file($file)) @unlink($file);
+                        }
                         return false;
                     }
                 }

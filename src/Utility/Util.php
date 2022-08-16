@@ -600,7 +600,8 @@
          * @return bool Returns if the class/object uses the trait.
          */
         public static function usesTrait($class, string $trait){
-            return in_array($trait, class_uses($class));
+            if(!is_string($class) || !is_object($class)) return false;
+            return in_array($trait, class_uses($class) ?? []);
         }
 
         /**
