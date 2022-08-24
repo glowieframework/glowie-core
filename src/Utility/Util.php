@@ -600,8 +600,14 @@
          * @return bool Returns if the class/object uses the trait.
          */
         public static function usesTrait($class, string $trait){
-            if(!is_string($class) || !is_object($class)) return false;
-            return in_array($trait, class_uses($class) ?? []);
+            if(is_string($class) || is_object($class)){
+                $parentClasses = class_parents($class);
+                $traits = class_uses($class);
+                foreach ($parentClasses as $parentClass) $traits = array_merge($traits, class_uses($parentClass));
+                return in_array($trait, $traits);
+            }else{
+                return false;
+            }
         }
 
         /**

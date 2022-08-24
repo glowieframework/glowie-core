@@ -2,6 +2,7 @@
     namespace Glowie\Core\Database;
 
     use stdClass;
+    use Util;
     use Glowie\Core\Traits\DatabaseTrait;
     use Glowie\Core\Exception\QueryException;
 
@@ -54,16 +55,34 @@
         public const TYPE_INTEGER = 'INT';
 
         /**
+         * Unsigned integer data type.
+         * @var string
+         */
+        public const TYPE_INTEGER_UNSIGNED = 'INT UNSIGNED';
+
+        /**
          * Tiny integer data type.
          * @var string
          */
         public const TYPE_TINY_INTEGER = 'TINYINT';
 
         /**
+         * Unsigned tiny integer data type.
+         * @var string
+         */
+        public const TYPE_TINY_INTEGER_UNSIGNED = 'TINYINT UNSIGNED';
+
+        /**
          * Big integer data type.
          * @var string
          */
         public const TYPE_BIG_INTEGER = 'BIGINT';
+
+        /**
+         * Unsigned big integer data type.
+         * @var string
+         */
+        public const TYPE_BIG_INTEGER_UNSIGNED = 'BIGINT UNSIGNED';
 
         /**
          * Float data type.
@@ -241,7 +260,7 @@
          * @param int|null $size (Optional) Field maximum length.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
-        public function autoIncrement(string $name, string $type = self::TYPE_BIG_INTEGER, ?int $size = null){
+        public function autoIncrement(string $name, string $type = self::TYPE_BIG_INTEGER_UNSIGNED, ?int $size = null){
             $type = strtoupper($type);
             $field = "`{$name}` {$type}";
             if(!empty($size)) $field .= "({$size})";
@@ -430,8 +449,18 @@
             }
 
             // Field type and size
-            $field .= strtoupper($data['type']);
-            if(!empty($data['size'])) $field .= "({$data['size']})";
+            $data['type'] = strtoupper($data['type']);
+
+            if(!empty($data['size'])){
+                if(Util::stringContains($data['type'], ' UNSIGNED')){
+                    $data['type'] = str_replace(' UNSIGNED', '', $data['type']);
+                    $field .= $data['type'] . "({$data['size']}) UNSIGNED";
+                }else{
+                    $field .= $data['type'] . "({$data['size']})";
+                }
+            }else{
+                $field .= $data['type'];
+            }
 
             // Not nullable field
             if(!$data['nullable']) $field .= " NOT NULL";
