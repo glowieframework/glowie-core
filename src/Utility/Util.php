@@ -232,6 +232,16 @@
         }
 
         /**
+         * Checks if an array is associative rather than numerically indexed.
+         * @param array $array Array to check.
+         * @return bool Returns true if is an associative array.
+         */
+        public static function isAssociativeArray(array $array){
+            $keys = array_keys($array);
+            return array_keys($keys) !== $keys;
+        }
+
+        /**
          * Returns a random item from an array.
          * @param array $array Array to pick a random item.
          * @return mixed Returns the random item value.

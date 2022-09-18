@@ -3,6 +3,7 @@
 
     use Config;
     use Glowie\Core\Element;
+    use Glowie\Core\Tools\Uploader;
     use Glowie\Core\Traits\ElementTrait;
 
     /**
@@ -46,6 +47,17 @@
                     $this->__constructTrait(array_merge($_GET, $_POST));
                     break;
             }
+        }
+
+        /**
+         * Returns the request uploaded files.
+         * @param string $input Valid file input field name.
+         * @return array|null Returns an array of the files, each one as an Element, or null if no files were uploaded.
+         */
+        public function getFiles(string $input){
+            $uploader = new Uploader();
+            if(empty($_FILES[$input])) return null;
+            return $uploader->arrangeFiles($_FILES[$input], false);
         }
 
         /**

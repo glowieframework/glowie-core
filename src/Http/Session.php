@@ -209,6 +209,25 @@
             }
         }
 
+        /**
+         * Persists the current session data to a long-life cookie.
+         * @param int $expires (Optional) Cookie expiration time in seconds.
+         */
+        public function persist(int $expires = Cookies::EXPIRES_DAY){
+            $cookies = new Cookies();
+            $cookies->set(session_name(), session_id(), $expires);
+        }
+
+        /**
+         * Flushes the persistent cookie with the session data.\
+         * **This also deletes the whole session data.**
+         */
+        public function flushPersistent(){
+            $cookies = new Cookies();
+            $cookies->remove(session_name());
+            $this->flush();
+        }
+
     }
 
 ?>

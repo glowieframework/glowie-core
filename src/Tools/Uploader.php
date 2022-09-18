@@ -3,6 +3,7 @@
 
     use Util;
     use Closure;
+    use Glowie\Core\Element;
     use Glowie\Core\Exception\FileException;
 
     /**
@@ -20,31 +21,62 @@
          * Upload status success code.
          * @var int
          */
-        public const UPLOAD_SUCCESS = 0;
+        public const ERR_UPLOAD_SUCCESS = 0;
 
         /**
-         * Upload status error code.
+         * Maximum file size (from php.ini `upload_max_filesize` directive) exceeded error code.
          * @var int
          */
-        public const UPLOAD_ERROR = 1;
-
-        /**
-         * File not selected error code.
-         * @var int
-         */
-        public const FILE_NOT_SELECTED = 2;
-
-        /**
-         * Extension not allowed error code.
-         * @var int
-         */
-        public const EXTENSION_NOT_ALLOWED = 3;
+        public const ERR_MAX_INI_SIZE_EXCEEDED = 1;
 
         /**
          * Maximum file size exceeded error code.
          * @var int
          */
-        public const MAX_SIZE_EXCEEDED = 4;
+        public const ERR_MAX_SIZE_EXCEEDED = 2;
+
+        /**
+         * Partial upload error code.
+         * @var int
+         */
+        public const ERR_PARTIAL_UPLOAD = 3;
+
+        /**
+         * File not selected error code.
+         * @var int
+         */
+        public const ERR_FILE_NOT_SELECTED = 4;
+
+
+        /**
+         * No temporary directory error code.
+         * @var int
+         */
+        public const ERR_NO_TMP_DIR = 6;
+
+        /**
+         * No writing permissions error code.
+         * @var int
+         */
+        public const ERR_NO_WRITE_PERMISSIONS = 7;
+
+        /**
+         * Extension cancelled upload error code.
+         * @var int
+         */
+        public const ERR_EXTENSION = 8;
+
+        /**
+         * Upload status error code.
+         * @var int
+         */
+        public const ERR_UPLOAD_ERROR = 9;
+
+        /**
+         * Extension not allowed error code.
+         * @var int
+         */
+        public const ERR_EXTENSION_NOT_ALLOWED = 10;
 
         /**
          * Target directory.
@@ -171,6 +203,12 @@
                 // Rearrange file array
                 $files = $this->arrangeFiles($_FILES[$input]);
 
+                // Validate empty files
+                if(empty($files)){
+                    $this->errors = self::ERR_FILE_NOT_SELECTED;
+                    return false;
+                }
+
                 // Single file upload
                 if(count($files) == 1){
                     return $this->processFile($files[0]);
@@ -188,7 +226,7 @@
                     }
                     $this->errors = $errors;
                     if(empty($this->errors)){
-                        $this->erorrs = self::UPLOAD_SUCCESS;
+                        $this->erorrs = self::ERR_UPLOAD_SUCCESS;
                         return $result;
                     }else{
                         if($deleteOnFail){
@@ -198,8 +236,36 @@
                     }
                 }
             }else{
-                $this->errors = self::FILE_NOT_SELECTED;
+                $this->errors = self::ERR_FILE_NOT_SELECTED;
                 return false;
+            }
+        }
+
+        /**
+         * Rearrange $_FILES input array.
+         * @param array $files $_FILES input array to rearrange.
+         * @param bool $assoc (Optional) Return files as an associative array instead of an Element.
+         * @return array Returns the new array.
+         */
+        public function arrangeFiles(array $files, bool $assoc = true){
+            if(is_array($files['name'])){
+                $result = [];
+                for ($i=0; $i < count($files['name']); $i++) {
+                    $item = [
+                        'name' => Util::sanitizeFilename($files['name'][$i]),
+                        'type' => $files['type'][$i],
+                        'tmp_name' => $files['tmp_name'][$i],
+                        'error' => $files['error'][$i],
+                        'size' => $files['size'][$i],
+                        'extension' => $this->getExtension($files['name'][$i])
+                    ];
+                    $result[] = $assoc ? $item : new Element($item);
+                }
+                return $result;
+            }else{
+                $files['name'] = Util::sanitizeFilename($files['name']);
+                $files['extension'] = $this->getExtension($files['name']);
+                return [($assoc ? $files : new Element($files))];
             }
         }
 
@@ -210,38 +276,39 @@
          * @return string|bool Returns the uploaded file relative URL on success or false on error.
          */
         private function processFile(array $file, int $key = 0){
+            if(!empty($file['error'])){
+                $this->errors = $file['error'];
+                return false;
+            }
+
             if ($this->checkFileSize($file['size'])) {
-                if ($this->checkExtension($file['name'])) {
+                if ($this->checkExtension($file['extension'])) {
                     $filename = $this->generateFilename($file['name'], $key);
                     $target = $this->directory . '/' . $filename;
                     if (is_uploaded_file($file['tmp_name']) && move_uploaded_file($file['tmp_name'], $target)) {
-                        $this->errors = self::UPLOAD_SUCCESS;
+                        $this->errors = self::ERR_UPLOAD_SUCCESS;
                         return $target;
                     } else {
-                        $this->errors = self::UPLOAD_ERROR;
+                        $this->errors = self::ERR_UPLOAD_ERROR;
                         return false;
                     }
                 } else {
-                    $this->errors = self::EXTENSION_NOT_ALLOWED;
+                    $this->errors = self::ERR_EXTENSION_NOT_ALLOWED;
                     return false;
                 }
             } else {
-                $this->errors = self::MAX_SIZE_EXCEEDED;
+                $this->errors = self::ERR_MAX_SIZE_EXCEEDED;
                 return false;
             }
         }
 
         /**
          * Checks the file extension.
-         * @param string $filename Filename to check.
+         * @param string $extension File extension to check.
          * @return bool Returns true if the file extension is allowed, false otherwise.
          */
-        private function checkExtension(string $filename){
-            if(!empty($this->extensions)){
-                return in_array($this->getExtension($filename), $this->extensions);
-            }else{
-                return true;
-            }
+        private function checkExtension(string $extension){
+            return empty($this->extensions) || in_array($extension, $this->extensions);
         }
 
         /**
@@ -291,29 +358,6 @@
                 return $result;
             }else{
                 return $filename;
-            }
-        }
-
-        /**
-         * Rearrange $_FILES input array.
-         * @param array $files $_FILES input array to rearrange.
-         * @return array Returns the new array.
-         */
-        private function arrangeFiles(array $files){
-            if(is_array($files['name'])){
-                $result = [];
-                for ($i=0; $i < count($files['name']); $i++) {
-                    $result[] = [
-                        'name' => Util::sanitizeFilename($files['name'][$i]),
-                        'type' => $files['type'][$i],
-                        'tmp_name' => $files['tmp_name'][$i],
-                        'error' => $files['error'][$i],
-                        'size' => $files['size'][$i]
-                    ];
-                }
-                return $result;
-            }else{
-                return [$files];
             }
         }
 

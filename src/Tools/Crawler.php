@@ -401,7 +401,7 @@
                 'body' => $response,
                 'json' => new Element(json_decode($response, true) ?? []),
                 'redirects' => $info['redirect_count'],
-                'headers' => $headers
+                'headers' => new Element($headers)
             ]);
         }
 
