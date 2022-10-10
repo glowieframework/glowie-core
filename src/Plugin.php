@@ -32,6 +32,12 @@
             }
         }
 
+        /**
+         * Copies a file to the application folder.
+         * @param string $origin Origin filename.
+         * @param string $target Target filename.
+         * @param bool $force Overwrite existing files.
+         */
         private function copyFile(string $origin, string $target, bool $force){
             // Get real app location path
             $target = Util::location($target);

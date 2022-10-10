@@ -444,7 +444,7 @@
          */
         private static function __createCommand(){
             // Checks permissions
-            if(!is_dir(Util::location('commands'))) mkdir(Util::location('commands'));
+            if(!is_dir(Util::location('commands'))) mkdir(Util::location('commands'), 0755, true);
             if(!is_writable(Util::location('commands'))) throw new FileException('Directory "app/commands" is not writable, please check your chmod settings');
 
             // Checks if name was filled
@@ -473,7 +473,7 @@
          */
         private static function __createController(){
             // Checks permissions
-            if(!is_dir(Util::location('controllers'))) mkdir(Util::location('controllers'));
+            if(!is_dir(Util::location('controllers'))) mkdir(Util::location('controllers'), 0755, true);
             if(!is_writable(Util::location('controllers'))) throw new FileException('Directory "app/controllers" is not writable, please check your chmod settings');
 
             // Checks if name was filled
@@ -502,7 +502,7 @@
          */
         private static function __createLanguage(){
             // Checks permissions
-            if(!is_dir(Util::location('languages'))) mkdir(Util::location('languages'));
+            if(!is_dir(Util::location('languages'))) mkdir(Util::location('languages'), 0755, true);
             if(!is_writable(Util::location('languages'))) throw new FileException('Directory "app/languages" is not writable, please check your chmod settings');
 
             // Checks if name was filled
@@ -529,7 +529,7 @@
          */
         private static function __createMiddleware(){
             // Checks permissions
-            if(!is_dir(Util::location('middlewares'))) mkdir(Util::location('middlewares'));
+            if(!is_dir(Util::location('middlewares'))) mkdir(Util::location('middlewares'), 0755, true);
             if(!is_writable(Util::location('middlewares'))) throw new FileException('Directory "app/middlewares" is not writable, please check your chmod settings');
 
             // Checks if name was filled
@@ -558,7 +558,7 @@
          */
         private static function __createMigration(){
             // Checks permissions
-            if(!is_dir(Util::location('migrations'))) mkdir(Util::location('migrations'));
+            if(!is_dir(Util::location('migrations'))) mkdir(Util::location('migrations'), 0755, true);
             if(!is_writable(Util::location('migrations'))) throw new FileException('Directory "app/migrations" is not writable, please check your chmod settings');
 
             // Checks if name was filled
@@ -588,7 +588,7 @@
          */
         private static function __createModel(){
             // Checks permissions
-            if(!is_dir(Util::location('models'))) mkdir(Util::location('models'));
+            if(!is_dir(Util::location('models'))) mkdir(Util::location('models'), 0755, true);
             if(!is_writable(Util::location('models'))) throw new FileException('Directory "app/models" is not writable, please check your chmod settings');
 
             // Checks if name was filled
