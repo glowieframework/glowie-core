@@ -4,6 +4,7 @@
     use Glowie\Core\Database\Kraken;
     use Glowie\Core\Exception\FileException;
     use Glowie\Core\Exception\ConsoleException;
+    use Glowie\Core\Exception\PluginException;
     use Glowie\Core\Error\HandlerCLI;
     use Glowie\Core\Http\Rails;
     use Glowie\Core\View\Buffer;
@@ -723,6 +724,32 @@
         }
 
         /**
+         * Publishes plugin files.
+         */
+        private static function __publish(){
+            // Get force flag
+            $force = filter_var(self::getArg('force', false), FILTER_VALIDATE_BOOLEAN);
+
+            // Get plugins
+            $plugins = Config::get('plugins', []);
+            if(empty($plugins)){
+                self::print('<color="yellow">There are no plugin files to publish.</color>');
+                return false;
+            }
+
+            // Publish files
+            foreach($plugins as $plugin){
+                if(!class_exists($plugin)) throw new PluginException("\"{$plugin}\" was not found");
+                $plugin = new $plugin;
+                $plugin->publish($force);
+            }
+
+            // Print success message
+            self::print('<color="green">Plugin files were published successfully.</color>');
+            return true;
+        }
+
+        /**
          * Prints the current Glowie and PHP CLI versions.
          */
         private static function __version(){
@@ -753,6 +780,7 @@
             self::print('  <color="yellow">create-model</color> <color="blue">--name --table --primary</color> | Creates a new model for your application');
             self::print('  <color="yellow">migrate</color> <color="blue">--steps</color> | Applies pending migrations from your application');
             self::print('  <color="yellow">rollback</color> <color="blue">--steps</color> | Rolls back the last applied migration');
+            self::print('  <color="yellow">publish</color> <color="blue">--force</color> | Publishes plugin files to the application folder');
             self::print('  <color="yellow">version</color> | Displays current Firefly version');
             self::print('  <color="yellow">help</color> | Displays this help message');
         }

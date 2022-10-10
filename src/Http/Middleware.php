@@ -82,7 +82,7 @@
          * The middleware handler.
          * @return bool Should return true on success or false on fail.
          */
-        abstract public function handle();
+        public abstract function handle();
 
     }
 

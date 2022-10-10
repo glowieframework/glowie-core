@@ -6,6 +6,7 @@
     use Env;
     use Glowie\Core\Http\Session;
     use Glowie\Core\Error\Handler;
+    use Glowie\Core\Exception\PluginException;
     use Glowie\Core\View\Buffer;
     use Glowie\Core\Http\Rails;
 
@@ -55,6 +56,13 @@
 
             // Start output buffering
             Buffer::start();
+
+            // Initialize plugins
+            foreach(Config::get('plugins', []) as $plugin){
+                if(!class_exists($plugin)) throw new PluginException("\"{$plugin}\" was not found");
+                $plugin = new $plugin;
+                $plugin->register();
+            }
 
             // Initialize router
             Rails::init();

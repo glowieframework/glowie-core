@@ -301,7 +301,6 @@
 
                             // Instantiates the middleware
                             self::$middleware = new $middleware($routeName, $result ?? []);
-                            if (!is_callable([self::$middleware, 'handle'])) throw new RoutingException("\"{$middleware}\" does not have a \"handle()\" method");
                             if (is_callable([self::$middleware, 'init'])) self::$middleware->init();
 
                             // Calls middleware handle() method

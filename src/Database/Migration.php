@@ -104,13 +104,13 @@
          * Runs the migration.
          * @return bool Returns true on success or false on errors.
          */
-        abstract public function run();
+        public abstract function run();
 
         /**
          * Rolls back the migration.
          * @return bool Returns true on success or false on errors.
          */
-        abstract public function rollback();
+        public abstract function rollback();
 
     }
 
