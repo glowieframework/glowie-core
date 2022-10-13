@@ -16,7 +16,7 @@
          */
         public static function load(){
             $file = Util::location('../.env');
-            if(!file_exists($file)) return;
+            if(!is_file($file)) return;
             $file = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             foreach($file as $config){
                 if(Util::startsWith($config, '#')) continue;

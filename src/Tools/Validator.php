@@ -3,6 +3,7 @@
 
     use Util;
     use Exception;
+    use Countable;
     use Glowie\Core\Traits\ElementTrait;
 
     /**
@@ -134,10 +135,10 @@
                     // [MIN] - Checks if variable is bigger or equal than min
                     case 'min':
                         if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "min" rule');
-                        if(is_array($data)){
+                        if($data instanceof Countable){
                             if(count($data) < $rule[1]) $result['min'] = true;
                         }else if(is_string($data)){
-                            if(strlen($data) < $rule[1]) $result['min'] = true;
+                            if(mb_strlen($data) < $rule[1]) $result['min'] = true;
                         }else{
                             if($data < $rule[1]) $result['min'] = true;
                         }
@@ -146,10 +147,10 @@
                     // [MAX] - Checks if variable is lower or equal than max
                     case 'max':
                         if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "max" rule');
-                        if (is_array($data)) {
+                        if ($data instanceof Countable) {
                             if (count($data) > $rule[1]) $result['max'] = true;
                         } else if (is_string($data)) {
-                            if (strlen($data) > $rule[1]) $result['max'] = true;
+                            if (mb_strlen($data) > $rule[1]) $result['max'] = true;
                         } else {
                             if ($data > $rule[1]) $result['max'] = true;
                         }
@@ -158,10 +159,10 @@
                     // [SIZE] - Checks if variable size equals to size
                     case 'size':
                         if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "size" rule');
-                        if (is_array($data)) {
+                        if ($data instanceof Countable) {
                             if (count($data) != $rule[1]) $result['size'] = true;
                         } else if (is_string($data)) {
-                            if (strlen($data) != $rule[1]) $result['size'] = true;
+                            if (mb_strlen($data) != $rule[1]) $result['size'] = true;
                         } else {
                             if ($data != $rule[1]) $result['size'] = true;
                         }

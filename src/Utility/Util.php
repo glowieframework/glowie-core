@@ -526,6 +526,16 @@
         }
 
         /**
+         * Converts a string into **kebab-case** convention. It also removes all accents and characters that are not\
+         * valid letters, numbers or underscores, and converts spaces into underscores.
+         * @param string $string String to convert.
+         * @return string Returns the resulting string.
+         */
+        public static function kebabCase(string $string){
+            return self::slug($string);
+        }
+
+        /**
          * Converts a string into **snake_case** convention. It also removes all accents and characters that are not\
          * valid letters, numbers or underscores, and converts spaces into underscores.
          * @param string $string String to convert.

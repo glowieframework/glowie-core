@@ -55,11 +55,11 @@
             // Validate file
             $this->_filename = $view;
             $view = Util::location('views/' . $view . (!Util::endsWith($view, '.phtml') ? '.phtml' : ''));
-            if(!file_exists($view)) throw new FileException(sprintf('View file "%s" not found', $this->_filename));
+            if(!is_file($view)) throw new FileException(sprintf('View file "%s" not found', $this->_filename));
 
             // Instantiate helpers
             $helpers = 'Glowie\Helpers\Helpers';
-            if(!self::$_helpers && class_exists($helpers)) self::$_helpers = new $helpers;
+            if(!self::$_helpers && is_file(Util::location('views/helpers/Helpers.php'))) self::$_helpers = new $helpers;
 
             // Parse parameters
             $this->_params = $params;

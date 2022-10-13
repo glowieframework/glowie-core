@@ -24,7 +24,7 @@
          */
         public static function load(){
             $file = Util::location('config/Config.php');
-            if(!file_exists($file)) throw new FileException('Config file "' . $file . '" was not found');
+            if(!is_file($file)) throw new FileException('Config file "' . $file . '" was not found');
             self::$config = require_once($file);
         }
 

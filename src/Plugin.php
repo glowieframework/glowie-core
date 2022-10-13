@@ -47,7 +47,7 @@
             if(!is_dir($dir)) mkdir($dir, 0755, true);
 
             // Copy the file
-            if($force || !file_exists($target)) copy($origin, $target);
+            if($force || !is_file($target)) copy($origin, $target);
         }
 
         /**

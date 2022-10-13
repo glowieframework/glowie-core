@@ -372,7 +372,7 @@
         private static function __init(){
             // Creates .env file
             $file = Util::location('../.env');
-            if(!file_exists($file)){
+            if(!is_file($file)){
                 copy(Util::location('../.env.example'), $file);
                 self::$silent = true;
                 self::__generateKeys();
@@ -456,7 +456,7 @@
             // Checks if the file exists
             $name = Util::pascalCase($name);
             $targetFile = Util::location('commands/' . $name . '.php');
-            if(file_exists($targetFile)) throw new ConsoleException(self::$command, self::$args, "Command {$name} already exists!");
+            if(is_file($targetFile)) throw new ConsoleException(self::$command, self::$args, "Command {$name} already exists!");
 
             // Creates the file
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Command.php');
@@ -485,7 +485,7 @@
             // Checks if the file exists
             $name = Util::pascalCase($name);
             $targetFile = Util::location('controllers/' . $name . '.php');
-            if(file_exists($targetFile)) throw new ConsoleException(self::$command, self::$args, "Controller {$name} already exists!");
+            if(is_file($targetFile)) throw new ConsoleException(self::$command, self::$args, "Controller {$name} already exists!");
 
             // Creates the file
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Controller.php');
@@ -514,7 +514,7 @@
             // Checks if the file exists
             $name = trim(strtolower($name));
             $targetFile = Util::location('languages/' . $name . '.php');
-            if(file_exists($targetFile)) throw new ConsoleException(self::$command, self::$args, "Language file {$name} already exists!");
+            if(is_file($targetFile)) throw new ConsoleException(self::$command, self::$args, "Language file {$name} already exists!");
 
             // Creates the file
             copy(self::TEMPLATES_FOLDER . 'Language.php', $targetFile);
@@ -541,7 +541,7 @@
             // Checks if the file exists
             $name = Util::pascalCase($name);
             $targetFile = Util::location('middlewares/' . $name . '.php');
-            if(file_exists($targetFile)) throw new ConsoleException(self::$command, self::$args, "Middleware {$name} already exists!");
+            if(is_file($targetFile)) throw new ConsoleException(self::$command, self::$args, "Middleware {$name} already exists!");
 
             // Creates the file
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Middleware.php');
@@ -571,7 +571,7 @@
             $cleanName = Util::pascalCase($name);
             $name = 'm' . date('Y_m_d_His_') . $cleanName;
             $targetFile = Util::location('migrations/' . $name . '.php');
-            if(file_exists($targetFile)) throw new ConsoleException(self::$command, self::$args, "Migration {$cleanName} already exists!");
+            if(is_file($targetFile)) throw new ConsoleException(self::$command, self::$args, "Migration {$cleanName} already exists!");
 
             // Creates the file
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Migration.php');
@@ -609,7 +609,7 @@
             // Checks if the file exists
             $name = Util::pascalCase($name);
             $targetFile = Util::location('models/' . $name . '.php');
-            if(file_exists($targetFile)) throw new ConsoleException(self::$command, self::$args, "Model {$name} already exists!");
+            if(is_file($targetFile)) throw new ConsoleException(self::$command, self::$args, "Model {$name} already exists!");
 
             // Creates the file
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Model.php');

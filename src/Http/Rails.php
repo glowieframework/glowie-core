@@ -59,7 +59,7 @@
          */
         public static function load(){
             $file = Util::location('config/Routes.php');
-            if(!file_exists($file)) throw new FileException('Route configuration file "' . $file . '" was not found');
+            if(!is_file($file)) throw new FileException('Route configuration file "' . $file . '" was not found');
             require_once($file);
         }
 
@@ -74,7 +74,7 @@
          * @param string $name (Optional) Route name.
          */
         public static function addRoute(string $route, string $controller = 'Glowie\Controllers\Main', ?string $action = null, $methods = [], string $name = ''){
-            if(empty($name)) $name = $route;
+            if(empty($name)) $name = Util::kebabCase($route);
             if(empty($action)) $action = Util::camelCase($name);
             if(empty($controller)) throw new RoutingException('Controller cannot be empty for route "' . $name . '"');
             if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
@@ -99,7 +99,7 @@
          * @param string $name (Optional) Route name.
          */
         public static function addProtectedRoute(string $route, $middleware = 'Glowie\Middlewares\Authenticate', string $controller = 'Glowie\Controllers\Main', ?string $action = null, $methods = [], string $name = ''){
-            if(empty($name)) $name = $route;
+            if(empty($name)) $name = Util::kebabCase($route);
             if(empty($action)) $action = Util::camelCase($name);
             if(empty($controller)) throw new RoutingException('Controller cannot be empty for route "' . $name . '"');
             if(empty($middleware)) throw new RoutingException('Middleware cannot be empty for route "' . $name . '"');
@@ -123,7 +123,7 @@
          * @param string $name (Optional) Route name.
          */
         public static function addRedirect(string $route, string $target, int $code = Response::HTTP_TEMPORARY_REDIRECT, $methods = [], string $name = ''){
-            if(empty($name)) $name = $route;
+            if(empty($name)) $name = Util::kebabCase($route);
             if(empty($target)) throw new RoutingException('Redirect target cannot be empty for route "' . $name . '"');
             if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
             self::$routes[$name] = [
