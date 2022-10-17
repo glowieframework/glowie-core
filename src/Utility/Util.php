@@ -87,7 +87,7 @@
             $missing = [];
             foreach(explode('/', $routeData['uri']) as $segment){
                 if(self::startsWith($segment, ':')){
-                    $segment = substr($segment, 1);
+                    $segment = mb_substr($segment, 1);
                     $result[] = $segment;
                     if(isset($params[$segment])){
                         $uri[] = $params[$segment];
@@ -341,24 +341,37 @@
         /**
          * Checks if a string starts with a given substring.
          * @param string $haystack The string to search in.
-         * @param string $needle The substring to search for in the haystack.
+         * @param string|array $needle The substring to search for in the haystack. You can also use an array of strings.
          * @return bool Returns **true** if haystack begins with needle, **false** otherwise.
          */
-        public static function startsWith(string $haystack, string $needle){
-            $length = mb_strlen($needle);
-            return substr($haystack, 0, $length) == $needle;
+        public static function startsWith(string $haystack, $needle){
+            $result = false;
+            foreach((array)$needle as $item){
+                if($result) break;
+                $length = mb_strlen($item);
+                $result = mb_substr($haystack, 0, $length) == $item;
+            }
+            return $result;
         }
 
         /**
          * Checks if a string ends with a given substring.
          * @param string $haystack The string to search in.
-         * @param string $needle The substring to search for in the haystack.
+         * @param string|array $needle The substring to search for in the haystack. You can also use an array of strings.
          * @return bool Returns **true** if haystack ends with needle, **false** otherwise.
          */
-        public static function endsWith(string $haystack, string $needle){
-            $length = mb_strlen($needle);
-            if (!$length) return true;
-            return substr($haystack, -$length) == $needle;
+        public static function endsWith(string $haystack, $needle){
+            $result = false;
+            foreach((array)$needle as $item){
+                if($result) break;
+                $length = mb_strlen($item);
+                if (!$length){
+                    $result = true;
+                }else{
+                    $result = mb_substr($haystack, -$length) == $item;
+                }
+            }
+            return $result;
         }
 
         /**
@@ -368,7 +381,7 @@
          * @return bool Returns **true** if haystack contains needle, **false** otherwise.
          */
         public static function stringContains(string $haystack, string $needle){
-            return strpos($haystack, $needle) !== false;
+            return mb_strpos($haystack, $needle) !== false;
         }
 
         /**
@@ -379,7 +392,7 @@
          * @return string Returns the resulting string.
          */
         public static function replaceFirst(string $haystack, string $needle, string $replace){
-            $pos = strpos($haystack, $needle);
+            $pos = mb_strpos($haystack, $needle);
             if($pos !== false) $haystack = substr_replace($haystack, $replace, $pos, mb_strlen($needle));
             return $haystack;
         }
@@ -392,7 +405,7 @@
          * @return string Returns the resulting string.
          */
         public static function replaceLast(string $haystack, string $needle, string $replace){
-            $pos = strrpos($haystack, $needle);
+            $pos = mb_strpos($haystack, $needle);
             if($pos !== false) $haystack = substr_replace($haystack, $replace, $pos, mb_strlen($needle));
             return $haystack;
         }
