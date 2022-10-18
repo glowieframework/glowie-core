@@ -498,6 +498,14 @@
         }
 
         /**
+         * Generates an unique random hash token.
+         * @return string Returns the resulting token.
+         */
+        public static function uniqueToken(){
+            return md5(uniqid(Util::randomToken(8)));
+        }
+
+        /**
          * Generates a random string with a specified length.
          * @param int $length Length of the string to generate.
          * @param bool $letters (Optional) Include lower and uppercase letters in the string.

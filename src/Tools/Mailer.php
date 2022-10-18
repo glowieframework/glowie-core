@@ -1,6 +1,7 @@
 <?php
     namespace Glowie\Core\Tools;
 
+    use Exception;
     use Util;
     use Glowie\Core\Exception\FileException;
     use Glowie\Core\View\View;
@@ -17,16 +18,46 @@
     class Mailer{
 
         /**
+         * Message high priority level.
+         * @var int
+         */
+        public const PRIORITY_HIGH = 1;
+
+        /**
+         * Message normal priority level.
+         * @var int
+         */
+        public const PRIORITY_NORMAL = 3;
+
+        /**
+         * Message low priority level.
+         * @var int
+         */
+        public const PRIORITY_LOW = 5;
+
+        /**
          * Email sender address.
          * @var string
          */
-        private $from;
+        private $from = '';
 
         /**
-         * Email recipient address.
-         * @var string
+         * Email recipients.
+         * @var array
          */
-        private $to;
+        private $to = [];
+
+        /**
+         * Email Cc recipients.
+         * @var array
+         */
+        private $cc = [];
+
+        /**
+         * Email Bcc recipients.
+         * @var array
+         */
+        private $bcc = [];
 
         /**
          * Custom email headers.
@@ -42,72 +73,71 @@
 
         /**
          * Creates a new email sender instance.
-         * @param string|array $from The sender address. You can also specify the sender display name by passing an array\
-         * with the following structure: `['Jane Doe', 'jane@address.com']`.
-         * @param string|array $to The recipient address. You can also specify the recipient display name by passing an array\
-         * with the following structure: `['Jane Doe', 'jane@address.com']`.
          * @param array $headers (Optional) Custom headers to append to the message. Must be an associative array with the key\
          * being the name of the header and the value the header value (can be a string or an array of strings).
          */
-        public function __construct($from, $to, array $headers = []){
-            $this->setFrom($from);
-            $this->setTo($to);
+        public function __construct(array $headers = []){
             foreach($headers as $key => $value) $this->addHeader($key, $value);
         }
 
         /**
-         * Sets the email sender address.
-         * @param string|array $from The sender address. You can also specify the sender display name by passing an array\
-         * with the following structure: `['Jane Doe', 'jane@address.com']`.
+         * Sets the email sender.
+         * @param string $email Sender email address.
+         * @param string|null $name (Optional) Sender name.
          * @return Mailer Current Mailer instance for nested calls.
          */
-        public function setFrom($from){
-            if(is_array($from) && count($from) >= 2) $from = "{$from[0]} <{$from[1]}>";
-            $this->from = $from;
+        public function setFrom(string $email, ?string $name = null){
+            if(!empty($name)) $email = "{$name} <{$email}>";
+            $this->from = $this->sanitizeString($email);
             return $this;
         }
 
         /**
-         * Sets the email recipient address.
-         * @param string|array $to The recipient address. You can also specify the recipient display name by passing an array\
-         * with the following structure: `['Jane Doe', 'jane@address.com']`.
+         * Adds an email recipient.
+         * @param string $email Recipient email address.
+         * @param string $name (Optional) Recipient name.
          * @return Mailer Current Mailer instance for nested calls.
          */
-        public function setTo($to){
-            if(is_array($to) && count($to) >= 2) $to = "{$to[0]} <{$to[1]}>";
-            $this->to = $to;
+        public function addTo(string $email, ?string $name = null){
+            if(!empty($name)) $email = "{$name} <{$email}>";
+            $this->to[] = $this->sanitizeString($email);
             return $this;
         }
 
         /**
          * Adds a carbon copy address to the email. All addresses will receive a copy\
          * of the message and their addresses will be shown to all recipients.
-         * @param string|array $address The address to add. You can also specify the recipient display name by passing an array\
-         * with the following structure: `['Jane Doe', 'jane@address.com']`.
+         * @param string $email Carbon copy address.
+         * @param string $name (Optional) Carbon copy name.
          * @return Mailer Current Mailer instance for nested calls.
          */
-        public function addCc($address){
-            if(is_array($address) && count($address) >= 2){
-                $this->addHeader('Cc', "{$address[0]} <{$address[1]}>");
-            }else{
-                $this->addHeader('Cc', $address);
-            }
+        public function addCc(string $email, ?string $name = null){
+            if(!empty($name)) $email = "{$name} <{$email}>";
+            $this->cc[] = $this->sanitizeString($email);
             return $this;
         }
 
         /**
          * Adds a blinded carbon copy address to the email. All addresses will receive a copy\
          * of the message, but their addresses will not be shown to the recipients.
-         * @param string|array $address The address to add. You can also specify the recipient display name by passing an array\
-         * with the following structure: `['Jane Doe', 'jane@address.com']`.
+         * @param string $email Blinded carbon copy address.
+         * @param string $name (Optional) Blinded carbon copy name.
          * @return Mailer Current Mailer instance for nested calls.
          */
-        public function addBcc($address){
-            if(is_array($address) && count($address) >= 2){
-                $this->addHeader('Bcc', "{$address[0]} <{$address[1]}>");
-            }else{
-                $this->addHeader('Bcc', $address);
-            }
+        public function addBcc(string $email, ?string $name = null){
+            if(!empty($name)) $email = "{$name} <{$email}>";
+            $this->bcc[] = $this->sanitizeString($email);
+            return $this;
+        }
+
+        /**
+         * Clears all recipients from the message. This clears **To**, **Cc** and **Bcc** addresses.
+         * @return Mailer Current Mailer instance for nested calls.
+         */
+        public function clearAddresses(){
+            $this->to = [];
+            $this->cc = [];
+            $this->bcc = [];
             return $this;
         }
 
@@ -119,13 +149,13 @@
          */
         public function addHeader(string $name, $content){
             $content = implode(', ', (array)$content);
-            $content = str_replace(["\r\n", "\r", "\n"], '', trim($content));
+            $content = $this->sanitizeString($content);
             $this->headers[] = "{$name}: {$content}";
             return $this;
         }
 
         /**
-         * Clears all headers from the message. This also cleans **Cc** and **Bcc** addresses.
+         * Clears all custom headers from the message.
          * @return Mailer Current Mailer instance for nested calls.
          */
         public function clearHeaders(){
@@ -140,7 +170,7 @@
          */
         public function addAttachment(string $filename){
             $filename = Util::location($filename);
-            if(!is_file($filename) || !is_readable($filename)) throw new FileException('File "' . $filename . '" is not a valid or readable file');
+            if(!is_file($filename) || !is_readable($filename)) throw new FileException('Mail attachment "' . $filename . '" is not a valid or readable file');
             $this->attachments[] = $filename;
             return $this;
         }
@@ -163,7 +193,7 @@
          * @param int $priority (Optional) The email priority level.
          * @return bool Returns true on success or false on errors.
          */
-        public function sendView(string $subject, string $view, array $params = [], int $priority = 1){
+        public function sendView(string $subject, string $view, array $params = [], int $priority = self::PRIORITY_NORMAL){
             $view = new View($view, $params, false);
             return $this->send($subject, $view->getContent(), true, $priority);
         }
@@ -177,30 +207,48 @@
          * @param int $priority (Optional) The email priority level.
          * @return bool Returns true on success or false on errors.
          */
-        public function send(string $subject, string $message, bool $isHtml = true, int $priority = 1){
+        public function send(string $subject, string $message, bool $isHtml = true, int $priority = self::PRIORITY_NORMAL){
+            // Check for empty address
+            if(empty($this->to)) throw new Exception('Mail: "To" address cannot be empty');
+
             // Prepares the headers
             $version = phpversion();
-            $headers = "From: {$this->from}\r\n";
-            $headers .= "Reply-To: {$this->from}\r\n";
-            $headers .= "Return-Path: {$this->from}\r\n";
-            $headers .= "X-Sender: {$this->from}\r\n";
-            $headers .= "X-Priority: {$priority}\r\n";
+            $headers = "X-Priority: {$priority}\r\n";
             $headers .= "MIME-Version: 1.0\r\n";
             $headers .= "X-Mailer: PHP/{$version}\r\n";
+
+            // Sets from
+            if(!empty($this->from)){
+                $headers .= "From: {$this->from}\r\n";
+                $headers .= "Reply-To: {$this->from}\r\n";
+                $headers .= "Return-Path: {$this->from}\r\n";
+                $headers .= "X-Sender: {$this->from}\r\n";
+            }
+
+            // Sets recipients
+            $to = implode(', ', $this->to);
+
+            if(!empty($this->cc)){
+                foreach($this->cc as $cc) $headers.= "Cc: {$cc}\r\n";
+            }
+
+            if(!empty($this->bcc)){
+                foreach($this->bcc as $bcc) $headers.= "Bcc: {$bcc}\r\n";
+            }
 
             // Append custom headers
             if(!empty($this->headers)) $headers .= implode("\r\n", $this->headers);
 
             // Parse attachments if any
             if(!empty($this->attachments)){
-                $boundary = Util::randomToken();
+                $boundary = Util::uniqueToken();
                 $headers .= "Content-Type: multipart/mixed; boundary=\"{$boundary}\"\r\n\r\n";
 
                 // Create body
                 $body = "--{$boundary}\r\n";
                 $body .= "Content-Type: " . ($isHtml ? 'text/html' : 'text/plain') . "; charset=\"utf-8\"\r\n";
                 $body .= "Content-Transfer-Encoding: 7bit\r\n\r\n";
-                $body .= $message . "\r\n\r\n";
+                $body .= wordwrap($message, 70, "\r\n") . "\r\n\r\n";
 
                 foreach($this->attachments as $filename){
                     // Get the file content stream
@@ -224,11 +272,20 @@
             }else{
                 // Parse only the message
                 $headers .= "Content-Type: " . ($isHtml ? 'text/html' : 'text/plain') . "; charset=\"utf-8\"\r\n";
-                $body = $message;
+                $body = wordwrap($message, 70, "\r\n");
             }
 
             // Sends the email
-            return mail($this->to, $subject, $body, $headers);
+            return mail($to, $subject, $body, $headers);
+        }
+
+        /**
+         * Sanitizes a string removing line breaks.
+         * @param string $string String to sanitize.
+         * @return string Returns the sanitized string.
+         */
+        private function sanitizeString(string $string){
+            return str_replace(["\r\n", "\r", "\n"], '', trim($string));
         }
 
     }
