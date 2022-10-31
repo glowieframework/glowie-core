@@ -84,22 +84,22 @@
          * Renders a view file.
          * @param string $view View filename. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
          * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
-         * @return void
          */
         final public function renderView(string $view, array $params = []){
-            return new View($view, $params);
+            $view = new View($view, $params);
+            echo $view->getContent();
         }
 
         /**
          * Renders a layout file.
          * @param string $layout Layout filename. Must be a **.phtml** file inside **app/views/layouts** folder, extension is not needed.
-         * @param string|null $view (Optional) View filename to render within layout. You can place its content by using `$this->getContent()`\
+         * @param string|null $view (Optional) View filename to render within layout. You can place its content by using `$this->getView()`\
          * inside the layout file. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
          * @param array $params (Optional) Parameters to pass into the rendered view and layout. Should be an associative array with each variable name and value.
-         * @return void
          */
         final public function renderLayout(string $layout, ?string $view = null, array $params = []){
-            return new Layout($layout, $view, $params);
+            $layout = new Layout($layout, $view, $params);
+            echo $layout->getContent();
         }
 
     }

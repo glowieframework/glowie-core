@@ -194,7 +194,7 @@
          * @return bool Returns true on success or false on errors.
          */
         public function sendView(string $subject, string $view, array $params = [], int $priority = self::PRIORITY_NORMAL){
-            $view = new View($view, $params, false);
+            $view = new View($view, $params);
             return $this->send($subject, $view->getContent(), true, $priority);
         }
 
@@ -284,7 +284,7 @@
          * @param string $string String to sanitize.
          * @return string Returns the sanitized string.
          */
-        private function sanitizeString(string $string){
+        public function sanitizeString(string $string){
             return str_replace(["\r\n", "\r", "\n"], '', trim($string));
         }
 

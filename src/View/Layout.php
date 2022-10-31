@@ -21,10 +21,16 @@
         use ElementTrait;
 
         /**
-         * Layout view content.
+         * Layout content.
          * @var string
          */
         private $_content;
+
+        /**
+         * Internal view content
+         * @var string
+         */
+        private $_view = '';
 
         /**
          * Layout original filename.
@@ -45,7 +51,7 @@
         private $_params;
 
         /**
-         * Instantiates a new Layout instance.
+         * Instantiates a new Layout.
          * @param string $layout Layout filename to instantiate.
          * @param string|null $view (Optional) View filename to parse inside the layout.
          * @param array $params (Optional) View parameters to parse.
@@ -67,13 +73,13 @@
 
             // Parse view
             if(!empty($view)){
-                $view = new View($view, $this->_params, false);
-                $this->_content = $view->getContent();
+                $view = new View($view, $this->_params);
+                $this->_view = $view->getContent();
             }
 
             // Render layout
             if(Config::get('skeltch.enabled', true)) $layout = Skeltch::run($layout);
-            include($layout);
+            $this->_content = $this->getBuffer($layout);
         }
 
         /**
@@ -90,33 +96,50 @@
         }
 
         /**
+         * Gets a layout buffer.
+         * @param string $path Layout filename to include.
+         * @return string The buffer contents as string.
+         */
+        private function getBuffer(string $path){
+            Buffer::start();
+            include($path);
+            return Buffer::get();
+        }
+
+        /**
          * Renders a view file.
          * @param string $view View filename. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
          * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
-         * @return void
          */
         public function renderView(string $view, array $params = []){
-            return Rails::getController()->renderView($view, array_merge($this->_params, $params));
+            Rails::getController()->renderView($view, array_merge($this->_params, $params));
         }
 
         /**
          * Renders a layout file.
          * @param string $layout Layout filename. Must be a **.phtml** file inside **app/views/layouts** folder, extension is not needed.
-         * @param string|null $view (Optional) View filename to render within layout. You can place its content by using `$this->getContent()`\
+         * @param string|null $view (Optional) View filename to render within layout. You can place its content by using `$this->getView()`\
          * inside the layout file. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
          * @param array $params (Optional) Parameters to pass into the rendered view and layout. Should be an associative array with each variable name and value.
-         * @return void
          */
         public function renderLayout(string $layout, ?string $view = null, array $params = []){
-            return Rails::getController()->renderLayout($layout, $view, array_merge($this->_params, $params));
+            Rails::getController()->renderLayout($layout, $view, array_merge($this->_params, $params));
         }
 
         /**
-         * Returns the layout view content as string.
-         * @return string View content.
+         * Returns the layout content as string.
+         * @return string Layout content.
          */
         public function getContent(){
             return $this->_content;
+        }
+
+        /**
+         * Returns the internal view content as string.
+         * @return string View content.
+         */
+        public function getView(){
+            return $this->_view;
         }
 
     }
