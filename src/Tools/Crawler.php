@@ -113,6 +113,15 @@
         }
 
         /**
+         * Clears all headers from the request.
+         * @return Crawler Current Crawler instance for nested calls.
+         */
+        public function clearHeaders(){
+            $this->headers = [];
+            return $this;
+        }
+
+        /**
          * Adds a custom cookie to the request.
          * @param string $name Cookie name.
          * @param string $value Cookie value.
@@ -120,6 +129,15 @@
          */
         public function addCookie(string $name, string $value){
             $this->cookies[] = "{$name}={$value}";
+            return $this;
+        }
+
+        /**
+         * Clears all cookies from the request.
+         * @return Crawler Current Crawler instance for nested calls.
+         */
+        public function clearCookies(){
+            $this->cookies = [];
             return $this;
         }
 
