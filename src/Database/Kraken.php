@@ -69,6 +69,12 @@
         private $_limit;
 
         /**
+         * DELETE table names.
+         * @var string
+         */
+        private $_delete;
+
+        /**
          * INSERT fields.
          * @var string
          */
@@ -1197,11 +1203,13 @@
         /**
          * Deletes data from the table.\
          * **Do not forget to use WHERE statements before calling this function, otherwise all records will be deleted.**
+         * @param string|array $table (Optional) Table name to delete data in case of table joins. You can also use an array of table names.
          * @return bool Returns true on success or false on failure.
          * @throws QueryException Throws an exception if the query fails.
          */
-        public function delete(){
+        public function delete($table = ''){
             $this->_instruction = 'DELETE';
+            if(!empty($table)) $this->_delete = implode(', ', (array)$table);
             return $this->execute();
         }
 
@@ -1457,6 +1465,7 @@
             $this->_having = [];
             $this->_order = [];
             $this->_limit = [];
+            $this->_delete = '';
             $this->_insert = '';
             $this->_values = '';
             $this->_duplicate = '';
@@ -1499,6 +1508,11 @@
             // Gets SELECT statement
             if($this->_instruction == 'SELECT' || $this->_instruction == 'SELECT DISTINCT'){
                 $query .= " {$this->_select}";
+            }
+
+            // Gets DELETE statement
+            if(!empty($this->_delete)){
+                $query .= " {$this->_delete}";
             }
 
             // Gets FROM statement

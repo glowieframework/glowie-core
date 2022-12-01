@@ -34,18 +34,21 @@
          * @return void
          */
         public static function dump($var, bool $plain = false){
-            // Clean output buffer
-            Buffer::clean();
-
             // Dumps the content
             if(Firefly::isCLI()){
                 var_dump($var);
-            }else if($plain){
-                Rails::getResponse()->setContentType(Response::CONTENT_PLAIN);
-                var_dump($var);
-            }else{
-                Rails::getResponse()->setContentType(Response::CONTENT_HTML);
-                include(__DIR__ . '/Views/dump.phtml');
+            }else {
+                // Clean output buffer
+                Buffer::clean();
+
+                // Dumps plain text or parsed content
+                if($plain){
+                    Rails::getResponse()->setContentType(Response::CONTENT_PLAIN);
+                    var_dump($var);
+                }else{
+                    Rails::getResponse()->setContentType(Response::CONTENT_HTML);
+                    include(__DIR__ . '/Views/dump.phtml');
+                }
             }
 
             // Stop script
