@@ -138,7 +138,15 @@
         }
 
         /**
-         * Gets the Element data as JSON.
+         * Dumps the Element data.
+         * @param bool $plain (Optional) Dump data as plain text instead of HTML.
+         */
+        public function dump(bool $plain = false){
+            Util::dump($this, $plain);
+        }
+
+        /**
+         * Gets the Element data as a string (data will be serialized as JSON).
          * @return string The resulting JSON string.
          */
         public function __toString(){

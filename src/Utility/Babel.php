@@ -54,19 +54,31 @@
         /**
          * Gets an internalization string from a language configuration.
          * @param string $key String key to get (accepts dot notation keys).
+         * @param array $params (Optional) Associative array of parameters to bind into the string.
          * @param string|null $lang (Optional) Language name to get string from. Leave empty to use the current active language.
-         * @param mixed $default (Optional) Default value to return if the key is not found.
-         * @return mixed Returns internationalization string if found or the default value if not.
+         * @param string $default (Optional) Default value to return if the key is not found.
+         * @return string Returns internationalization string if found or the default value if not.
          */
-        public static function get(string $key, ?string $lang = null, $default = ''){
+        public static function get(string $key, array $params = [], ?string $lang = null, string $default = ''){
             // Parses active language
             if(!$lang) $lang = self::$active_language;
 
             // Checks if specified language was defined
-            if(!empty(self::$languages[$lang])) return Util::arrayGet(self::$languages[$lang], $key, $default);
+            if(empty(self::$languages[$lang])) throw new i18nException('Language "' . $lang . '" does not exist in "app/languages"');
 
-            // Language was not found
-            throw new i18nException('Language "' . $lang . '" does not exist in "app/languages"');
+            // Get string
+            $result = Util::arrayGet(self::$languages[$lang], $key, $default);
+
+            // Parse parameters
+            if(!empty($params) && !empty($result)){
+                foreach($params as $key => $value){
+                    $result = preg_replace('~(?<!\\\):' . preg_quote($key) . '~i', $value, $result);
+                    $result = preg_replace('~\\\:' . preg_quote($key) . '~i', ':' . $key, $result);
+                }
+            }
+
+            // Return result
+            return $result;
         }
 
     }

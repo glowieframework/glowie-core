@@ -20,7 +20,7 @@
 
         /**
          * Request headers.
-         * @var array
+         * @var string[]
          */
         private static $headers;
 
@@ -43,6 +43,10 @@
                     $this->__constructTrait(array_merge($_POST, $_GET));
                     break;
 
+                case 'REQUEST':
+                    $this->__constructTrait($_REQUEST);
+                    break;
+
                 default:
                     $this->__constructTrait(array_merge($_GET, $_POST));
                     break;
@@ -52,7 +56,7 @@
         /**
          * Returns the request uploaded files.
          * @param string $input Valid file input field name.
-         * @return array|null Returns an array of the files, each one as an Element, or null if no files were uploaded.
+         * @return Element[]|null Returns an array of the files, each one as an Element, or null if no files were uploaded.
          */
         public function getFiles(string $input){
             $uploader = new Uploader();
@@ -148,7 +152,7 @@
 
         /**
          * Gets all the request headers as an associative array.
-         * @return array Returns an associative array with all headers.
+         * @return string[] Returns an associative array with all headers.
          */
         public function getHeaders(){
             return getallheaders();

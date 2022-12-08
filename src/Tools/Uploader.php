@@ -86,15 +86,21 @@
 
         /**
          * Upload errors.
-         * @var int|array
+         * @var int|int[]
          */
         private $errors = 0;
 
         /**
          * Allowed extensions.
-         * @var array
+         * @var string[]
          */
         private $extensions;
+
+        /**
+         * Allowed mime types.
+         * @var string[]
+         */
+        private $mimes;
 
         /**
          * Maximum allowed file size.
@@ -118,16 +124,18 @@
          * Creates a new file uploader instance.
          * @param string $directory (Optional) Target directory to store the uploaded files. Must be an existing directory with write permissions\
          * relative to the **app/public** folder.
-         * @param array $extensions (Optional) Array of allowed file extensions. Use an empty array to allow any extension.
+         * @param string[] $extensions (Optional) Array of allowed file extensions. Use an empty array to allow any extension.
          * @param float $maxFileSize (Optional) Maximum allowed file size **in megabytes**. Use `0` for unlimited (not recommended).\
          * **Important:** This setting cannot be higher than your php.ini `upload_max_filesize` directive.
          * @param bool $overwrite (Optional) Overwrite existing files. If false, uploaded files will append a number to its name.
+         * @param string[] $mimes (Optional) Array of allowed mime types. Use an empty array to allow any type.
          */
-        public function __construct(string $directory = 'uploads', array $extensions = [], float $maxFileSize = 2, bool $overwrite = false){
+        public function __construct(string $directory = 'uploads', array $extensions = [], float $maxFileSize = 2, bool $overwrite = false, array $mimes = []){
             $this->setDirectory($directory);
             $this->setExtensions($extensions);
             $this->setMaxFileSize($maxFileSize);
             $this->setOverwrite($overwrite);
+            $this->setMimes($mimes);
         }
 
         /**
@@ -144,7 +152,7 @@
 
         /**
          * Sets the allowed extensions that the uploader will accept.
-         * @param array $extensions Array of allowed file extensions. Use an empty array to allow any extension.
+         * @param string[] $extensions Array of allowed file extensions. Use an empty array to allow any extension.
          * @return Uploader Current Uploader instance for nested calls.
          */
         public function setExtensions(array $extensions){
@@ -174,6 +182,16 @@
         }
 
         /**
+         * Sets the allowed mime types that the uploader will accept.
+         * @param string[] $mimes Array of allowed mime types. Use an empty array to allow any.
+         * @return Uploader Current Uploader instance for nested calls.
+         */
+        public function setMimes(array $mimes){
+            $this->mimes = $mimes;
+            return $this;
+        }
+
+        /**
          * Sets a custom naming handler function for generating filenames.
          * @param Closure|null $callback A closure with the naming handler. It receives the original filename as a parameter.\
          * You can also pass `null` to use the default generator.
@@ -186,7 +204,7 @@
 
         /**
          * Returns the latest upload errors.
-         * @return int|array Upload errors.
+         * @return int|int[] Upload errors.
          */
         public function getErrors(){
             return $this->errors;
@@ -257,6 +275,7 @@
                         'tmp_name' => $files['tmp_name'][$i],
                         'error' => $files['error'][$i],
                         'size' => $files['size'][$i],
+                        'size_string' => $this->parseSize($files['size'][$i]),
                         'extension' => $this->getExtension($files['name'][$i])
                     ];
                     $result[] = $assoc ? $item : new Element($item);
@@ -265,6 +284,7 @@
             }else{
                 $files['name'] = Util::sanitizeFilename($files['name']);
                 $files['extension'] = $this->getExtension($files['name']);
+                $files['size_string'] = $this->parseSize($files['size']);
                 return [($assoc ? $files : new Element($files))];
             }
         }
@@ -282,7 +302,7 @@
             }
 
             if ($this->checkFileSize($file['size'])) {
-                if ($this->checkExtension($file['extension'])) {
+                if ($this->checkExtension($file['extension']) && $this->checkMime($file['type'])) {
                     $filename = $this->generateFilename($file['name'], $key);
                     $target = $this->directory . '/' . $filename;
                     if (is_uploaded_file($file['tmp_name']) && move_uploaded_file($file['tmp_name'], $target)) {
@@ -312,17 +332,43 @@
         }
 
         /**
+         * Checks the file mime type.
+         * @param string $mime Mime type to check.
+         * @return bool Returns true if the mime type is allowed, false otherwise.
+         */
+        private function checkMime(string $mime){
+            return empty($this->mimes) || in_array($mime, $this->mimes);
+        }
+
+        /**
          * Checks the file size.
          * @param float $size File size to check.
          * @return bool Returns true if the file size is below maximum allowed size, false otherwise.
          */
         private function checkFileSize(float $size){
-            if($this->maxFileSize != 0){
-                $max = $this->maxFileSize * 1024 * 1024;
-                return $size <= $max ? true : false;
+            return empty($this->maxFileSize) || ($size <= ($this->maxFileSize * 1024 * 1024));
+        }
+
+        /**
+         * Parses the file size to a readable string.
+         * @param float $size File size to parse.
+         * @return string Returns the file size in a human-readable way.
+         */
+        private function parseSize(float $size){
+            if ($size >= 1073741824){
+                $size = number_format($size / 1073741824, 2) . ' GB';
+            }else if ($size >= 1048576){
+                $size = number_format($size / 1048576, 2) . ' MB';
+            }else if ($size >= 1024){
+                $size = number_format($size / 1024, 2) . ' KB';
+            }else if ($size > 1){
+                $size = $size . ' bytes';
+            }else if ($size == 1){
+                $size = $size . ' byte';
             }else{
-                return true;
+                $size = '0 bytes';
             }
+            return $size;
         }
 
         /**
