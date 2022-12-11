@@ -2,6 +2,7 @@
     namespace Glowie\Core\Http;
 
     use Config;
+    use Util;
 
     /**
      * Cookie manager for Glowie application.
@@ -153,7 +154,15 @@
         }
 
         /**
-         * Gets the cookies data as JSON.
+         * Dumps the cookies data.
+         * @param bool $plain (Optional) Dump data as plain text instead of HTML.
+         */
+        public function dump(bool $plain = false){
+            Util::dump($this, $plain);
+        }
+
+        /**
+         * Gets the cookies data as a string (data will be serialized as JSON).
          * @return string The resulting JSON string.
          */
         public function __toString(){

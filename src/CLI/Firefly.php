@@ -301,6 +301,11 @@
             // Checks if CLI is running
             if(!self::$isCLI) throw new ConsoleException(self::$command, self::$args, 'This command cannot be used from outside the console');
 
+            // Register class alias
+            foreach(Config::get('sandbox.alias', []) as $alias => $class){
+                if(!class_exists($alias)) class_alias($class, $alias);
+            }
+
             // Starts the interactive mode
             self::print('<color="green">Welcome to Firefly Sandbox!</color>');
             self::print('<color="yellow">Type quit to exit the interactive mode</color>');

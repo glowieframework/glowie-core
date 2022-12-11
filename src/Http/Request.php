@@ -20,7 +20,7 @@
 
         /**
          * Request headers.
-         * @var string[]
+         * @var array
          */
         private static $headers;
 
@@ -56,7 +56,7 @@
         /**
          * Returns the request uploaded files.
          * @param string $input Valid file input field name.
-         * @return Element[]|null Returns an array of the files, each one as an Element, or null if no files were uploaded.
+         * @return array|null Returns an array of the files, each one as an Element, or null if no files were uploaded.
          */
         public function getFiles(string $input){
             $uploader = new Uploader();
@@ -152,7 +152,7 @@
 
         /**
          * Gets all the request headers as an associative array.
-         * @return string[] Returns an associative array with all headers.
+         * @return array Returns an associative array with all headers.
          */
         public function getHeaders(){
             return getallheaders();

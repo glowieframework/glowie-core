@@ -165,7 +165,15 @@
         }
 
         /**
-         * Gets the session data as JSON.
+         * Dumps the session data.
+         * @param bool $plain (Optional) Dump data as plain text instead of HTML.
+         */
+        public function dump(bool $plain = false){
+            Util::dump($this, $plain);
+        }
+
+        /**
+         * Gets the session data as a string (data will be serialized as JSON).
          * @return string The resulting JSON string.
          */
         public function __toString(){

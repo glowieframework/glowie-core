@@ -86,19 +86,19 @@
 
         /**
          * Upload errors.
-         * @var int|int[]
+         * @var int|array
          */
         private $errors = 0;
 
         /**
          * Allowed extensions.
-         * @var string[]
+         * @var array
          */
         private $extensions;
 
         /**
          * Allowed mime types.
-         * @var string[]
+         * @var array
          */
         private $mimes;
 
@@ -122,13 +122,13 @@
 
         /**
          * Creates a new file uploader instance.
-         * @param string $directory (Optional) Target directory to store the uploaded files. Must be an existing directory with write permissions\
-         * relative to the **app/public** folder.
-         * @param string[] $extensions (Optional) Array of allowed file extensions. Use an empty array to allow any extension.
+         * @param string $directory (Optional) Target directory to store the uploaded files. Must be an existing directory with write permissions,\
+         * absolute path or relative to the **app/public** folder.
+         * @param array $extensions (Optional) Array of allowed file extensions. Use an empty array to allow any extension.
          * @param float $maxFileSize (Optional) Maximum allowed file size **in megabytes**. Use `0` for unlimited (not recommended).\
          * **Important:** This setting cannot be higher than your php.ini `upload_max_filesize` directive.
          * @param bool $overwrite (Optional) Overwrite existing files. If false, uploaded files will append a number to its name.
-         * @param string[] $mimes (Optional) Array of allowed mime types. Use an empty array to allow any type.
+         * @param array $mimes (Optional) Array of allowed mime types. Use an empty array to allow any type.
          */
         public function __construct(string $directory = 'uploads', array $extensions = [], float $maxFileSize = 2, bool $overwrite = false, array $mimes = []){
             $this->setDirectory($directory);
@@ -152,7 +152,7 @@
 
         /**
          * Sets the allowed extensions that the uploader will accept.
-         * @param string[] $extensions Array of allowed file extensions. Use an empty array to allow any extension.
+         * @param array $extensions Array of allowed file extensions. Use an empty array to allow any extension.
          * @return Uploader Current Uploader instance for nested calls.
          */
         public function setExtensions(array $extensions){
@@ -183,7 +183,7 @@
 
         /**
          * Sets the allowed mime types that the uploader will accept.
-         * @param string[] $mimes Array of allowed mime types. Use an empty array to allow any.
+         * @param array $mimes Array of allowed mime types. Use an empty array to allow any.
          * @return Uploader Current Uploader instance for nested calls.
          */
         public function setMimes(array $mimes){
@@ -204,7 +204,7 @@
 
         /**
          * Returns the latest upload errors.
-         * @return int|int[] Upload errors.
+         * @return int|array Upload errors.
          */
         public function getErrors(){
             return $this->errors;
@@ -408,3 +408,4 @@
         }
 
     }
+?>
