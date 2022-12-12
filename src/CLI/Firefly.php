@@ -420,8 +420,57 @@
             ], [$appKey, $appToken, $maintenanceKey], $content, 1);
 
             // Saves the new content
-            self::print('<color="green">Application secret keys generated successfully!</color>');
             file_put_contents($file, $content);
+            self::print('<color="green">Application secret keys generated successfully!</color>');
+            return true;
+        }
+
+        /**
+         * Encrypts the environment config file.
+         */
+        private static function __encryptEnv(){
+            // Reads the config file content
+            $file = Util::location('../.env');
+            if(!is_readable($file)) throw new FileException('File ".env" is not readable, please check your chmod settings');
+            $content = file_get_contents($file);
+
+            // Generate key
+            $key = self::getArg('key', Util::randomToken());
+            if(empty($key)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "key" for this command');
+            $iv = substr($key, 0, 16);
+
+            // Encrypts the data
+            $content = openssl_encrypt($content, 'AES-256-CBC', $key, 0, $iv);
+
+            // Saves the new content
+            file_put_contents(Util::location('../.env.encrypted'), $content);
+            self::print('<color="green">Environment config file encrypted successfully!</color>');
+            self::print('<color="yellow">Decryption key: ' . $key . '</color>');
+            self::print('<color="red">Store it with caution!</color>');
+            return true;
+        }
+
+        /**
+         * Decrypts the environment config file.
+         */
+        private static function __decryptEnv(){
+            // Get key
+            $key = self::argOrInput('key', 'Decryption key: ');
+            if(empty($key)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
+            $iv = substr($key, 0, 16);
+
+            // Reads the encrypted config file content
+            $file = Util::location('../.env.encrypted');
+            if(!is_readable($file)) throw new FileException('File ".env.encrypted" is not writable, please check your chmod settings');
+            $content = file_get_contents($file);
+
+            // Decrypts the data
+            $content = openssl_decrypt($content, 'AES-256-CBC', $key, 0, $iv);
+            if($content === false) throw new ConsoleException(self::$command, self::$args, 'Invalid decryption key!');
+
+            // Saves the new content
+            file_put_contents(Util::location('../.env'), $content);
+            self::print('<color="green">Environment config file decrypted successfully!</color>');
             return true;
         }
 
@@ -776,6 +825,8 @@
             self::print('  <color="yellow">clear-session</color> | Clears the application session folder');
             self::print('  <color="yellow">clear-log</color> | Clears the application error log');
             self::print('  <color="yellow">generate-keys</color> | Regenerates the application secret keys');
+            self::print('  <color="yellow">encrypt-env</color> | Encrypts the environment config file');
+            self::print('  <color="yellow">decrypt-env</color> | Decrypts the environment config file');
             self::print('  <color="yellow">test-database</color> <color="blue">--name</color> | Tests a database connection');
             self::print('  <color="yellow">create-command</color> <color="blue">--name</color> | Creates a new command for your application');
             self::print('  <color="yellow">create-controller</color> <color="blue">--name</color> | Creates a new controller for your application');

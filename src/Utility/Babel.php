@@ -16,7 +16,7 @@
          * Active language configuration.
          * @var string
          */
-        private static $active_language = 'en';
+        private static $active_language;
 
         /**
          * Language configurations.
@@ -32,6 +32,10 @@
                 $lang = pathinfo($file, PATHINFO_FILENAME);
                 self::$languages[$lang] = include_once($file);
             }
+
+            // Sets the default language
+            $default = Config::get('other.language');
+            if(!empty($default)) self::setActiveLanguage($default);
         }
 
         /**
