@@ -7,6 +7,7 @@
     use Closure;
     use stdClass;
     use Exception;
+    use Util;
 
     /**
      * Database ORM toolkit for Glowie application.
@@ -345,6 +346,8 @@
                 foreach($param3 as $value){
                     if($value instanceof stdClass){
                         $values[] = $value->value;
+                    }else if($value === 'NULL' || is_null($value)){
+                        $values[] = 'NULL';
                     }else{
                         $values[] = "\"{$this->escape($value)}\"";
                     }
@@ -358,6 +361,8 @@
                 foreach($param3 as $value){
                     if($value instanceof stdClass){
                         $values[] = $value->value;
+                    }else if($value === 'NULL' || is_null($value)){
+                        $values[] = 'NULL';
                     }else{
                         $values[] = "\"{$this->escape($value)}\"";
                     }
@@ -366,7 +371,7 @@
                 if($param2 == '=') $param2 = 'IN';
                 $values = implode(', ', $values);
                 $query .= "{$param1} {$param2} ($values)";
-            }else if($param3 === 'NULL'){
+            }else if($param3 === 'NULL' || is_null($param3)){
                 if($param2 == '=') $param2 = 'IS';
                 $query .= "{$param1} {$param2} NULL";
             }else{
@@ -808,6 +813,8 @@
                 foreach($param3 as $value){
                     if($value instanceof stdClass){
                         $values[] = $value->value;
+                    }else if($value === 'NULL' || is_null($value)){
+                        $values[] = 'NULL';
                     }else{
                         $values[] = "\"{$this->escape($value)}\"";
                     }
@@ -821,6 +828,8 @@
                 foreach($param3 as $value){
                     if($value instanceof stdClass){
                         $values[] = $value->value;
+                    }else if($value === 'NULL' || is_null($value)){
+                        $values[] = 'NULL';
                     }else{
                         $values[] = "\"{$this->escape($value)}\"";
                     }
@@ -829,7 +838,7 @@
                 if($param2 == '=') $param2 = 'IN';
                 $values = implode(', ', $values);
                 $query .= "{$param1} {$param2} ($values)";
-            }else if($param3 === 'NULL'){
+            }else if($param3 === 'NULL' || is_null($param3)){
                 if($param2 == '=') $param2 = 'IS';
                 $query .= "{$param1} {$param2} NULL";
             }else{
@@ -1066,7 +1075,7 @@
 
         /**
          * Inserts data into the table.
-         * @param array $data An associative array relating fields and values to insert. Also accepts an array of multiple insert arrays.
+         * @param array $data An associative array relating fields and values to insert. Also accepts a multi-dimensional insert array.
          * @param bool $ignore (Optional) Ignore failing or existing rows while inserting data (INSERT IGNORE).
          * @param bool $replace (Optional) Replace existing rows matching the primary key or unique indexes (REPLACE).
          * @param array $onDuplicate (Optional) Associative array with fields and values to update on existing rows (ON DUPLICATE KEY).
@@ -1087,7 +1096,7 @@
             $values = [];
 
             // Checks for multiple inserts
-            if(isset($data[0]) && is_array($data[0])){
+            if(!Util::isAssociativeArray($data)){
                 // Get fields
                 $fields = array_keys($data[0]);
 
@@ -1099,6 +1108,8 @@
                     foreach($row as $value){
                         if($value instanceof stdClass){
                             $result[] = $value->value;
+                        }else if($value === 'NULL' || is_null($value)){
+                            $result[] = 'NULL';
                         }else{
                             $result[] = "\"{$this->escape($value)}\"";
                         }
@@ -1113,6 +1124,8 @@
                   // Escape values
                   if($value instanceof stdClass){
                     $values[] = $value->value;
+                  }else if($value === 'NULL' || is_null($value)){
+                    $values[] = 'NULL';
                   }else{
                     $values[] = "\"{$this->escape($value)}\"";
                   }
@@ -1129,6 +1142,8 @@
                 foreach($onDuplicate as $key => $value){
                     if($value instanceof stdClass){
                         $set[] = "{$key} = {$value->value}";
+                    }else if($value === 'NULL' || is_null($value)){
+                        $set[] = "{$key} = NULL";
                     }else{
                         $set[] = "{$key} = \"{$this->escape($value)}\"";
                     }
@@ -1191,6 +1206,8 @@
             foreach($data as $key => $value){
                 if($value instanceof stdClass){
                     $set[] = "{$key} = {$value->value}";
+                }else if($value === 'NULL' || is_null($value)){
+                    $set[] = "{$key} = NULL";
                 }else{
                     $set[] = "{$key} = \"{$this->escape($value)}\"";
                 }

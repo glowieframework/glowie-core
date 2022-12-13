@@ -240,6 +240,7 @@
          * @return bool Returns true if is an associative array.
          */
         public static function isAssociativeArray(array $array){
+            if(!is_array($array)) return false;
             $keys = array_keys($array);
             return array_keys($keys) !== $keys;
         }
@@ -342,6 +343,23 @@
         }
 
         /**
+         * Returns a CSS classlist string based in giving conditions.
+         * @param array $array Array of conditions. The key must be the class name, and the value a boolean expression.
+         * @return string Returns the classlist.
+         */
+        public static function cssArray(array $array){
+            $result = [];
+            foreach($array as $key => $value){
+                if(is_numeric($key)){
+                    $result[] = $value;
+                }elseif($value){
+                    $result[] = $key;
+                }
+            }
+            return implode(' ', $result);
+        }
+
+        /**
          * Checks if a string starts with a given substring.
          * @param string $haystack The string to search in.
          * @param string|array $needle The substring to search for in the haystack. You can also use an array of strings.
@@ -426,12 +444,26 @@
         }
 
         /**
+         * Limits the number of words in a string.
+         * @param string $string String to limit.
+         * @param int $words Maximum number of words to limit.
+         * @param string $end (Optional) Text to append to the end of the limited string.
+         * @return string Returns the resulting string.
+         */
+        public static function limitStringWords(string $string, int $words, string $end = '...'){
+            $string = explode(' ', $string, $words + 1);
+            if(isset($string[$words])) unset($string[$words]);
+            return implode(' ', $string) . $end;
+        }
+
+        /**
          * Encrypts a string using your application secret keys.
          * @param string $string String to encrypt.
          * @param string $method (Optional) Hashing algorithm to use in encryption.
+         * @param string|null $token (Optional) Optional token to use in encryption. Leave empty to use your app default token.
          * @return string|bool Returns the encrypted string on success or false on errors.
          */
-        public static function encryptString(string $string, string $method = 'sha256'){
+        public static function encryptString(string $string, string $method = 'sha256', ?string $token = null){
             // Validate method
             if(!in_array($method, hash_algos())) throw new Exception('encryptString(): Invalid hashing algorithm');
 
@@ -440,25 +472,24 @@
             if(empty($key)) throw new Exception('encryptString(): Application key was not defined');
             $key = hash($method, $key);
 
-            // Get app token and hash it
-            $token = Config::get('secret.app_token');
+            // Get token and hash it
+            $token = $token ?? Config::get('secret.app_token');
             if(empty($token)) throw new Exception('encryptString(): Application token was not defined');
             $token = hash($method, $token);
 
             // Encrypts the string
             $iv = substr($token, 0, 16);
-            $hash = openssl_encrypt($string, "AES-256-CBC", $key, 0, $iv);
-            if(!$hash) return false;
-            return base64_encode($hash);
+            return openssl_encrypt($string, "AES-256-CBC", $key, 0, $iv);
         }
 
         /**
          * Decrypts a string using your application secret keys.
          * @param string $string String to decrypt.
          * @param string $method (Optional) Hashing algorithm to use in decryption.
+         * @param string|null $token (Optional) Token to use in decryption. Leave empty to use your app default token.
          * @return string|bool Returns the decrypted string on success or false on errors.
          */
-        public static function decryptString(string $string, string $method = 'sha256'){
+        public static function decryptString(string $string, string $method = 'sha256', ?string $token = null){
             // Validate method
             if(!in_array($method, hash_algos())) throw new Exception('decryptString(): Invalid hashing algorithm');
 
@@ -467,16 +498,14 @@
             if(empty($key)) throw new Exception('decryptString(): Application key was not defined');
             $key = hash($method, $key);
 
-            // Get app token and hash it
-            $token = Config::get('secret.app_token');
+            // Get token and hash it
+            $token = $token ?? Config::get('secret.app_token');
             if(empty($token)) throw new Exception('decryptString(): Application token was not defined');
             $token = hash($method, $token);
 
             // Decrypts the string
             $iv = substr($token, 0, 16);
-            $hash = base64_decode($string);
-            if(!$hash) return false;
-            return openssl_decrypt($hash, "AES-256-CBC", $key, 0, $iv);
+            return openssl_decrypt($string, "AES-256-CBC", $key, 0, $iv);
         }
 
         /**
@@ -589,6 +618,40 @@
          */
         public static function pascalCase(string $string){
             return ucfirst(self::camelCase($string));
+        }
+
+        /**
+         * Validates if a string is a valid JSON string.
+         * @param string $string String to be validated.
+         * @return bool Returns true if valid JSON, false otherwise.
+         */
+        public static function isJson(string $string){
+            if(!is_string($string)) return false;
+            try {
+                json_decode($string, true, 512, JSON_THROW_ON_ERROR);
+            } catch (JsonException $th) {
+                return false;
+            }
+            return true;
+        }
+
+        /**
+         * Masks a string with a repeated character.
+         * @param string $string String to be masked.
+         * @param string $character Character to use in mask.
+         * @param int $index Index of the string to start masking.
+         * @param int|null $length Masking length. Leave empty to mask the rest of the string.
+         * @return string Returns the masked string.
+         */
+        public static function maskString(string $string, string $character, int $index, ?int $length = null){
+            $segment = mb_substr($string, $index, $length, 'UTF-8');
+            $strlen = mb_strlen($string, 'UTF-8');
+            $startIndex = $index;
+            if($index < 0) $startIndex = $index < -$strlen ? 0 : $strlen + $index;
+            $start = mb_substr($string, 0, $startIndex, 'UTF-8');
+            $segmentLen = mb_strlen($segment, 'UTF-8');
+            $end = mb_substr($string, $startIndex + $segmentLen);
+            return $start . str_repeat(mb_substr($character, 0, 1, 'UTF-8'), $segmentLen) . $end;
         }
 
         /**

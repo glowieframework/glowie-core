@@ -169,7 +169,7 @@
         public function all(bool $deleted = false){
             $fields = !empty($this->_fields) ? $this->_fields : '*';
             if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->castData($this->select($fields)->fetchAll(), true);
+            return $this->castData($this->select($fields)->fetchAll());
         }
 
         /**
@@ -183,7 +183,7 @@
             $this->filterFields($field, $value);
             $fields = !empty($this->_fields) ? $this->_fields : '*';
             if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->castData($this->select($fields)->fetchAll(), true);
+            return $this->castData($this->select($fields)->fetchAll());
         }
 
         /**
@@ -196,7 +196,7 @@
             if(!$this->_timestamps) throw new Exception('latest(): Model "' . get_class($this) . '" is not handling timestamp fields');
             $fields = !empty($this->_fields) ? $this->_fields : '*';
             if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->castData($this->select($fields)->orderBy($this->_createdField, 'DESC')->fetchAll(), true);
+            return $this->castData($this->select($fields)->orderBy($this->_createdField, 'DESC')->fetchAll());
         }
 
         /**
@@ -209,7 +209,7 @@
             if(!$this->_timestamps) throw new Exception('oldest(): Model "' . get_class($this) . '" is not handling timestamp fields');
             $fields = !empty($this->_fields) ? $this->_fields : '*';
             if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->castData($this->select($fields)->orderBy($this->_createdField, 'ASC')->fetchAll(), true);
+            return $this->castData($this->select($fields)->orderBy($this->_createdField, 'ASC')->fetchAll());
         }
 
         /**
@@ -390,16 +390,15 @@
 
         /**
          * Casts data types of fields from a row or an array of rows using model casts setting.
-         * @param array|Element $data A single row as an Element or associative array or an array of rows.
-         * @param bool $multiple (Optional) Set to `true` if working with an array of multiple rows.
+         * @param array|Element $data A single row as an Element/associative array or a multi-dimensional of rows.
          * @return array|Element Returns the data with the casted fields.
          */
-        public function castData($data, bool $multiple = false){
+        public function castData($data){
             // Checks if data or casts property is empty
             if(empty($data) || empty($this->_casts)) return $data;
 
             // Checks if is an array of rows
-            if($multiple){
+            if(is_array($data) && !Util::isAssociativeArray($data)){
                 $result = [];
                 foreach($data as $item) $result[] = $this->castData($item);
                 return $result;
@@ -488,7 +487,7 @@
                     // Gets the rule
                     switch($mutator){
                         case 'json':
-                            $data[$field] = json_encode($data[$field], JSON_NUMERIC_CHECK);
+                            $data[$field] = json_encode($data[$field], JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
                             break;
 
                         case 'callback':
@@ -527,6 +526,8 @@
                 foreach($field as $key => $value){
                     if(is_array($value)){
                         $this->whereIn($key, $value);
+                    }else if($value === 'NULL' || is_null($value)){
+                        $this->whereNull('key');
                     }else{
                         $this->where($key, $value);
                     }
@@ -534,6 +535,8 @@
             }else{
                 if(is_array($value)){
                     $this->whereIn($field, $value);
+                }else if($value === 'NULL' || is_null($value)){
+                    $this->whereNull('key');
                 }else{
                     $this->where($field, $value);
                 }

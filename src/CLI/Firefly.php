@@ -434,7 +434,7 @@
             if(!is_readable($file)) throw new FileException('File ".env" is not readable, please check your chmod settings');
             $content = file_get_contents($file);
 
-            // Generate key
+            // Generate key and hash it
             $key = self::getArg('key', Util::randomToken());
             if(empty($key)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "key" for this command');
             $iv = substr($key, 0, 16);
@@ -456,17 +456,17 @@
         private static function __decryptEnv(){
             // Get key
             $key = self::argOrInput('key', 'Decryption key: ');
-            if(empty($key)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
+            if(empty($key)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "key" for this command');
             $iv = substr($key, 0, 16);
 
             // Reads the encrypted config file content
             $file = Util::location('../.env.encrypted');
-            if(!is_readable($file)) throw new FileException('File ".env.encrypted" is not writable, please check your chmod settings');
+            if(!is_readable($file)) throw new FileException('File ".env.encrypted" does not exist');
             $content = file_get_contents($file);
 
             // Decrypts the data
             $content = openssl_decrypt($content, 'AES-256-CBC', $key, 0, $iv);
-            if($content === false) throw new ConsoleException(self::$command, self::$args, 'Invalid decryption key!');
+            if($content === false) throw new ConsoleException(self::$command, self::$args, 'Unable to decrypt or wrong key used');
 
             // Saves the new content
             file_put_contents(Util::location('../.env'), $content);
