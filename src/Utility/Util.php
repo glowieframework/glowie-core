@@ -85,34 +85,31 @@
             if(empty($routeData)) throw new Exception('route(): Route name "' . $route .'" does not match any existing route');
 
             // Gets the route parameters
-            $uri = [];
             $result = [];
             $missing = [];
-            foreach(explode('/', $routeData['uri']) as $segment){
-                if(self::startsWith($segment, ':')){
-                    $segment = mb_substr($segment, 1);
-                    $result[] = $segment;
-                    if(isset($params[$segment])){
-                        $uri[] = $params[$segment];
+            if(preg_match_all('~:([^\/:]+)~', $routeData['uri'], $segments) && !empty($segments[1])){
+                $uri = $routeData['uri'];
+                foreach($segments[1] as $item){
+                    if(isset($params[$item])){
+                        $result[$item] = $params[$item];
+                        $uri = preg_replace('~:' . preg_quote($item) . '~i', $params[$item], $uri);
                     }else{
-                        $missing[] = $segment;
+                        $missing[] = $item;
                     }
-                }else{
-                    $uri[] = $segment;
                 }
             }
 
             // Validates missing parameters
-            if (!empty($missing)) throw new Exception('route(): Missing parameter "' . implode('", "', $missing) . '" for route "' . $route . '"');
+            if (!empty($missing)) throw new Exception('route(): Missing parameter(s) "' . implode('", "', $missing) . '" for route "' . $route . '"');
 
             // Checks if the route has any parameters
             if(!empty($result)){
                 // Parses remaining parameters and returns result
-                $remaining = array_diff_key($params, array_flip($result));
-                return self::baseUrl(implode('/', $uri) . (!empty($remaining) ? '?' . http_build_query($remaining) : ''));
+                $remaining = array_diff_key($params, $result);
+                return self::baseUrl($uri . (!empty($remaining) ? '?' . http_build_query($remaining) : ''));
             }else{
                 // Returns result
-                return self::baseUrl(implode('/', $uri) . (!empty($params) ? '?' . http_build_query($params) : ''));
+                return self::baseUrl($routeData['uri'] . (!empty($params) ? '?' . http_build_query($params) : ''));
             }
         }
 

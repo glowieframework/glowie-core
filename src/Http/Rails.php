@@ -254,16 +254,13 @@
                 // Creates a regex replacing dynamic parameters to valid regex patterns
                 $regex = '~^' . preg_replace('(\\\:[^\/\\\]+)', '([^\/]+)', preg_quote($item['uri'], '/')) . '$~';
                 if (preg_match_all($regex, trim($route, '/'), $params)) {
-                    // Fetch route parameters
+                    // Parse route parameters
                     $result = [];
-                    foreach(explode('/', $item['uri']) as $segment){
-                        if(Util::startsWith($segment, ':')) $result[] = substr($segment, 1);
-                    }
-
-                    // If all parameters were filled
-                    if (!empty($result)) {
-                        array_shift($params);
-                        $result = array_combine($result, array_column($params, 0));
+                    if(!empty($params)){
+                        if(preg_match_all('~:([^\/:]+)~', $item['uri'], $segments) && !empty($segments[1])){
+                            array_shift($params);
+                            $result = array_combine($segments[1], array_column($params, 0));
+                        }
                     }
 
                     // Saves the configuration
