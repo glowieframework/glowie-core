@@ -233,10 +233,10 @@
 
         /**
          * Checks if an array is associative rather than numerically indexed.
-         * @param array $array Array to check.
+         * @param mixed $array Array to check.
          * @return bool Returns true if is an associative array.
          */
-        public static function isAssociativeArray(array $array){
+        public static function isAssociativeArray($array){
             if(!is_array($array)) return false;
             $keys = array_keys($array);
             return array_keys($keys) !== $keys;

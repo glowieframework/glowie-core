@@ -221,7 +221,7 @@
         public function drop($primary = null, bool $force = false){
             if(!is_null($primary)) $this->whereIn($this->_primaryKey, (array)$primary);
             if($this->_softDeletes && !$force){
-                return $this->update([$this->_deletedField = self::raw('NOW()')]);
+                return $this->update([$this->_deletedField => self::raw('NOW()')]);
             }else{
                 return $this->delete();
             }
@@ -237,7 +237,7 @@
         public function dropBy($field, $value = null, bool $force = false){
             $this->filterFields($field, $value);
             if($this->_softDeletes && !$force){
-                return $this->update([$this->_deletedField = self::raw('NOW()')]);
+                return $this->update([$this->_deletedField => self::raw('NOW()')]);
             }else{
                 return $this->delete();
             }
@@ -279,6 +279,20 @@
             }else{
                 return $result;
             }
+        }
+
+        /**
+         * Gets the first row that matches a set of fields and values. If no matching row is found, a new one is created and returned.
+         * @param array $find Associative array of fields and values to search.
+         * @param array $create (Optional) Associative array of data to merge into the `$find` fields to create a new row.
+         * @return mixed Returns the existing or new row, false on error.
+         */
+        public function findOrCreate(array $find, array $create = []){
+            $row = $this->findBy($find);
+            if($row) return $row;
+            $id = $this->create(array_merge($find, $create));
+            if(!$id) return false;
+            return $this->find($id);
         }
 
         /**
@@ -405,11 +419,8 @@
             }
 
             // Converts the element to an array
-            $isElement = false;
-            if(Util::usesTrait($data, ElementTrait::class)){
-                $isElement = true;
-                $data = $data->toArray();
-            }
+            $isElement = Util::usesTrait($data, ElementTrait::class);
+            if($isElement) $data = $data->toArray();
 
             // Performs the castings
             foreach($this->_casts as $field => $type){
@@ -424,6 +435,10 @@
                             $data[$field] = json_decode($data[$field], true) ?? null;
                             break;
 
+                        case 'decimal':
+                            $data[$field] = round($data[$field], $params[1] ?? 0);
+                            break;
+
                         case 'json':
                             $json = json_decode($data[$field], true);
                             if($json){
@@ -431,6 +446,10 @@
                             }else{
                                 $data[$field] = null;
                             }
+                            break;
+
+                        case 'encrypted':
+                            $data[$field] = Util::decryptString($data[$field], 'sha256', $params[1] ?? null);
                             break;
 
                         case 'callback':
@@ -471,11 +490,8 @@
             if(empty($data) || empty($this->_mutators)) return $data;
 
             // Converts the element to an array
-            $isElement = false;
-            if(Util::usesTrait($data, ElementTrait::class)){
-                $isElement = true;
-                $data = $data->toArray();
-            }
+            $isElement = Util::usesTrait($data, ElementTrait::class);
+            if($isElement) $data = $data->toArray();
 
             // Performs mutations
             foreach($this->_mutators as $field => $mutator){
@@ -488,6 +504,10 @@
                     switch($mutator){
                         case 'json':
                             $data[$field] = json_encode($data[$field], JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
+                            break;
+
+                        case 'encrypted':
+                            $data[$field] = Util::encryptString($data[$field], 'sha256', $params[1] ?? null);
                             break;
 
                         case 'callback':
@@ -522,12 +542,12 @@
          * @param mixed $value (Optional) Value to search for.
          */
         private function filterFields($field, $value = null){
-            if(is_array($field)){
+            if(Util::isAssociativeArray($field)){
                 foreach($field as $key => $value){
                     if(is_array($value)){
                         $this->whereIn($key, $value);
                     }else if($value === 'NULL' || is_null($value)){
-                        $this->whereNull('key');
+                        $this->whereNull($key);
                     }else{
                         $this->where($key, $value);
                     }
@@ -536,7 +556,7 @@
                 if(is_array($value)){
                     $this->whereIn($field, $value);
                 }else if($value === 'NULL' || is_null($value)){
-                    $this->whereNull('key');
+                    $this->whereNull($field);
                 }else{
                     $this->where($field, $value);
                 }
