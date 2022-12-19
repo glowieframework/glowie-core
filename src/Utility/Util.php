@@ -4,7 +4,6 @@
     use Glowie\Core\Http\Response;
     use Glowie\Core\View\Buffer;
     use Glowie\Core\Exception\FileException;
-    use Glowie\Core\CLI\Firefly;
     use Glowie\Core\Element;
 
     /**
@@ -35,7 +34,7 @@
          */
         public static function dump($var, bool $plain = false){
             // Dumps the content
-            if(Firefly::isCLI()){
+            if(self::isCLI()){
                 var_dump($var);
             }else {
                 // Clean output buffer
@@ -70,7 +69,7 @@
          * @return string Full location.
          */
         public static function location(string $path = ''){
-            return Util::directorySeparator(APP_LOCATION . rtrim($path, DIRECTORY_SEPARATOR));
+            return self::directorySeparator(APP_LOCATION . rtrim($path, DIRECTORY_SEPARATOR));
         }
 
         /**
@@ -531,7 +530,7 @@
          * @return string Returns the resulting token.
          */
         public static function uniqueToken(){
-            return md5(uniqid(Util::randomToken(8)));
+            return md5(uniqid(self::randomToken(8)));
         }
 
         /**
@@ -723,4 +722,13 @@
             return str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
         }
 
+        /**
+         * Returns if the application is running through command-line console.
+         * @return bool Returns true if CLI, false otherwise.
+         */
+        public static function isCLI(){
+            return defined('STDIN') || (empty($_SERVER['REMOTE_ADDR']) && !isset($_SERVER['HTTP_USER_AGENT']) && count($_SERVER['argv']) > 0);
+        }
+
     }
+?>

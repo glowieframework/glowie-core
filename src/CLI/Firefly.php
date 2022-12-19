@@ -6,7 +6,6 @@
     use Glowie\Core\Exception\ConsoleException;
     use Glowie\Core\Exception\PluginException;
     use Glowie\Core\Error\HandlerCLI;
-    use Glowie\Core\Http\Rails;
     use Glowie\Core\View\Buffer;
     use Util;
     use Throwable;
@@ -71,12 +70,6 @@
         private static $args;
 
         /**
-         * Stores if Firefly is running through CLI.
-         * @var bool
-         */
-        private static $isCLI;
-
-        /**
          * Enable silent print mode.
          * @var bool
          */
@@ -90,7 +83,6 @@
             global $argv;
             self::$command = '';
             self::$args = $argv;
-            self::$isCLI = true;
             self::$silent = false;
 
             // Store application start time
@@ -116,8 +108,12 @@
             // Timezone configuration
             date_default_timezone_set(Config::get('other.timezone', 'America/Sao_Paulo'));
 
-            // Load route configuration file
-            Rails::load();
+            // Initialize plugins
+            foreach(Config::get('plugins', []) as $plugin){
+                if(!class_exists($plugin)) throw new PluginException("\"{$plugin}\" was not found");
+                $plugin = new $plugin;
+                $plugin->register();
+            }
 
             // Gets the command
             array_shift(self::$args);
@@ -144,19 +140,10 @@
             // Register settings
             self::$command = '';
             self::$args = $args;
-            self::$isCLI = false;
             self::$silent = $silent;
 
             // Runs the command
             self::triggerCommand($command);
-        }
-
-        /**
-         * Returns if the application is running through console.
-         * @return bool True if application is running in CLI mode, false otherwise.
-         */
-        public static function isCLI(){
-            return self::$isCLI;
         }
 
         /**
@@ -170,7 +157,7 @@
             $args = [];
             foreach(self::$args as $value){
                 $match = [];
-                if(preg_match('/--(.+)=(.+)/', $value, $match)) $args[strtolower($match[1])] = $match[2];
+                if(preg_match('/--(.+)=(.+)/', $value, $match) && count($match) == 3) $args[strtolower($match[1])] = $match[2];
             }
 
             // Returns the result
@@ -206,7 +193,7 @@
          * @param bool $break (Optional) Break line at the end.
          */
         public static function print(string $text, bool $break = true){
-            if(self::$isCLI){
+            if(Util::isCLI()){
                 // If running in console, replace colors, backgrounds and closing tags
                 $text = preg_replace(array_keys(self::REGEX), array_values(self::REGEX), $text);
             }else{
@@ -228,7 +215,7 @@
          * @return string Returns the input value as a string.
          */
         public static function input(string $message = '', string $default = ''){
-            if(!self::$isCLI) return $default;
+            if(!Util::isCLI()) return $default;
             self::print($message, false);
             $value = trim(fgets(STDIN));
             if($value === '') return $default;
@@ -280,7 +267,7 @@
          */
         private static function __shine(){
             // Checks if CLI is running
-            if(!self::$isCLI) throw new ConsoleException(self::$command, self::$args, 'This command cannot be used from outside the console');
+            if(!Util::isCLI()) throw new ConsoleException(self::$command, self::$args, 'This command cannot be used from outside the console');
 
             // Checks if host was filled
             $host = self::getArg('host', 'localhost');
@@ -290,7 +277,7 @@
 
             // Starts the server
             self::print('<color="green">Local development server started!</color>');
-            self::print('<color="yellow">To shutdown the server press Ctrl+C</color>');
+            self::print('<color="yellow">To shutdown the server press Ctrl/Command+C</color>');
             system('php -S ' . $host . ':' . $port .' -t app/public ' . __DIR__ . '/Server.php');
         }
 
@@ -299,7 +286,7 @@
          */
         private static function __sandbox(){
             // Checks if CLI is running
-            if(!self::$isCLI) throw new ConsoleException(self::$command, self::$args, 'This command cannot be used from outside the console');
+            if(!Util::isCLI()) throw new ConsoleException(self::$command, self::$args, 'This command cannot be used from outside the console');
 
             // Register class alias
             foreach(Config::get('sandbox.alias', []) as $alias => $class){
@@ -308,7 +295,7 @@
 
             // Starts the interactive mode
             self::print('<color="green">Welcome to Firefly Sandbox!</color>');
-            self::print('<color="yellow">Type quit to exit the interactive mode</color>');
+            self::print('<color="yellow">Type quit or exit to end the interactive mode</color>');
 
             // REPL
             while (true) {
@@ -317,18 +304,21 @@
 
                 // Gets the current command
                 $__command = trim(fgets(STDIN));
-                if($__command == 'quit' || $__command == 'exit') break;
+                if(strtolower($__command) == 'quit' || strtolower($__command) == 'exit') break;
 
                 // Captures the output buffer
                 Buffer::start();
 
                 try {
                     // Evaluates the command
-                    $__command .= ';';
-                    eval($__command);
+                    if(!Util::startsWith($__command, ['return', 'echo', 'print'])) $__command = 'return ' . $__command;
+                    if(!Util::endsWith($__command, ';')) $__command .= ';';
+                    $__returnValue = eval($__command);
 
                     // Flushes the buffer
-                    self::print('<color="yellow">>> ' . Buffer::get() . '</color>');
+                    if($__returnValue) var_dump($__returnValue);
+                    $__returnText = Buffer::get();
+                    if(!empty($__returnText)) self::print('<color="yellow">>> ' . trim($__returnText) . '</color>');
                 } catch (Throwable $e) {
                     // Clears the output buffer
                     Buffer::clean();
@@ -825,8 +815,8 @@
             self::print('  <color="yellow">clear-session</color> | Clears the application session folder');
             self::print('  <color="yellow">clear-log</color> | Clears the application error log');
             self::print('  <color="yellow">generate-keys</color> | Regenerates the application secret keys');
-            self::print('  <color="yellow">encrypt-env</color> | Encrypts the environment config file');
-            self::print('  <color="yellow">decrypt-env</color> | Decrypts the environment config file');
+            self::print('  <color="yellow">encrypt-env</color> <color="blue">--key</color> | Encrypts the environment config file');
+            self::print('  <color="yellow">decrypt-env</color> <color="blue">--key</color> | Decrypts the environment config file');
             self::print('  <color="yellow">test-database</color> <color="blue">--name</color> | Tests a database connection');
             self::print('  <color="yellow">create-command</color> <color="blue">--name</color> | Creates a new command for your application');
             self::print('  <color="yellow">create-controller</color> <color="blue">--name</color> | Creates a new controller for your application');

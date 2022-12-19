@@ -14,7 +14,9 @@
 
         'nested' => [
 
-            'sample' => 'You can also create nested strings'
+            'sample' => 'You can also create nested strings',
+
+            'variable' => 'Also try using some variables, like :name'
 
         ]
 

@@ -1,6 +1,8 @@
 <?php
     namespace Glowie\Core\CLI;
 
+    use Util;
+
     /**
      * CLI command core for Glowie application.
      * @category Command
@@ -87,16 +89,14 @@
          * Clears the current console line.
          */
         public function clear(){
-            if(Firefly::isCLI()) $this->print("\033[2K\r", false);
+            if(Util::isCLI()) $this->print("\033[2K\r", false);
         }
 
         /**
          * Clears the whole console screen.
          */
         public function clearScreen(){
-            if(Firefly::isCLI()){
-                DIRECTORY_SEPARATOR === '\\' ? popen('cls', 'w') : exec('clear');
-            }
+            if(Util::isCLI()) DIRECTORY_SEPARATOR === '\\' ? popen('cls', 'w') : exec('clear');
         }
 
         /**
