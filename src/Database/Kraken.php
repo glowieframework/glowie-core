@@ -1097,6 +1097,9 @@
 
             // Checks for multiple inserts
             if(!Util::isAssociativeArray($data)){
+                // Validate multiple inserts
+                if(!is_array($data[0])) throw new Exception('insert(): Multiple INSERT calls must be a multi-dimensional array');
+
                 // Get fields
                 $fields = array_keys($data[0]);
 

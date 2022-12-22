@@ -91,7 +91,7 @@
             $code = preg_replace('~(?<!@){\s*empty\s*\((.+?)\)\s*}~is', '<?php if(Util::isEmpty($1)): ?>', $code);
             $code = preg_replace('~(?<!@){\s*notempty\s*\((.+?)\)\s*}~is', '<?php if(!Util::isEmpty($1)): ?>', $code);
             $code = preg_replace('~(?<!@){\s*notset\s*\((.+?)\)\s*}~is', '<?php if(!isset($1)): ?>', $code);
-            $code = preg_replace('~(?<!@){\s*else\s*if\s*\((.+?)\)\s*}~is', '<?php else if($1): ?>', $code);
+            $code = preg_replace('~(?<!@){\s*else\s*if\s*\((.+?)\)\s*}~is', '<?php elseif($1): ?>', $code);
             $code = preg_replace('~(?<!@){\s*else\s*}~is', '<?php else: ?>', $code);
             $code = preg_replace('~(?<!@){\s*(/if|/isset|/empty|/notempty|/notset)\s*}~is', '<?php endif; ?>', $code);
             return $code;
