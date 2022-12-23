@@ -112,6 +112,8 @@
             $code = preg_replace('~(?<!@){\s*route\s*\((.+?)\)\s*}~is', '<?php echo Util::route($1); ?>', $code);
             $code = preg_replace('~(?<!@){\s*content\s*}~is', '<?php echo $this->getView(); ?>', $code);
             $code = preg_replace('~(?<!@){\s*csrf\s*}~is', '<?php echo Util::csrfToken(); ?>', $code);
+            $code = preg_replace('~(?<!@){\s*json\s*\((.+?)\)\s*}~is', '<?php echo Util::jsonEncode($1); ?>', $code);
+            $code = preg_replace('~(?<!@){\s*class\s*\((.+?)\)\s*}~is', '<?php echo Util::cssArray($1); ?>', $code);
             return $code;
         }
 

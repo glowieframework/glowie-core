@@ -38,11 +38,7 @@
          * @param array $data (Optional) An associative array with the initial data to store in the cookies.
          */
         public function __construct(array $data = []){
-            if(!empty($data)){
-                foreach($data as $key => $value){
-                    $this->set($key, $value);
-                }
-            }
+            if(!empty($data)) $this->set($data);
         }
 
         /**
@@ -75,14 +71,19 @@
 
         /**
          * Sets the value for a key in the cookies.
-         * @param string $key Key to set value.
-         * @param mixed $value Value to set.
+         * @param string|array $key Key to set value. You can also pass an associative array\
+         * of values to set at once and they will be merged into the cookies.
+         * @param mixed $value (Optional) Value to set.
          * @param int $expires (Optional) Cookie expiration time in seconds.
          * @return Cookies Current Cookies instance for nested calls.
          */
-        public function set(string $key, $value, int $expires = self::EXPIRES_DAY){
-            $_COOKIE[$key] = $value;
-            setcookie($key, $value, time() + $expires, '/', '', Config::get('cookies.secure', false), Config::get('cookies.restrict', false));
+        public function set($key, $value = null, int $expires = self::EXPIRES_DAY){
+            if(is_array($key)){
+                foreach($key as $field => $value) $this->set($field, $value, $expires);
+            }else{
+                $_COOKIE[$key] = $value;
+                setcookie($key, $value, time() + $expires, '/', '', Config::get('cookies.secure', false), Config::get('cookies.restrict', false));
+            }
             return $this;
         }
 
@@ -120,11 +121,16 @@
 
         /**
          * Checks if any value has been associated to a key in the cookies data.
-         * @param string $key Key to check.
+         * @param string|array $key Key to check. You can also use an array of keys.
          * @return bool Returns true or false.
          */
-        public function has(string $key){
-            return $this->__isset($key);
+        public function has($key){
+            $result = false;
+            foreach((array)$key as $item){
+                if($result) break;
+                $result = $this->__isset($item);
+            }
+            return $result;
         }
 
         /**

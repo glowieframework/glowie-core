@@ -5,6 +5,7 @@
     use Glowie\Core\View\Buffer;
     use Glowie\Core\Exception\FileException;
     use Glowie\Core\Element;
+    use Glowie\Core\Traits\ElementTrait;
 
     /**
      * Miscellaneous utilities for Glowie application.
@@ -236,7 +237,7 @@
          * @return bool Returns true if is an associative array.
          */
         public static function isAssociativeArray($array){
-            if(!is_array($array)) return false;
+            if(!is_array($array) || empty($array)) return false;
             $keys = array_keys($array);
             return array_keys($keys) !== $keys;
         }
@@ -618,10 +619,10 @@
 
         /**
          * Validates if a string is a valid JSON string.
-         * @param string $string String to be validated.
+         * @param mixed $string String to be validated.
          * @return bool Returns true if valid JSON, false otherwise.
          */
-        public static function isJson(string $string){
+        public static function isJson($string){
             if(!is_string($string)) return false;
             try {
                 json_decode($string, true, 512, JSON_THROW_ON_ERROR);
@@ -629,6 +630,18 @@
                 return false;
             }
             return true;
+        }
+
+        /**
+         * Serializes a variable to JSON with predefined flags. Also checks for Elements to correctly convert them.
+         * @param mixed $data Variable to be encoded.
+         * @param int $flags (Optional) JSON encoding flags (same as in `json_encode()` function).
+         * @param int $depth (Optional) JSON encoding maximum depth (same as in `json_encode()` function).
+         * @return string The resulting JSON string.
+         */
+        public static function jsonEncode($data, int $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK, int $depth = 512){
+            if(self::usesTrait($data, ElementTrait::class)) return $data->toJson($flags, $depth);
+            return json_encode($data, $flags, $depth);
         }
 
         /**

@@ -4,6 +4,7 @@
     use Util;
     use Exception;
     use Countable;
+    use Closure;
     use Glowie\Core\Traits\ElementTrait;
 
     /**
@@ -22,6 +23,21 @@
          * @var array
          */
         private $errors = [];
+
+        /**
+         * Custom validation rules.
+         * @var array
+         */
+        private static $custom = [];
+
+        /**
+         * Sets a custom validation rule. This rule is persisted through all `Validator` instances.
+         * @param string $rule Custom rule name.
+         * @param Closure $callback A validation function that receives the data as the first parameter and returns a boolean if valid.
+         */
+        public static function setCustomRule(string $rule, Closure $callback){
+            self::$custom[$rule] = $callback;
+        }
 
         /**
          * Returns an associative array with the latest validation errors.
@@ -130,6 +146,12 @@
 
                 // Check type of rule
                 switch($type){
+                    // [CUSTOM] - Checks for custom rule
+                    case 'custom':
+                        if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "custom" rule');
+                        if(empty(self::$custom[$rule[1]])) throw new Exception('Validator: Custom rule "' . $rule[1] . '" does not exist');
+                        if(!self::$custom[$rule[1]]($data)) $result[] = $rule[1];
+                        break;
 
                     // [REQUIRED] - Checks if variable is not empty or null
                     case 'required':
@@ -243,6 +265,11 @@
                         if(!is_array($data)) $result[] = 'array';
                         break;
 
+                    // [ASSOC] - Checks if variable is an associative array
+                    case 'assoc':
+                        if(!Util::isAssociativeArray($data)) $result[] = 'assoc';
+                        break;
+
                     // [DATE] - Checks if variable is a valid date
                     case 'date':
                         if(!is_string($data)){
@@ -269,22 +296,48 @@
 
                     // [FILE] - Checks if path is an existing file
                     case 'file':
-                        if(!is_file($data)) $result[] = 'file';
+                        if (!is_string($data)){
+                            $result[] = 'file';
+                        }else{
+                            if(!is_file($data)) $result[] = 'file';
+                        }
                         break;
 
                     // [UPLOAD] - Checks if variable is an uploaded file through HTTP POST
                     case 'upload':
-                        if(!is_uploaded_file($data)) $result[] = 'upload';
+                        if(!is_string($data)){
+                            $result[] = 'upload';
+                        }else{
+                            if(!is_uploaded_file($data)) $result[] = 'upload';
+                        }
                         break;
 
                     // [DIRECTORY] - Checks if path is an existing directory
                     case 'directory':
-                        if(!is_dir($data)) $result[] = 'directory';
+                        if(!is_string($data)){
+                            $result[] = 'directory';
+                        }else{
+                            if(!is_dir($data)) $result[] = 'directory';
+                        }
+                        break;
+
+                    // [MIME] - Checks if file matches a list of mime types
+                    case 'mime':
+                        if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "mime" rule');
+                        if(!is_string($data) || !is_file($data)){
+                            $result[] = 'mime';
+                        }else{
+                            if(!in_array(mime_content_type($data), explode(',', $rule[1]))) $result[] = 'mime';
+                        }
                         break;
 
                     // [WRITABLE] - Checks if path is a writable directory or file
                     case 'writable':
-                        if(!is_writable($data)) $result[] = 'writable';
+                        if(!is_string($data)){
+                            $result[] = 'writable';
+                        }else{
+                            if(!is_writable($data)) $result[] = 'writable';
+                        }
                         break;
 
                     // [OBJECT] - Checks if variable is an object
@@ -297,13 +350,19 @@
                         if(!is_bool($data)) $result[] = 'boolean';
                         break;
 
+                    // [TRUE] - Checks if variable is a truthy value
+                    case 'true':
+                        if(!filter_var($data, FILTER_VALIDATE_BOOLEAN)) $result[] = 'true';
+                        break;
+
+                    // [FALSE] - Checks if variable is a falsy value
+                    case 'false':
+                        if(filter_var($data, FILTER_VALIDATE_BOOLEAN)) $result[] = 'true';
+                        break;
+
                     // [JSON] - Checks if string is valid JSON format
                     case 'json':
-                        if(!is_string($data)){
-                            $result[] = 'json';
-                        }else{
-                            if(!json_decode($data)) $result[] = 'json';
-                        }
+                        if(!Util::isJson($data)) $result[] = 'json';
                         break;
 
                     // [VALUE] - Checks if variable matches value

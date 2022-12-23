@@ -58,16 +58,21 @@
 
         /**
          * Sets the value for a key in the Element data.
-         * @param string $key Key to set value (accepts dot notation keys).
-         * @param mixed $value Value to set.
+         * @param string|array $key Key to set value (accepts dot notation keys). You can also pass an associative array\
+         * of values to set at once and they will be merged into the Element data.
+         * @param mixed $value (Optional) Value to set.
          * @param bool $ignoreDot (Optional) Ignore dot notation keys.
          * @return Element Current Element instance for nested calls.
          */
-        public function set(string $key, $value, bool $ignoreDot = false){
-            if($ignoreDot){
-                $this->__data[$key] = $value;
+        public function set($key, $value = null, bool $ignoreDot = false){
+            if(is_array($key)){
+                $this->__data = array_merge($this->__data, $key);
             }else{
-                Util::arraySet($this->__data, $key, $value);
+                if($ignoreDot){
+                    $this->__data[$key] = $value;
+                }else{
+                    Util::arraySet($this->__data, $key, $value);
+                }
             }
             return $this;
         }
@@ -103,11 +108,16 @@
 
         /**
          * Checks if any value has been associated to a key in the Element data.
-         * @param string $key Key to check (accepts dot notation keys).
+         * @param string|array $key Key to check (accepts dot notation keys). You can also use an array of keys.
          * @return bool Returns true or false.
          */
-        public function has(string $key){
-            return Util::arrayGet($this->__data, $key) !== null;
+        public function has($key){
+            $result = false;
+            foreach((array)$key as $item){
+                if($result) break;
+                $result = Util::arrayGet($this->__data, $item) !== null;
+            }
+            return $result;
         }
 
         /**
