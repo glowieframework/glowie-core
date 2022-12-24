@@ -41,6 +41,9 @@
                 // Clean output buffer
                 Buffer::clean();
 
+                // Sets response code
+                Rails::getResponse()->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
+
                 // Dumps plain text or parsed content
                 if($plain){
                     Rails::getResponse()->setContentType(Response::CONTENT_PLAIN);
@@ -717,6 +720,7 @@
          */
         public static function usesTrait($class, string $trait){
             if(is_string($class) || is_object($class)){
+                if(is_string($class) && !class_exists($class)) return false;
                 $parentClasses = class_parents($class);
                 $traits = class_uses($class);
                 foreach ($parentClasses as $parentClass) $traits = array_merge($traits, class_uses($parentClass));

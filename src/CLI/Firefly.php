@@ -459,8 +459,10 @@
             if($content === false) throw new ConsoleException(self::$command, self::$args, 'Unable to decrypt or wrong key used');
 
             // Saves the new content
-            file_put_contents(Util::location('../.env'), $content);
+            $targetFile = Util::location('../.env');
+            file_put_contents($targetFile, $content);
             self::print('<color="green">Environment config file decrypted successfully!</color>');
+            self::print('<color="cyan">File: ' . $targetFile . '</color>');
             return true;
         }
 
@@ -509,6 +511,7 @@
 
             // Success message
             self::print("<color=\"green\">Command {$name} created successfully!</color>");
+            self::print('<color="cyan">File: ' . $targetFile . '</color>');
             return true;
         }
 
@@ -538,6 +541,7 @@
 
             // Success message
             self::print("<color=\"green\">Controller {$name} created successfully!</color>");
+            self::print('<color="cyan">File: ' . $targetFile . '</color>');
             return true;
         }
 
@@ -565,6 +569,7 @@
 
             // Success message
             self::print("<color=\"green\">Language file {$name} created successfully!</color>");
+            self::print('<color="cyan">File: ' . $targetFile . '</color>');
             return true;
         }
 
@@ -594,6 +599,7 @@
 
             // Success message
             self::print("<color=\"green\">Middleware {$name} created successfully!</color>");
+            self::print('<color="cyan">File: ' . $targetFile . '</color>');
             return true;
         }
 
@@ -624,6 +630,7 @@
 
             // Success message
             self::print("<color=\"green\">Migration {$cleanName} created successfully!</color>");
+            self::print('<color="cyan">File: ' . $targetFile . '</color>');
             return true;
         }
 
@@ -662,6 +669,7 @@
 
             // Success message
             self::print("<color=\"green\">Model {$name} created successfully!</color>");
+            self::print('<color="cyan">File: ' . $targetFile . '</color>');
             return true;
         }
 

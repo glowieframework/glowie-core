@@ -143,6 +143,9 @@
                 }else{
                     $this->query('SET SESSION sql_mode="ALLOW_INVALID_DATES,NO_ENGINE_SUBSTITUTION"');
                 }
+
+                // Sets the timezone
+                $this->query('SET time_zone = "' . Config::get('other.timezone', 'America/Sao_Paulo') . '"');
             } catch (Throwable $e) {
                 throw new DatabaseException($database, $e->getMessage(), $e->getCode(), $e);
             }
