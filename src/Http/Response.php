@@ -4,7 +4,6 @@
     use Util;
     use Config;
     use SimpleXMLElement;
-    use Glowie\Core\Traits\ElementTrait;
     use Glowie\Core\View\Buffer;
 
     /**
@@ -284,7 +283,7 @@
         public function setJson($data, int $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK, int $depth = 512){
             Buffer::clean();
             $this->setContentType(self::CONTENT_JSON);
-            if(Util::usesTrait($data, ElementTrait::class)) $data = $data->toArray();
+            if(is_callable([$data, 'toArray'])) $data = $data->toArray();
             echo json_encode($data, $flags, $depth);
         }
 
@@ -297,7 +296,7 @@
             Buffer::clean();
             $this->setContentType(self::CONTENT_XML);
             $xml = new SimpleXMLElement("<?xml version=\"1.0\"?><{$root}></{$root}>");
-            if(Util::usesTrait($data, ElementTrait::class)) $data = $data->toArray();
+            if(is_callable([$data, 'toArray'])) $data = $data->toArray();
             $this->arrayToXML($data, $xml);
             echo $xml->asXML();
         }

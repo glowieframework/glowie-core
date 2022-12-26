@@ -98,6 +98,18 @@
         }
 
         /**
+         * Removes all Element data, except the one that matches the specified key.
+         * @param string|array $key Key to keep. You can also use an array of keys to keep.
+         * @return Element Current Element instance for nested calls.
+         */
+        public function only($key){
+            foreach($this->__data as $field => $value){
+                if(!in_array($field, (array)$key)) $this->remove($field);
+            }
+            return $this;
+        }
+
+        /**
          * Checks if any value has been associated to a key in the Element data.
          * @param string $key Key to check.
          * @return bool Returns true or false.

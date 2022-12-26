@@ -116,7 +116,7 @@
             Kraken::__construct($this->_table, $this->_database);
 
             // Sets the initial data
-            if(Util::usesTrait($data, ElementTrait::class)) $data = $data->toArray();
+            if(is_callable([$data, 'toArray'])) $data = $data->toArray();
             $data = array_merge($this->_attributes, $data);
             if(!empty($data)) $this->fill($data);
         }
@@ -265,7 +265,7 @@
             $this->clearQuery();
 
             // Parse data and timestamps
-            if(Util::usesTrait($data, ElementTrait::class)) $data = $data->toArray();
+            if(is_callable([$data, 'toArray'])) $data = $data->toArray();
             $data = $this->mutateData($this->filterData($data));
             if($this->_timestamps){
                 $data[$this->_createdField] = Kraken::raw('NOW()');
@@ -306,7 +306,7 @@
             $this->clearQuery();
 
             // Checks if the primary key was passed and matches an existing row
-            if(Util::usesTrait($data, ElementTrait::class)) $data = $data->toArray();
+            if(is_callable([$data, 'toArray'])) $data = $data->toArray();
             if(isset($data[$this->_primaryKey]) && $this->find($data[$this->_primaryKey])){
                 // Parse data and timestamps
                 $updatedData = $this->mutateData($this->filterData($data));
@@ -327,7 +327,7 @@
          * @return $this Current Model instance for nested calls.
          */
         public function fill($row, bool $overwrite = false){
-            if(Util::usesTrait($row, ElementTrait::class)) $row = $row->toArray();
+            if(is_callable([$row, 'toArray'])) $row = $row->toArray();
             if(!$overwrite) $row = array_merge($this->toArray(), $row);
             $this->_initialData = new Element($row);
             $this->__constructTrait($row);
@@ -419,7 +419,7 @@
             }
 
             // Converts the element to an array
-            $isElement = Util::usesTrait($data, ElementTrait::class);
+            $isElement = is_callable([$data, 'toArray']);
             if($isElement) $data = $data->toArray();
 
             // Performs the castings
@@ -490,7 +490,7 @@
             if(empty($data) || empty($this->_mutators)) return $data;
 
             // Converts the element to an array
-            $isElement = Util::usesTrait($data, ElementTrait::class);
+            $isElement = is_callable([$data, 'toArray']);
             if($isElement) $data = $data->toArray();
 
             // Performs mutations

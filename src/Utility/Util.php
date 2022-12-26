@@ -5,7 +5,6 @@
     use Glowie\Core\View\Buffer;
     use Glowie\Core\Exception\FileException;
     use Glowie\Core\Element;
-    use Glowie\Core\Traits\ElementTrait;
 
     /**
      * Miscellaneous utilities for Glowie application.
@@ -643,7 +642,7 @@
          * @return string The resulting JSON string.
          */
         public static function jsonEncode($data, int $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK, int $depth = 512){
-            if(self::usesTrait($data, ElementTrait::class)) return $data->toJson($flags, $depth);
+            if(is_callable([$data, 'toArray'])) return $data->toJson($flags, $depth);
             return json_encode($data, $flags, $depth);
         }
 

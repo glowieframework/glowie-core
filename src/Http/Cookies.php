@@ -111,6 +111,18 @@
         }
 
         /**
+         * Removes all cookies data, except the one that matches the specified key.
+         * @param string|array $key Key to keep. You can also use an array of keys to keep.
+         * @return Cookies Current Cookies instance for nested calls.
+         */
+        public function only($key){
+            foreach($_COOKIE as $field => $value){
+                if(!in_array($field, (array)$key)) $this->remove($field);
+            }
+            return $this;
+        }
+
+        /**
          * Checks if any value has been associated to a key in the cookies data.
          * @param string $key Key to check.
          * @return bool Returns true or false.

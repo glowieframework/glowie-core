@@ -5,7 +5,6 @@
     use Exception;
     use Countable;
     use Closure;
-    use Glowie\Core\Traits\ElementTrait;
 
     /**
      * Data validator for Glowie application.
@@ -72,7 +71,7 @@
          */
         public function validateFields($data, array $rules, bool $bail = false, bool $bailAll = false){
             // Converts Element data to array
-            if(Util::usesTrait($data, ElementTrait::class)) $data = $data->toArray();
+            if(is_callable([$data, 'toArray'])) $data = $data->toArray();
             if(!Util::isAssociativeArray($rules)) throw new Exception('Validator: Rules must be an associative array for each field/ruleset pairs');
 
             // Loops through rules
@@ -103,7 +102,7 @@
          */
         public function validateMultiple($data, $rules, bool $bail = false, bool $bailAll = false){
             // Converts Element data to array
-            if(Util::usesTrait($data, ElementTrait::class)) $data = $data->toArray();
+            if(is_callable([$data, 'toArray'])) $data = $data->toArray();
 
             // Get array values only
             $data = array_values($data);

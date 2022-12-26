@@ -124,6 +124,18 @@
         }
 
         /**
+         * Removes all session data, except the one that matches the specified key.
+         * @param string|array $key Key to keep. You can also use an array of keys to keep.
+         * @return Session Current Session instance for nested calls.
+         */
+        public function only($key){
+            foreach($_SESSION as $field => $value){
+                if(!in_array($field, (array)$key)) $this->remove($field);
+            }
+            return $this;
+        }
+
+        /**
          * Checks if any value has been associated to a key in the session data.
          * @param string $key Key to check.
          * @return bool Returns true or false.
