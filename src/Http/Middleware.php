@@ -64,17 +64,15 @@
 
          /**
          * Creates a new instance of the middleware.
-         * @param string $route (Optional) Requested route.
-         * @param array $params (Optional) Route parameters.
          */
-        final public function __construct(string $route = '', array $params = []){
+        final public function __construct(){
             $this->controller = Rails::getController();
             $this->get = new Element($_GET);
-            $this->params = new Element($params);
+            $this->params = new Element(Rails::getParams());
             $this->post = new Element($_POST);
             $this->request = Rails::getRequest();
             $this->response = Rails::getResponse();
-            $this->route = $route;
+            $this->route = Rails::getCurrentRoute();
             $this->session = new Session();
         }
 

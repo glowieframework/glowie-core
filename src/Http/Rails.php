@@ -22,7 +22,7 @@
          * Auto routing setting.
          * @var bool
          */
-        private static $auto_routing = false;
+        private static $autoRouting = false;
 
         /**
          * Current controller.
@@ -55,6 +55,18 @@
         private static $routes = [];
 
         /**
+         * Current route name.
+         * @var string
+         */
+        private static $currentRoute;
+
+        /**
+         * Current route params.
+         * @var array
+         */
+        private static $currentParams = [];
+
+        /**
          * Loads the route configuration file.
          */
         public static function load(){
@@ -79,6 +91,7 @@
             if(empty($controller)) throw new RoutingException('Controller cannot be empty for route "' . $name . '"');
             if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
             self::$routes[$name] = [
+                'name' => $name,
                 'uri' => trim($route, '/'),
                 'controller' => $controller,
                 'action' => $action,
@@ -105,6 +118,7 @@
             if(empty($middleware)) throw new RoutingException('Middleware cannot be empty for route "' . $name . '"');
             if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
             self::$routes[$name] = [
+                'name' => $name,
                 'uri' => trim($route, '/'),
                 'controller' => $controller,
                 'action' => $action,
@@ -127,6 +141,7 @@
             if(empty($target)) throw new RoutingException('Redirect target cannot be empty for route "' . $name . '"');
             if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
             self::$routes[$name] = [
+                'name' => $name,
                 'uri' => trim($route, '/'),
                 'redirect' => $target,
                 'code' => $code,
@@ -169,7 +184,7 @@
          * @param bool $option (Optional) **True** for turning on auto routing or **false** for turning it off.
          */
         public static function setAutoRouting(bool $option = true){
-            self::$auto_routing = $option;
+            self::$autoRouting = $option;
         }
 
         /**
@@ -179,6 +194,22 @@
          */
         public static function getRoute(string $route){
             return self::$routes[$route] ?? null;
+        }
+
+        /**
+         * Gets the current route name.
+         * @return string Returns the current route name.
+         */
+        public static function getCurrentRoute(){
+            return self::$currentRoute;
+        }
+
+        /**
+         * Gets the current route params.
+         * @return array Associative array with the current route params.
+         */
+        public static function getParams(){
+            return self::$currentParams;
         }
 
         /**
@@ -242,12 +273,12 @@
                 }
 
                 // Validates the cookie
-                if($cookies->get('MAINTENANCE_KEY') != $key) return self::callServiceUnavailable($route);
+                if($cookies->get('MAINTENANCE_KEY') != $key) return self::callServiceUnavailable();
             }
 
             // Stores current route configuration
             $config = null;
-            $routeName = $route;
+            self::$currentRoute = $route;
 
             // Loops through routes configuration to find a valid route pattern
             foreach (self::$routes as $key => $item) {
@@ -265,7 +296,8 @@
 
                     // Saves the configuration
                     $config = $item;
-                    $routeName = $key;
+                    self::$currentParams = $result;
+                    self::$currentRoute = $key;
                     break;
                 }
             }
@@ -275,7 +307,7 @@
                 // Checks if there is a request method configuration
                 if(!empty($config['methods'])){
                     $config['methods'] = array_map('strtoupper', $config['methods']);
-                    if(!in_array(self::$request->getMethod(), $config['methods'])) return self::callMethodNotAllowed($route, $result ?? []);
+                    if(!in_array(self::$request->getMethod(), $config['methods'])) return self::callMethodNotAllowed();
                 }
 
                 // Checks if there is not a redirect configuration
@@ -287,7 +319,7 @@
                     if (!class_exists($controller)) throw new RoutingException("\"{$controller}\" was not found");
 
                     // Instantiates the controller
-                    self::$controller = new $controller($routeName, $result ?? []);
+                    self::$controller = new $controller;
 
                     // Checks for the route middlewares
                     if(!empty($config['middleware'])){
@@ -297,7 +329,7 @@
                             if (!class_exists($middleware)) throw new RoutingException("\"{$middleware}\" was not found");
 
                             // Instantiates the middleware
-                            self::$middleware = new $middleware($routeName, $result ?? []);
+                            self::$middleware = new $middleware;
                             if (is_callable([self::$middleware, 'init'])) self::$middleware->init();
 
                             // Calls middleware handle() method
@@ -311,7 +343,7 @@
                                     self::$response->deny();
                                     return self::$middleware->fail();
                                 } else {
-                                    return self::callForbidden($routeName, $result ?? []);
+                                    return self::callForbidden();
                                 };
                             }
                         }
@@ -336,7 +368,7 @@
                 }
             } else {
                 // Check if auto routing is enabled
-                if(self::$auto_routing){
+                if(self::$autoRouting){
 
                     // Get URI parameters
                     $autoroute = explode('/', trim($route, '/'));
@@ -345,43 +377,42 @@
                     if($route == '/'){
                         $controller = 'Glowie\Controllers\Main';
                         $action = 'index';
-                        return self::callAutoRoute($controller, $action, $routeName);
+                        return self::callAutoRoute($controller, $action);
 
                     // If only the controller was specified
                     }else if(count($autoroute) == 1){
                         $controller = 'Glowie\Controllers\\' . Util::pascalCase($autoroute[0]);
                         $action = 'index';
-                        return self::callAutoRoute($controller, $action, $routeName);
+                        return self::callAutoRoute($controller, $action);
 
                     // Controller and action were specified
                     }else if(count($autoroute) == 2){
                         $controller = 'Glowie\Controllers\\' . Util::pascalCase($autoroute[0]);
                         $action = Util::camelCase($autoroute[1]);
-                        return self::callAutoRoute($controller, $action, $routeName);
+                        return self::callAutoRoute($controller, $action);
 
                     // Controller, action and parameters were specified
                     }else{
                         $controller = 'Glowie\Controllers\\' . Util::pascalCase($autoroute[0]);
                         $action = Util::camelCase($autoroute[1]);
                         $params = array_slice($autoroute, 2);
-                        return self::callAutoRoute($controller, $action, $routeName, $params);
+                        return self::callAutoRoute($controller, $action, $params);
                     }
                 }else{
                     // Route was not found
-                    return self::callNotFound($routeName);
+                    return self::callNotFound();
                 }
             }
         }
 
         /**
          * Calls `notFound()` action in Error controller.
-         * @param string $route Request route.
          */
-        private static function callNotFound(string $route){
+        private static function callNotFound(){
             self::$response->notFound();
             $controller = 'Glowie\Controllers\Error';
             if (class_exists($controller)) {
-                self::$controller = new $controller($route);
+                self::$controller = new $controller;
                 if (is_callable([self::$controller, 'init'])) self::$controller->init();
                 if (is_callable([self::$controller, 'notFound'])) self::$controller->notFound();
             }
@@ -389,14 +420,12 @@
 
         /**
          * Calls `forbidden()` action in Error controller.
-         * @param string $route Request route.
-         * @param array $params (Optional) Route parameters.
          */
-        private static function callForbidden(string $route, array $params = []){
+        private static function callForbidden(){
             self::$response->deny();
             $controller = 'Glowie\Controllers\Error';
             if (class_exists($controller)) {
-                self::$controller = new $controller($route, $params);
+                self::$controller = new $controller;
                 if (is_callable([self::$controller, 'init'])) self::$controller->init();
                 if (is_callable([self::$controller, 'forbidden'])) self::$controller->forbidden();
             }
@@ -404,14 +433,12 @@
 
          /**
          * Calls `methodNotAllowed()` action in Error controller.
-         * @param string $route Request route.
-         * @param array $params (Optional) Route parameters.
          */
-        private static function callMethodNotAllowed(string $route, array $params = []){
+        private static function callMethodNotAllowed(){
             self::$response->setStatusCode(Response::HTTP_METHOD_NOT_ALLOWED);
             $controller = 'Glowie\Controllers\Error';
             if (class_exists($controller)) {
-                self::$controller = new $controller($route, $params);
+                self::$controller = new $controller;
                 if (is_callable([self::$controller, 'init'])) self::$controller->init();
                 if (is_callable([self::$controller, 'methodNotAllowed'])) self::$controller->methodNotAllowed();
             }
@@ -419,14 +446,12 @@
 
         /**
          * Calls `serviceUnavailable()` action in Error controller.
-         * @param string $route Request route.
-         * @param array $params (Optional) Route parameters.
          */
-        private static function callServiceUnavailable(string $route, array $params = []){
+        private static function callServiceUnavailable(){
             self::$response->setStatusCode(Response::HTTP_SERVICE_UNAVAILABLE);
             $controller = 'Glowie\Controllers\Error';
             if (class_exists($controller)) {
-                self::$controller = new $controller($route, $params);
+                self::$controller = new $controller;
                 if (is_callable([self::$controller, 'init'])) self::$controller->init();
                 if (is_callable([self::$controller, 'serviceUnavailable'])) self::$controller->serviceUnavailable();
             }
@@ -436,10 +461,9 @@
          * Calls the auto routing settings.
          * @param string $controller Controller name.
          * @param string $action Action name.
-         * @param string $route Request route.
          * @param array $params (Optional) Route parameters.
          */
-        private static function callAutoRoute(string $controller, string $action, string $route, array $params = []){
+        private static function callAutoRoute(string $controller, string $action, array $params = []){
             if (class_exists($controller)) {
                 if (!empty($params)){
                     foreach($params as $key => $value){
@@ -447,15 +471,16 @@
                         unset($params[$key]);
                     }
                 }
-                self::$controller = new $controller($route, $params);
+                self::$currentParams = $params;
+                self::$controller = new $controller;
                 if (is_callable([self::$controller, 'init'])) self::$controller->init();
                 if (is_callable([self::$controller, $action])) {
                     self::$controller->{$action}();
                 } else {
-                    self::callNotFound($route);
+                    self::callNotFound();
                 };
             } else {
-                self::callNotFound($route);
+                self::callNotFound();
             }
         }
     }

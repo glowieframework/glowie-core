@@ -2,6 +2,7 @@
     namespace Glowie\Core;
 
     use Util;
+    use Glowie\Core\Exception\FileException;
 
     /**
      * Plugin core for Glowie application.
@@ -15,7 +16,7 @@
     abstract class Plugin{
 
         /**
-         * Array of files to be published to the app folder.
+         * Array of files and directories to be published to the app folder.
          * @var array
          */
         protected $files = [];
@@ -26,7 +27,14 @@
          */
         final public function publish(bool $force = false){
             foreach($this->files as $origin => $target){
-                if(!is_dir($origin)){
+                if(is_dir($origin)){
+                    $files = Util::getFiles($origin . '/*');
+                    foreach($files as $file){
+                        if(!is_file($file)) continue;
+                        $fileTarget = $target . Util::replaceFirst($file, $origin, '');
+                        $this->copyFile($file, $fileTarget, $force);
+                    }
+                }else if(is_file($origin)){
                     $this->copyFile($origin, $target, $force);
                 }
             }
@@ -45,6 +53,7 @@
             // Check if base folder exists
             $dir = pathinfo($target, PATHINFO_DIRNAME);
             if(!is_dir($dir)) mkdir($dir, 0755, true);
+            if(!is_writable($dir)) throw new FileException('Directory ' . $dir . ' is not writable, please check your chmod settings');
 
             // Copy the file
             if($force || !is_file($target)) copy($origin, $target);

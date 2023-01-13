@@ -342,8 +342,9 @@
         }
 
         /**
-         * Returns a CSS classlist string based in giving conditions.
-         * @param array $array Array of conditions. The key must be the class name, and the value a boolean expression.
+         * Returns a CSS classlist string based on giving conditions.
+         * @param array $array Array of conditions. The key must be the class name, and the value a boolean expression.\
+         * If you omit the key, the class will be added anyway.
          * @return string Returns the classlist.
          */
         public static function cssArray(array $array){
@@ -351,7 +352,7 @@
             foreach($array as $key => $value){
                 if(is_numeric($key)){
                     $result[] = $value;
-                }elseif($value){
+                }else if($value){
                     $result[] = $key;
                 }
             }
