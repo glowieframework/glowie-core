@@ -144,8 +144,8 @@
          * @return Uploader Current Uploader instance for nested calls.
          */
         public function setDirectory(string $directory){
-            $directory = trim($directory, '/\\');
-            if(!is_dir($directory) || !is_writable($directory)) throw new FileException('Directory "' . Util::location($directory) . '" is invalid or not writable');
+            $directory = rtrim($directory, '/\\');
+            if(!is_dir($directory) || !is_writable($directory)) throw new FileException('Directory "' . $directory . '" is invalid or not writable');
             $this->directory = $directory;
             return $this;
         }
@@ -244,7 +244,7 @@
                     }
                     $this->errors = $errors;
                     if(empty($this->errors)){
-                        $this->erorrs = self::ERR_UPLOAD_SUCCESS;
+                        $this->errors = self::ERR_UPLOAD_SUCCESS;
                         return $result;
                     }else{
                         if($deleteOnFail){
@@ -304,8 +304,8 @@
             if ($this->checkFileSize($file['size'])) {
                 if ($this->checkExtension($file['extension']) && $this->checkMime($file['type'])) {
                     $filename = $this->generateFilename($file['name'], $key);
-                    $target = $this->directory . '/' . $filename;
-                    if (is_uploaded_file($file['tmp_name']) && move_uploaded_file($file['tmp_name'], $target)) {
+                    $target = $this->directory . DIRECTORY_SEPARATOR . $filename;
+                    if (is_uploaded_file($file['tmp_name']) && @move_uploaded_file($file['tmp_name'], $target)) {
                         $this->errors = self::ERR_UPLOAD_SUCCESS;
                         return $target;
                     } else {
@@ -384,27 +384,15 @@
         }
 
         /**
-         * Checks for an existing file and returns the new filename if overwrite is not enabled.
-         * @param string $filename Filename to check.
+         * Generates an unique filename or uses the custom naming generator.
+         * @param string $filename Original filename to parse.
          * @param int $key (Optional) File key in multiple files.
          * @return string Returns the new filename.
          */
         private function generateFilename(string $filename, int $key = 0){
             if($this->namingHandler) $filename = call_user_func_array($this->namingHandler, [$filename, $key]);
-            if(!$this->overwrite){
-                $ext = $this->getExtension($filename);
-                $name = ($ext == '') ? $name = $filename : $name = substr($filename, 0, strlen($filename) - strlen($ext) - 1);
-                $i = 1;
-                $result = $filename;
-                while (is_file($this->directory . '/' . $filename)) {
-                    $result = $name . '_' . $i . '.' . $ext;
-                    $filename = $result;
-                    $i++;
-                }
-                return $result;
-            }else{
-                return $filename;
-            }
+            $filename = Util::uniqueToken() . '.' . $this->getExtension($filename);
+            return $filename;
         }
 
     }

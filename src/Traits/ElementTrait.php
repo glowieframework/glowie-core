@@ -150,6 +150,14 @@
         }
 
         /**
+         * Returns the serializable JSON data for the Element.
+         * @return array Element data as an associative array.
+         */
+        public function jsonSerialize(){
+            return $this->toArray();
+        }
+
+        /**
          * Gets the Element data as JSON.
          * @param int $flags (Optional) JSON encoding flags (same as in `json_encode()` function).
          * @param int $depth (Optional) JSON encoding maximum depth (same as in `json_encode()` function).

@@ -4,6 +4,7 @@
     use Glowie\Core\Exception\FileException;
     use Config;
     use Util;
+    use JsonSerializable;
 
     /**
      * Session manager for Glowie application.
@@ -14,7 +15,7 @@
      * @license MIT
      * @link https://glowie.tk
      */
-    class Session{
+    class Session implements JsonSerializable{
 
         /**
          * Session flash data.
@@ -174,6 +175,14 @@
          */
         public function toArray(){
             return $_SESSION;
+        }
+
+        /**
+         * Returns the serializable JSON data for the session.
+         * @return array Session data as an associative array.
+         */
+        public function jsonSerialize(){
+            return $this->toArray();
         }
 
         /**

@@ -3,6 +3,7 @@
 
     use Config;
     use Util;
+    use JsonSerializable;
 
     /**
      * Cookie manager for Glowie application.
@@ -13,7 +14,7 @@
      * @license MIT
      * @link https://glowie.tk
      */
-    class Cookies{
+    class Cookies implements JsonSerializable{
 
         /**
          * Expiration time for **1 minute**.
@@ -159,6 +160,14 @@
          */
         public function toArray(){
             return $_COOKIE;
+        }
+
+        /**
+         * Returns the serializable JSON data for the cookies.
+         * @return array Cookies data as an associative array.
+         */
+        public function jsonSerialize(){
+            return $this->toArray();
         }
 
         /**

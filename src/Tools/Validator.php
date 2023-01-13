@@ -160,12 +160,15 @@
                     // [MIN] - Checks if variable is bigger or equal than min
                     case 'min':
                         if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "min" rule');
+                        $rule[1] = (int)$rule[1];
                         if($data instanceof Countable){
                             if(count($data) < $rule[1]) $result[] = 'min';
-                        }else if(is_string($data)){
-                            if(mb_strlen($data) < $rule[1]) $result[] = 'min';
+                        }else if(is_string($data) && is_file($data)){
+                            if(filesize($data) < ($rule[1] * 1024)) $result[] = 'min';
                         }else if(is_numeric($data)){
                             if($data < $rule[1]) $result[] = 'min';
+                        }else if(is_string($data)){
+                            if(mb_strlen($data) < $rule[1]) $result[] = 'min';
                         }else{
                             $result[] = 'min';
                         }
@@ -174,12 +177,15 @@
                     // [MAX] - Checks if variable is lower or equal than max
                     case 'max':
                         if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "max" rule');
+                        $rule[1] = (int)$rule[1];
                         if ($data instanceof Countable) {
                             if (count($data) > $rule[1]) $result[] = 'max';
-                        } else if (is_string($data)) {
-                            if (mb_strlen($data) > $rule[1]) $result[] = 'max';
+                        } else if(is_string($data) && is_file($data)){
+                            if(filesize($data) > ($rule[1] * 1024)) $result[] = 'max';
                         } else if(is_numeric($data)) {
                             if ($data > $rule[1]) $result[] = 'max';
+                        } else if (is_string($data)) {
+                            if (mb_strlen($data) > $rule[1]) $result[] = 'max';
                         }else{
                             $result[] = 'max';
                         }
@@ -188,12 +194,15 @@
                     // [SIZE] - Checks if variable size equals to size
                     case 'size':
                         if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "size" rule');
+                        $rule[1] = (int)$rule[1];
                         if ($data instanceof Countable) {
                             if (count($data) != $rule[1]) $result[] = 'size';
-                        } else if (is_string($data)) {
-                            if (mb_strlen($data) != $rule[1]) $result[] = 'size';
+                        } else if(is_string($data) && is_file($data)){
+                            if(filesize($data) != ($rule[1] * 1024)) $result[] = 'size';
                         } else if(is_numeric($data)){
                             if ($data != $rule[1]) $result[] = 'size';
+                        } else if (is_string($data)) {
+                            if (mb_strlen($data) != $rule[1]) $result[] = 'size';
                         } else {
                             $result[] = 'size';
                         }

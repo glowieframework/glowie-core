@@ -2,6 +2,7 @@
     namespace Glowie\Core;
 
     use Glowie\Core\Traits\ElementTrait;
+    use JsonSerializable;
 
     /**
      * Generic safe object instance for Glowie application.
@@ -12,7 +13,7 @@
      * @license MIT
      * @link https://glowie.tk
      */
-    class Element{
+    class Element implements JsonSerializable{
         use ElementTrait;
 
         /**
