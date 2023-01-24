@@ -85,19 +85,9 @@
          * Creates a new HTTP client instance.
          * @param array $headers (Optional) Custom headers to send in the request. Must be an associative array with the key being the name of the header\
          * and the value the header value (can be a string or an array of strings).
-         * @param array $cookies (Optional) Custom cookies to send in the request. Must be an associative array with the key being the name of the cookie\
-         * and the value the cookie value.
          */
-        public function __construct(array $headers = [], array $cookies = []){
-            // Set headers
-            if(!empty($headers)){
-                foreach($headers as $key => $value) $this->addHeader($key, $value);
-            }
-
-            // Set cookies
-            if(!empty($cookies)){
-                foreach($cookies as $key => $value) $this->addCookie($key, $value);
-            }
+        public function __construct(array $headers = []){
+            foreach($headers as $key => $value) $this->addHeader($key, $value);
         }
 
         /**

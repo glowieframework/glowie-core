@@ -643,7 +643,7 @@
          * @return string The resulting JSON string.
          */
         public static function jsonEncode($data, int $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK, int $depth = 512){
-            if(is_callable([$data, 'toArray'])) return $data->toJson($flags, $depth);
+            if(is_callable([$data, 'toJson'])) return $data->toJson($flags, $depth);
             return json_encode($data, $flags, $depth);
         }
 

@@ -61,7 +61,7 @@
         public function getFiles(string $input){
             $uploader = new Uploader();
             if(empty($_FILES[$input])) return null;
-            return $uploader->arrangeFiles($_FILES[$input], false);
+            return $uploader->arrangeFiles($_FILES[$input]);
         }
 
         /**

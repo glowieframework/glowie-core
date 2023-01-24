@@ -82,7 +82,7 @@
          * Target directory.
          * @var string
          */
-        private $directory;
+        private $directory = 'uploads';
 
         /**
          * Upload errors.
@@ -94,25 +94,19 @@
          * Allowed extensions.
          * @var array
          */
-        private $extensions;
+        private $extensions = [];
 
         /**
          * Allowed mime types.
          * @var array
          */
-        private $mimes;
+        private $mimes = [];
 
         /**
          * Maximum allowed file size.
          * @var float
          */
-        private $maxFileSize;
-
-        /**
-         * Overwrite existing files.
-         * @var bool
-         */
-        private $overwrite;
+        private $maxFileSize = 2;
 
         /**
          * Custom naming handler function.
@@ -124,18 +118,9 @@
          * Creates a new file uploader instance.
          * @param string $directory (Optional) Target directory to store the uploaded files. Must be an existing directory with write permissions,\
          * absolute path or relative to the **app/public** folder.
-         * @param array $extensions (Optional) Array of allowed file extensions. Use an empty array to allow any extension.
-         * @param float $maxFileSize (Optional) Maximum allowed file size **in megabytes**. Use `0` for unlimited (not recommended).\
-         * **Important:** This setting cannot be higher than your php.ini `upload_max_filesize` directive.
-         * @param bool $overwrite (Optional) Overwrite existing files. If false, uploaded files will append a number to its name.
-         * @param array $mimes (Optional) Array of allowed mime types. Use an empty array to allow any type.
          */
-        public function __construct(string $directory = 'uploads', array $extensions = [], float $maxFileSize = 2, bool $overwrite = false, array $mimes = []){
+        public function __construct(string $directory = 'uploads'){
             $this->setDirectory($directory);
-            $this->setExtensions($extensions);
-            $this->setMaxFileSize($maxFileSize);
-            $this->setOverwrite($overwrite);
-            $this->setMimes($mimes);
         }
 
         /**
@@ -144,9 +129,7 @@
          * @return Uploader Current Uploader instance for nested calls.
          */
         public function setDirectory(string $directory){
-            $directory = rtrim($directory, '/\\');
-            if(!is_dir($directory) || !is_writable($directory)) throw new FileException('Directory "' . $directory . '" is invalid or not writable');
-            $this->directory = $directory;
+            $this->directory = rtrim($directory, '/\\');
             return $this;
         }
 
@@ -168,16 +151,6 @@
          */
         public function setMaxFileSize(float $maxFileSize){
             $this->maxFileSize = $maxFileSize;
-            return $this;
-        }
-
-        /**
-         * Sets if the uploader should overwrite existing files.
-         * @param bool $overwrite If true, uploaded files will be overwritten. Otherwise, it will append a number to its name.
-         * @return Uploader Current Uploader instance for nested calls.
-         */
-        public function setOverwrite(bool $overwrite){
-            $this->overwrite = $overwrite;
             return $this;
         }
 
@@ -213,10 +186,14 @@
         /**
          * Performs one or multiple file uploads.
          * @param string $input Valid file input field name.
-         * @param bool $deleteOnFail (Optional) Delete all uploaded files if a upload fails.
+         * @param bool $deleteOnFail (Optional) Delete all uploaded files if an upload fails.
          * @return mixed Returns the uploaded file URL (or an array of URLs if multiple files) on success or false on errors.
          */
-        public function upload(string $input, bool $deleteOnFail = true){
+        public function upload(string $input, bool $deleteOnFail = false){
+            // Validate target directory
+            if(!is_dir($this->directory) || !is_writable($this->directory)) throw new FileException('Directory "' . $this->directory . '" is invalid or not writable');
+
+            // Checks for empty uploads
             if(!empty($_FILES[$input])){
                 // Rearrange file array
                 $files = $this->arrangeFiles($_FILES[$input]);
@@ -239,7 +216,7 @@
                         if($process !== false){
                             $result[] = $process;
                         }else{
-                            $errors[$file['name']] = $this->errors;
+                            $errors[$file->name] = $this->errors;
                         }
                     }
                     $this->errors = $errors;
@@ -262,10 +239,9 @@
         /**
          * Rearrange $_FILES input array.
          * @param array $files $_FILES input array to rearrange.
-         * @param bool $assoc (Optional) Return files as an associative array instead of an Element.
          * @return array Returns the new array.
          */
-        public function arrangeFiles(array $files, bool $assoc = true){
+        public function arrangeFiles(array $files){
             if(is_array($files['name'])){
                 $result = [];
                 for ($i=0; $i < count($files['name']); $i++) {
@@ -278,34 +254,35 @@
                         'size_string' => $this->parseSize($files['size'][$i]),
                         'extension' => $this->getExtension($files['name'][$i])
                     ];
-                    $result[] = $assoc ? $item : new Element($item);
+                    $result[] = new Element($item);
                 }
                 return $result;
             }else{
                 $files['name'] = Util::sanitizeFilename($files['name']);
                 $files['extension'] = $this->getExtension($files['name']);
                 $files['size_string'] = $this->parseSize($files['size']);
-                return [($assoc ? $files : new Element($files))];
+                return [new Element($files)];
             }
         }
 
         /**
          * Fetches a file upload.
-         * @param array $file Uploaded file array.
+         * @param Element $file Uploaded file Element.
          * @param int $key (Optional) File key in multiple files.
          * @return string|bool Returns the uploaded file relative URL on success or false on error.
          */
-        private function processFile(array $file, int $key = 0){
-            if(!empty($file['error'])){
-                $this->errors = $file['error'];
+        private function processFile($file, int $key = 0){
+            if(!empty($file->error)){
+                $this->errors = $file->error;
                 return false;
             }
 
-            if ($this->checkFileSize($file['size'])) {
-                if ($this->checkExtension($file['extension']) && $this->checkMime($file['type'])) {
-                    $filename = $this->generateFilename($file['name'], $key);
-                    $target = $this->directory . DIRECTORY_SEPARATOR . $filename;
-                    if (is_uploaded_file($file['tmp_name']) && @move_uploaded_file($file['tmp_name'], $target)) {
+            // Perform upload
+            if ($this->checkFileSize($file->size)) {
+                if ($this->checkExtension($file->extension) && $this->checkMime($file->type)) {
+                    $filename = $this->generateFilename($file->name, $key);
+                    $target = $this->directory . '/' . $filename;
+                    if (is_uploaded_file($file->tmp_name) && @move_uploaded_file($file->tmp_name, $target)) {
                         $this->errors = self::ERR_UPLOAD_SUCCESS;
                         return $target;
                     } else {

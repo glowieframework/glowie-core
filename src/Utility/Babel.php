@@ -34,8 +34,7 @@
             }
 
             // Sets the default language
-            $default = Config::get('other.language');
-            if(!empty($default)) self::setActiveLanguage($default);
+            self::setActiveLanguage(Config::get('other.language', 'en'));
         }
 
         /**
@@ -43,7 +42,6 @@
          * @param string $lang Language name to set as active.
          */
         public static function setActiveLanguage(string $lang){
-            if(empty(self::$languages[$lang])) throw new i18nException('Language "' . $lang . '" does not exist in "app/languages"');
             self::$active_language = $lang;
         }
 
