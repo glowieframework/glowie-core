@@ -22,6 +22,12 @@
         use DatabaseTrait;
 
         /**
+         * Safe mode;
+         * @var bool
+         */
+        private $_safe;
+
+        /**
          * SELECT statement.
          * @var string
          */
@@ -113,6 +119,16 @@
         public function __construct(string $table = 'glowie', string $database = 'default'){
             $this->table($table);
             $this->database($database);
+        }
+
+        /**
+         * Enables the WHERE checking for UPDATE and DELETE queries.
+         * @param bool $option (Optional) True to enable safe mode, false to disable.
+         * @return $this Current instance for nested calls.
+         */
+        public function safeUpdateDeletes(bool $option = true){
+            $this->_safe = $option;
+            return $this;
         }
 
         /**
@@ -1201,6 +1217,9 @@
          * @throws QueryException Throws an exception if the query fails.
          */
         public function update(array $data){
+            // Check for safe mode
+            if($this->_safe && empty($this->_where)) throw new Exception('update(): Safe mode reports missing WHERE statements before UPDATE query');
+
             // Set params
             $this->_instruction = 'UPDATE';
             $set = [];
@@ -1228,6 +1247,7 @@
          * @throws QueryException Throws an exception if the query fails.
          */
         public function delete($table = ''){
+            if($this->_safe && empty($this->_where)) throw new Exception('delete(): Safe mode reports missing WHERE statements before DELETE query');
             $this->_instruction = 'DELETE';
             if(!empty($table)) $this->_delete = implode(', ', (array)$table);
             return $this->execute();

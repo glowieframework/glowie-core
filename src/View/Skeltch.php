@@ -91,21 +91,23 @@
             $code = preg_replace('~(?<!@){\s*empty\s*\((.+?)\)\s*}~is', '<?php if(Util::isEmpty($1)): ?>', $code);
             $code = preg_replace('~(?<!@){\s*notempty\s*\((.+?)\)\s*}~is', '<?php if(!Util::isEmpty($1)): ?>', $code);
             $code = preg_replace('~(?<!@){\s*notset\s*\((.+?)\)\s*}~is', '<?php if(!isset($1)): ?>', $code);
+            $code = preg_replace('~(?<!@){\s*env\s*\((.+?)\)\s*}~is', '<?php if(Config::get(\'env\') == $1): ?>', $code);
             $code = preg_replace('~(?<!@){\s*else\s*if\s*\((.+?)\)\s*}~is', '<?php elseif($1): ?>', $code);
             $code = preg_replace('~(?<!@){\s*else\s*}~is', '<?php else: ?>', $code);
-            $code = preg_replace('~(?<!@){\s*(/if|/isset|/empty|/notempty|/notset)\s*}~is', '<?php endif; ?>', $code);
+            $code = preg_replace('~(?<!@){\s*(/if|/isset|/empty|/notempty|/notset|/env)\s*}~is', '<?php endif; ?>', $code);
             return $code;
         }
 
         /**
          * Compiles Glowie functions.\
-         * example: `{@url('/')}`
+         * example: `{url('/')}`
          * @param string $code Code to compile.
          * @return string Returns the compiled code.
          */
         private static function compileFunctions(string $code){
             $code = preg_replace('~(?<!@){\s*view\s*\((.+?)\)\s*}~is', '<?php $this->renderView($1); ?>', $code);
             $code = preg_replace('~(?<!@){\s*layout\s*\((.+?)\)\s*}~is', '<?php $this->renderLayout($1); ?>', $code);
+            $code = preg_replace('~(?<!@){\s*partial\s*\((.+?)\)\s*}~is', '<?php $this->renderPartial($1); ?>', $code);
             $code = preg_replace('~(?<!@){\s*babel\s*\((.+?)\)\s*}~is', '<?php echo Babel::get($1); ?>', $code);
             $code = preg_replace('~(?<!@){\s*url\s*\((.+?)\)\s*}~is', '<?php echo Util::baseUrl($1); ?>', $code);
             $code = preg_replace('~(?<!@){\s*asset\s*\((.+?)\)\s*}~is', '<?php echo Util::asset($1); ?>', $code);

@@ -20,7 +20,6 @@
         }
     ],
     "require": {
-        "ext-curl": "*",
         "ext-mbstring": "*",
         "ext-openssl": "*"
     },

@@ -118,6 +118,9 @@
          * Refreshes the database connection.
          */
         public function reconnect(){
+            // Checks for mysqli extension
+            if(!extension_loaded('mysqli')) throw new Exception('DB: Missing "mysqli" extension in your PHP installation');
+
             // Gets connection configuration
             $database = Config::get("database.{$this->_connection}");
             if(!$database) throw new DatabaseException([], 'Database connection setting "' . $this->_connection . '" not found in your app configuration');

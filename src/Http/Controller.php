@@ -100,6 +100,16 @@
             echo $layout->getContent();
         }
 
+        /**
+         * Renders a view file in a private scope. No global or parent view properties will be inherited.
+         * @param string $view View filename. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
+         * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
+         */
+        final public function renderPartial(string $view, array $params = []){
+            $view = new View($view, $params, true);
+            echo $view->getContent();
+        }
+
     }
 
 ?>

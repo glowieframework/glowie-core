@@ -16,7 +16,7 @@
          * Active language configuration.
          * @var string
          */
-        private static $active_language;
+        private static $activeLanguage;
 
         /**
          * Language configurations.
@@ -42,7 +42,7 @@
          * @param string $lang Language name to set as active.
          */
         public static function setActiveLanguage(string $lang){
-            self::$active_language = $lang;
+            self::$activeLanguage = $lang;
         }
 
         /**
@@ -50,7 +50,7 @@
          * @return string Active language name.
          */
         public static function getActiveLanguage(){
-            return self::$active_language;
+            return self::$activeLanguage;
         }
 
         /**
@@ -63,7 +63,7 @@
          */
         public static function get(string $key, array $params = [], ?string $lang = null, string $default = ''){
             // Parses active language
-            if(!$lang) $lang = self::$active_language;
+            if(!$lang) $lang = self::$activeLanguage;
 
             // Checks if specified language was defined
             if(empty(self::$languages[$lang])) throw new i18nException('Language "' . $lang . '" does not exist in "app/languages"');

@@ -49,8 +49,9 @@
          * Instantiates a new View.
          * @param string $view View filename to instantiate.
          * @param array $params (Optional) View parameters to parse.
+         * @param bool $partial (Optional) Restrict view partial scope.
          */
-        public function __construct(string $view, array $params = []){
+        public function __construct(string $view, array $params = [], bool $partial = false){
             // Validate file
             $this->_filename = $view;
             $view = Util::location('views/' . $view . (!Util::endsWith($view, '.phtml') ? '.phtml' : ''));
@@ -62,7 +63,7 @@
 
             // Parse parameters
             $this->_params = $params;
-            $globalParams = Rails::getController()->view->toArray();
+            $globalParams = !$partial ? Rails::getController()->view->toArray() : [];
             $this->__constructTrait(array_merge($globalParams, $this->_params));
 
             // Render view
@@ -112,6 +113,15 @@
          */
         public function renderLayout(string $layout, ?string $view = null, array $params = []){
             Rails::getController()->renderLayout($layout, $view, array_merge($this->_params, $params));
+        }
+
+        /**
+         * Renders a view file in a private scope. No global or parent view properties will be inherited.
+         * @param string $view View filename. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
+         * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
+         */
+        public function renderPartial(string $view, array $params = []){
+            Rails::getController()->renderPartial($view, $params);
         }
 
         /**

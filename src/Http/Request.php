@@ -159,6 +159,15 @@
         }
 
         /**
+         * Checks if a header is present.
+         * @param string $name Header name to check.
+         * @return bool Returns true if the header is present, false otherwise.
+         */
+        public function hasHeader(string $name){
+            return !is_null($this->getHeader($name));
+        }
+
+        /**
          * Gets the `Content-Type` header.
          * @return string|null Returns the header value if exists or null if there is none.
          */

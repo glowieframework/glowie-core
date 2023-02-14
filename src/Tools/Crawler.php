@@ -3,6 +3,7 @@
 
     use Glowie\Core\Element;
     use Glowie\Core\Exception\RequestException;
+    use Exception;
 
     /**
      * HTTP client for Glowie application.
@@ -87,6 +88,7 @@
          * and the value the header value (can be a string or an array of strings).
          */
         public function __construct(array $headers = []){
+            if(!extension_loaded('curl')) throw new Exception('Crawler: Missing "curl" extension in your PHP installation');
             foreach($headers as $key => $value) $this->addHeader($key, $value);
         }
 

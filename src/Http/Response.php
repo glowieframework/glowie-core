@@ -196,6 +196,14 @@
         }
 
         /**
+         * Sets a **429 Too Many Requests** HTTP response code.
+         * @return Response Current Response instance for nested calls.
+         */
+        public function rateLimit(){
+            return $this->setStatusCode(self::HTTP_TOO_MANY_REQUESTS);
+        }
+
+        /**
          * Sets a new header value or replaces the existing one.
          * @param string $name Header name to set.
          * @param string|array $value Header value to set. Can also be an array of values.
