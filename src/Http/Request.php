@@ -2,6 +2,7 @@
     namespace Glowie\Core\Http;
 
     use Config;
+    use Util;
     use Glowie\Core\Element;
     use Glowie\Core\Tools\Uploader;
     use Glowie\Core\Traits\ElementTrait;
@@ -77,7 +78,8 @@
          * @return string Request clean URI.
          */
         public function getURI(){
-            return trim(substr(trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/'), strlen(APP_FOLDER)), '/');
+            $result = trim(substr(trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/'), strlen(APP_FOLDER)), '/');
+            return !Util::isEmpty($result) ? $result : '/';
         }
 
         /**
@@ -103,7 +105,7 @@
          * @return mixed Returns the value if the key exists (or the default if not) or the JSON Element if a key is not provided.
          */
         public function getJson(?string $key = null, $default = null){
-            if(empty($key)) return self::$json;
+            if(Util::isEmpty($key)) return self::$json;
             return self::$json->get($key, $default);
         }
 

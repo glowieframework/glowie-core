@@ -152,7 +152,7 @@
         public function addSelect($columns = '*'){
             $this->_instruction = 'SELECT';
             $value = implode(', ', (array)$columns);
-            $this->_select .= (!empty($this->_select) ? ', ' : '') . $value;
+            $this->_select .= (!Util::isEmpty($this->_select) ? ', ' : '') . $value;
             return $this;
         }
 
@@ -1249,7 +1249,7 @@
         public function delete($table = ''){
             if($this->_safe && empty($this->_where)) throw new Exception('delete(): Safe mode reports missing WHERE statements before DELETE query');
             $this->_instruction = 'DELETE';
-            if(!empty($table)) $this->_delete = implode(', ', (array)$table);
+            if(!Util::isEmpty($table)) $this->_delete = implode(', ', (array)$table);
             return $this->execute();
         }
 
@@ -1536,11 +1536,11 @@
          */
         public function getQuery(){
             // Checks for raw query
-            if(!empty($this->_raw)) return $this->_raw;
+            if(!Util::isEmpty($this->_raw)) return $this->_raw;
 
             // Checks for empty query
-            if(empty($this->_instruction)) $this->_instruction = 'SELECT';
-            if(empty($this->_select)) $this->_select = '*';
+            if(Util::isEmpty($this->_instruction)) $this->_instruction = 'SELECT';
+            if(Util::isEmpty($this->_select)) $this->_select = '*';
 
             // Gets the instruction
             $query = $this->_instruction;
@@ -1551,13 +1551,13 @@
             }
 
             // Gets DELETE statement
-            if(!empty($this->_delete)){
+            if(!Util::isEmpty($this->_delete)){
                 $query .= " {$this->_delete}";
             }
 
             // Gets FROM statement
             if($this->_instruction == 'SELECT' || $this->_instruction == 'SELECT DISTINCT' || $this->_instruction == 'DELETE'){
-                if (!empty($this->_from)) {
+                if (!Util::isEmpty($this->_from)) {
                     $query .= " FROM {$this->_from}";
                 } else {
                     $query .= " FROM {$this->_table}";
@@ -1582,14 +1582,14 @@
 
             // Gets INSERT statements
             if($this->_instruction == 'INSERT' || $this->_instruction == 'INSERT IGNORE' || $this->_instruction == 'REPLACE'){
-                if(!empty($this->_insert) && !empty($this->_values)){
+                if(!Util::isEmpty($this->_insert) && !Util::isEmpty($this->_values)){
                     $query .= " INTO {$this->_table} ({$this->_insert}) VALUES $this->_values";
                 }
             }
 
             // Gets ON DUPLICATE KEY statement
             if($this->_instruction == 'INSERT'){
-                if (!empty($this->_duplicate)) {
+                if (!Util::isEmpty($this->_duplicate)) {
                     $query .= " {$this->_duplicate}";
                 }
             }

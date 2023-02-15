@@ -263,7 +263,7 @@
         public function autoIncrement(string $name, string $type = self::TYPE_BIG_INTEGER_UNSIGNED, ?int $size = null){
             $type = strtoupper($type);
             $field = "`{$name}` {$type}";
-            if(!empty($size)) $field .= "({$size})";
+            if(!Util::isEmpty($size)) $field .= "({$size})";
             $this->_autoincrement = "{$field} NOT NULL";
             return $this;
         }
@@ -451,7 +451,7 @@
             // Field type and size
             $data['type'] = strtoupper($data['type']);
 
-            if(!empty($data['size'])){
+            if(!Util::isEmpty($data['size'])){
                 if(Util::stringContains($data['type'], ' UNSIGNED')){
                     $data['type'] = str_replace(' UNSIGNED', '', $data['type']);
                     $field .= $data['type'] . "({$data['size']}) UNSIGNED";
@@ -476,7 +476,7 @@
 
             // After
             if($data['operation'] != 'create'){
-                if(!empty($data['after'])) $field .= " AFTER `{$data['after']}`";
+                if(!Util::isEmpty($data['after'])) $field .= " AFTER `{$data['after']}`";
             }
 
             // Saves the result
@@ -506,7 +506,7 @@
         public function index($column, string $name = '', bool $unique = false){
             foreach((array)$column as $item){
                 $key = $name;
-                if(empty($name)) $key = $item;
+                if(Util::isEmpty($name)) $key = $item;
                 if($unique){
                     $this->_unique[$key][] = "`{$item}`";
                 }else{
@@ -539,7 +539,7 @@
          * @return Skeleton Current Skeleton instance for nested calls.
          */
         public function foreignKey($column, string $table, $reference, ?string $name = null, string $update = 'RESTRICT', string $delete = 'RESTRICT'){
-            $name = !empty($name) ? "CONSTRAINT `{$name}` " : '';
+            $name = !Util::isEmpty($name) ? "CONSTRAINT `{$name}` " : '';
             $column = implode('`, `', (array)$column);
             $reference = implode('`, `', (array)$reference);
             $this->_foreign[] = "{$name}FOREIGN KEY (`{$column}`) REFERENCES `{$table}` (`{$reference}`) ON UPDATE {$update} ON DELETE {$delete}";
@@ -736,7 +736,7 @@
          * @return bool Returns true if the table exists, false otherwise.
          */
         public function tableExists(?string $table = null){
-            if(empty($table)) $table = $this->_table;
+            if(Util::isEmpty($table)) $table = $this->_table;
             $this->_raw = "SHOW TABLES LIKE \"{$table}\"";
             $result = $this->execute(true, false);
             return !empty($result);
@@ -769,14 +769,14 @@
          */
         public function getQuery(){
             // Checks for raw query
-            if(!empty($this->_raw)) return $this->_raw;
+            if(!Util::isEmpty($this->_raw)) return $this->_raw;
 
             // Gets the instruction
             $query = $this->_instruction;
 
             // Gets EXISTS
             if(in_array($this->_instruction, ['CREATE TABLE', 'CREATE TEMPORARY TABLE', 'TRUNCATE TABLE', 'DROP TABLE', 'CREATE DATABASE', 'DROP DATABASE'])){
-                if(!empty($this->_exists)) $query .= $this->_exists;
+                if(!Util::isEmpty($this->_exists)) $query .= $this->_exists;
             }
 
             // Gets DATABASE statements
@@ -795,10 +795,10 @@
                 $query .= ' (';
 
                 // Like
-                if(!empty($this->_like)) $instructions[] = "LIKE `{$this->_like}`";
+                if(!Util::isEmpty($this->_like)) $instructions[] = "LIKE `{$this->_like}`";
 
                 // Auto increment
-                if(!empty($this->_autoincrement)) $instructions[] = "{$this->_autoincrement} AUTO_INCREMENT";
+                if(!Util::isEmpty($this->_autoincrement)) $instructions[] = "{$this->_autoincrement} AUTO_INCREMENT";
 
                 // Fields
                 if (!empty($this->_fields)) $instructions = array_merge($instructions, $this->_fields);
@@ -835,7 +835,7 @@
                 $query .= ')';
 
                 // Collate
-                if(!empty($this->_collate)){
+                if(!Util::isEmpty($this->_collate)){
                     $query .= " COLLATE=\"{$this->_collate}\"";
                 }
             }
@@ -846,7 +846,7 @@
                 $query .= ' ';
 
                 // Auto increment
-                if(!empty($this->_autoincrement)){
+                if(!Util::isEmpty($this->_autoincrement)){
                     $instructions[] = "ADD COLUMN {$this->_autoincrement} AUTO_INCREMENT";
                 }
 
@@ -886,7 +886,7 @@
                 }
 
                 // Collate
-                if(!empty($this->_collate)){
+                if(!Util::isEmpty($this->_collate)){
                     $instructions[] = "COLLATE=\"{$this->_collate}\"";
                 }
 

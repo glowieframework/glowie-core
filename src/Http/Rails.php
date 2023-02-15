@@ -86,9 +86,9 @@
          * @param string $name (Optional) Route name.
          */
         public static function addRoute(string $route, string $controller = 'Glowie\Controllers\Main', ?string $action = null, $methods = [], string $name = ''){
-            if(empty($name)) $name = Util::kebabCase($route);
-            if(empty($action)) $action = Util::camelCase($name);
-            if(empty($controller)) throw new RoutingException('Controller cannot be empty for route "' . $name . '"');
+            if(Util::isEmpty($name)) $name = Util::kebabCase($route);
+            if(Util::isEmpty($action)) $action = Util::camelCase($name);
+            if(Util::isEmpty($controller)) throw new RoutingException('Controller cannot be empty for route "' . $name . '"');
             if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
             self::$routes[$name] = [
                 'name' => $name,
@@ -112,10 +112,10 @@
          * @param string $name (Optional) Route name.
          */
         public static function addProtectedRoute(string $route, $middleware = 'Glowie\Middlewares\Authenticate', string $controller = 'Glowie\Controllers\Main', ?string $action = null, $methods = [], string $name = ''){
-            if(empty($name)) $name = Util::kebabCase($route);
-            if(empty($action)) $action = Util::camelCase($name);
-            if(empty($controller)) throw new RoutingException('Controller cannot be empty for route "' . $name . '"');
-            if(empty($middleware)) throw new RoutingException('Middleware cannot be empty for route "' . $name . '"');
+            if(Util::isEmpty($name)) $name = Util::kebabCase($route);
+            if(Util::isEmpty($action)) $action = Util::camelCase($name);
+            if(Util::isEmpty($controller)) throw new RoutingException('Controller cannot be empty for route "' . $name . '"');
+            if(Util::isEmpty($middleware)) throw new RoutingException('Middleware cannot be empty for route "' . $name . '"');
             if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
             self::$routes[$name] = [
                 'name' => $name,
@@ -137,8 +137,8 @@
          * @param string $name (Optional) Route name.
          */
         public static function addRedirect(string $route, string $target, int $code = Response::HTTP_TEMPORARY_REDIRECT, $methods = [], string $name = ''){
-            if(empty($name)) $name = Util::kebabCase($route);
-            if(empty($target)) throw new RoutingException('Redirect target cannot be empty for route "' . $name . '"');
+            if(Util::isEmpty($name)) $name = Util::kebabCase($route);
+            if(Util::isEmpty($target)) throw new RoutingException('Redirect target cannot be empty for route "' . $name . '"');
             if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
             self::$routes[$name] = [
                 'name' => $name,
@@ -257,14 +257,13 @@
 
             // Retrieves the request URI
             $route = self::$request->getURI();
-            if(empty($route)) $route = '/';
 
             // Checks for maintenance mode
             if(Config::get('maintenance.enabled', false)){
                 // Validates secret bypass route
                 $cookies = new Cookies();
                 $key = Config::get('maintenance.bypass_key');
-                if(empty($key)) throw new Exception('Application maintenance bypass key was not defined');
+                if(Util::isEmpty($key)) throw new Exception('Application maintenance bypass key was not defined');
 
                 // Saves the maintenance key in the cookies
                 if($route == $key){
@@ -277,7 +276,7 @@
             }
 
             // Stores current route configuration
-            $config = null;
+            $config = false;
             self::$currentRoute = $route;
 
             // Loops through routes configuration to find a valid route pattern
@@ -303,105 +302,98 @@
             }
 
             // Checks if route was found
-            if ($config) {
+            if ($config !== false) {
                 // Checks if there is a request method configuration
                 if(!empty($config['methods'])){
                     $config['methods'] = array_map('strtoupper', $config['methods']);
                     if(!in_array(self::$request->getMethod(), $config['methods'])) return self::callMethodNotAllowed();
                 }
 
-                // Checks if there is not a redirect configuration
-                if(empty($config['redirect'])){
-                    // Gets the controller
-                    $controller = $config['controller'];
+                // Checks if there is a redirect configuration
+                if(!Util::isEmpty($config['redirect'])) return self::$response->redirect($config['redirect'], $config['code']);
 
-                    // If the controller class does not exist, trigger an error
-                    if (!class_exists($controller)) throw new RoutingException("\"{$controller}\" was not found");
+                // Gets the controller
+                $controller = $config['controller'];
 
-                    // Instantiates the controller
-                    self::$controller = new $controller;
+                // If the controller class does not exist, trigger an error
+                if (!class_exists($controller)) throw new RoutingException("\"{$controller}\" was not found");
 
-                    // Checks for the route middlewares
-                    if(!empty($config['middleware'])){
-                        // Runs each middleware
-                        foreach($config['middleware'] as $middleware){
-                            // If middleware class does not exist, trigger an error
-                            if (!class_exists($middleware)) throw new RoutingException("\"{$middleware}\" was not found");
+                // Instantiates the controller
+                self::$controller = new $controller;
 
-                            // Instantiates the middleware
-                            self::$middleware = new $middleware;
-                            if (is_callable([self::$middleware, 'init'])) self::$middleware->init();
+                // Checks for the route middlewares
+                if(!Util::isEmpty($config['middleware'])){
+                    // Runs each middleware
+                    foreach($config['middleware'] as $middleware){
+                        // If middleware class does not exist, trigger an error
+                        if (!class_exists($middleware)) throw new RoutingException("\"{$middleware}\" was not found");
 
-                            // Calls middleware handle() method
-                            $response = self::$middleware->handle();
-                            if ($response) {
-                                // Middleware passed
-                                if (is_callable([self::$middleware, 'success'])) self::$middleware->success();
+                        // Instantiates the middleware
+                        self::$middleware = new $middleware;
+                        if (is_callable([self::$middleware, 'init'])) self::$middleware->init();
+
+                        // Calls middleware handle() method
+                        $response = self::$middleware->handle();
+                        if ($response) {
+                            // Middleware passed
+                            if (is_callable([self::$middleware, 'success'])) self::$middleware->success();
+                        } else {
+                            // Middleware blocked
+                            if (is_callable([self::$middleware, 'fail'])) {
+                                self::$response->deny();
+                                return self::$middleware->fail();
                             } else {
-                                // Middleware blocked
-                                if (is_callable([self::$middleware, 'fail'])) {
-                                    self::$response->deny();
-                                    return self::$middleware->fail();
-                                } else {
-                                    return self::callForbidden();
-                                };
-                            }
+                                return self::callForbidden();
+                            };
                         }
                     }
-
-                    // Gets the action
-                    $action = $config['action'];
-
-                    // If action does not exist, trigger an error
-                    if (is_callable([self::$controller, $action])) {
-                        // Runs the controller init() method
-                        if (is_callable([self::$controller, 'init'])) self::$controller->init();
-
-                        // Calls action
-                        return self::$controller->{$action}();
-                    } else {
-                        throw new RoutingException("Action \"{$action}()\" not found in \"{$controller}\"");
-                    }
-                }else{
-                    // Redirects to the target URL
-                    return self::$response->redirect($config['redirect'], $config['code']);
                 }
-            } else {
-                // Check if auto routing is enabled
-                if(self::$autoRouting){
 
-                    // Get URI parameters
-                    $autoroute = explode('/', trim($route, '/'));
+                // Gets the action
+                $action = $config['action'];
 
-                    // If no route was specified
-                    if($route == '/'){
-                        $controller = 'Glowie\Controllers\Main';
-                        $action = 'index';
-                        return self::callAutoRoute($controller, $action);
+                // If action does not exist, trigger an error
+                if (is_callable([self::$controller, $action])) {
+                    // Runs the controller init() method
+                    if (is_callable([self::$controller, 'init'])) self::$controller->init();
 
-                    // If only the controller was specified
-                    }else if(count($autoroute) == 1){
-                        $controller = 'Glowie\Controllers\\' . Util::pascalCase($autoroute[0]);
-                        $action = 'index';
-                        return self::callAutoRoute($controller, $action);
-
-                    // Controller and action were specified
-                    }else if(count($autoroute) == 2){
-                        $controller = 'Glowie\Controllers\\' . Util::pascalCase($autoroute[0]);
-                        $action = Util::camelCase($autoroute[1]);
-                        return self::callAutoRoute($controller, $action);
-
-                    // Controller, action and parameters were specified
-                    }else{
-                        $controller = 'Glowie\Controllers\\' . Util::pascalCase($autoroute[0]);
-                        $action = Util::camelCase($autoroute[1]);
-                        $params = array_slice($autoroute, 2);
-                        return self::callAutoRoute($controller, $action, $params);
-                    }
-                }else{
-                    // Route was not found
-                    return self::callNotFound();
+                    // Calls action
+                    return self::$controller->{$action}();
+                } else {
+                    throw new RoutingException("Action \"{$action}()\" not found in \"{$controller}\"");
                 }
+            }else if(self::$autoRouting){
+                // Get URI parameters
+                $autoroute = explode('/', trim($route, '/'));
+
+                // If no route was specified
+                if($route == '/'){
+                    $controller = 'Glowie\Controllers\Main';
+                    $action = 'index';
+                    return self::callAutoRoute($controller, $action);
+
+                // If only the controller was specified
+                }else if(count($autoroute) == 1){
+                    $controller = 'Glowie\Controllers\\' . Util::pascalCase($autoroute[0]);
+                    $action = 'index';
+                    return self::callAutoRoute($controller, $action);
+
+                // Controller and action were specified
+                }else if(count($autoroute) == 2){
+                    $controller = 'Glowie\Controllers\\' . Util::pascalCase($autoroute[0]);
+                    $action = Util::camelCase($autoroute[1]);
+                    return self::callAutoRoute($controller, $action);
+
+                // Controller, action and parameters were specified
+                }else{
+                    $controller = 'Glowie\Controllers\\' . Util::pascalCase($autoroute[0]);
+                    $action = Util::camelCase($autoroute[1]);
+                    $params = array_slice($autoroute, 2);
+                    return self::callAutoRoute($controller, $action, $params);
+                }
+            }else{
+                // Route was not found
+                return self::callNotFound();
             }
         }
 

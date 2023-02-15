@@ -5,6 +5,7 @@
     use Util;
     use SQLite3;
     use Exception;
+    use JsonSerializable;
 
     /**
      * Cache for Glowie application.
@@ -15,7 +16,7 @@
      * @license MIT
      * @link https://glowie.tk
      */
-    class Cache{
+    class Cache implements JsonSerializable{
 
         /**
          * Expiration time for **1 minute**.
@@ -44,7 +45,7 @@
         /**
          * Creates a new Cache handler instance.
          */
-        public function __construct(){
+        public function __construct(array $data = []){
             // Checks if the cache database is already connected
             if(!self::$db){
                 // Checks for sqlite3 extension
@@ -57,6 +58,9 @@
                 $tableExists = self::$db->querySingle("SELECT name FROM sqlite_master WHERE type='table' AND name='cache'");
                 if(!$tableExists) self::$db->exec("CREATE TABLE cache(key TEXT PRIMARY KEY, value TEXT, expires INTEGER)");
             }
+
+            // Parse initial data, if any
+            if(!empty($data)) $this->set($data);
         }
 
         /**
@@ -87,25 +91,30 @@
 
         /**
          * Sets a cache variable.
-         * @param string $key Key to set value.
-         * @param mixed $value Value to set. It will be casted to a string.
+         * @param string|array $key Key to set value. You can also pass an associative array\
+         * of values to set at once and they will be merged into the cache.
+         * @param mixed $value (Optional) Value to set. It will be casted to a string.
          * @param int|null $expires (Optional) Expiration time in seconds.
          * @return Cache Current instance for nested calls.
          */
-        public function set(string $key, $value, ?int $expires = null){
-            // Escape key and values
-            $key = self::$db->escapeString($key);
-            if(is_null($value)){
-                $value = 'NULL';
+        public function set($key, $value = null, ?int $expires = null){
+            if(is_array($key)){
+                foreach($key as $field => $value) $this->set($field, $value, $expires);
             }else{
-                $value = "'" . self::$db->escapeString((string)$value) . "'";
+                // Escape key and values
+                $key = self::$db->escapeString($key);
+                if(is_null($value)){
+                    $value = 'NULL';
+                }else{
+                    $value = "'" . self::$db->escapeString((string)$value) . "'";
+                }
+
+                // Calculate expire date
+                $expires = $expires ? time() + $expires : 'NULL';
+
+                // Inserts the row
+                self::$db->exec("REPLACE INTO cache(key, value, expires) VALUES('{$key}', {$value}, {$expires})");
             }
-
-            // Calculate expire date
-            $expires = $expires ? time() + $expires : 'NULL';
-
-            // Inserts the row
-            self::$db->exec("REPLACE INTO cache(key, value, expires) VALUES('{$key}', {$value}, {$expires})");
             return $this;
         }
 
@@ -150,18 +159,16 @@
 
         /**
          * Checks if any value has been associated to a key in the cache.
-         * @param string $key Key to check.
+         * @param string|array $key Key to check. You can also use an array of keys.
          * @return bool Returns true or false.
          */
-        public function has(string $key){
-            // Escape key
-            $key = self::$db->escapeString($key);
-
-            // Calculate expire date
-            $expires = time();
-
-            // Returns result
-            return self::$db->querySingle("SELECT COUNT(key) FROM cache WHERE key = '{$key}' AND (expires IS NULL OR expires >= {$expires})") != 0;
+        public function has($key){
+            $result = false;
+            foreach((array)$key as $item){
+                if($result) break;
+                $result = $this->__isset($item);
+            }
+            return $result;
         }
 
         /**
@@ -170,7 +177,14 @@
          * @return bool Returns true or false.
          */
         public function __isset(string $key){
-            return $this->has($key);
+            // Escape key
+            $key = self::$db->escapeString($key);
+
+            // Calculate expire date
+            $expires = time();
+
+            // Returns result
+            return self::$db->querySingle("SELECT COUNT(key) FROM cache WHERE key = '{$key}' AND (expires IS NULL OR expires >= {$expires})") != 0;
         }
 
         /**
@@ -186,6 +200,18 @@
 
             // Remove rows
             self::$db->exec("DELETE FROM cache WHERE key IN ({$keys})");
+            return $this;
+        }
+
+        /**
+         * Removes all cookies data, except the one that matches the specified key.
+         * @param string|array $key Key to keep. You can also use an array of keys to keep.
+         * @return Cache Current instance for nested calls.
+         */
+        public function only($key){
+            foreach($this->toArray() as $field => $value){
+                if(!in_array($field, (array)$key)) $this->remove($field);
+            }
             return $this;
         }
 
@@ -217,6 +243,64 @@
         public function flush(){
             self::$db->exec("DELETE FROM cache");
             return $this;
+        }
+
+        /**
+         * Gets the cache data as an associative array.
+         * @return array The resulting array.
+         */
+        public function toArray(){
+            // Calculate expire date
+            $expires = time();
+
+            // Get data
+            $result = self::$db->query("SELECT key, value FROM cache WHERE (expires IS NULL OR expires >= {$expires})");
+
+            // Parse resulting rows
+            $return = [];
+            while($row = $result->fetchArray(SQLITE3_ASSOC)) $return[] = $row;
+            return array_combine(array_column($return, 'key'), array_column($return, 'value'));
+        }
+
+        /**
+         * Returns the serializable JSON data for the cache.
+         * @return array Cache data as an associative array.
+         */
+        public function jsonSerialize(){
+            return $this->toArray();
+        }
+
+        /**
+         * Gets the cache data as JSON.
+         * @param int $flags (Optional) JSON encoding flags (same as in `json_encode()` function).
+         * @param int $depth (Optional) JSON encoding maximum depth (same as in `json_encode()` function).
+         * @return string The resulting JSON string.
+         */
+        public function toJson(int $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK, int $depth = 512){
+            return json_encode($_COOKIE, $flags, $depth);
+        }
+
+        /**
+         * Dumps the cache data.
+         * @param bool $plain (Optional) Dump data as plain text instead of HTML.
+         */
+        public function dump(bool $plain = false){
+            Util::dump($this, $plain);
+        }
+
+        /**
+         * Gets the cache data as a string (data will be serialized as JSON).
+         * @return string The resulting JSON string.
+         */
+        public function __toString(){
+            return $this->toJson();
+        }
+
+        /**
+         * Cache debugging information.
+         */
+        public function __debugInfo(){
+            return $this->toArray();
         }
 
     }

@@ -318,7 +318,7 @@
                     // Flushes the buffer
                     if($__returnValue) var_dump($__returnValue);
                     $__returnText = Buffer::get();
-                    if(!empty($__returnText)) self::print('<color="yellow">>> ' . trim($__returnText) . '</color>');
+                    if(!Util::isEmpty($__returnText)) self::print('<color="yellow">>> ' . trim($__returnText) . '</color>');
                 } catch (Throwable $e) {
                     // Clears the output buffer
                     Buffer::clean();
@@ -426,7 +426,7 @@
 
             // Generate key and hash it
             $key = self::getArg('key', Util::randomToken());
-            if(empty($key)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "key" for this command');
+            if(Util::isEmpty($key)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "key" for this command');
             $iv = substr($key, 0, 16);
 
             // Encrypts the data
@@ -446,7 +446,7 @@
         private static function __decryptEnv(){
             // Get key
             $key = self::argOrInput('key', 'Decryption key: ');
-            if(empty($key)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "key" for this command');
+            if(Util::isEmpty($key)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "key" for this command');
             $iv = substr($key, 0, 16);
 
             // Reads the encrypted config file content
@@ -497,7 +497,7 @@
             $name = self::argOrInput('name', 'Command name: ');
 
             // Validates the controller name
-            if(empty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
+            if(Util::isEmpty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
 
             // Checks if the file exists
             $name = Util::pascalCase($name);
@@ -527,7 +527,7 @@
             $name = self::argOrInput('name', 'Controller name: ');
 
             // Validates the controller name
-            if(empty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
+            if(Util::isEmpty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
 
             // Checks if the file exists
             $name = Util::pascalCase($name);
@@ -557,7 +557,7 @@
             $name = self::argOrInput('name', 'Language name: ');
 
             // Validates the language id
-            if(empty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
+            if(Util::isEmpty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
 
             // Checks if the file exists
             $name = trim(strtolower($name));
@@ -585,7 +585,7 @@
             $name = self::argOrInput('name', 'Middleware name: ');
 
             // Validates the middleware name
-            if(empty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
+            if(Util::isEmpty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
 
             // Checks if the file exists
             $name = Util::pascalCase($name);
@@ -615,7 +615,7 @@
             $name = self::argOrInput('name', 'Migration name: ');
 
             // Validates the migration name
-            if(empty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
+            if(Util::isEmpty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
 
             // Checks if the file exists
             $cleanName = Util::pascalCase($name);
@@ -646,7 +646,7 @@
             $name = self::argOrInput('name', 'Model name: ');
 
             // Validates the model name
-            if(empty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
+            if(Util::isEmpty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
 
             // Checks if table was filled
             $default_table = Util::snakeCase($name);

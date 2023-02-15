@@ -342,7 +342,7 @@
          */
         public function isDirty(string $field = ''){
             if(!$this->_initialData) throw new Exception('isDirty(): Model "' . get_class($this) . '" entity was not filled with a row data');
-            if(!empty($field)){
+            if(!Util::isEmpty($field)){
                 return ($this->_initialData->get($field) !== $this->get($field));
             }else{
                 return ($this->_initialData->toArray() !== $this->toArray());
@@ -453,7 +453,7 @@
                             break;
 
                         case 'callback':
-                            if (empty($params[1])) throw new Exception('Missing function name in callback casting for "' . $field . '" field in "' . get_class($this) . '"');
+                            if (Util::isEmpty($params[1])) throw new Exception('Missing function name in callback casting for "' . $field . '" field in "' . get_class($this) . '"');
                             if (is_callable([$this, $params[1]])) {
                                 $data[$field] = call_user_func_array([$this, $params[1]], [$data[$field]]);
                             } else {
@@ -462,7 +462,7 @@
                             break;
 
                         case 'date':
-                            if(!empty($params[1])){
+                            if(!Util::isEmpty($params[1])){
                                 $data[$field] = date($params[1], strtotime($data[$field]));
                             }else{
                                 $data[$field] = strtotime($data[$field]);
@@ -511,7 +511,7 @@
                             break;
 
                         case 'callback':
-                            if (empty($params[1])) throw new Exception('Missing function name in callback mutator for "' . $field . '" field in "' . get_class($this) . '"');
+                            if (Util::isEmpty($params[1])) throw new Exception('Missing function name in callback mutator for "' . $field . '" field in "' . get_class($this) . '"');
                             if (is_callable([$this, $params[1]])) {
                                 $data[$field] = call_user_func_array([$this, $params[1]], [$data[$field]]);
                             } else {

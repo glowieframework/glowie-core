@@ -694,10 +694,10 @@
          * @var mixed $variable Variable to be checked.
          * @return bool Returns true if the variable is empty, false otherwise.
          */
-        public static function isEmpty($variable){
+        public static function isEmpty(&$variable){
             if(!isset($variable)) return true;
-            if(is_string($variable)) return trim($variable) === '';
             if(is_numeric($variable) || is_bool($variable)) return false;
+            if(is_string($variable)) return trim($variable) === '';
             if($variable instanceof Countable) return count($variable) === 0;
             return empty($variable);
         }
