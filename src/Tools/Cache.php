@@ -204,7 +204,7 @@
         }
 
         /**
-         * Removes all cookies data, except the one that matches the specified key.
+         * Removes all cache data, except the one that matches the specified key.
          * @param string|array $key Key to keep. You can also use an array of keys to keep.
          * @return Cache Current instance for nested calls.
          */
@@ -216,7 +216,7 @@
         }
 
          /**
-         * Removes the associated key value from the cookies data.
+         * Removes the associated key value from the cache data.
          * @param string $key Key to delete value.
          */
         public function __unset(string $key){
@@ -277,7 +277,8 @@
          * @return string The resulting JSON string.
          */
         public function toJson(int $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK, int $depth = 512){
-            return json_encode($_COOKIE, $flags, $depth);
+            $data = $this->toArray();
+            return empty($data) ? '{}' : json_encode($data, $flags, $depth);
         }
 
         /**

@@ -164,7 +164,7 @@
          * @return string The resulting JSON string.
          */
         public function toJson(int $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK, int $depth = 512){
-            return json_encode($this->__data, $flags, $depth);
+            return empty($this->__data) ? '{}' : json_encode($this->__data, $flags, $depth);
         }
 
         /**

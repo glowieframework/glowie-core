@@ -58,10 +58,16 @@
         private const TEMPLATES_FOLDER = __DIR__ . '/Templates/';
 
         /**
+         * Custom commands.
+         * @var array
+         */
+        private static $custom = [];
+
+        /**
          * Current command.
          * @var string
          */
-        private static $command;
+        private static $command = '';
 
         /**
          * Command arguments.
@@ -81,7 +87,6 @@
         public static function run(){
             // Register settings
             global $argv;
-            self::$command = '';
             self::$args = $argv;
             self::$silent = false;
 
@@ -131,6 +136,16 @@
         }
 
         /**
+         * Sets a custom command.
+         * @param string $command Command name.
+         * @param string $class Command classname to be called.
+         */
+        public static function custom(string $command, string $class){
+            $command = Util::kebabCase($command);
+            self::$custom[$command] = $class;
+        }
+
+        /**
          * Calls a Firefly command outside the terminal.
          * @param string $command Firefly command to call.
          * @param array $args (Optional) Associative array of arguments to pass with the command.
@@ -138,7 +153,6 @@
          */
         public static function call(string $command, array $args = [], bool $silent = false){
             // Register settings
-            self::$command = '';
             self::$args = $args;
             self::$silent = $silent;
 
@@ -170,7 +184,7 @@
          */
         private static function triggerCommand(string $command){
             // Saves the command
-            $command = strtolower($command);
+            $command = Util::kebabCase($command);
             self::$command = $command;
 
             // Finds a valid command
@@ -178,6 +192,9 @@
             $classname = 'Glowie\Commands\\' . $name;
             if(class_exists($classname)){
                 $class = new $classname;
+                $class->run();
+            }else if(!empty(self::$custom[$command])){
+                $class = new self::$custom[$command];
                 $class->run();
             }else if(is_callable([self::class, '__' . $name])){
                 $name = '__' . $name;
