@@ -15,16 +15,15 @@
 Glowie is a PHP framework designed to be as light, fast and powerful as possible for developing applications and dynamic websites the easiest way.
 
 ## Features
-- MVC structure with simple organization
+- MVC structure with simple scaffolding
 - Powerful database ORM toolkit, migrations, query and schema builders
-- Set of tools for validating forms and request data the safest way
+- Set of tools for validating forms and working with request data
 - Built-in templating engine and layout manager
 - Easy routing engine, with custom parameters and auto routing
 - Middleware support for protected routes
 - Simple mailer for sending messages
 - Safe and fast session and cookies management
 - Easy to use HTTP request engine
-- Application maintenance mode handler
 - File upload handler and validator
 - Command line tool for increasing workflow speed
 - Set of utility methods for dealing with arrays, strings, objects and many more
@@ -32,6 +31,7 @@ Glowie is a PHP framework designed to be as light, fast and powerful as possible
 - Built-in local development server and REPL
 - On-the-fly updates with tiny blueprint
 - Large compatibility with all basic hosting providers
+- and many more...
 
 ## Only what you need
 Forget about those fancy frameworks with thousands of useless functions and classes with stuff you will never use. Glowie is packed with only what you need for your application to run smoothly.
