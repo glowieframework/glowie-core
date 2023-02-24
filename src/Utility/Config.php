@@ -20,12 +20,21 @@
         private static $config = [];
 
         /**
-         * Loads the configuration file.
+         * Loads the configuration files.
          */
         public static function load(){
+            // Load main configuration file
             $file = Util::location('config/Config.php');
             if(!is_file($file)) throw new FileException('Config file "' . $file . '" was not found');
             self::$config = require_once($file);
+
+            // Load other configuration files
+            foreach(glob(Util::location('config/*.php')) as $file){
+                $basename = pathinfo($file, PATHINFO_BASENAME);
+                if($basename == 'Config.php' || $basename == 'Routes.php') continue;
+                $file = require_once($file);
+                self::$config = array_merge(self::$config, $file);
+            }
         }
 
         /**

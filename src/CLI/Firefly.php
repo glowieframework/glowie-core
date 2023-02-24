@@ -12,6 +12,7 @@
     use Config;
     use Env;
     use Babel;
+    use Exception;
 
     /**
      * Command line tool for Glowie application.
@@ -136,13 +137,14 @@
         }
 
         /**
-         * Sets a custom command.
-         * @param string $command Command name.
-         * @param string $class Command classname to be called.
+         * Sets a custom command handler.
+         * @param string $namespace Command namespace.
+         * @param string $class Full command classname to be called.
          */
-        public static function custom(string $command, string $class){
-            $command = Util::kebabCase($command);
-            self::$custom[$command] = $class;
+        public static function custom(string $namespace, string $class){
+            $namespace = Util::kebabCase($namespace);
+            $command = Util::pascalCase(Util::classname($class));
+            self::$custom[$namespace . ':' . $command] = $class;
         }
 
         /**
@@ -183,23 +185,33 @@
          * @param string $command Command to trigger.
          */
         private static function triggerCommand(string $command){
-            // Saves the command
+            // Checks for namespaced commands
+            $namespace = '';
+            if(Util::stringContains($command, ':')){
+                $command = explode(':', $command, 2);
+                $namespace = $command[0];
+                $command = $command[1];
+            }
+
+            // Parses the command and namespace properly
             $command = Util::kebabCase($command);
-            self::$command = $command;
+            $namespace = Util::kebabCase($namespace);
+            self::$command = (!Util::isEmpty($namespace) ? ($namespace . ':') : '') . $command;
 
             // Finds a valid command
             $name = Util::pascalCase($command);
-            $classname = 'Glowie\Commands\\' . $name;
+            $classname = 'Glowie\Commands\\' . (!Util::isEmpty($namespace) ? (Util::pascalCase($namespace) . '\\') : '') . $name;
             if(class_exists($classname)){
                 $class = new $classname;
                 $class->run();
-            }else if(!empty(self::$custom[$command])){
-                $class = new self::$custom[$command];
+            }else if(!empty(self::$custom[$namespace . ':' . $name]) && class_exists(self::$custom[$namespace . ':' . $name])){
+                $class = new self::$custom[$namespace . ':' . $name];
                 $class->run();
             }else if(is_callable([self::class, '__' . $name])){
                 $name = '__' . $name;
                 self::$name();
             }else{
+                $command = self::$command;
                 throw new ConsoleException($command, self::$args, "Unknown command \"{$command}\"");
             }
         }
