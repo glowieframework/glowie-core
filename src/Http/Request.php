@@ -35,6 +35,7 @@
          * Creates a new Request handler instance.
          */
         public function __construct(){
+            // Parse headers and JSON data, if any
             self::$headers = array_change_key_case(getallheaders(), CASE_LOWER);
             self::$json = new Element(json_decode($this->getBody(), true) ?? []);
 
@@ -114,6 +115,7 @@
          * @return string Request method.
          */
         public function getMethod(){
+            if(!empty($_POST['_method']) && in_array(strtoupper($_POST['_method']), ['HEAD', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'])) return strtoupper($_POST['_method']);
             return $_SERVER['REQUEST_METHOD'] ?? 'GET';
         }
 
@@ -131,6 +133,30 @@
          */
         public function isPost(){
             return $this->getMethod() == 'POST';
+        }
+
+        /**
+         * Returns **true** if the request was made using PUT method.
+         * @return bool Returns true or false matching the request method.
+         */
+        public function isPut(){
+            return $this->getMethod() == 'PUT';
+        }
+
+        /**
+         * Returns **true** if the request was made using DELETE method.
+         * @return bool Returns true or false matching the request method.
+         */
+        public function isDelete(){
+            return $this->getMethod() == 'DELETE';
+        }
+
+        /**
+         * Returns **true** if the request was made using PATCH method.
+         * @return bool Returns true or false matching the request method.
+         */
+        public function isPatch(){
+            return $this->getMethod() == 'PATCH';
         }
 
         /**
@@ -175,6 +201,14 @@
          */
         public function getContentType(){
             return $this->getHeader('Content-Type');
+        }
+
+        /**
+         * Gets the `User-Agent` header.
+         * @return string|null Returns the header value if exists or null if there is none.
+         */
+        public function getUserAgent(){
+            return $this->getHeader('User-Agent');
         }
 
         /**

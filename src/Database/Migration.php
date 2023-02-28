@@ -57,9 +57,9 @@
         final public function __construct(){
             // Creates the connection and stores the migration name
             $this->name = Util::classname($this);
-            $this->db = new Kraken('glowie', $this->database);
-            $this->forge = new Skeleton('glowie', $this->database);
             $this->table = Config::get('migrations.table', 'migrations');
+            $this->db = new Kraken($this->table, $this->database);
+            $this->forge = new Skeleton($this->table, $this->database);
 
             // Creates the migrations history table if not exists
             if(!isset(self::$tableCreated[$this->database])){
@@ -79,7 +79,7 @@
          */
         final public function isApplied(){
             $this->db->clearQuery();
-            return $this->db->table($this->table)->where('name', $this->name)->exists();
+            return $this->db->database($this->database)->table($this->table)->where('name', $this->name)->exists();
         }
 
         /**
@@ -88,7 +88,7 @@
          */
         final public function saveMigration(){
             $this->db->clearQuery();
-            return $this->db->table($this->table)->insert(['name' => $this->name]);
+            return $this->db->database($this->database)->table($this->table)->insert(['name' => $this->name]);
         }
 
         /**
@@ -97,7 +97,7 @@
          */
         final public function deleteMigration(){
             $this->db->clearQuery();
-            return $this->db->table($this->table)->where('name', $this->name)->delete();
+            return $this->db->database($this->database)->table($this->table)->where('name', $this->name)->delete();
         }
 
         /**

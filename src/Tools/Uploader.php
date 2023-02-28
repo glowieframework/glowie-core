@@ -186,10 +186,11 @@
         /**
          * Performs one or multiple file uploads.
          * @param string $input Valid file input field name.
-         * @param bool $deleteOnFail (Optional) Delete all uploaded files if an upload fails.
+         * @param bool $multiple (Optional) Allow multiple uploads.
+         * @param bool $deleteOnFail (Optional) Delete all uploaded files if an upload fails (only multiple uploads).
          * @return mixed Returns the uploaded file URL (or an array of URLs if multiple files) on success or false on errors.
          */
-        public function upload(string $input, bool $deleteOnFail = false){
+        public function upload(string $input, bool $multiple = true, bool $deleteOnFail = false){
             // Validate target directory
             if(!is_dir($this->directory) || !is_writable($this->directory)) throw new FileException('Directory "' . $this->directory . '" is invalid or not writable');
 
@@ -205,7 +206,7 @@
                 }
 
                 // Single file upload
-                if(count($files) == 1){
+                if(!$multiple){
                     return $this->processFile($files[0]);
                 }else{
                     // Multiple files upload
@@ -216,7 +217,7 @@
                         if($process !== false){
                             $result[] = $process;
                         }else{
-                            $errors[$file->name] = $this->errors;
+                            $errors[$key] = $this->errors;
                         }
                     }
                     $this->errors = $errors;
@@ -367,8 +368,12 @@
          * @return string Returns the new filename.
          */
         private function generateFilename(string $filename, int $key = 0){
-            if($this->namingHandler) $filename = call_user_func_array($this->namingHandler, [$filename, $key]);
-            $filename = Util::uniqueToken() . '.' . $this->getExtension($filename);
+            if($this->namingHandler){
+                $filename = call_user_func_array($this->namingHandler, [$filename, $key]);
+            }else{
+                $ext = $this->getExtension($filename);
+                $filename = Util::uniqueToken() . (!empty($ext) ? ('.' . $ext) : '');
+            }
             return $filename;
         }
 

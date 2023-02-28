@@ -197,6 +197,14 @@
         }
 
         /**
+         * Gets all routes configuration as an associative array.
+         * @return array Returns all routes.
+         */
+        public static function getAllRoutes(){
+            return self::$routes;
+        }
+
+        /**
          * Gets the current route name.
          * @return string Returns the current route name.
          */
@@ -456,24 +464,21 @@
          * @param array $params (Optional) Route parameters.
          */
         private static function callAutoRoute(string $controller, string $action, array $params = []){
-            if (class_exists($controller)) {
-                if (!empty($params)){
-                    foreach($params as $key => $value){
-                        $params['param' . ($key + 1)] = $value;
-                        unset($params[$key]);
-                    }
+            if (!class_exists($controller)) return self::callNotFound();
+            if (!empty($params)){
+                foreach($params as $key => $value){
+                    $params['param' . ($key + 1)] = $value;
+                    unset($params[$key]);
                 }
-                self::$currentParams = $params;
-                self::$controller = new $controller;
+            }
+            self::$currentParams = $params;
+            self::$controller = new $controller;
+            if (is_callable([self::$controller, $action])) {
                 if (is_callable([self::$controller, 'init'])) self::$controller->init();
-                if (is_callable([self::$controller, $action])) {
-                    self::$controller->{$action}();
-                } else {
-                    self::callNotFound();
-                };
+                self::$controller->{$action}();
             } else {
                 self::callNotFound();
-            }
+            };
         }
     }
 

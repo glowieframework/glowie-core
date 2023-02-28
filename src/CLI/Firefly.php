@@ -7,12 +7,12 @@
     use Glowie\Core\Exception\PluginException;
     use Glowie\Core\Error\HandlerCLI;
     use Glowie\Core\View\Buffer;
+    use Glowie\Core\Http\Rails;
     use Util;
     use Throwable;
     use Config;
     use Env;
     use Babel;
-    use Exception;
 
     /**
      * Command line tool for Glowie application.
@@ -110,6 +110,9 @@
 
             // Load language files
             Babel::load();
+
+            // Load route configuration file
+            Rails::load();
 
             // Timezone configuration
             date_default_timezone_set(Config::get('other.timezone', 'America/Sao_Paulo'));
@@ -238,6 +241,55 @@
         }
 
         /**
+         * Prints a table of data in the console.
+         * @param array $headers Table headers.
+         * @param array $rows A multi-dimensional array of data to parse.
+         */
+        public static function table(array $headers, array $rows){
+            // Remove associative indexes from the arrays
+            $headers = array_values($headers);
+            foreach($rows as $key => $row) $rows[$key] = array_values((array)$row);
+
+            // Parse maximum column sizes
+            $maxSizes = [];
+            $grid = [];
+
+            foreach($headers as $key => $col){
+                $maxSizes[$key] = mb_strlen($col);
+
+                // Find cells
+                foreach(array_column($rows, $key) as $row){
+                    $row = (string)$row;
+                    if(mb_strlen($row) > $maxSizes[$key]) $maxSizes[$key] = mb_strlen($row);
+                }
+
+                // Parse grid
+                $grid[] = '+' . str_repeat('-', $maxSizes[$key] + 2);
+            }
+
+            // Create the table
+            $table = [];
+            foreach(array_merge([$headers], $rows) as $key => $row){
+                // Fill empty values
+                $row = array_pad($row, count($headers), '');
+                foreach($row as $cellKey => $cell){
+                    if(!isset($maxSizes[$cellKey])) continue;
+                    $table[$key][] = str_pad((string)$cell, $maxSizes[$cellKey], ' ');
+                }
+            }
+
+            // Print top grid
+            $grid = implode('', $grid) . '+';
+            self::print($grid);
+
+            // Print rows
+            foreach($table as $row){
+                self::print('| ' . implode(' | ', $row) . ' |');
+                self::print($grid);
+            }
+        }
+
+        /**
          * Asks for the user input in the console.
          * @param string $message (Optional) Message to prompt to the user.
          * @param string $default (Optional) Default value to return if no input is provided.
@@ -356,6 +408,31 @@
                     self::print('<color="red">>></color> <bg="red"><color="black">' . get_class($e) . ':</color></bg><color="red"> ' . $e->getMessage() . '</color>');
                 }
             }
+        }
+
+        /**
+         * Prints a list of all application routes.
+         */
+        private static function __routes(){
+            // Get all routes
+            $routes = Rails::getAllRoutes();
+            $result = [];
+
+            // Parse route listing
+            foreach($routes as $name => $item){
+                $result[] = [
+                    'methods' => !empty($item['methods']) ? strtoupper(implode(', ', $item['methods'])) : 'ALL',
+                    'name' => !Util::isEmpty($name) ? $name : '/',
+                    'uri' => !Util::isEmpty($item['uri']) ? $item['uri'] : '/',
+                    'target' => !empty($item['controller']) ? ($item['controller'] . '::' . $item['action'] . '()') : ($item['code'] . ' ' . $item['redirect'])
+                ];
+            }
+
+            // Prints the table
+            $result = Util::orderArray($result, 'methods');
+            self::print('<color="yellow">Application routes: </color>');
+            self::print('');
+            self::table(['methods', 'name', 'uri', 'target'], $result);
         }
 
         /**
@@ -848,6 +925,7 @@
             self::print('  <color="yellow">init</color> | Initializes the project');
             self::print('  <color="yellow">shine</color> <color="blue">--host --port</color> | Starts the local development server');
             self::print('  <color="yellow">sandbox</color> | Starts the REPL interactive mode');
+            self::print('  <color="yellow">routes</color> | Prints a list of all application routes');
             self::print('  <color="yellow">clear-cache</color> | Clears the application cache folder');
             self::print('  <color="yellow">clear-session</color> | Clears the application session folder');
             self::print('  <color="yellow">clear-log</color> | Clears the application error log');

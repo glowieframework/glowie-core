@@ -34,47 +34,7 @@
          * @param array $rows A multi-dimensional array of data to parse.
          */
         public function table(array $headers, array $rows){
-            // Remove associative indexes from the arrays
-            $headers = array_values($headers);
-            foreach($rows as $key => $row) $rows[$key] = array_values((array)$row);
-
-            // Parse maximum column sizes
-            $maxSizes = [];
-            $grid = [];
-
-            foreach($headers as $key => $col){
-                $maxSizes[$key] = mb_strlen($col);
-
-                // Find cells
-                foreach(array_column($rows, $key) as $row){
-                    $row = (string)$row;
-                    if(mb_strlen($row) > $maxSizes[$key]) $maxSizes[$key] = mb_strlen($row);
-                }
-
-                // Parse grid
-                $grid[] = '+' . str_repeat('-', $maxSizes[$key] + 2);
-            }
-
-            // Create the table
-            $table = [];
-            foreach(array_merge([$headers], $rows) as $key => $row){
-                // Fill empty values
-                $row = array_pad($row, count($headers), '');
-                foreach($row as $cellKey => $cell){
-                    if(!isset($maxSizes[$cellKey])) continue;
-                    $table[$key][] = str_pad((string)$cell, $maxSizes[$cellKey], ' ');
-                }
-            }
-
-            // Print top grid
-            $grid = implode('', $grid) . '+';
-            $this->print($grid);
-
-            // Print rows
-            foreach($table as $row){
-                $this->print('| ' . implode(' | ', $row) . ' |');
-                $this->print($grid);
-            }
+            Firefly::table($headers, $rows);
         }
 
         /**
