@@ -423,7 +423,7 @@
                 $result[] = [
                     'methods' => !empty($item['methods']) ? strtoupper(implode(', ', $item['methods'])) : 'ALL',
                     'name' => !Util::isEmpty($name) ? $name : '/',
-                    'uri' => !Util::isEmpty($item['uri']) ? $item['uri'] : '/',
+                    'uri' => !empty($item['uri']) ? $item['uri'] : '/',
                     'target' => !empty($item['controller']) ? ($item['controller'] . '::' . $item['action'] . '()') : ($item['code'] . ' ' . $item['redirect'])
                 ];
             }

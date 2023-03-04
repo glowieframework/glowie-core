@@ -318,7 +318,7 @@
                 }
 
                 // Checks if there is a redirect configuration
-                if(!Util::isEmpty($config['redirect'])) return self::$response->redirect($config['redirect'], $config['code']);
+                if(!empty($config['redirect'])) return self::$response->redirect($config['redirect'], $config['code']);
 
                 // Gets the controller
                 $controller = $config['controller'];
@@ -330,7 +330,7 @@
                 self::$controller = new $controller;
 
                 // Checks for the route middlewares
-                if(!Util::isEmpty($config['middleware'])){
+                if(!empty($config['middleware'])){
                     // Runs each middleware
                     foreach($config['middleware'] as $middleware){
                         // If middleware class does not exist, trigger an error

@@ -451,7 +451,7 @@
             // Field type and size
             $data['type'] = strtoupper($data['type']);
 
-            if(!Util::isEmpty($data['size'])){
+            if(!empty($data['size'])){
                 if(Util::stringContains($data['type'], ' UNSIGNED')){
                     $data['type'] = str_replace(' UNSIGNED', '', $data['type']);
                     $field .= $data['type'] . "({$data['size']}) UNSIGNED";
@@ -476,7 +476,7 @@
 
             // After
             if($data['operation'] != 'create'){
-                if(!Util::isEmpty($data['after'])) $field .= " AFTER `{$data['after']}`";
+                if(!empty($data['after'])) $field .= " AFTER `{$data['after']}`";
             }
 
             // Saves the result

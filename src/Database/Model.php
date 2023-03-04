@@ -453,7 +453,7 @@
                             break;
 
                         case 'callback':
-                            if (Util::isEmpty($params[1])) throw new Exception('Missing function name in callback casting for "' . $field . '" field in "' . get_class($this) . '"');
+                            if (empty($params[1])) throw new Exception('Missing function name in callback casting for "' . $field . '" field in "' . get_class($this) . '"');
                             if (is_callable([$this, $params[1]])) {
                                 $data[$field] = call_user_func_array([$this, $params[1]], [$data[$field]]);
                             } else {
@@ -462,7 +462,7 @@
                             break;
 
                         case 'date':
-                            if(!Util::isEmpty($params[1])){
+                            if(!empty($params[1])){
                                 $data[$field] = date($params[1], strtotime($data[$field]));
                             }else{
                                 $data[$field] = strtotime($data[$field]);
@@ -511,7 +511,7 @@
                             break;
 
                         case 'callback':
-                            if (Util::isEmpty($params[1])) throw new Exception('Missing function name in callback mutator for "' . $field . '" field in "' . get_class($this) . '"');
+                            if (empty($params[1])) throw new Exception('Missing function name in callback mutator for "' . $field . '" field in "' . get_class($this) . '"');
                             if (is_callable([$this, $params[1]])) {
                                 $data[$field] = call_user_func_array([$this, $params[1]], [$data[$field]]);
                             } else {

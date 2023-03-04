@@ -88,8 +88,8 @@
         private static function compileIfs(string $code){
             $code = preg_replace('~(?<!@){\s*if\s*\((.+?)\)\s*}~is', '<?php if($1): ?>', $code);
             $code = preg_replace('~(?<!@){\s*isset\s*\((.+?)\)\s*}~is', '<?php if(isset($1)): ?>', $code);
-            $code = preg_replace('~(?<!@){\s*empty\s*\((.+?)\)\s*}~is', '<?php if(Util::isEmpty($1)): ?>', $code);
-            $code = preg_replace('~(?<!@){\s*notempty\s*\((.+?)\)\s*}~is', '<?php if(!Util::isEmpty($1)): ?>', $code);
+            $code = preg_replace('~(?<!@){\s*empty\s*\((.+?)\)\s*}~is', '<?php if(!isset($1) || Util::isEmpty($1)): ?>', $code);
+            $code = preg_replace('~(?<!@){\s*notempty\s*\((.+?)\)\s*}~is', '<?php if(isset($1) && !Util::isEmpty($1)): ?>', $code);
             $code = preg_replace('~(?<!@){\s*notset\s*\((.+?)\)\s*}~is', '<?php if(!isset($1)): ?>', $code);
             $code = preg_replace('~(?<!@){\s*env\s*\((.+?)\)\s*}~is', '<?php if(Config::get(\'env\') == $1): ?>', $code);
             $code = preg_replace('~(?<!@){\s*else\s*if\s*\((.+?)\)\s*}~is', '<?php elseif($1): ?>', $code);
