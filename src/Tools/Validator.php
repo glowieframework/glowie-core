@@ -13,7 +13,7 @@
      * @author Glowie
      * @copyright Copyright (c) Glowie
      * @license MIT
-     * @link https://glowie.tk
+     * @link https://eugabrielsilva.tk/glowie
      */
     class Validator{
 
@@ -132,7 +132,7 @@
          * @param bool $bail (Optional) Stop validation after first failure found.
          * @return bool Returns true if all rules passed, false otherwise.
          */
-        public function validate($data, $rules, bool $bail = false){
+        public function validate(&$data, $rules, bool $bail = false){
             // Stores result
             $result = [];
 
@@ -154,7 +154,7 @@
 
                     // [REQUIRED] - Checks if variable is not empty or null
                     case 'required':
-                        if (Util::isEmpty($data)) $result[] = 'required';
+                        if (!isset($data) || Util::isEmpty($data)) $result[] = 'required';
                         break;
 
                     // [MIN] - Checks if variable is bigger or equal than min
@@ -387,7 +387,7 @@
 
                     // [EMPTY] - Check if variable is empty
                     case 'empty':
-                        if (!Util::isEmpty($data)) $result[] = 'empty';
+                        if (isset($data) || !Util::isEmpty($data)) $result[] = 'empty';
                         break;
 
                     // [ENDSWITH] - Check if variable ends with string

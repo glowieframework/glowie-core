@@ -7,7 +7,7 @@
         "glowie",
         "mvc"
     ],
-    "homepage": "https://glowie.tk",
+    "homepage": "https://eugabrielsilva.tk/glowie",
     "support": {
         "issues": "https://github.com/glowieframework/glowie-core/issues",
         "source": "https://github.com/glowieframework/glowie-core"
@@ -15,13 +15,14 @@
     "authors": [
         {
             "name": "Gabriel Silva",
-            "email": "dev@glowie.tk",
-            "homepage": "https://glowie.tk"
+            "email": "glowie@eugabrielsilva.tk",
+            "homepage": "https://eugabrielsilva.tk/glowie"
         }
     ],
     "require": {
         "ext-mbstring": "*",
-        "ext-openssl": "*"
+        "ext-openssl": "*",
+        "ext-fileinfo": "*"
     },
     "autoload": {
         "psr-4": {

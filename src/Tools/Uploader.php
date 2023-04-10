@@ -13,7 +13,7 @@
      * @author Glowie
      * @copyright Copyright (c) Glowie
      * @license MIT
-     * @link https://glowie.tk
+     * @link https://eugabrielsilva.tk/glowie
      */
     class Uploader{
 
@@ -184,11 +184,20 @@
         }
 
         /**
+         * Performs a single file upload.
+         * @param string $input Valid file input field name.
+         * @return mixed Returns the uploaded file relative URL on success or false on errors.
+         */
+        public function uploadSingle(string $input){
+            return $this->upload($input, false, false);
+        }
+
+        /**
          * Performs one or multiple file uploads.
          * @param string $input Valid file input field name.
          * @param bool $multiple (Optional) Allow multiple uploads.
          * @param bool $deleteOnFail (Optional) Delete all uploaded files if an upload fails (only multiple uploads).
-         * @return mixed Returns the uploaded file URL (or an array of URLs if multiple files) on success or false on errors.
+         * @return mixed Returns the uploaded file relative URL (or an array of URLs if multiple files) on success or false on errors.
          */
         public function upload(string $input, bool $multiple = true, bool $deleteOnFail = false){
             // Validate target directory

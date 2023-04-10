@@ -14,7 +14,7 @@
      * @author Glowie
      * @copyright Copyright (c) Glowie
      * @license MIT
-     * @link https://glowie.tk
+     * @link https://eugabrielsilva.tk/glowie
      */
     class Request{
         use ElementTrait;
@@ -67,6 +67,15 @@
         }
 
         /**
+         * Returns a single file from the request uploaded files.
+         * @param string $input Valid file input field name.
+         * @return Element|null Returns the file as an Element, or null if no files were uploaded.
+         */
+        public function getFile(string $input){
+            return $this->getFiles($input)[0] ?? null;
+        }
+
+        /**
          * Returns the request full URL.
          * @return string Request full URL.
          */
@@ -81,6 +90,30 @@
         public function getURI(){
             $result = trim(substr(trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/'), strlen(APP_FOLDER)), '/');
             return !Util::isEmpty($result) ? $result : '/';
+        }
+
+        /**
+         * Gets the request full query string, without `?`.
+         * @return string Request query string.
+         */
+        public function getQueryString(){
+            return parse_url($this->getURL(), PHP_URL_QUERY) ?? '';
+        }
+
+        /**
+         * Gets the request anchor fragment, without `#`.
+         * @return string Request fragment.
+         */
+        public function getFragment(){
+            return parse_url($this->getURL(), PHP_URL_FRAGMENT) ?? '';
+        }
+
+        /**
+         * Gets the request port.
+         * @return int Request port.
+         */
+        public function getPort(){
+            return (int)($_SERVER['SERVER_PORT'] ?? 80);
         }
 
         /**
@@ -157,6 +190,22 @@
          */
         public function isPatch(){
             return $this->getMethod() == 'PATCH';
+        }
+
+        /**
+         * Returns **true** if the request was made using HEAD method.
+         * @return bool Returns true or false matching the request method.
+         */
+        public function isHead(){
+            return $this->getMethod() == 'HEAD';
+        }
+
+        /**
+         * Returns **true** if the request was made using OPTIONS method.
+         * @return bool Returns true or false matching the request method.
+         */
+        public function isOptions(){
+            return $this->getMethod() == 'OPTIONS';
         }
 
         /**

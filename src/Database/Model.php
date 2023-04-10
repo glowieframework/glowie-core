@@ -14,7 +14,7 @@
      * @author Glowie
      * @copyright Copyright (c) Glowie
      * @license MIT
-     * @link https://glowie.tk
+     * @link https://eugabrielsilva.tk/glowie
      */
     class Model extends Kraken{
         use ElementTrait;
@@ -153,12 +153,27 @@
          * @param mixed $primary (Optional) Primary key value to search for.
          * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
          * @param bool $overwrite (Optional) Set to `true` to overwrite the existing model data instead of merging.
-         * @return $this Current Model instance for nested calls.
+         * @return mixed Returns the current Model instance if the row is found, false otherwise.
          */
         public function findAndFill($primary = null, bool $deleted = false, bool $overwrite = false){
             $result = $this->find($primary, $deleted);
-            if($result) $this->fill($result, $overwrite);
-            return $this;
+            if(!$result) return false;
+            return $this->fill($result, $overwrite);
+        }
+
+        /**
+         * Gets the first row that matches a field value, then fills the model entity with the row data if found.
+         * @param string|array $field Field name to use while searching or an associative array relating fields and values to search.
+         * @param mixed $value (Optional) Value to search for.
+         * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
+         * @param bool $overwrite (Optional) Set to `true` to overwrite the existing model data instead of merging.
+         * @return mixed Returns the current Model instance if the row is found, false otherwise.
+         */
+        public function findAndFillBy($field, $value = null, bool $deleted = false, bool $overwrite = false){
+            $result = $this->findBy($field, $value, $deleted);
+            if(!$result) return false;
+            $this->fill($result, $overwrite);
+            return true;
         }
 
         /**
