@@ -100,6 +100,28 @@
         }
 
         /**
+         * Setup an anonymous (controller-independent) route for the application.
+         * @param string $route The route URI to setup.
+         * @param Closure $callback A closure to run anonymously. A generic controller instance will be injected as a param of this function.
+         * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods.\
+         * Leave empty for all.
+         * @param string $name (Optional) Route name.
+         */
+        public static function addAnonymous(string $route, $callback, $methods = [], string $name = ''){
+            if(Util::isEmpty($name)) $name = Util::kebabCase($route);
+            if(!is_callable($callback)) throw new RoutingException('Invalid callback method for route "' . $name . '"');
+            if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
+            self::$routes[$name] = [
+                'name' => $name,
+                'uri' => trim($route, '/'),
+                'controller' => Generic::class,
+                'action' => 'action',
+                'callback' => $callback,
+                'methods' => (array)$methods
+            ];
+        }
+
+        /**
          * Setup a new protected route for the application.
          * @param string $route The route URI to setup.
          * @param string|array $middleware (Optional) The namespaced middleware name that this route will use to protect itself.\
@@ -123,6 +145,32 @@
                 'controller' => $controller,
                 'action' => $action,
                 'middleware' => (array)$middleware,
+                'methods' => (array)$methods
+            ];
+        }
+
+        /**
+         * Setup an anonymous (controller-independent) protected route for the application.
+         * @param string $route The route URI to setup.
+         * @param string|array $middleware (Optional) The namespaced middleware name that this route will use to protect itself.\
+         * You can use `MiddlewareName::class` to get this property correctly. You can also use an array of multiple middlewares.
+         * @param Closure $callback A closure to run anonymously. A generic controller instance will be injected as a param of this function.
+         * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods.\
+         * Leave empty for all.
+         * @param string $name (Optional) Route name.
+         */
+        public static function addProtectedAnonymous(string $route, $middleware = 'Glowie\Middlewares\Authenticate', $callback, $methods = [], string $name = ''){
+            if(Util::isEmpty($name)) $name = Util::kebabCase($route);
+            if(!is_callable($callback)) throw new RoutingException('Invalid callback method for route "' . $name . '"');
+            if(Util::isEmpty($middleware)) throw new RoutingException('Middleware cannot be empty for route "' . $name . '"');
+            if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
+            self::$routes[$name] = [
+                'name' => $name,
+                'uri' => trim($route, '/'),
+                'controller' => Generic::class,
+                'action' => 'action',
+                'middleware' => (array)$middleware,
+                'callback' => $callback,
                 'methods' => (array)$methods
             ];
         }
@@ -321,7 +369,7 @@
                 if(!empty($config['redirect'])) return self::$response->redirect($config['redirect'], $config['code']);
 
                 // Gets the controller
-                $controller = $config['controller'];
+                $controller = !empty($config['callback']) ? Generic::class : $config['controller'];
 
                 // If the controller class does not exist, trigger an error
                 if (!class_exists($controller)) throw new RoutingException("\"{$controller}\" was not found");
@@ -356,6 +404,9 @@
                         }
                     }
                 }
+
+                // Checks for anonymous controller
+                if(!empty($config['callback'])) return self::$controller->action($config['callback']);
 
                 // Gets the action
                 $action = $config['action'];
