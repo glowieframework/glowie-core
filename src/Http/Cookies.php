@@ -89,6 +89,29 @@
         }
 
         /**
+         * Sets an encrypted string value in the cookies data.
+         * @param string $key Key to set value.
+         * @param string $value Value to be store encrypted.
+         * @param int $expires (Optional) Cookie expiration time in seconds.
+         * @return Cookies Current Cookies instance for nested calls.
+         */
+        public function setEncrypted(string $key, string $value, int $expires = self::EXPIRES_DAY){
+            return $this->set($key, Util::encryptString($value), $expires);
+        }
+
+        /**
+         * Gets an encrypted string value from the cookies data.
+         * @param string $key Key to get value.
+         * @param mixed $default (Optional) Default value to return if the key does not exist.
+         * @return mixed Returns the decrypted value if exists or the default if not.
+         */
+        public function getEncrypted(string $key, $default = null){
+            $value = $this->get($key);
+            if(!$value) return $default;
+            return Util::decryptString($value);
+        }
+
+        /**
          * Removes the associated key value from the cookies data.
          * @param string $key Key to delete value.
          */

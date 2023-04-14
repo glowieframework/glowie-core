@@ -105,6 +105,29 @@
         }
 
         /**
+         * Sets an encrypted string value in the session data.
+         * @param string $key Key to set value (accepts dot notation keys).
+         * @param string $value Value to be store encrypted.
+         * @param bool $ignoreDot (Optional) Ignore dot notation keys.
+         * @return Session Current Session instance for nested calls.
+         */
+        public function setEncrypted(string $key, string $value, bool $ignoreDot = false){
+            return $this->set($key, Util::encryptString($value), $ignoreDot);
+        }
+
+        /**
+         * Gets an encrypted string value from the session data.
+         * @param string $key Key to get value (accepts dot notation keys).
+         * @param mixed $default (Optional) Default value to return if the key does not exist.
+         * @return mixed Returns the decrypted value if exists or the default if not.
+         */
+        public function getEncrypted(string $key, $default = null){
+            $value = $this->get($key);
+            if(!$value) return $default;
+            return Util::decryptString($value);
+        }
+
+        /**
          * Removes the associated key value from the session data.
          * @param string $key Key to delete value.
          */

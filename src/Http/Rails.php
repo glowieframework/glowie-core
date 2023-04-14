@@ -93,7 +93,7 @@
          * @param string $name (Optional) Route name.
          */
         public static function addRoute(string $route, string $controller = 'Glowie\Controllers\Main', ?string $action = null, $methods = [], string $name = ''){
-            if(Util::isEmpty($name)) $name = Util::kebabCase($route);
+            if(Util::isEmpty($name)) $name = Util::slug($route, '-', true);
             if(Util::isEmpty($action)) $action = Util::camelCase($name);
             if(Util::isEmpty($controller)) throw new RoutingException('Controller cannot be empty for route "' . $name . '"');
             if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
@@ -116,7 +116,7 @@
          * @param string $name (Optional) Route name.
          */
         public static function addAnonymous(string $route, Closure $callback, $methods = [], string $name = ''){
-            if(Util::isEmpty($name)) $name = Util::kebabCase($route);
+            if(Util::isEmpty($name)) $name = Util::slug($route, '-', true);
             if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
             self::$routes[$name] = [
                 'name' => $name,
@@ -142,7 +142,7 @@
          * @param string $name (Optional) Route name.
          */
         public static function addProtectedRoute(string $route, $middleware = 'Glowie\Middlewares\Authenticate', string $controller = 'Glowie\Controllers\Main', ?string $action = null, $methods = [], string $name = ''){
-            if(Util::isEmpty($name)) $name = Util::kebabCase($route);
+            if(Util::isEmpty($name)) $name = Util::slug($route, '-', true);
             if(Util::isEmpty($action)) $action = Util::camelCase($name);
             if(Util::isEmpty($controller)) throw new RoutingException('Controller cannot be empty for route "' . $name . '"');
             if(Util::isEmpty($middleware)) throw new RoutingException('Middleware cannot be empty for route "' . $name . '"');
@@ -169,7 +169,7 @@
          * @param string $name (Optional) Route name.
          */
         public static function addProtectedAnonymous(string $route, $middleware = 'Glowie\Middlewares\Authenticate', Closure $callback, $methods = [], string $name = ''){
-            if(Util::isEmpty($name)) $name = Util::kebabCase($route);
+            if(Util::isEmpty($name)) $name = Util::slug($route, '-', true);
             if(Util::isEmpty($middleware)) throw new RoutingException('Middleware cannot be empty for route "' . $name . '"');
             if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
             self::$routes[$name] = [
@@ -194,7 +194,7 @@
          * @param string $name (Optional) Route name.
          */
         public static function addRedirect(string $route, string $target, int $code = Response::HTTP_TEMPORARY_REDIRECT, $methods = [], string $name = ''){
-            if(Util::isEmpty($name)) $name = Util::kebabCase($route);
+            if(Util::isEmpty($name)) $name = Util::slug($route, '-', true);
             if(Util::isEmpty($target)) throw new RoutingException('Redirect target cannot be empty for route "' . $name . '"');
             if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
             self::$routes[$name] = [
@@ -243,6 +243,7 @@
          * @param Closure $callback A function with the grouped route definition methods.
          */
         public static function groupRoutes(string $name, Closure $callback){
+            if(Util::isEmpty($name)) throw new RoutingException('Route group name cannot be empty');
             self::$group = $name;
             call_user_func($callback);
             self::$group = null;
@@ -283,7 +284,7 @@
 
         /**
          * Gets the current route group name.
-         * @return string Returns the current route group name.
+         * @return string|null Returns the current route group name or `null` if the route is not in any group.
          */
         public static function getCurrentGroup(){
             return self::$routes[self::$currentRoute]['group'];
