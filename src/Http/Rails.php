@@ -4,6 +4,7 @@
     use Util;
     use Config;
     use Exception;
+    use Closure;
     use Glowie\Core\Exception\RoutingException;
     use Glowie\Core\Exception\FileException;
 
@@ -67,6 +68,12 @@
         private static $currentParams = [];
 
         /**
+         * Current route group.
+         * @var string|null
+         */
+        private static $group = null;
+
+        /**
          * Loads the route configuration file.
          */
         public static function load(){
@@ -95,7 +102,8 @@
                 'uri' => trim($route, '/'),
                 'controller' => $controller,
                 'action' => $action,
-                'methods' => (array)$methods
+                'methods' => (array)$methods,
+                'group' => self::$group
             ];
         }
 
@@ -107,9 +115,8 @@
          * Leave empty for all.
          * @param string $name (Optional) Route name.
          */
-        public static function addAnonymous(string $route, $callback, $methods = [], string $name = ''){
+        public static function addAnonymous(string $route, Closure $callback, $methods = [], string $name = ''){
             if(Util::isEmpty($name)) $name = Util::kebabCase($route);
-            if(!is_callable($callback)) throw new RoutingException('Invalid callback method for route "' . $name . '"');
             if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
             self::$routes[$name] = [
                 'name' => $name,
@@ -117,7 +124,8 @@
                 'controller' => Generic::class,
                 'action' => 'action',
                 'callback' => $callback,
-                'methods' => (array)$methods
+                'methods' => (array)$methods,
+                'group' => self::$group
             ];
         }
 
@@ -145,7 +153,8 @@
                 'controller' => $controller,
                 'action' => $action,
                 'middleware' => (array)$middleware,
-                'methods' => (array)$methods
+                'methods' => (array)$methods,
+                'group' => self::$group
             ];
         }
 
@@ -159,9 +168,8 @@
          * Leave empty for all.
          * @param string $name (Optional) Route name.
          */
-        public static function addProtectedAnonymous(string $route, $middleware = 'Glowie\Middlewares\Authenticate', $callback, $methods = [], string $name = ''){
+        public static function addProtectedAnonymous(string $route, $middleware = 'Glowie\Middlewares\Authenticate', Closure $callback, $methods = [], string $name = ''){
             if(Util::isEmpty($name)) $name = Util::kebabCase($route);
-            if(!is_callable($callback)) throw new RoutingException('Invalid callback method for route "' . $name . '"');
             if(Util::isEmpty($middleware)) throw new RoutingException('Middleware cannot be empty for route "' . $name . '"');
             if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
             self::$routes[$name] = [
@@ -171,7 +179,8 @@
                 'action' => 'action',
                 'middleware' => (array)$middleware,
                 'callback' => $callback,
-                'methods' => (array)$methods
+                'methods' => (array)$methods,
+                'group' => self::$group
             ];
         }
 
@@ -193,7 +202,8 @@
                 'uri' => trim($route, '/'),
                 'redirect' => $target,
                 'code' => $code,
-                'methods' => (array)$methods
+                'methods' => (array)$methods,
+                'group' => self::$group
             ];
         }
 
@@ -228,6 +238,17 @@
         }
 
         /**
+         * Groups a collection of routes inside a named group.
+         * @param string $name Group name.
+         * @param Closure $callback A function with the grouped route definition methods.
+         */
+        public static function groupRoutes(string $name, Closure $callback){
+            self::$group = $name;
+            call_user_func($callback);
+            self::$group = null;
+        }
+
+        /**
          * Sets the auto routing feature on or off.
          * @param bool $option (Optional) **True** for turning on auto routing or **false** for turning it off.
          */
@@ -258,6 +279,14 @@
          */
         public static function getCurrentRoute(){
             return self::$currentRoute;
+        }
+
+        /**
+         * Gets the current route group name.
+         * @return string Returns the current route group name.
+         */
+        public static function getCurrentGroup(){
+            return self::$routes[self::$currentRoute]['group'];
         }
 
         /**

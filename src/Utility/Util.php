@@ -116,6 +116,24 @@
         }
 
         /**
+         * Checks if the current route name matches a string.
+         * @param string $route The string to match the route name.
+         * @return bool Returns true if route matches, false otherwise.
+         */
+        public static function isCurrentRoute(string $route){
+            return Rails::getCurrentRoute() === $route;
+        }
+
+        /**
+         * Checks if the current route group matches a string.
+         * @param string $group The string to match the routes group name.
+         * @return bool Returns true if group matches, false otherwise.
+         */
+        public static function isCurrentGroup(string $group){
+            return Rails::getCurrentGroup() === $group;
+        }
+
+        /**
          * Returns the base URL of an asset file with a token to force cache reloading on browsers.
          * @param string $filename Asset filename. Must be a path relative to the **app/public/assets** folder.
          * @param string $token (Optional) Token parameter name to append to the filename.
@@ -554,6 +572,17 @@
         }
 
         /**
+         * Generates a random nunber with a specified length.
+         * @param int $length Lenght of the generated number.
+         * @param bool $int (Optional) Return the number as an integer instead of a string.
+         * @return string|int Returns the resulting number.
+         */
+        public static function randomNumber(int $length, bool $int = false){
+            $result = self::randomString($length, false, true);
+            return $int ? (int)$result : $result;
+        }
+
+        /**
          * Converts UTF-8 accented characters from a string into its non-accented equivalents.
          * @param string $string String to convert.
          * @return string Returns the resulting string.
@@ -565,16 +594,16 @@
         }
 
         /**
-         * Converts a string into a valid URI slug format. It also removes all accents and characters that are not\
-         * valid letters, numbers or dashes, and converts spaces into dashes.
+         * Converts a string into a valid URI slug format.
          * @param string $string String to convert.
-         * @param string $separator (Optional) Separator to use to replace spaces.
+         * @param string $separator (Optional) Separator to use to replace spaces (and invalid characters if `$keepOther` is true).
+         * @param bool $keepOther (Optional) Keep invalid characters replacing them with the separator instead of removing.
          * @return string Returns the resulting string.
          */
-        public static function slug(string $string, string $separator = '-'){
+        public static function slug(string $string, string $separator = '-', bool $keepOther = false){
             $string = self::stripAccents(strtolower($string));
             $string = str_replace(' ', $separator, $string);
-            $string = preg_replace('/[^a-zA-Z0-9' . preg_quote($separator) . ']/', '', $string);
+            $string = preg_replace('/[^a-zA-Z0-9' . preg_quote($separator) . ']/', $keepOther ? $separator : '', $string);
             return $string;
         }
 
@@ -672,10 +701,9 @@
          * @return array Returns an array with the filenames.
          */
         public static function getFiles(string $pattern){
-            $files = glob($pattern);
-            foreach (glob(dirname($pattern) . '/*', GLOB_ONLYDIR | GLOB_NOSORT) as $dir) {
-                $files = array_merge($files, self::getFiles($dir . '/' . basename($pattern)));
-            }
+            $files = glob($pattern) ?? [];
+            $folders = glob(dirname($pattern) . '/*', GLOB_ONLYDIR) ?? [];
+            foreach ($folders as $dir) $files = array_merge($files, self::getFiles($dir . '/' . basename($pattern)));
             return $files;
         }
 

@@ -132,7 +132,7 @@
          * @param bool $bail (Optional) Stop validation after first failure found.
          * @return bool Returns true if all rules passed, false otherwise.
          */
-        public function validate(&$data, $rules, bool $bail = false){
+        public function validate($data, $rules, bool $bail = false){
             // Stores result
             $result = [];
 
