@@ -189,7 +189,7 @@
 
         /**
          * Removes the associated key value from the cache.
-         * @param string|array Key to delete value. You can also use an array of keys to remove.
+         * @param string|array $key Key to delete value. You can also use an array of keys to remove.
          * @return Cache Current instance for nested calls.
          */
         public function remove($key){

@@ -22,16 +22,16 @@
         use DatabaseTrait;
 
         /**
-         * Safe mode;
+         * Safe UPDATE/DELETE queries.
          * @var bool
          */
-        private $_safe;
+        private $_safe = true;
 
         /**
          * SELECT statement.
          * @var string
          */
-        private $_select;
+        protected $_select;
 
         /**
          * FROM statement.
@@ -122,12 +122,20 @@
         }
 
         /**
-         * Enables the WHERE checking for UPDATE and DELETE queries.
-         * @param bool $option (Optional) True to enable safe mode, false to disable.
+         * Disables WHERE checking in UPDATE or DELETE queries.
          * @return $this Current instance for nested calls.
          */
-        public function safeUpdateDeletes(bool $option = true){
-            $this->_safe = $option;
+        public function noSafeUpdateDeletes(){
+            $this->_safe = false;
+            return $this;
+        }
+
+        /**
+         * Enables WHERE checking in UPDATE or DELETE queries.
+         * @return $this Current instance for nested calls.
+         */
+        public function withSafeUpdateDeletes(){
+            $this->_safe = true;
             return $this;
         }
 
@@ -1431,6 +1439,7 @@
             // Parse results
             return new Element([
                 'page' => $currentPage,
+                'is_valid' => !empty($results),
                 'data' => $results,
                 'from' => empty($results) ? 0 : $offset + 1,
                 'to' => empty($results) ? 0 : count($results) + $offset,

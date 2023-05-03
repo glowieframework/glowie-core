@@ -122,16 +122,34 @@
         }
 
         /**
+         * Fetches the first result from a SELECT query. Results will be casted, if available.
+         * @return mixed Returns the first resulting row on success or null if not found.
+         * @throws QueryException Throws an exception if the query fails.
+         */
+        public function fetchRow(){
+            return $this->castData(Kraken::fetchRow());
+        }
+
+        /**
+         * Fetches all results from a SELECT query. Results will be casted, if available.
+         * @return array Returns an array with all resulting rows.
+         * @throws QueryException Throws an exception if the query fails.
+         */
+        public function fetchAll(){
+            return $this->castData(Kraken::fetchAll());
+        }
+
+        /**
          * Gets the first row that matches the model primary key value.
          * @param mixed $primary (Optional) Primary key value to search for.
          * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
          * @return mixed Returns the row on success or null if not found.
          */
         public function find($primary = null, bool $deleted = false){
-            $fields = !empty($this->_fields) ? $this->_fields : '*';
+            $fields = !Util::isEmpty($this->_select) ? $this->_select : (!Util::isEmpty($this->_fields) ? $this->_fields : '*');
             if(!is_null($primary)) $this->where($this->_primaryKey, $primary);
             if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->castData($this->select($fields)->fetchRow());
+            return $this->select($fields)->fetchRow();
         }
 
         /**
@@ -143,9 +161,9 @@
          */
         public function findBy($field, $value = null, bool $deleted = false){
             $this->filterFields($field, $value);
-            $fields = !empty($this->_fields) ? $this->_fields : '*';
+            $fields = !Util::isEmpty($this->_select) ? $this->_select : (!Util::isEmpty($this->_fields) ? $this->_fields : '*');
             if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->castData($this->select($fields)->fetchRow());
+            return $this->select($fields)->fetchRow();
         }
 
         /**
@@ -182,9 +200,9 @@
          * @return array Returns an array with all rows.
          */
         public function all(bool $deleted = false){
-            $fields = !empty($this->_fields) ? $this->_fields : '*';
+            $fields = !Util::isEmpty($this->_select) ? $this->_select : (!Util::isEmpty($this->_fields) ? $this->_fields : '*');
             if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->castData($this->select($fields)->fetchAll());
+            return $this->select($fields)->fetchAll();
         }
 
         /**
@@ -196,9 +214,9 @@
          */
         public function allBy($field, $value = null, bool $deleted = false){
             $this->filterFields($field, $value);
-            $fields = !empty($this->_fields) ? $this->_fields : '*';
+            $fields = !Util::isEmpty($this->_select) ? $this->_select : (!Util::isEmpty($this->_fields) ? $this->_fields : '*');
             if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->castData($this->select($fields)->fetchAll());
+            return $this->select($fields)->fetchAll();
         }
 
         /**
@@ -209,9 +227,9 @@
          */
         public function latest(bool $deleted = false){
             if(!$this->_timestamps) throw new Exception('latest(): Model "' . get_class($this) . '" is not handling timestamp fields');
-            $fields = !empty($this->_fields) ? $this->_fields : '*';
+            $fields = !Util::isEmpty($this->_select) ? $this->_select : (!Util::isEmpty($this->_fields) ? $this->_fields : '*');
             if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->castData($this->select($fields)->orderBy($this->_createdField, 'DESC')->fetchAll());
+            return $this->select($fields)->orderBy($this->_createdField, 'DESC')->fetchAll();
         }
 
         /**
@@ -222,9 +240,9 @@
          */
         public function oldest(bool $deleted = false){
             if(!$this->_timestamps) throw new Exception('oldest(): Model "' . get_class($this) . '" is not handling timestamp fields');
-            $fields = !empty($this->_fields) ? $this->_fields : '*';
+            $fields = !Util::isEmpty($this->_select) ? $this->_select : (!Util::isEmpty($this->_fields) ? $this->_fields : '*');
             if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->castData($this->select($fields)->orderBy($this->_createdField, 'ASC')->fetchAll());
+            return $this->select($fields)->orderBy($this->_createdField, 'ASC')->fetchAll();
         }
 
         /**
@@ -422,7 +440,7 @@
          * @param array|Element $data A single row as an Element/associative array or a multi-dimensional of rows.
          * @return array|Element Returns the data with the casted fields.
          */
-        public function castData($data){
+        private function castData($data){
             // Checks if data or casts property is empty
             if(empty($data) || empty($this->_casts)) return $data;
 
@@ -500,7 +518,7 @@
          * @param array|Element $data An Element or associative array of data to mutate.
          * @return array|Element Returns the mutated data.
          */
-        public function mutateData($data){
+        private function mutateData($data){
             // Checks if data or mutators property is empty
             if(empty($data) || empty($this->_mutators)) return $data;
 
@@ -546,7 +564,7 @@
          * @param array $data An associative array of fields and values to filter.
          * @return array Returns the filtered array.
          */
-        public function filterData(array $data){
+        private function filterData(array $data){
             if(empty($data) || empty($this->_updatable)) return $data;
             return array_intersect_key($data, array_flip($this->_updatable));
         }

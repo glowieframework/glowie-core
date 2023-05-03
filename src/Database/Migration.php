@@ -67,6 +67,7 @@
                     $this->forge->table($this->table)
                                 ->createColumn('name', Skeleton::TYPE_STRING, 255)
                                 ->createColumn('applied_at', Skeleton::TYPE_DATETIME, null, Skeleton::raw('NOW()'))
+                                ->unique('name')
                                 ->create();
                 };
                 self::$tableCreated[$this->database] = true;

@@ -291,6 +291,7 @@
             // Parse results
             return new Element([
                 'page' => $currentPage,
+                'is_valid' => !empty($results),
                 'data' => $results,
                 'from' => empty($results) ? 0 : $offset + 1,
                 'to' => empty($results) ? 0 : count($results) + $offset,
