@@ -760,6 +760,7 @@
             $this->_like = '';
             $this->_database = '';
             $this->_raw = '';
+            $this->_prepared = [];
             return $this;
         }
 

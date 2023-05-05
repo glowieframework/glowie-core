@@ -106,6 +106,12 @@
         private $_set;
 
         /**
+         * UNION statement.
+         * @var string
+         */
+        private $_union;
+
+        /**
          * Last insert ID.
          * @var int
          */
@@ -1080,6 +1086,41 @@
         }
 
         /**
+         * Performs a raw UNION between two queries.
+         * @param string $query Raw query to union.
+         * @param bool $all (Optional) Return all results instead of just the unique ones.
+         * @return $this Current instance for nested calls.
+         */
+        public function rawUnion(string $query, bool $all = false){
+            $type = $all ? 'UNION ALL ' : 'UNION ';
+            $this->_union = $type . $query;
+            return $this;
+        }
+
+        public function rawUnionAll(string $query){
+            return $this->rawUnion($query, true);
+        }
+
+        /**
+         * Performs an UNION between two queries.
+         * @param Kraken $query Query builder instance to union.
+         * @param bool $all (Optional) Return all results instead of just the unique ones.
+         * @return $this Current instance for nested calls.
+         */
+        public function union(Kraken $query, bool $all = false){
+            return $this->rawUnion($query->getQuery(), $all);
+        }
+
+        /**
+         * Performs an UNION between two queries getting all results.
+         * @param Kraken $query Query builder instance to union.
+         * @return $this Current instance for nested calls.
+         */
+        public function unionAll(Kraken $query){
+            return $this->rawUnion($query->getQuery(), true);
+        }
+
+        /**
          * Fetches the first result from a SELECT query.
          * @return mixed Returns the first resulting row on success or null if not found.
          * @throws QueryException Throws an exception if the query fails.
@@ -1520,6 +1561,8 @@
             $this->_duplicate = '';
             $this->_set = '';
             $this->_raw = '';
+            $this->_union = '';
+            $this->_prepared = [];
             return $this;
         }
 
@@ -1609,6 +1652,11 @@
                     $where = implode(' ', $this->_where);
                     $query .= " WHERE {$where}";
                 }
+            }
+
+            // Gets UNION statement
+            if(!empty($this->_union)){
+                $query .= " {$this->_union}";
             }
 
             // Gets GROUP BY, HAVING and ORDER BY statements

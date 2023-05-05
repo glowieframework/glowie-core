@@ -147,8 +147,8 @@
          */
         public function find($primary = null, bool $deleted = false){
             $fields = !Util::isEmpty($this->_select) ? $this->_select : (!Util::isEmpty($this->_fields) ? $this->_fields : '*');
-            if(!is_null($primary)) $this->where($this->_primaryKey, $primary);
-            if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
+            if(!is_null($primary)) $this->where($this->_table . '.' . $this->_primaryKey, $primary);
+            if($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
             return $this->select($fields)->fetchRow();
         }
 
@@ -161,9 +161,7 @@
          */
         public function findBy($field, $value = null, bool $deleted = false){
             $this->filterFields($field, $value);
-            $fields = !Util::isEmpty($this->_select) ? $this->_select : (!Util::isEmpty($this->_fields) ? $this->_fields : '*');
-            if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->select($fields)->fetchRow();
+            return $this->find(null, $deleted);
         }
 
         /**
@@ -201,7 +199,7 @@
          */
         public function all(bool $deleted = false){
             $fields = !Util::isEmpty($this->_select) ? $this->_select : (!Util::isEmpty($this->_fields) ? $this->_fields : '*');
-            if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
+            if($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
             return $this->select($fields)->fetchAll();
         }
 
@@ -214,9 +212,7 @@
          */
         public function allBy($field, $value = null, bool $deleted = false){
             $this->filterFields($field, $value);
-            $fields = !Util::isEmpty($this->_select) ? $this->_select : (!Util::isEmpty($this->_fields) ? $this->_fields : '*');
-            if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->select($fields)->fetchAll();
+            return $this->all($deleted);
         }
 
         /**
@@ -227,9 +223,7 @@
          */
         public function latest(bool $deleted = false){
             if(!$this->_timestamps) throw new Exception('latest(): Model "' . get_class($this) . '" is not handling timestamp fields');
-            $fields = !Util::isEmpty($this->_select) ? $this->_select : (!Util::isEmpty($this->_fields) ? $this->_fields : '*');
-            if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->select($fields)->orderBy($this->_createdField, 'DESC')->fetchAll();
+            return $this->orderBy($this->_table . '.' . $this->_createdField, 'DESC')->all($deleted);
         }
 
         /**
@@ -240,9 +234,7 @@
          */
         public function oldest(bool $deleted = false){
             if(!$this->_timestamps) throw new Exception('oldest(): Model "' . get_class($this) . '" is not handling timestamp fields');
-            $fields = !Util::isEmpty($this->_select) ? $this->_select : (!Util::isEmpty($this->_fields) ? $this->_fields : '*');
-            if($this->_softDeletes && !$deleted) $this->whereNull($this->_deletedField);
-            return $this->select($fields)->orderBy($this->_createdField, 'ASC')->fetchAll();
+            return $this->orderBy($this->_table . '.' . $this->_createdField, 'ASC')->all($deleted);
         }
 
         /**
@@ -252,9 +244,9 @@
          * @return bool Returns true on success or false on failure.
          */
         public function drop($primary = null, bool $force = false){
-            if(!is_null($primary)) $this->whereIn($this->_primaryKey, (array)$primary);
+            if(!is_null($primary)) $this->whereIn($this->_table . '.' . $this->_primaryKey, (array)$primary);
             if($this->_softDeletes && !$force){
-                return $this->update([$this->_deletedField => self::raw('NOW()')]);
+                return $this->update([$this->_table . '.' . $this->_deletedField => self::raw('NOW()')]);
             }else{
                 return $this->delete();
             }
@@ -270,7 +262,7 @@
         public function dropBy($field, $value = null, bool $force = false){
             $this->filterFields($field, $value);
             if($this->_softDeletes && !$force){
-                return $this->update([$this->_deletedField => self::raw('NOW()')]);
+                return $this->update([$this->_table . '.' . $this->_deletedField => self::raw('NOW()')]);
             }else{
                 return $this->delete();
             }
@@ -284,8 +276,18 @@
         public function purge(){
             if(!$this->_softDeletes) throw new Exception('purge(): Model "' . get_class($this) . '" soft deletes are not enabled');
             $this->clearQuery();
-            $this->whereNotNull($this->_deletedField);
+            $this->whereNotNull($this->_table . '.' . $this->_deletedField);
             return $this->delete();
+        }
+
+        /**
+         * Gets only a list of soft deleted rows (if enabled).
+         * @return array Returns an array with the filtered rows.
+         */
+        public function getDeleted(){
+            if(!$this->_softDeletes) throw new Exception('getDeleted(): Model "' . get_class($this) . '" soft deletes are not enabled');
+            $this->whereNotNull($this->_table . '.' . $this->_deletedField);
+            return $this->all(true);
         }
 
         /**
@@ -405,12 +407,17 @@
 
         /**
          * Saves the model entity data to the database.
-         * @return bool Returns true on success or false on failure.
+         * @return bool Returns the last inserted `AUTO_INCREMENT` value (or true) if the row is created, otherwise returns true on success or false on failure.
          */
         public function save(){
             $data = $this->toArray();
             if(empty($data)) throw new Exception('save(): Model "' . get_class($this) . '" entity cannot be empty while saving');
-            return $this->updateOrCreate($data);
+            $result = $this->updateOrCreate($data);
+
+            // Parse primary key value
+            if(is_bool($result)) return $result;
+            $this->{$this->_primaryKey} = $result;
+            return $result;
         }
 
         /**
@@ -577,6 +584,7 @@
         private function filterFields($field, $value = null){
             if(Util::isAssociativeArray($field)){
                 foreach($field as $key => $value){
+                    $key = $this->_table . '.' . $key;
                     if(is_array($value)){
                         $this->whereIn($key, $value);
                     }else if($value === 'NULL' || is_null($value)){
@@ -586,6 +594,7 @@
                     }
                 }
             }else{
+                $field = $this->_table . '.' . $field;
                 if(is_array($value)){
                     $this->whereIn($field, $value);
                 }else if($value === 'NULL' || is_null($value)){

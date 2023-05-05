@@ -61,6 +61,12 @@
         private $_raw;
 
         /**
+         * Prepared statement.
+         * @var array
+         */
+        private $_prepared;
+
+        /**
          * Return results as associative arrays.
          * @var bool
          */
@@ -142,9 +148,9 @@
 
                 // Sets the strict mode
                 if(!empty($database['strict'])){
-                    $this->query('SET SESSION sql_mode="ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"');
+                    $this->query('SET SESSION sql_mode="ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"', false);
                 }else{
-                    $this->query('SET SESSION sql_mode="ALLOW_INVALID_DATES,NO_ENGINE_SUBSTITUTION"');
+                    $this->query('SET SESSION sql_mode="ALLOW_INVALID_DATES,NO_ENGINE_SUBSTITUTION"', false);
                 }
             } catch (Throwable $e) {
                 throw new DatabaseException($database, $e->getMessage(), $e->getCode(), $e);
@@ -179,8 +185,22 @@
          * the results. Otherwise returns true on success or false on failure.
          * @throws QueryException Throws an exception if the query fails.
          */
-        public function query(string $query, bool $return = false){
+        public function query(string $query, bool $return = true){
             $this->_raw = $query;
+            return $this->execute($return);
+        }
+
+        /**
+         * Runs a raw prepared SQL query.
+         * @param string $query Full raw query to run with question marks in prepared parameters.
+         * @param array $params (Optional) Array of parameters to bind in order of each question mark in the query.
+         * @param bool $return (Optional) Set to **true** if the query should return any results.
+         * @return array|bool If the query is successful and should return results, will return an array with\
+         * the results. Otherwise returns true on success or false on failure.
+         * @throws QueryException Throws an exception if the query fails.
+         */
+        public function prepared(string $query, array $params = [], bool $return = true){
+            $this->_prepared = [$query, $params];
             return $this->execute($return);
         }
 
@@ -245,7 +265,7 @@
          * @throws QueryException Throws an exception if the query fails.
          */
         public function disableFkChecks(){
-            return $this->query('SET FOREIGN_KEY_CHECKS = 0');
+            return $this->query('SET FOREIGN_KEY_CHECKS = 0', false);
         }
 
         /**
@@ -254,7 +274,7 @@
          * @throws QueryException Throws an exception if the query fails.
          */
         public function enableFkChecks(){
-            return $this->query('SET FOREIGN_KEY_CHECKS = 1');
+            return $this->query('SET FOREIGN_KEY_CHECKS = 1', false);
         }
 
         /**
@@ -267,9 +287,37 @@
          */
         private function execute(bool $returns = false, bool $returnsFirst = false){
             try {
-                // Run query and clear its data
-                $built = $this->getQuery();
-                $query = $this->getConnection()->query($built);
+                // Run query or prepared statement
+                if(!empty($this->_prepared)){
+                    $stmt = $this->getConnection()->prepare($this->_prepared[0]);
+                    $types = '';
+
+                    // Prepared types checking
+                    foreach($this->_prepared[1] as $value){
+                        switch(gettype($value)){
+                            case 'integer':
+                                $types .= 'i';
+                                break;
+
+                            case 'double':
+                                $types .= 'd';
+                                break;
+
+                            default:
+                                $types .= 's';
+                                break;
+                        }
+                    }
+
+                    $stmt->bind_param($types, ...$this->_prepared[1]);
+                    $stmt->execute();
+                    $query = $stmt->get_result();
+                }else{
+                    $built = $this->getQuery();
+                    $query = $this->getConnection()->query($built);
+                }
+
+                // Clear query data
                 $this->clearQuery();
 
                 // Checks for query result
