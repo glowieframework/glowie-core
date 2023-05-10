@@ -61,7 +61,7 @@
             self::log("[{$date}] {$e->getMessage()} at file {$e->getFile()}:{$e->getLine()}\n{$e->getTraceAsString()}\n\n");
 
             // Clean output buffer
-            Buffer::clean();
+            if(Buffer::isActive()) Buffer::clean();
 
             // Display the error or the default error page
             http_response_code(Response::HTTP_INTERNAL_SERVER_ERROR);

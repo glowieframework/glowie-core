@@ -6,10 +6,8 @@
     use Glowie\Core\Exception\ConsoleException;
     use Glowie\Core\Exception\PluginException;
     use Glowie\Core\Error\HandlerCLI;
-    use Glowie\Core\View\Buffer;
     use Glowie\Core\Http\Rails;
     use Util;
-    use Throwable;
     use Config;
     use Env;
     use Babel;
@@ -241,6 +239,13 @@
         }
 
         /**
+         * Clears the whole console screen.
+         */
+        public static function clearScreen(){
+            if(Util::isCLI()) DIRECTORY_SEPARATOR === '\\' ? popen('cls', 'w') : exec('clear');
+        }
+
+        /**
          * Prints a table of data in the console.
          * @param array $headers Table headers.
          * @param array $rows A multi-dimensional array of data to parse.
@@ -344,6 +349,14 @@
         }
 
         /**
+         * Gets the current command.
+         * @return string Returns the current command.
+         */
+        public static function getCommand(){
+            return self::$command;
+        }
+
+        /**
          * Starts the local development server.
          */
         private static function __shine(){
@@ -366,48 +379,7 @@
          * Starts the REPL interactive mode.
          */
         private static function __sandbox(){
-            // Checks if CLI is running
-            if(!Util::isCLI()) throw new ConsoleException(self::$command, self::$args, 'This command cannot be used from outside the console');
-
-            // Register class alias
-            foreach(Config::get('sandbox.alias', []) as $alias => $class){
-                if(!class_exists($alias)) class_alias($class, $alias);
-            }
-
-            // Starts the interactive mode
-            self::print('<color="green">Welcome to Firefly Sandbox!</color>');
-            self::print('<color="yellow">Type quit or exit to end the interactive mode</color>');
-
-            // REPL
-            while (true) {
-                // Starting tag
-                self::print('<color="cyan">sandbox >> </color>', false);
-
-                // Gets the current command
-                $__command = trim(fgets(STDIN));
-                if(strtolower($__command) == 'quit' || strtolower($__command) == 'exit') break;
-
-                // Captures the output buffer
-                Buffer::start();
-
-                try {
-                    // Evaluates the command
-                    if(!Util::startsWith($__command, ['return', 'echo', 'print'])) $__command = 'return ' . $__command;
-                    if(!Util::endsWith($__command, ';')) $__command .= ';';
-                    $__returnValue = eval($__command);
-
-                    // Flushes the buffer
-                    if($__returnValue) var_dump($__returnValue);
-                    $__returnText = Buffer::get();
-                    if(!Util::isEmpty($__returnText)) self::print('<color="yellow">>> ' . trim($__returnText) . '</color>');
-                } catch (Throwable $e) {
-                    // Clears the output buffer
-                    Buffer::clean();
-
-                    // Prints the error
-                    self::print('<color="red">>></color> <bg="red"><color="black">' . get_class($e) . ':</color></bg><color="red"> ' . $e->getMessage() . '</color>');
-                }
-            }
+            Sandbox::run();
         }
 
         /**

@@ -277,7 +277,7 @@
          * @param string $content Content to set as the body.
          */
         public function setBody(string $content){
-            Buffer::clean();
+            if(Buffer::isActive()) Buffer::clean();
             $this->setContentType(self::CONTENT_PLAIN);
             echo $content;
         }
@@ -289,7 +289,7 @@
          * @param int $depth (Optional) JSON encoding maximum depth (same as in `json_encode()` function).
          */
         public function setJson($data, int $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK, int $depth = 512){
-            Buffer::clean();
+            if(Buffer::isActive()) Buffer::clean();
             $this->setContentType(self::CONTENT_JSON);
             if(is_callable([$data, 'toArray'])) $data = $data->toArray();
             echo json_encode($data, $flags, $depth);
@@ -301,7 +301,7 @@
          * @param string $root (Optional) Name of the XML root element.
          */
         public function setXML($data, string $root = 'data'){
-            Buffer::clean();
+            if(Buffer::isActive()) Buffer::clean();
             $this->setContentType(self::CONTENT_XML);
             $xml = new SimpleXMLElement("<?xml version=\"1.0\"?><{$root}></{$root}>");
             if(is_callable([$data, 'toArray'])) $data = $data->toArray();
@@ -316,7 +316,7 @@
          * @return void
          */
         public function redirect(string $destination, int $code = self::HTTP_TEMPORARY_REDIRECT){
-            Buffer::clean();
+            if(Buffer::isActive()) Buffer::clean();
             $this->setStatusCode($code);
             header('Location: ' . $destination, true, $code);
             die();

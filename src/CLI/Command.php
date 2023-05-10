@@ -56,7 +56,7 @@
          * Clears the whole console screen.
          */
         public function clearScreen(){
-            if(Util::isCLI()) DIRECTORY_SEPARATOR === '\\' ? popen('cls', 'w') : exec('clear');
+            Firefly::clearScreen();
         }
 
         /**

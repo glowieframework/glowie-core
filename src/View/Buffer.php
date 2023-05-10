@@ -25,7 +25,6 @@
          * @return bool Returns true on success or false on failure.
          */
         public static function flush(){
-            if(!ob_get_length()) return;
             return ob_end_flush();
         }
 
@@ -34,7 +33,6 @@
          * @return bool Returns true on success or false on failure.
          */
         public static function clean(){
-            if(!ob_get_length()) return;
             return ob_end_clean();
         }
 
@@ -43,8 +41,15 @@
          * @return string|bool Returns the content or false on fail.
          */
         public static function get(){
-            if(!ob_get_length()) return;
             return ob_get_clean();
+        }
+
+        /**
+         * Checks if the output buffer is active.
+         * @return bool Returns true if active, false otherwise.
+         */
+        public static function isActive(){
+            return ob_get_length() !== false;
         }
 
     }

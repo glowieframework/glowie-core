@@ -38,7 +38,7 @@
                 var_dump($var);
             }else {
                 // Clean output buffer
-                Buffer::clean();
+                if(Buffer::isActive()) Buffer::clean();
 
                 // Sets response code
                 Rails::getResponse()->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);

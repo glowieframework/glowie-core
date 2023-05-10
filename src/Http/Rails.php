@@ -74,6 +74,12 @@
         private static $group = null;
 
         /**
+         * Current route prefix.
+         * @var string
+         */
+        private static $prefix = '';
+
+        /**
          * Loads the route configuration file.
          */
         public static function load(){
@@ -99,7 +105,7 @@
             if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
             self::$routes[$name] = [
                 'name' => $name,
-                'uri' => trim($route, '/'),
+                'uri' => trim(self::$prefix . $route, '/'),
                 'controller' => $controller,
                 'action' => $action,
                 'methods' => (array)$methods,
@@ -120,7 +126,7 @@
             if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
             self::$routes[$name] = [
                 'name' => $name,
-                'uri' => trim($route, '/'),
+                'uri' => trim(self::$prefix . $route, '/'),
                 'controller' => Generic::class,
                 'action' => 'action',
                 'callback' => $callback,
@@ -149,7 +155,7 @@
             if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
             self::$routes[$name] = [
                 'name' => $name,
-                'uri' => trim($route, '/'),
+                'uri' => trim(self::$prefix . $route, '/'),
                 'controller' => $controller,
                 'action' => $action,
                 'middleware' => (array)$middleware,
@@ -174,7 +180,7 @@
             if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
             self::$routes[$name] = [
                 'name' => $name,
-                'uri' => trim($route, '/'),
+                'uri' => trim(self::$prefix . $route, '/'),
                 'controller' => Generic::class,
                 'action' => 'action',
                 'middleware' => (array)$middleware,
@@ -199,7 +205,7 @@
             if(!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
             self::$routes[$name] = [
                 'name' => $name,
-                'uri' => trim($route, '/'),
+                'uri' => trim(self::$prefix . $route, '/'),
                 'redirect' => $target,
                 'code' => $code,
                 'methods' => (array)$methods,
@@ -241,12 +247,15 @@
          * Groups a collection of routes inside a named group.
          * @param string $name Group name.
          * @param Closure $callback A function with the grouped route definition methods.
+         * @param bool $prefix (Optional) Prepend the group name as a path prefix in all grouped routes.
          */
-        public static function groupRoutes(string $name, Closure $callback){
+        public static function groupRoutes(string $name, Closure $callback, bool $prefix = false){
             if(Util::isEmpty($name)) throw new RoutingException('Route group name cannot be empty');
             self::$group = $name;
+            if($prefix) self::$prefix = $name . '/';
             call_user_func($callback);
             self::$group = null;
+            self::$prefix = '';
         }
 
         /**
