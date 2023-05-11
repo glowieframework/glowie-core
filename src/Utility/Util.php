@@ -58,6 +58,60 @@
         }
 
         /**
+         * Parses a variable in an HTML structure recursively.
+         * @param mixed $var Variable to parse.
+         * @return string Returns the HTML code.
+         */
+        protected static function parseDump($var){
+            // Prepares the result string
+            $html = '';
+
+            // Checks if variable is an object or array
+            if(is_object($var)){
+                $html .= '<a href="">{' . get_class($var) . '(';
+
+                // Cast Element or object to array
+                $var = is_callable([$var, 'toArray']) ? $var->toArray() : (array)$var;
+
+                // Counts the properties
+                $html .= count($var) . ')⏷}</a>';
+            }else if(is_array($var)) {
+                $html .= '<a href="">[array(' . count($var) . ')⏷]</a>';
+            }
+
+            // Checks for variable type
+            if(is_array($var)){
+                $html .= '<div class="collapse">';
+
+                // Gets each array key/value pair
+                foreach($var as $key => $value){
+                    $html .= '<div>';
+
+                    // Replace private class identifiers
+                    if(Util::startsWith(trim($key), '*')) $key = Util::replaceFirst($key, '*', '');
+
+                    // Put variable value recursively
+                    $html .= '<strong>' . $key . '</strong> => ';
+                    $html .= self::parseDump($value);
+                    $html .= '</div>';
+                }
+
+                $html .= '</div>';
+            }else if(is_string($var)){
+                $html .= '"' . $var . '"';
+            }else if(is_null($var)){
+                $html .= 'NULL';
+            }else if(is_bool($var)){
+                $html .= $var ? 'true' : 'false';
+            }else{
+                $html .= $var;
+            }
+
+            // Returns the result
+            return $html;
+        }
+
+        /**
          * Returns the absolute URL of the application path.
          * @param string $path (Optional) Relative path to append to the base URL.
          * @return string Full base URL.
