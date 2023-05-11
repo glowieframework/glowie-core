@@ -3,13 +3,13 @@
 </p>
 
 <p align="center">
-    <a href="https://packagist.org/packages/glowieframework/glowie"><img src="https://img.shields.io/github/v/release/glowieframework/glowie" alt="Latest Version"></a>
-    <a href="https://packagist.org/packages/glowieframework/glowie" target="_blank"><img src="https://img.shields.io/packagist/dt/glowieframework/glowie" alt="Total Downloads"></a>
+    <a href="https://packagist.org/packages/glowieframework/glowie"><img src="https://img.shields.io/github/v/release/glowieframework/glowie-core" alt="Latest Version"></a>
+    <a href="https://packagist.org/packages/glowieframework/glowie" target="_blank"><img src="https://img.shields.io/packagist/dt/glowieframework/glowie-core" alt="Total Downloads"></a>
     <a href="https://packagist.org/packages/glowieframework/glowie" target="_blank"><img src="https://img.shields.io/github/license/glowieframework/glowie" alt="License"></a>
     <a href="https://packagist.org/packages/glowieframework/glowie" target="_blank"><img src="https://img.shields.io/packagist/php-v/glowieframework/glowie" alt="PHP Version"></a>
 </p>
 
-> **Note:** This repository is suited only for Glowie core modules. For creating projects using Glowie, please refer to <a href="https://github.com/glowieframework/glowie">this repo</a>. Issues and discussions should also be created in that main repository.
+> **Note:** This repository is suited only for Glowie core modules. For creating projects using Glowie, please refer to <a href="https://github.com/glowieframework/glowie">this repo</a>.
 
 ## Powerful and lightweight PHP framework
 Glowie is a PHP framework designed to be as light, fast and powerful as possible for developing applications and dynamic websites the easiest way.
