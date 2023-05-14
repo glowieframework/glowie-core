@@ -51,10 +51,11 @@
          * @param array $params (Optional) View parameters to parse.
          * @param bool $partial (Optional) Restrict view partial scope.
          */
-        public function __construct(string $view, array $params = [], bool $partial = false){
+        public function __construct(string $view, array $params = [], bool $partial = false, bool $absolute = false){
             // Validate file
             $this->_filename = $view;
-            $view = Util::location('views/' . $view . (!Util::endsWith($view, '.phtml') ? '.phtml' : ''));
+            $view = !$absolute ? Util::location('views/' . $view) : $view;
+            $view .= !Util::endsWith($view, '.phtml') ? '.phtml' : '';
             if(!is_file($view)) throw new FileException(sprintf('View file "%s" not found', $this->_filename));
 
             // Instantiate helpers
@@ -99,9 +100,10 @@
          * Renders a view file.
          * @param string $view View filename. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
          * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
+         * @param bool $absolute (Optional) Use an absolute path for the view file.
          */
-        public function renderView(string $view, array $params = []){
-            Rails::getController()->renderView($view, array_merge($this->_params, $params));
+        public function renderView(string $view, array $params = [], bool $absolute = false){
+            Rails::getController()->renderView($view, array_merge($this->_params, $params), $absolute);
         }
 
         /**
@@ -110,18 +112,20 @@
          * @param string|null $view (Optional) View filename to render within layout. You can place its content by using `$this->getView()`\
          * inside the layout file. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
          * @param array $params (Optional) Parameters to pass into the rendered view and layout. Should be an associative array with each variable name and value.
+         * @param bool $absolute (Optional) Use an absolute path for the view file.
          */
-        public function renderLayout(string $layout, ?string $view = null, array $params = []){
-            Rails::getController()->renderLayout($layout, $view, array_merge($this->_params, $params));
+        public function renderLayout(string $layout, ?string $view = null, array $params = [], bool $absolute = false){
+            Rails::getController()->renderLayout($layout, $view, array_merge($this->_params, $params), $absolute);
         }
 
         /**
          * Renders a view file in a private scope. No global or parent view properties will be inherited.
          * @param string $view View filename. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
          * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
+         * @param bool $absolute (Optional) Use an absolute path for the view file.
          */
-        public function renderPartial(string $view, array $params = []){
-            Rails::getController()->renderPartial($view, $params);
+        public function renderPartial(string $view, array $params = [], bool $absolute = false){
+            Rails::getController()->renderPartial($view, $params, $absolute);
         }
 
         /**

@@ -83,8 +83,8 @@
          * @param string $view View filename. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
          * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
          */
-        final public function renderView(string $view, array $params = []){
-            $view = new View($view, $params);
+        final public function renderView(string $view, array $params = [], bool $absolute = false){
+            $view = new View($view, $params, false, $absolute);
             echo $view->getContent();
         }
 
@@ -94,9 +94,10 @@
          * @param string|null $view (Optional) View filename to render within layout. You can place its content by using `$this->getView()`\
          * inside the layout file. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
          * @param array $params (Optional) Parameters to pass into the rendered view and layout. Should be an associative array with each variable name and value.
+         * @param bool $absolute (Optional) Use an absolute path for the view file.
          */
-        final public function renderLayout(string $layout, ?string $view = null, array $params = []){
-            $layout = new Layout($layout, $view, $params);
+        final public function renderLayout(string $layout, ?string $view = null, array $params = [], bool $absolute = false){
+            $layout = new Layout($layout, $view, $params, $absolute);
             echo $layout->getContent();
         }
 
@@ -104,9 +105,10 @@
          * Renders a view file in a private scope. No global or parent view properties will be inherited.
          * @param string $view View filename. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
          * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
+         * @param bool $absolute (Optional) Use an absolute path for the view file.
          */
-        final public function renderPartial(string $view, array $params = []){
-            $view = new View($view, $params, true);
+        final public function renderPartial(string $view, array $params = [], bool $absolute = false){
+            $view = new View($view, $params, true, $absolute);
             echo $view->getContent();
         }
 

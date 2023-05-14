@@ -252,7 +252,7 @@
         public static function groupRoutes(string $name, Closure $callback, bool $prefix = false){
             if(Util::isEmpty($name)) throw new RoutingException('Route group name cannot be empty');
             self::$group = $name;
-            if($prefix) self::$prefix = $name . '/';
+            if($prefix) self::$prefix = rtrim($name, '/') . '/';
             call_user_func($callback);
             self::$group = null;
             self::$prefix = '';

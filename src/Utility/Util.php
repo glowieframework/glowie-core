@@ -67,16 +67,30 @@
             $html = '';
 
             // Checks if variable is an object or array
+            $class = null;
             if(is_object($var)){
-                $html .= '<a href="">{' . get_class($var) . '(';
+                $class = get_class($var);
+                $html .= '<a href="" class="toggle">{' . $class;
 
-                // Cast Element or object to array
-                $var = is_callable([$var, 'toArray']) ? $var->toArray() : (array)$var;
+                // Checks for Closure variable
+                if($var instanceof Closure){
+                    // Parse Closure data
+                    $reflection = new ReflectionFunction($var);
+                    $var = [
+                        'class' => $reflection->getClosureScopeClass()->name,
+                        'this' => get_class($reflection->getClosureThis()),
+                        'file' => $reflection->getFileName(),
+                        'line' => $reflection->getStartLine() . ' to ' . $reflection->getEndLine()
+                    ];
+                }else{
+                    // Cast Element or object to array
+                    $var = is_callable([$var, 'toArray']) ? $var->toArray() : (array)$var;
+                }
 
                 // Counts the properties
-                $html .= count($var) . ')⏷}</a>';
+                $html .= '(' . count($var) . ')⏷}</a>';
             }else if(is_array($var)) {
-                $html .= '<a href="">[array(' . count($var) . ')⏷]</a>';
+                $html .= '<a href="" class="toggle">[array(' . count($var) . ')⏷]</a>';
             }
 
             // Checks for variable type
@@ -87,24 +101,27 @@
                 foreach($var as $key => $value){
                     $html .= '<div>';
 
-                    // Replace private class identifiers
-                    if(Util::startsWith(trim($key), '*')) $key = Util::replaceFirst($key, '*', '');
+                    // Replace class visibility identifiers
+                    if($class){
+                        if(Util::startsWith($key, "\0" . $class . "\0")) $key = Util::replaceFirst($key, "\0" . $class . "\0", '');
+                        if(Util::startsWith($key, "\0*\0")) $key = Util::replaceFirst($key, "\0*\0", '');
+                    }
 
                     // Put variable value recursively
-                    $html .= '<strong>' . $key . '</strong> => ';
+                    $html .= '<strong>' . htmlspecialchars($key) . '</strong> => ';
                     $html .= self::parseDump($value);
                     $html .= '</div>';
                 }
 
                 $html .= '</div>';
             }else if(is_string($var)){
-                $html .= '"' . $var . '"';
+                $html .= '"' . htmlspecialchars($var) . '"';
             }else if(is_null($var)){
                 $html .= 'NULL';
             }else if(is_bool($var)){
                 $html .= $var ? 'true' : 'false';
             }else{
-                $html .= $var;
+                $html .= htmlspecialchars((string)$var);
             }
 
             // Returns the result
