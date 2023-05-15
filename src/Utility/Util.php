@@ -66,7 +66,7 @@
             // Prepares the result string
             $html = '';
 
-            // Checks if variable is an object or array
+            // Checks if variable is an object, array or resource
             $class = null;
             if(is_object($var)){
                 $class = get_class($var);
@@ -74,7 +74,6 @@
 
                 // Checks for Closure variable
                 if($var instanceof Closure){
-                    // Parse Closure data
                     $reflection = new ReflectionFunction($var);
                     $var = [
                         'class' => $reflection->getClosureScopeClass()->name,
@@ -91,6 +90,10 @@
                 $html .= '(' . count($var) . ')⏷}</a>';
             }else if(is_array($var)) {
                 $html .= '<a href="" class="toggle">[array(' . count($var) . ')⏷]</a>';
+            }else if(is_resource($var)){
+                $html .= '<a href="" class="toggle">{' . get_resource_type($var);
+                $var = stream_get_meta_data($var);
+                $html .= '(' . count($var) . ')⏷}</a>';
             }
 
             // Checks for variable type
@@ -115,13 +118,19 @@
 
                 $html .= '</div>';
             }else if(is_string($var)){
-                $html .= '"' . htmlspecialchars($var) . '"';
+                $html .= '<span class="string" title="' . mb_strlen($var) . ' characters">';
+                $html .= '"' . self::limitString(htmlspecialchars($var), 3000) . '"';
+                $html .= '</span>';
             }else if(is_null($var)){
-                $html .= 'NULL';
+                $html .= '<span class="other">null</span>';
             }else if(is_bool($var)){
+                $html .= '<span class="other">';
                 $html .= $var ? 'true' : 'false';
+                $html .= '</span>';
             }else{
+                $html .= '<span class="other">';
                 $html .= htmlspecialchars((string)$var);
+                $html .= '</span>';
             }
 
             // Returns the result

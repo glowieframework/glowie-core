@@ -7,6 +7,7 @@
     use Closure;
     use Glowie\Core\Exception\RoutingException;
     use Glowie\Core\Exception\FileException;
+    use Glowie\Core\Element;
 
     /**
      * Router and starting point for Glowie application.
@@ -370,34 +371,16 @@
                 if($cookies->get('MAINTENANCE_KEY') != $key) return self::callServiceUnavailable();
             }
 
-            // Stores current route configuration
-            $config = false;
+            // Matches a valid route pattern
+            $config = self::matchRoute($route);
             self::$currentRoute = $route;
 
-            // Loops through routes configuration to find a valid route pattern
-            foreach (self::$routes as $key => $item) {
-                // Creates a regex replacing dynamic parameters to valid regex patterns
-                $regex = '~^' . preg_replace('(\\\:[^\/\\\]+)', '([^\/]+)', preg_quote($item['uri'], '/')) . '$~';
-                if (preg_match_all($regex, trim($route, '/'), $params)) {
-                    // Parse route parameters
-                    $result = [];
-                    if(!empty($params)){
-                        if(preg_match_all('~:([^\/:]+)~', $item['uri'], $segments) && !empty($segments[1])){
-                            array_shift($params);
-                            $result = array_combine($segments[1], array_column($params, 0));
-                        }
-                    }
-
-                    // Saves the configuration
-                    $config = $item;
-                    self::$currentParams = $result;
-                    self::$currentRoute = $key;
-                    break;
-                }
-            }
-
             // Checks if route was found
-            if ($config !== false) {
+            if (!is_null($config)) {
+                // Parse parameters and route name
+                self::$currentParams = $config['params']->toArray();
+                self::$currentRoute = $config['name'];
+
                 // Checks if there is a request method configuration
                 if(!empty($config['methods'])){
                     $config['methods'] = array_map('strtoupper', $config['methods']);
@@ -493,6 +476,40 @@
                 // Route was not found
                 return self::callNotFound();
             }
+        }
+
+        /**
+         * Matches an URI against the application routes.
+         * @param string $uri URI to match.
+         * @return array|null Returns the route configuration as an associative array if a route was matched, null otherwise.
+         */
+        public static function matchRoute(string $uri){
+            // Prepare result
+            $config = null;
+
+            // Loops through each route to match a valid pattern
+            foreach (self::$routes as $item) {
+                // Creates a regex replacing dynamic parameters to valid regex patterns
+                $regex = '~^' . preg_replace('(\\\:[^\/\\\]+)', '([^\/]+)', preg_quote($item['uri'], '/')) . '$~';
+                if (preg_match_all($regex, trim($uri, '/'), $params)) {
+                    // Parse route parameters
+                    $result = [];
+                    if(!empty($params)){
+                        if(preg_match_all('~:([^\/:]+)~', $item['uri'], $segments) && !empty($segments[1])){
+                            array_shift($params);
+                            $result = array_combine($segments[1], array_column($params, 0));
+                        }
+                    }
+
+                    // Saves the configuration
+                    $config = $item;
+                    $config['params'] = new Element($result);
+                    break;
+                }
+            }
+
+            // Return result
+            return $config;
         }
 
         /**

@@ -107,7 +107,7 @@
          */
         protected static function parseTrace(array $trace){
             $isTraceable = false;
-            $result =    '<strong style="color: #ed578b;">Stack trace:</strong>
+            $result =    '<strong class="stack-title">Stack trace:</strong>
                         <table cellspacing="0" cellpadding="0"><tbody>';
             foreach($trace as $key => $item){
                 if(!empty($item['class']) && $item['class'] == self::class) continue;
