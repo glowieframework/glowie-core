@@ -30,7 +30,6 @@
          * Dumps a variable in a human-readable way and ends the script execution.
          * @param mixed $var Variable to be dumped.
          * @param bool $plain (Optional) Dump variable as plain text instead of HTML.
-         * @return void
          */
         public static function dump($var, bool $plain = false){
             // Dumps the content
@@ -43,13 +42,17 @@
                 // Sets response code
                 Rails::getResponse()->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
 
-                // Dumps plain text or parsed content
-                if($plain){
-                    Rails::getResponse()->setContentType(Response::CONTENT_PLAIN);
-                    var_dump($var);
+                // Checks if app debug is enabled
+                if(error_reporting()){
+                    if($plain){
+                        Rails::getResponse()->setContentType(Response::CONTENT_PLAIN);
+                        var_dump($var);
+                    }else{
+                        Rails::getResponse()->setContentType(Response::CONTENT_HTML);
+                        include(__DIR__ . '/Views/dump.phtml');
+                    }
                 }else{
-                    Rails::getResponse()->setContentType(Response::CONTENT_HTML);
-                    include(__DIR__ . '/Views/dump.phtml');
+                    include(__DIR__ . '/../Error/Views/default.phtml');
                 }
             }
 

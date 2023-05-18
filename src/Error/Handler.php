@@ -28,15 +28,10 @@
             mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
             set_exception_handler([self::class, 'exceptionHandler']);
             set_error_handler([self::class, 'errorHandler'], $level);
-            ini_set('display_errors', '1');
-            ini_set('display_startup_errors', '1');
 
             // INI settings
-            ini_set('highlight.comment', '#8BC34A');
-            ini_set('highlight.default', '#545454');
-            ini_set('highlight.html', '#06B');
-            ini_set('highlight.keyword', '#FF5722');
-            ini_set('highlight.string', '#4CAF50');
+            ini_set('display_errors', '1');
+            ini_set('display_startup_errors', '1');
         }
 
         /**
@@ -87,17 +82,9 @@
 
             // Parses the code
             $text = trim($text[$line - 1]);
-            $text = highlight_string("<?php " . $text, true);
-            $text = trim($text);
-            $text = preg_replace("|^\\<code\\>\\<span style\\=\"color\\: #[a-fA-F0-9]{0,6}\"\\>|", "", $text, 1);
-            $text = preg_replace("|\\</code\\>\$|", "", $text, 1);
-            $text = trim($text);
-            $text = preg_replace("|\\</span\\>\$|", "", $text, 1);
-            $text = trim($text);
-            $text = preg_replace("|^(\\<span style\\=\"color\\: #[a-fA-F0-9]{0,6}\"\\>)(&lt;\\?php&nbsp;)(.*?)(\\</span\\>)|", "\$1\$3\$4", $text);
 
             // Returns resulting block
-            return '<span style="color: #75715E;">' . $line . '</span> ' . $text . '</span>';
+            return $line . ' ' . $text;
         }
 
         /**
@@ -123,7 +110,7 @@
                                     (!empty($item['class']) ? '<span class="class">' . $item['class'] . '</span>-><span class="method">' . $item['function'] . '()</span>' : '') .
 
                                     // Highlight
-                                    (!empty($item['file']) && !empty($item['line']) ? '<code>' . self::highlight($item['file'], $item['line']) . '</code>' : '') .
+                                    (!empty($item['file']) && !empty($item['line']) ? '<pre><code class="language-php">' . self::highlight($item['file'], $item['line']) . '</code></pre>' : '') .
 
                                     // Args
                                     (!empty($item['args']) ? '<a href="javascript:void(0);" onclick="javascript:toggleArgs(\'#args_' . $key . '\')" class="args-toggle">View args</a><pre class="args" id="args_' . $key . '">' . self::getDump($item['args']) . '</pre>' : '') . '

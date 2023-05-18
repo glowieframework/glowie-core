@@ -7,7 +7,7 @@
         <link rel="shortcut icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABNUlEQVQ4jZ3Tv0pcQRQG8N8Ml2CV6tYiEmwMksInMD6AjY9grAbyp0wZxC4Wt9H4CGnyALL4DEEsLMQi5TSBIBbL3hQ7K3cvdxX3g4HhfN/5zuGcmaCHtm7WcIBdrJXwHUY4DznddvWhk1jhGz7jVd+4YIzv+BpyGj8alOSf2OuIHzCrto6VDvcL+yGncSyBo14y3IScNkNOm7jpcXs4htjWzZvS9kvxsa2bjYhDVEsYVDiIptNeFrvRdEDLYj0+r3kSsTJ9JFtDZFs3r2f3BQZ3FS4XGLzF32c6GEWcYTJA3uN9Of8G+AnOY8jpGqcDgquQ0yjkNML1AH8acrqa7f8LNsyvdLutm+NSabvfesmZ+0wrOMEHi4c2wQ98Cjk9zBl0jN6ZfucdrJbwH1zgLOT0u6v/D0mmTb6gKDocAAAAAElFTkSuQmCC" />
         <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
         <style>
-            body{background-color:#f3f3f3}.wrapper{font-family:'Segoe UI',sans-serif;font-size:18px;background-color:#fff;color:#000;margin:10px;border:1px solid #d04978}.wrapper .title{background:linear-gradient(90deg,#ed578b 0,#ed576a 100%);color:#fff;padding:10px 20px}.wrapper .title span{font-size:13px;display:block;text-align:right}.wrapper .details{padding:20px}.wrapper .details pre{white-space:wrap;word-wrap:break-word;font-size:16px;display:block;border:1px solid #dcdcdc;margin:0;background-color:#f5f5f5;padding:15px}.wrapper .details pre a.toggle{text-decoration:none;color:gray}.wrapper .details pre .collapse{display:none;padding:0 20px}.wrapper .details pre .collapse.show{display:block}.wrapper .details pre span.string{color:#388e3c}.wrapper .details pre span.other{color:#3949ab}@media (prefers-color-scheme:dark){body{background-color:#212121}.wrapper .details pre{background-color:#263238;color:#fff;border-color:#37474f}.wrapper{background-color:transparent;border-color:#455a64}.wrapper .title{background:linear-gradient(90deg,#455a64 0,#37474f 100%)}.wrapper .details pre a.toggle{color:#d3d3d3}.wrapper .details pre span.string{color:#7cb342}.wrapper .details pre span.other{color:#7986cb}}
+            body{background-color:#f3f3f3}.wrapper{font-family:'Segoe UI','Tahoma',sans-serif;font-size:18px;background-color:#fff;color:#000;margin:10px;border:1px solid #d04978}.wrapper .title{background:linear-gradient(90deg,#ed578b 0,#ed576a 100%);color:#fff;padding:10px 20px}.wrapper .title span{font-size:13px;display:block;text-align:right}.wrapper .details{padding:20px}.wrapper .details pre{white-space:break-spaces;word-break:break-word;font-size:16px;display:block;border:1px solid #dcdcdc;margin:0;background-color:#f5f5f5;padding:15px}.wrapper .details pre a.toggle{text-decoration:none;color:gray}.wrapper .details pre .collapse{display:none;padding:0 20px}.wrapper .details pre .collapse.show{display:block}.wrapper .details pre span.string{color:#388e3c}.wrapper .details pre span.other{color:#3949ab}@media (prefers-color-scheme:dark){body{background-color:#212121}.wrapper .details pre{background-color:#263238;color:#fff;border-color:#37474f}.wrapper{background-color:transparent;border-color:#455a64}.wrapper .title{background:linear-gradient(90deg,#455a64 0,#37474f 100%)}.wrapper .details pre a.toggle{color:#d3d3d3}.wrapper .details pre span.string{color:#7cb342}.wrapper .details pre span.other{color:#7986cb}}
         </style>
     </head>
     <body>
@@ -19,7 +19,7 @@
                 <pre><?= self::parseDump($var) ?></pre>
             </div>
             <div class="title">
-                <span>Glowie <?= Util::getVersion(); ?> | PHP <?= phpversion(); ?></span>
+                <span>Glowie <?= self::getVersion(); ?> | PHP <?= phpversion(); ?></span>
             </div>
         </div>
         <script>
