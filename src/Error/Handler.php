@@ -93,15 +93,26 @@
          * @return string Table result in HTML.
          */
         protected static function parseTrace(array $trace){
+            // Prepare result
             $isTraceable = false;
             $result =    '<strong class="stack-title">Stack trace:</strong>
-                        <table cellspacing="0" cellpadding="0"><tbody>';
+                          <a href="" class="args-toggle vendor-toggle">Toggle vendor ⏷</a>
+                          <table cellspacing="0" cellpadding="0"><tbody>';
+
+            // Iterate through stack trace
             foreach($trace as $key => $item){
+                // Get class
+                $vendor = false;
                 if(!empty($item['class']) && $item['class'] == self::class) continue;
+                if(!empty($item['class']) && Util::startsWith($item['class'], 'Glowie\Core')) $vendor = true;
+
+                // Change traceable status
                 if(!$isTraceable) $isTraceable = true;
-                $result .=   '<tr>' .
+
+                // Add result to the HTML table
+                $result .=   '<tr class="' . ($vendor ? 'vendor hide' : '') . '">' .
                                 // Index
-                                '<th>#' . ($key + 1) .'</th>' .
+                                '<th>#' . (count($trace) - $key) .'</th>' .
                                 '<td>' .
                                     // File/line
                                     (!empty($item['file']) && !empty($item['line']) ? '<i>' . $item['file'] . ':' . $item['line'] . '</i>' : '') .
@@ -113,11 +124,15 @@
                                     (!empty($item['file']) && !empty($item['line']) ? '<pre><code class="language-php">' . self::highlight($item['file'], $item['line']) . '</code></pre>' : '') .
 
                                     // Args
-                                    (!empty($item['args']) ? '<a href="javascript:void(0);" onclick="javascript:toggleArgs(\'#args_' . $key . '\')" class="args-toggle">View args</a><pre class="args" id="args_' . $key . '">' . self::getDump($item['args']) . '</pre>' : '') . '
+                                    (!empty($item['args']) ? '<a href="" class="args-toggle">View args ⏷</a><pre class="args">' . self::getDump($item['args']) . '</pre>' : '') . '
                                 </td>
                             </tr>';
             }
+
+            // Close result table
             $result .= '</tbody></table>';
+
+            // Return result
             return $isTraceable ? $result : '';
         }
 
@@ -150,5 +165,3 @@
         }
 
     }
-
-?>
