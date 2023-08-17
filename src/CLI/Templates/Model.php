@@ -33,6 +33,12 @@
         protected $_primaryKey = '__FIREFLY_TEMPLATE_PRIMARY__';
 
         /**
+         * Enable the use of UUIDs in the table.
+         * @var bool
+         */
+        protected $_uuid = false;
+
+        /**
          * Table retrievable fields.
          * @var array
          */

@@ -371,11 +371,22 @@
             $offset = ($currentPage - 1) * $resultsPerPage;
             $results = array_slice($array, $offset, $resultsPerPage);
 
+            // Create pages array
+            $pages = [];
+
+            for ($i=1; $i <= $totalPages; $i++) {
+                $pages[] = new Element([
+                    'label' => $i,
+                    'active' => $currentPage == $i
+                ]);
+            }
+
             // Parse results
             return new Element([
                 'page' => $currentPage,
                 'is_valid' => !empty($results),
                 'data' => $results,
+                'pages' => $pages,
                 'from' => empty($results) ? 0 : $offset + 1,
                 'to' => empty($results) ? 0 : count($results) + $offset,
                 'total_pages' => (int)$totalPages,
@@ -637,6 +648,14 @@
          */
         public static function uniqueToken(){
             return md5(uniqid(self::randomToken(8)));
+        }
+
+        /**
+         * Generates an universally unique identifier (UUID).
+         * @return string Returns the resulting UUID.
+         */
+        public static function uuid(){
+            return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x', mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0x0fff) | 0x4000, mt_rand(0, 0x3fff) | 0x8000, mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff));
         }
 
         /**

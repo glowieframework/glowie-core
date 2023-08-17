@@ -39,20 +39,10 @@
             self::$headers = array_change_key_case(getallheaders(), CASE_LOWER);
             self::$json = new Element(json_decode($this->getBody(), true) ?? []);
 
-            // Request variables parsing
-            switch(Config::get('other.request_vars', 'GET_POST')){
-                case 'POST_GET':
-                    $this->__constructTrait(array_merge($_POST, $_GET));
-                    break;
-
-                case 'REQUEST':
-                    $this->__constructTrait($_REQUEST);
-                    break;
-
-                default:
-                    $this->__constructTrait(array_merge($_GET, $_POST));
-                    break;
-            }
+            // Parse request variables
+            $params = [];
+            parse_str($this->getBody(), $params);
+            $this->__constructTrait(array_merge($_REQUEST, $params));
         }
 
         /**

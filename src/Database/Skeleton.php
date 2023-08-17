@@ -324,6 +324,17 @@
         }
 
         /**
+         * Creates an **id** column in UUID format in the table and set is as the primary key.
+         * @param string $name (Optional) Column name.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function uuid(string $name = 'id'){
+            $this->createColumn($name, self::TYPE_CHAR, 36);
+            $this->primaryKey($name);
+            return $this;
+        }
+
+        /**
          * Adds a column into an existing table.
          * @param string $name Column name to add.
          * @param string $type Column data type. Must be a valid type supported by your current MySQL version.

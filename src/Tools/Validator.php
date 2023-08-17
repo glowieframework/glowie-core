@@ -258,6 +258,15 @@
                         }
                         break;
 
+                    // [UUID] - Checks if variable is a valid universally unique identifier
+                    case 'uuid':
+                        if(!is_string($data)){
+                            $result[] = 'uuid';
+                        }else{
+                            if (preg_match('/^\{?[0-9a-f]{8}\-?[0-9a-f]{4}\-?[0-9a-f]{4}\-?[0-9a-f]{4}\-?[0-9a-f]{12}\}?$/i', $data) !== 1) $result[] = 'uuid';
+                        }
+                        break;
+
                     // [REGEX] - Checks if variable matches a regex pattern
                     case 'regex':
                         if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "regex" rule');

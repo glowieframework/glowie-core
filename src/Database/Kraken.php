@@ -113,9 +113,9 @@
 
         /**
          * Last insert ID.
-         * @var int
+         * @var int|null
          */
-        private $_lastInsertId = 0;
+        private $_lastInsertId = null;
 
         /**
          * Creates a new Kraken database instance.
@@ -1477,11 +1477,22 @@
             $this->limit($offset, $resultsPerPage);
             $results = $this->fetchAll();
 
+            // Create pages array
+            $pages = [];
+
+            for ($i=1; $i <= $totalPages; $i++) {
+                $pages[] = new Element([
+                    'label' => $i,
+                    'active' => $currentPage == $i
+                ]);
+            }
+
             // Parse results
             return new Element([
                 'page' => $currentPage,
                 'is_valid' => !empty($results),
                 'data' => $results,
+                'pages' => $pages,
                 'from' => empty($results) ? 0 : $offset + 1,
                 'to' => empty($results) ? 0 : count($results) + $offset,
                 'total_pages' => (int)$totalPages,
@@ -1527,7 +1538,7 @@
 
         /**
          * Returns the last inserted `AUTO_INCREMENT` value from an INSERT query.
-         * @return mixed Last insert id.
+         * @return int|null Last insert id.
          */
         public function lastInsertId(){
             return $this->_lastInsertId;
