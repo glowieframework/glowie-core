@@ -1,4 +1,5 @@
 <?php
+    use Glowie\Core\CLI\Firefly;
     use Glowie\Core\Http\Rails;
     use Glowie\Core\Http\Session;
     use Glowie\Core\Http\Response;
@@ -34,7 +35,8 @@
         public static function dump($var, bool $plain = false){
             // Dumps the content
             if(self::isCLI()){
-                var_dump($var);
+                Firefly::print(self::parseDump($var, true), false);
+                Firefly::print('</color>');
             }else {
                 // Clean output buffer
                 if(Buffer::isActive()) Buffer::clean();
@@ -52,6 +54,8 @@
                         include(__DIR__ . '/Views/dump.phtml');
                     }
                 }else{
+                    $title = 'Server Error';
+                    $text = '500 | Server Error';
                     include(__DIR__ . '/../Error/Views/default.phtml');
                 }
             }
@@ -63,9 +67,11 @@
         /**
          * Parses a variable in an HTML structure recursively.
          * @param mixed $var Variable to parse.
-         * @return string Returns the HTML code.
+         * @param bool $cli (Optional) Parse in CLI mode.
+         * @param int $space (Optional) CLI tab spacement for current iteration.
+         * @return string Returns the HTML/CLI dump code.
          */
-        protected static function parseDump($var){
+        protected static function parseDump($var, bool $cli = false, int $space = 2){
             // Prepares the result string
             $html = '';
 
@@ -73,7 +79,7 @@
             $class = null;
             if(is_object($var)){
                 $class = get_class($var);
-                $html .= '<a href="" class="toggle">{' . $class;
+                $html .= $cli ? '<color="cyan">{' . $class : '<a href="" class="toggle">{' . $class;
 
                 // Checks for Closure variable
                 if($var instanceof Closure){
@@ -90,22 +96,35 @@
                 }
 
                 // Counts the properties
-                $html .= '(' . count($var) . ')⏷}</a>';
+                if($cli){
+                    $html .= '(' . count($var) . ')</color>';
+                }else{
+                    $html .= '(' . count($var) . ')⏷}</a>';
+                }
             }else if(is_array($var)) {
-                $html .= '<a href="" class="toggle">[array(' . count($var) . ')⏷]</a>';
+                if($cli){
+                    $wasArray = true;
+                    $html .= '<color="magenta">array('. count($var) . ')[</color>';
+                }else{
+                    $html .= '<a href="" class="toggle">[array(' . count($var) . ')⏷]</a>';
+                }
             }else if(is_resource($var)){
-                $html .= '<a href="" class="toggle">{' . get_resource_type($var);
+                $html .= $cli ? '<color="cyan">{' . get_resource_type($var) : '<a href="" class="toggle">{' . get_resource_type($var);
                 $var = stream_get_meta_data($var);
-                $html .= '(' . count($var) . ')⏷}</a>';
+                if($cli){
+                    $html .= '(' . count($var) . ')</color>';
+                }else{
+                    $html .= '(' . count($var) . ')⏷}</a>';
+                }
             }
 
             // Checks for variable type
             if(is_array($var)){
-                $html .= '<div class="collapse">';
+                $html .= $cli ? '' : '<div class="collapse">';
 
                 // Gets each array key/value pair
                 foreach($var as $key => $value){
-                    $html .= '<div>';
+                    $html .= $cli ? PHP_EOL : '<div>';
 
                     // Replace class visibility identifiers
                     if($class){
@@ -114,26 +133,43 @@
                     }
 
                     // Put variable value recursively
-                    $html .= '<strong>' . htmlspecialchars($key) . '</strong> => ';
-                    $html .= self::parseDump($value);
-                    $html .= '</div>';
+                    if($cli){
+                        $html .= str_repeat(' ', $space) . '<color="yellow">' . htmlspecialchars($key) . ' </color>=> ';
+                    }else{
+                        $html .= '<strong>' . htmlspecialchars($key) . '</strong> => ';
+                    }
+
+                    $html .= self::parseDump($value, $cli, $space + 2);
+                    $html .= $cli ? '' : '</div>';
                 }
 
-                $html .= '</div>';
+                if($cli){
+                    if(!empty($wasArray)){
+                        $html .= PHP_EOL . str_repeat(' ', $space - 2) . '<color="magenta">]</color>';
+                    }else{
+                        $html .= PHP_EOL . str_repeat(' ', $space - 2) . '<color="cyan">}</color>';
+                    }
+                }else{
+                    $html .= '</div>';
+                }
             }else if(is_string($var)){
-                $html .= '<span class="string" title="' . mb_strlen($var) . ' characters">';
+                if($cli){
+                    $html .= '<color="green">';
+                }else{
+                    $html .= '<span class="string" title="' . mb_strlen($var) . ' characters">';
+                }
                 $html .= '"' . self::limitString(htmlspecialchars($var), 3000) . '"';
-                $html .= '</span>';
+                $html .= $cli ? '</color>' : '</span>';
             }else if(is_null($var)){
-                $html .= '<span class="other">null</span>';
+                $html .= $cli ? '<color="blue">null</color>' : '<span class="other">null</span>';
             }else if(is_bool($var)){
-                $html .= '<span class="other">';
+                $html .= $cli ? '<color="blue">' : '<span class="other">';
                 $html .= $var ? 'true' : 'false';
-                $html .= '</span>';
+                $html .= $cli ? '</color>' : '</span>';
             }else{
-                $html .= '<span class="other">';
+                $html .= $cli ? '<color="blue">' : '<span class="other">';
                 $html .= htmlspecialchars((string)$var);
-                $html .= '</span>';
+                $html .= $cli ? '</color>' : '</span>';
             }
 
             // Returns the result

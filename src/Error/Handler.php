@@ -63,6 +63,8 @@
             if(error_reporting()){
                 include(__DIR__ . '/Views/error.phtml');
             }else{
+                $title = 'Server Error';
+                $text = '500 | Server Error';
                 include(__DIR__ . '/Views/default.phtml');
             }
         }

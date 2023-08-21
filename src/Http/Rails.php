@@ -297,7 +297,7 @@
          * @return string|null Returns the current route group name or `null` if the route is not in any group.
          */
         public static function getCurrentGroup(){
-            return self::$routes[self::$currentRoute]['group'];
+            return self::$routes[self::$currentRoute]['group'] ?? null;
         }
 
         /**
@@ -516,52 +516,60 @@
          * Calls `notFound()` action in Error controller.
          */
         private static function callNotFound(){
+            // Check if method is implemented
             self::$response->notFound();
             $controller = 'Glowie\Controllers\Error';
-            if (class_exists($controller)) {
-                self::$controller = new $controller;
-                if (is_callable([self::$controller, 'init'])) self::$controller->init();
-                if (is_callable([self::$controller, 'notFound'])) self::$controller->notFound();
-            }
+            if(!class_exists($controller) || !is_callable([$controller, 'notFound'])) return self::loadDefaultErrorView('Not Found', '404 | Not Found');
+
+            // Create Error controller and dispatch method
+            self::$controller = new $controller;
+            if (is_callable([self::$controller, 'init'])) self::$controller->init();
+            self::$controller->notFound();
         }
 
         /**
          * Calls `forbidden()` action in Error controller.
          */
         private static function callForbidden(){
+            // Check if method is implemented
             self::$response->deny();
             $controller = 'Glowie\Controllers\Error';
-            if (class_exists($controller)) {
-                self::$controller = new $controller;
-                if (is_callable([self::$controller, 'init'])) self::$controller->init();
-                if (is_callable([self::$controller, 'forbidden'])) self::$controller->forbidden();
-            }
+            if (!class_exists($controller) || !is_callable([$controller, 'forbidden'])) return self::loadDefaultErrorView('Forbidden', '403 | Forbidden');
+
+            // Create Error controller and dispatch method
+            self::$controller = new $controller;
+            if (is_callable([self::$controller, 'init'])) self::$controller->init();
+            self::$controller->forbidden();
         }
 
          /**
          * Calls `methodNotAllowed()` action in Error controller.
          */
         private static function callMethodNotAllowed(){
+            // Check if method is implemented
             self::$response->setStatusCode(Response::HTTP_METHOD_NOT_ALLOWED);
             $controller = 'Glowie\Controllers\Error';
-            if (class_exists($controller)) {
-                self::$controller = new $controller;
-                if (is_callable([self::$controller, 'init'])) self::$controller->init();
-                if (is_callable([self::$controller, 'methodNotAllowed'])) self::$controller->methodNotAllowed();
-            }
+            if (!class_exists($controller) || !is_callable([$controller, 'methodNotAllowed'])) return self::loadDefaultErrorView('Method Not Allowed', '405 | Method Not Allowed');
+
+            // Create Error controller and dispatch method
+            self::$controller = new $controller;
+            if (is_callable([self::$controller, 'init'])) self::$controller->init();
+            self::$controller->methodNotAllowed();
         }
 
         /**
          * Calls `serviceUnavailable()` action in Error controller.
          */
         private static function callServiceUnavailable(){
+            // Check if method is implemented
             self::$response->setStatusCode(Response::HTTP_SERVICE_UNAVAILABLE);
             $controller = 'Glowie\Controllers\Error';
-            if (class_exists($controller)) {
-                self::$controller = new $controller;
-                if (is_callable([self::$controller, 'init'])) self::$controller->init();
-                if (is_callable([self::$controller, 'serviceUnavailable'])) self::$controller->serviceUnavailable();
-            }
+            if (!class_exists($controller) || !is_callable([$controller, 'serviceUnavailable'])) return self::loadDefaultErrorView('Service Unavailable', '405 | Service Unavailable');
+
+            // Create Error controller and dispatch method
+            self::$controller = new $controller;
+            if (is_callable([self::$controller, 'init'])) self::$controller->init();
+            self::$controller->serviceUnavailable();
         }
 
         /**
@@ -586,6 +594,15 @@
             } else {
                 self::callNotFound();
             };
+        }
+
+        /**
+         * Loads the default error view.
+         * @param string $title Window title.
+         * @param string $text Window text.
+         */
+        private static function loadDefaultErrorView(string $title, string $text){
+            include(__DIR__ . '/../Error/Views/default.phtml');
         }
     }
 
