@@ -79,7 +79,7 @@
             $class = null;
             if(is_object($var)){
                 $class = get_class($var);
-                $html .= $cli ? '<color="cyan">{' . $class : '<a href="" class="toggle">{' . $class;
+                $html .= $cli ? '<color="yellow">' . $class : '<a href="" class="toggle">{' . $class;
 
                 // Checks for Closure variable
                 if($var instanceof Closure){
@@ -97,7 +97,7 @@
 
                 // Counts the properties
                 if($cli){
-                    $html .= '(' . count($var) . ')</color>';
+                    $html .= '(' . count($var) . '){</color>';
                 }else{
                     $html .= '(' . count($var) . ')⏷}</a>';
                 }
@@ -106,7 +106,7 @@
                     $wasArray = true;
                     $html .= '<color="magenta">array('. count($var) . ')[</color>';
                 }else{
-                    $html .= '<a href="" class="toggle">[array(' . count($var) . ')⏷]</a>';
+                    $html .= '<a href="" class="toggle array">[array(' . count($var) . ')⏷]</a>';
                 }
             }else if(is_resource($var)){
                 $html .= $cli ? '<color="cyan">{' . get_resource_type($var) : '<a href="" class="toggle">{' . get_resource_type($var);
@@ -134,9 +134,17 @@
 
                     // Put variable value recursively
                     if($cli){
-                        $html .= str_repeat(' ', $space) . '<color="yellow">' . htmlspecialchars($key) . ' </color>=> ';
+                        if(is_string($key)){
+                            $html .= str_repeat(' ', $space) . '<color="green">"' . htmlspecialchars($key) . '" </color>=> ';
+                        }else{
+                            $html .= str_repeat(' ', $space) . '<color="blue">' . htmlspecialchars($key) . ' </color>=> ';
+                        }
                     }else{
-                        $html .= '<strong>' . htmlspecialchars($key) . '</strong> => ';
+                        if(is_string($key)){
+                            $html .= '<span class="string"><strong>"' . htmlspecialchars($key) . '"</strong></span> => ';
+                        }else{
+                            $html .= '<span class="other"><strong>' . htmlspecialchars($key) . '</strong></span> => ';
+                        }
                     }
 
                     $html .= self::parseDump($value, $cli, $space + 2);
@@ -147,7 +155,7 @@
                     if(!empty($wasArray)){
                         $html .= PHP_EOL . str_repeat(' ', $space - 2) . '<color="magenta">]</color>';
                     }else{
-                        $html .= PHP_EOL . str_repeat(' ', $space - 2) . '<color="cyan">}</color>';
+                        $html .= PHP_EOL . str_repeat(' ', $space - 2) . '<color="yellow">}</color>';
                     }
                 }else{
                     $html .= '</div>';
