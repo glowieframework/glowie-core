@@ -6,6 +6,7 @@
     use Glowie\Core\Traits\ElementTrait;
     use Util;
     use Exception;
+    use JsonSerializable;
 
     /**
      * Model core for Glowie application.
@@ -16,7 +17,7 @@
      * @license MIT
      * @link https://eugabrielsilva.tk/glowie
      */
-    class Model extends Kraken{
+    class Model extends Kraken implements JsonSerializable{
         use ElementTrait;
 
         /**

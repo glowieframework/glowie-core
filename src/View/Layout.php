@@ -7,6 +7,7 @@
     use Config;
     use Util;
     use BadMethodCallException;
+    use JsonSerializable;
 
     /**
      * Layout core for Glowie application.
@@ -17,7 +18,7 @@
      * @license MIT
      * @link https://eugabrielsilva.tk/glowie
      */
-    class Layout{
+    class Layout implements JsonSerializable{
         use ElementTrait;
 
         /**

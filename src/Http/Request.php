@@ -1,11 +1,11 @@
 <?php
     namespace Glowie\Core\Http;
 
-    use Config;
     use Util;
     use Glowie\Core\Element;
     use Glowie\Core\Tools\Uploader;
     use Glowie\Core\Traits\ElementTrait;
+    use JsonSerializable;
 
     /**
      * Request handler for Glowie application.
@@ -16,7 +16,7 @@
      * @license MIT
      * @link https://eugabrielsilva.tk/glowie
      */
-    class Request{
+    class Request implements JsonSerializable{
         use ElementTrait;
 
         /**
