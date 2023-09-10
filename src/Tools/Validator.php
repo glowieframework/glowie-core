@@ -165,10 +165,10 @@
                             if(count($data) < $rule[1]) $result[] = 'min';
                         }else if(is_string($data) && is_file($data)){
                             if(filesize($data) < ($rule[1] * 1024)) $result[] = 'min';
-                        }else if(is_numeric($data)){
-                            if($data < $rule[1]) $result[] = 'min';
                         }else if(is_string($data)){
                             if(mb_strlen($data) < $rule[1]) $result[] = 'min';
+                        }else if(is_numeric($data)){
+                            if($data < $rule[1]) $result[] = 'min';
                         }else{
                             $result[] = 'min';
                         }
@@ -182,10 +182,10 @@
                             if (count($data) > $rule[1]) $result[] = 'max';
                         } else if(is_string($data) && is_file($data)){
                             if(filesize($data) > ($rule[1] * 1024)) $result[] = 'max';
-                        } else if(is_numeric($data)) {
-                            if ($data > $rule[1]) $result[] = 'max';
                         } else if (is_string($data)) {
                             if (mb_strlen($data) > $rule[1]) $result[] = 'max';
+                        } else if(is_numeric($data)) {
+                            if ($data > $rule[1]) $result[] = 'max';
                         }else{
                             $result[] = 'max';
                         }
@@ -199,10 +199,10 @@
                             if (count($data) != $rule[1]) $result[] = 'size';
                         } else if(is_string($data) && is_file($data)){
                             if(filesize($data) != ($rule[1] * 1024)) $result[] = 'size';
-                        } else if(is_numeric($data)){
-                            if ($data != $rule[1]) $result[] = 'size';
                         } else if (is_string($data)) {
                             if (mb_strlen($data) != $rule[1]) $result[] = 'size';
+                        } else if(is_numeric($data)){
+                            if ($data != $rule[1]) $result[] = 'size';
                         } else {
                             $result[] = 'size';
                         }
