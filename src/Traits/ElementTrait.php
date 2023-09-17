@@ -1,6 +1,7 @@
 <?php
     namespace Glowie\Core\Traits;
 
+    use Glowie\Core\Collection;
     use Util;
 
     /**
@@ -30,35 +31,35 @@
 
         /**
          * Gets the value associated to a key in the Element data.
-         * @param mixed $key Key to get value.
+         * @param string $key Key to get value.
          * @return mixed Returns the value if exists or null if there is none.
          */
-        public function __get($key){
+        public function __get(string $key){
             return $this->get($key);
         }
 
         /**
          * Gets the value associated to a key in the Element data.
-         * @param mixed $key Key to get value (accepts dot notation keys).
+         * @param string $key Key to get value (accepts dot notation keys).
          * @param mixed $default (Optional) Default value to return if the key does not exist.
          * @return mixed Returns the value if exists or the default if not.
          */
-        public function get($key, $default = null){
+        public function get(string $key, $default = null){
             return Util::arrayGet($this->__data, $key, $default);
         }
 
         /**
          * Sets the value for a key in the Element data.
-         * @param mixed $key Key to set value.
+         * @param string $key Key to set value.
          * @param mixed $value Value to set.
          */
-        public function __set($key, $value){
+        public function __set(string $key, $value){
             $this->set($key, $value, true);
         }
 
         /**
          * Sets the value for a key in the Element data.
-         * @param mixed $key Key to set value (accepts dot notation keys). You can also pass an associative array\
+         * @param string|array $key Key to set value (accepts dot notation keys). You can also pass an associative array\
          * of values to set at once and they will be merged into the Element data.
          * @param mixed $value (Optional) Value to set.
          * @param bool $ignoreDot (Optional) Ignore dot notation keys.
@@ -79,15 +80,15 @@
 
         /**
          * Removes the associated key value from the Element data.
-         * @param mixed $key Key to delete value.
+         * @param string $key Key to delete value.
          */
-        public function __unset($key){
+        public function __unset(string $key){
             $this->remove($key);
         }
 
         /**
          * Removes the associated key value from the Element data.
-         * @param mixed $key Key to delete value. You can also use an array of keys to remove.
+         * @param string|array $key Key to delete value. You can also use an array of keys to remove.
          * @return Element Current Element instance for nested calls.
          */
         public function remove($key){
@@ -99,7 +100,7 @@
 
         /**
          * Removes all Element data, except the one that matches the specified key.
-         * @param mixed $key Key to keep. You can also use an array of keys to keep.
+         * @param string|array $key Key to keep. You can also use an array of keys to keep.
          * @return Element Current Element instance for nested calls.
          */
         public function only($key){
@@ -111,16 +112,16 @@
 
         /**
          * Checks if any value has been associated to a key in the Element data.
-         * @param mixed $key Key to check.
+         * @param string $key Key to check.
          * @return bool Returns true or false.
          */
-        public function __isset($key){
+        public function __isset(string $key){
             return $this->has($key);
         }
 
         /**
          * Checks if any value has been associated to a key in the Element data.
-         * @param mixed $key Key to check (accepts dot notation keys). You can also use an array of keys.
+         * @param string|array $key Key to check (accepts dot notation keys). You can also use an array of keys.
          * @return bool Returns true or false.
          */
         public function has($key){
@@ -147,6 +148,14 @@
          */
         public function toArray(){
             return $this->__data;
+        }
+
+        /**
+         * Gets the Element data as a Collection.
+         * @return Collection The resulting Collection instance.
+         */
+        public function toCollection(){
+            return new Collection($this->__data);
         }
 
         /**
