@@ -1456,10 +1456,11 @@
          * Fetches all results from a SELECT query with pagination.
          * @param int $currentPage (Optional) Current page to get results.
          * @param int $resultsPerPage (Optional) Number of results to get per page.
+         * @param int|null $range (Optional) Pagination range interval (for `pages` array).
          * @return Element Returns an Element with the pagination result.
          * @throws QueryException Throws an exception if the query fails.
          */
-        public function paginate(int $currentPage = 1, int $resultsPerPage = 25){
+        public function paginate(int $currentPage = 1, int $resultsPerPage = 25, ?int $range = null){
             // Backup query
             $query = $this->backupQuery();
 
@@ -1480,11 +1481,27 @@
             // Create pages array
             $pages = [];
 
-            for ($i=1; $i <= $totalPages; $i++) {
-                $pages[] = new Element([
-                    'label' => $i,
-                    'active' => $currentPage == $i
-                ]);
+            // Check for ranged pagination
+            if(!empty($range)){
+                $rangeHalf = floor($range / 2);
+                $rangeStart = max(1, $currentPage - $rangeHalf);
+                $rangeEnd = min($totalPages, $currentPage + $rangeHalf);
+                $rangeStart = max(1, min($rangeStart, $totalPages - $range + 1));
+                $rangeEnd = min($totalPages, max($rangeEnd, $range));
+
+                for ($i=$rangeStart; $i <= $rangeEnd; $i++) {
+                    $pages[] = new Element([
+                        'label' => $i,
+                        'active' => $currentPage == $i
+                    ]);
+                }
+            }else{
+                for ($i=1; $i <= $totalPages; $i++) {
+                    $pages[] = new Element([
+                        'label' => $i,
+                        'active' => $currentPage == $i
+                    ]);
+                }
             }
 
             // Parse results
@@ -1496,10 +1513,11 @@
                 'from' => empty($results) ? 0 : $offset + 1,
                 'to' => empty($results) ? 0 : count($results) + $offset,
                 'total_pages' => (int)$totalPages,
-                'previous_page' => $currentPage == 1 ? $currentPage : $currentPage - 1,
-                'next_page' => $currentPage == $totalPages ? $currentPage : $currentPage + 1,
+                'previous_page' => $currentPage == 1 ? null : $currentPage - 1,
+                'next_page' => $currentPage == $totalPages ? null : $currentPage + 1,
                 'results_per_page' => $resultsPerPage,
-                'total_results' => $totalResults
+                'total_results' => $totalResults,
+                'range' => $range
             ]);
         }
 
