@@ -1,6 +1,7 @@
 <?php
     namespace Glowie\Core\CLI;
 
+    use Glowie\Core\Exception\ConsoleException;
     use Util;
 
     /**
@@ -132,6 +133,74 @@
          */
         public function input(string $message = '', string $default = ''){
             return Firefly::input($message, $default);
+        }
+
+        /**
+         * Asks for the user input in the console, but text will be hidden.
+         * @param string $message (Optional) Message to prompt to the user.
+         * @param string $default (Optional) Default value to return if no input is provided.
+         * @return string Returns the input value as a string.
+         */
+        public function inputPassword(string $message = '', string $default = ''){
+            $response = $this->input($message . '<hidden>', $default);
+            $this->print('</hidden>', false);
+            return $response;
+        }
+
+        /**
+         * Prompts the user to choose between a list of options.
+         * @param string $message (Optional) Message to prompt to the user.
+         * @param array $options Array of available options. **Options are indexed starting with 1 instead of 0.**
+         * @param int $default (Optional) Default response to return if empty.
+         * @return mixed Returns the selected option value if valid, null otherwise.
+         */
+        public function select(string $message = '', array $options, int $default = 1){
+            // Validate args
+            if(empty($options)) throw new ConsoleException(Firefly::getCommand(), Firefly::getArgs(), 'select(): Options array cannot be empty');
+            if(!isset($options[$default - 1])) throw new ConsoleException(Firefly::getCommand(), Firefly::getArgs(), 'select(): Invalid default value');
+            $options = array_values($options);
+
+            // Create prompt
+            $this->print($message);
+            $this->print('<color="magenta">', false);
+            foreach($options as $key => $item) $this->print('  ' . ($key + 1) . ': ' . $item);
+            $this->print('</color>', false);
+            $response = (int)$this->input('<color="yellow">[1-' . count($options) . '] </color>', $default);
+
+            // Return response
+            if(!isset($options[$response - 1])) return null;
+            return $options[$response - 1];
+        }
+
+        /**
+         * Prompts the user to confirm an action with yes or no.
+         * @param string $message (Optional) Message to prompt to the user.
+         * @param bool $default (Optional) Default response to return if empty.
+         * @return bool Returns true or false, depending on the user answer, or the default value if invalid answer.
+         */
+        public function confirm(string $message = '', bool $default = false){
+            $message .= '<color="yellow"> [y/n] </color>';
+            $response = $this->input($message, $default ? 'y' : 'n');
+
+            switch(trim(strtolower($response))){
+                case 'y':
+                case 'yes':
+                case 'true':
+                case '1':
+                    return true;
+                    break;
+
+                case 'n':
+                case 'no':
+                case 'false':
+                case '0':
+                    return false;
+                    break;
+
+                default:
+                    return $default;
+                    break;
+            }
         }
 
         /**
