@@ -64,6 +64,7 @@
             $code = self::compilePHP($code);
             $code = self::compileComments($code);
             $code = self::compileIgnores($code);
+            $code = self::compileBlocks($code);
             file_put_contents($target, $code);
         }
 
@@ -95,6 +96,19 @@
             $code = preg_replace('~(?<!@){\s*else\s*if\s*\((.+?)\)\s*}~is', '<?php elseif($1): ?>', $code);
             $code = preg_replace('~(?<!@){\s*else\s*}~is', '<?php else: ?>', $code);
             $code = preg_replace('~(?<!@){\s*(/if|/isset|/empty|/notempty|/notset|/env)\s*}~is', '<?php endif; ?>', $code);
+            return $code;
+        }
+
+        /**
+         * Compiles layout blocks.\
+         * example: `{block('name')}` | `{/block}`
+         * @param string $code Code to compile.
+         * @return string Returns the compiled code.
+         */
+        private static function compileBlocks(string $code){
+            $code = preg_replace('~(?<!@){\s*block\s*\((.+?)\)\s*}~is', '<?php self::startBlock($1); ?>', $code);
+            $code = preg_replace('~(?<!@){\s*(/block)\s*}~is', '<?php self::endBlock(); ?>', $code);
+            $code = preg_replace('~(?<!@){\s*yield\s*\((.+?)\)\s*}~is', '<?php echo self::getBlock($1); ?>', $code);
             return $code;
         }
 

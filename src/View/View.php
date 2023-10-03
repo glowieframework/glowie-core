@@ -8,6 +8,7 @@
     use Config;
     use Util;
     use BadMethodCallException;
+    use Exception;
     use JsonSerializable;
 
     /**
@@ -45,6 +46,18 @@
          * @var array
          */
         private $_params;
+
+        /**
+         * View blocks.
+         * @var array
+         */
+        private static $_blocks;
+
+        /**
+         * Current block name.
+         * @var string
+         */
+        private static $_block;
 
         /**
          * Instantiates a new View.
@@ -135,6 +148,35 @@
          */
         public function getContent(){
             return $this->_content;
+        }
+
+        /**
+         * Starts a layout block.
+         * @param string $name Block name.
+         */
+        public static function startBlock(string $name){
+            if(self::$_block) throw new Exception('startBlock(): Block is already started');
+            self::$_block = $name;
+            Buffer::start();
+        }
+
+        /**
+         * Finishes a layout block.
+         */
+        public static function endBlock(){
+            if(!self::$_block) throw new Exception('endBlock(): No block was started');
+            self::$_blocks[self::$_block] = Buffer::get();
+            self::$_block = null;
+        }
+
+        /**
+         * Gets a block content.
+         * @param string $name Block name.
+         * @param string $default (Optional) Default content to return.
+         * @return string Returns the block content or the default if block is not found.
+         */
+        public static function getBlock(string $name, string $default = ''){
+            return self::$_blocks[$name] ?? $default;
         }
 
     }
