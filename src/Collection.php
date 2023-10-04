@@ -243,26 +243,55 @@
             return new Collection(Util::orderArray($this->__data, $key, $order));
         }
 
+        /**
+         * Filters the Collection leaving only items that match a key value.
+         * @param mixed $key Key to use as the filtering base. You can also use an associative array with keys and values to match.
+         * @param mixed $value (Optional) Value to filter if using a single key.
+         * @param bool $strict (Optional) Use strict types while comparing values.
+         * @return Collection Returns a new Collection with the filtered data.
+         */
         public function filterBy($key, $value = null, bool $strict = false){
             return new Collection(Util::filterArray($this->__data, $key, $value, $strict));
         }
 
+        /**
+         * Searches the Collection for the first item that matches a key value.
+         * @param mixed $key Key to match value.
+         * @param mixed $value Value to search.
+         * @return array Returns the first item found.
+         */
         public function search($key, $value){
-            return new Collection(Util::searchArray($this->__data, $key, $value));
+            return Util::searchArray($this->__data, $key, $value);
         }
 
+        /**
+         * Flattens the Collection into a new single level Collection with dot notation.
+         * @return Collection Returns a new flattened Collection.
+         */
         public function flatten(){
             return new Collection(Util::dotArray($this->__data));
         }
 
+        /**
+         * Unflattens the Collection from dot notation to a multi-dimensional Collection.
+         * @return Collection Returns a new unflattened Collection.
+         */
         public function unflatten(){
             return new Collection(Util::undotArray($this->__data));
         }
 
+        /**
+         * Checks if the Collection is associative rather than numerically indexed.
+         * @return bool Returns true if is an associative Collection.
+         */
         public function isAssociative(){
             return Util::isAssociativeArray($this->__data);
         }
 
+        /**
+         * Checks if the Collection is multidimensional.
+         * @return bool Returns true if is a multidimensional Collection.
+         */
         public function isMultidimensional(){
             return Util::isMultidimensionalArray($this->__data);
         }
@@ -284,6 +313,16 @@
          */
         public function paginate(int $currentPage = 1, int $resultsPerPage = 25, ?int $range = null){
             return Util::paginateArray($this->__data, $currentPage, $resultsPerPage, $range);
+        }
+
+        /**
+         * Splits the Collection into smaller chunks.
+         * @param int $length Size of each chunk.
+         * @param bool $preserveKeys (Optional) Keep keys association.
+         * @return array Returns an array with the Collection chunks.
+         */
+        public function chunk(int $length, bool $preserveKeys = false){
+            return array_chunk($this->__data, $length, $preserveKeys);
         }
 
         /**
