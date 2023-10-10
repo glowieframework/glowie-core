@@ -60,6 +60,24 @@
         private static $_block;
 
         /**
+         * View stacks.
+         * @var array
+         */
+        private static $_stacks;
+
+        /**
+         * Current stack name.
+         * @var string
+         */
+        private static $_stack;
+
+        /**
+         * If stack should be prepended instead of pushed to end.
+         * @var bool
+         */
+        private static $_prependStack = false;
+
+        /**
          * Instantiates a new View.
          * @param string $view View filename to instantiate.
          * @param array $params (Optional) View parameters to parse.
@@ -177,6 +195,54 @@
          */
         public static function getBlock(string $name, string $default = ''){
             return self::$_blocks[$name] ?? $default;
+        }
+
+        /**
+         * Pushes content to a layout stack.
+         * @param string $name Stack name.
+         */
+        public static function pushStack(string $name){
+            if(self::$_stack) throw new Exception('pushStack(): Stack is already started');
+            self::$_stack = $name;
+            self::$_prependStack = false;
+            Buffer::start();
+        }
+
+        /**
+         * Prepends content to the start of a layout stack.
+         * @param string $name Stack name.
+         */
+        public static function prependStack(string $name){
+            if(self::$_stack) throw new Exception('pushStack(): Stack is already started');
+            self::$_stack = $name;
+            self::$_prependStack = true;
+            Buffer::start();
+        }
+
+        /**
+         * Finishes a layout stack.
+         */
+        public static function endStack(){
+            if(!self::$_stack) throw new Exception('endStack(): No stack was started');
+            if(empty(self::$_stacks[self::$_stack])) self::$_stacks[self::$_stack] = [];
+            $content = Buffer::get();
+            if(self::$_prependStack){
+                array_unshift(self::$_stacks[self::$_stack], $content);
+            }else{
+                self::$_stacks[self::$_stack][] = $content;
+            }
+            self::$_stack = null;
+        }
+
+        /**
+         * Gets a stack content.
+         * @param string $name Stack name.
+         * @param string $default (Optional) Default content to return.
+         * @return string Returns the stack content or the default if block is not found.
+         */
+        public static function getStack(string $name, string $default = ''){
+            if(empty(self::$_stacks[$name])) return $default;
+            return implode(PHP_EOL, self::$_stacks[$name]);
         }
 
     }

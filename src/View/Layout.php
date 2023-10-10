@@ -181,6 +181,39 @@
             return View::getBlock($name, $default);
         }
 
+        /**
+         * Pushes content to a layout stack.
+         * @param string $name Stack name.
+         */
+        public static function pushStack(string $name){
+            View::pushStack($name);
+        }
+
+        /**
+         * Prepends content to the start of a layout stack.
+         * @param string $name Stack name.
+         */
+        public static function prependStack(string $name){
+            View::prependStack($name);
+        }
+
+        /**
+         * Finishes a layout stack.
+         */
+        public function endStack(){
+            View::endStack();
+        }
+
+        /**
+         * Gets a stack content.
+         * @param string $name Stack name.
+         * @param string $default (Optional) Default content to return.
+         * @return string Returns the stack content or the default if block is not found.
+         */
+        public function getStack(string $name, string $default = ''){
+            return View::getStack($name, $default);
+        }
+
     }
 
 ?>

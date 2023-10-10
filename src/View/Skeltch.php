@@ -62,9 +62,9 @@
             $code = self::compileIfs($code);
             $code = self::compileFunctions($code);
             $code = self::compilePHP($code);
+            $code = self::compileBlocks($code);
             $code = self::compileComments($code);
             $code = self::compileIgnores($code);
-            $code = self::compileBlocks($code);
             file_put_contents($target, $code);
         }
 
@@ -100,7 +100,7 @@
         }
 
         /**
-         * Compiles layout blocks.\
+         * Compiles layout blocks and stacks.\
          * example: `{block('name')}` | `{/block}`
          * @param string $code Code to compile.
          * @return string Returns the compiled code.
@@ -109,6 +109,10 @@
             $code = preg_replace('~(?<!@){\s*block\s*\((.+?)\)\s*}~is', '<?php self::startBlock($1); ?>', $code);
             $code = preg_replace('~(?<!@){\s*(/block)\s*}~is', '<?php self::endBlock(); ?>', $code);
             $code = preg_replace('~(?<!@){\s*yield\s*\((.+?)\)\s*}~is', '<?php echo self::getBlock($1); ?>', $code);
+            $code = preg_replace('~(?<!@){\s*push\s*\((.+?)\)\s*}~is', '<?php self::pushStack($1); ?>', $code);
+            $code = preg_replace('~(?<!@){\s*prepend\s*\((.+?)\)\s*}~is', '<?php self::prependStack($1); ?>', $code);
+            $code = preg_replace('~(?<!@){\s*(/push|/prepend)\s*}~is', '<?php self::endStack(); ?>', $code);
+            $code = preg_replace('~(?<!@){\s*stack\s*\((.+?)\)\s*}~is', '<?php echo self::getStack($1); ?>', $code);
             return $code;
         }
 
