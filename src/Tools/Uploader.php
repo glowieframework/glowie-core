@@ -204,7 +204,7 @@
             if(!is_dir($this->directory) || !is_writable($this->directory)) throw new FileException('Directory "' . $this->directory . '" is invalid or not writable');
 
             // Checks for empty uploads
-            if(!empty($_FILES[$input])){
+            if(!empty($_FILES[$input]['name'])){
                 // Rearrange file array
                 $files = $this->arrangeFiles($_FILES[$input]);
 
@@ -267,7 +267,7 @@
                     $result[] = new Element($item);
                 }
                 return $result;
-            }else{
+            }else if(!empty($files['name'])) {
                 $files['name'] = Util::sanitizeFilename($files['name']);
                 $files['extension'] = $this->getExtension($files['name']);
                 $files['size_string'] = $this->parseSize($files['size']);

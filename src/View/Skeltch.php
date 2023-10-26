@@ -126,6 +126,7 @@
             $code = preg_replace('~(?<!@){\s*view\s*\((.+?)\)\s*}~is', '<?php $this->renderView($1); ?>', $code);
             $code = preg_replace('~(?<!@){\s*layout\s*\((.+?)\)\s*}~is', '<?php $this->renderLayout($1); ?>', $code);
             $code = preg_replace('~(?<!@){\s*partial\s*\((.+?)\)\s*}~is', '<?php $this->renderPartial($1); ?>', $code);
+            $code = preg_replace('~(?<!@){\s*inline\s*\((.+?)\)\s*}~is', '<?php $this->renderInline($1); ?>', $code);
             $code = preg_replace('~(?<!@){\s*babel\s*\((.+?)\)\s*}~is', '<?php echo Babel::get($1); ?>', $code);
             $code = preg_replace('~(?<!@){\s*url\s*\((.+?)\)\s*}~is', '<?php echo Util::baseUrl($1); ?>', $code);
             $code = preg_replace('~(?<!@){\s*asset\s*\((.+?)\)\s*}~is', '<?php echo Util::asset($1); ?>', $code);

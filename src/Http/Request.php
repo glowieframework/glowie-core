@@ -52,7 +52,7 @@
          */
         public function getFiles(string $input){
             $uploader = new Uploader();
-            if(empty($_FILES[$input])) return null;
+            if(empty($_FILES[$input]['name'])) return null;
             return $uploader->arrangeFiles($_FILES[$input]);
         }
 
@@ -80,6 +80,15 @@
         public function getURI(){
             $result = trim(substr(trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/'), strlen(APP_FOLDER)), '/');
             return !Util::isEmpty($result) ? $result : '/';
+        }
+
+        /**
+         * Returns the request hostname address.
+         * @param bool $withHttp (Optional) Include http/https in address.
+         * @return string Request hostname.
+         */
+        public function getHostname(bool $withHttp = false){
+            return ($withHttp ? (isset($_SERVER['HTTPS']) ? 'https://' : 'http://') : '') . $_SERVER['HTTP_HOST'];
         }
 
         /**

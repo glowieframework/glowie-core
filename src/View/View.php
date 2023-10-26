@@ -161,6 +161,15 @@
         }
 
         /**
+         * Renders a raw view code using Skeltch engine.
+         * @param string $view View content in HTML.
+         * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
+         */
+        final public function renderInline(string $content, array $params = []){
+            Rails::getController()->renderInline($content, $params);
+        }
+
+        /**
          * Returns the view content as string.
          * @return string View content.
          */

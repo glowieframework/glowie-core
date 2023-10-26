@@ -4,6 +4,7 @@
     use Glowie\Core\Element;
     use Glowie\Core\View\View;
     use Glowie\Core\View\Layout;
+    use Util;
 
     /**
      * Controller core for Glowie application.
@@ -109,6 +110,18 @@
          */
         final public function renderPartial(string $view, array $params = [], bool $absolute = false){
             $view = new View($view, $params, true, $absolute);
+            echo $view->getContent();
+        }
+
+        /**
+         * Renders a raw view code using Skeltch engine.
+         * @param string $view View content in HTML.
+         * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
+         */
+        final public function renderInline(string $content, array $params = []){
+            $filename = Util::location('storage/cache/' . md5($content) . '.phtml');
+            file_put_contents($filename, $content);
+            $view = new View($filename, $params, false, true);
             echo $view->getContent();
         }
 
