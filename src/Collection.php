@@ -312,17 +312,22 @@
          * @return Element Returns an Element with the pagination result.
          */
         public function paginate(int $currentPage = 1, int $resultsPerPage = 25, ?int $range = null){
-            return Util::paginateArray($this->__data, $currentPage, $resultsPerPage, $range);
+            $result = Util::paginateArray($this->__data, $currentPage, $resultsPerPage, $range);
+            $result->data = new Collection($result->data);
+            $result->pages = new Collection($result->pages);
+            return $result;
         }
 
         /**
          * Splits the Collection into smaller chunks.
          * @param int $length Size of each chunk.
          * @param bool $preserveKeys (Optional) Keep keys association.
-         * @return array Returns an array with the Collection chunks.
+         * @return Collection Returns a multidimensional Collection of chunks.
          */
         public function chunk(int $length, bool $preserveKeys = false){
-            return array_chunk($this->__data, $length, $preserveKeys);
+            $result = array_chunk($this->__data, $length, $preserveKeys);
+            foreach($result as &$arr) $arr = new Collection($arr);
+            return new Collection($result);
         }
 
         /**

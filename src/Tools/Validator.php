@@ -161,78 +161,45 @@
                     case 'min':
                         if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "min" rule');
                         $rule[1] = (int)$rule[1];
-                        if($data instanceof Countable){
-                            if(count($data) < $rule[1]) $result[] = 'min';
-                        }else if(is_string($data) && is_file($data)){
-                            if(filesize($data) < ($rule[1] * 1024)) $result[] = 'min';
-                        }else if(is_string($data)){
-                            if(mb_strlen($data) < $rule[1]) $result[] = 'min';
-                        }else if(is_numeric($data)){
-                            if($data < $rule[1]) $result[] = 'min';
-                        }else{
-                            $result[] = 'min';
-                        }
+                        if(Util::getSize($data) < $rule[1]) $result[] = 'min';
                         break;
 
                     // [MAX] - Checks if variable is lower or equal than max
                     case 'max':
                         if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "max" rule');
                         $rule[1] = (int)$rule[1];
-                        if ($data instanceof Countable) {
-                            if (count($data) > $rule[1]) $result[] = 'max';
-                        } else if(is_string($data) && is_file($data)){
-                            if(filesize($data) > ($rule[1] * 1024)) $result[] = 'max';
-                        } else if (is_string($data)) {
-                            if (mb_strlen($data) > $rule[1]) $result[] = 'max';
-                        } else if(is_numeric($data)) {
-                            if ($data > $rule[1]) $result[] = 'max';
-                        }else{
-                            $result[] = 'max';
-                        }
+                        if(Util::getSize($data) > $rule[1]) $result[] = 'max';
                         break;
 
                     // [SIZE] - Checks if variable size equals to size
                     case 'size':
                         if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "size" rule');
                         $rule[1] = (int)$rule[1];
-                        if ($data instanceof Countable) {
-                            if (count($data) != $rule[1]) $result[] = 'size';
-                        } else if(is_string($data) && is_file($data)){
-                            if(filesize($data) != ($rule[1] * 1024)) $result[] = 'size';
-                        } else if (is_string($data)) {
-                            if (mb_strlen($data) != $rule[1]) $result[] = 'size';
-                        } else if(is_numeric($data)){
-                            if ($data != $rule[1]) $result[] = 'size';
-                        } else {
-                            $result[] = 'size';
-                        }
+                        if(Util::getSize($data) != $rule[1]) $result[] = 'size';
+                        break;
+
+                    // [BETWEEN] - Checks if variable size is between the specified
+                    case 'between':
+                        if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "between" rule');
+                        $rule[1] = explode(',', $rule[1], 2);
+                        if(count($rule[1]) != 2) throw new Exception('Validator: Between rule must have two values for min and max');
+                        $size = Util::getSize($data);
+                        if($size < (int)$rule[1][0] || $size > (int)$rule[1][1]) $result[] = 'between';
                         break;
 
                     // [EMAIL] - Checks if variable is a valid email
                     case 'email':
-                        if(!is_string($data)){
-                            $result[] = 'email';
-                        }else{
-                            if(!filter_var($data, FILTER_VALIDATE_EMAIL)) $result[] = 'email';
-                        }
+                        if(!is_string($data) || !filter_var($data, FILTER_VALIDATE_EMAIL)) $result[] = 'email';
                         break;
 
-                        // [URL] - Checks if variable is a valid URL
+                    // [URL] - Checks if variable is a valid URL
                     case 'url':
-                        if(!is_string($data)){
-                            $result[] = 'url';
-                        }else{
-                            if (!filter_var($data, FILTER_VALIDATE_URL)) $result[] = 'url';
-                        }
+                        if (!is_string($data) || !filter_var($data, FILTER_VALIDATE_URL)) $result[] = 'url';
                         break;
 
                     // [ALPHA] - Checks if variable is alphabetic
                     case 'alpha':
-                        if(!is_string($data)){
-                            $result[] = 'alpha';
-                        }else{
-                            if(!preg_match('/^[a-z]+$/i', $data)) $result[] = 'alpha';
-                        }
+                        if(!is_string($data) || !preg_match('/^[a-z]+$/i', $data)) $result[] = 'alpha';
                         break;
 
                     // [NUMERIC] - Checks if variable is a number
@@ -242,39 +209,23 @@
 
                     // [ALPHANUMERIC] - Checks if variable is alphanumeric
                     case 'alphanumeric':
-                        if(!is_string($data)){
-                            $result[] = 'alphanumeric';
-                        }else{
-                            if (!preg_match('/^[a-z0-9]+$/i', $data)) $result[] = 'alphanumeric';
-                        }
+                        if (!is_string($data) || !preg_match('/^[a-z0-9]+$/i', $data)) $result[] = 'alphanumeric';
                         break;
 
                     // [ALPHADASH] - Checks if variable is alphanumeric or has dashes/underscores
                     case 'alphadash':
-                        if(!is_string($data)){
-                            $result[] = 'alphadash';
-                        }else{
-                            if (!preg_match('/^[a-z0-9-_]+$/i', $data)) $result[] = 'alphadash';
-                        }
+                        if (!is_string($data) || !preg_match('/^[a-z0-9-_]+$/i', $data)) $result[] = 'alphadash';
                         break;
 
                     // [UUID] - Checks if variable is a valid universally unique identifier
                     case 'uuid':
-                        if(!is_string($data)){
-                            $result[] = 'uuid';
-                        }else{
-                            if (preg_match('/^\{?[0-9a-f]{8}\-?[0-9a-f]{4}\-?[0-9a-f]{4}\-?[0-9a-f]{4}\-?[0-9a-f]{12}\}?$/i', $data) !== 1) $result[] = 'uuid';
-                        }
+                        if (!is_string($data) || preg_match('/^\{?[0-9a-f]{8}\-?[0-9a-f]{4}\-?[0-9a-f]{4}\-?[0-9a-f]{4}\-?[0-9a-f]{12}\}?$/i', $data) !== 1) $result[] = 'uuid';
                         break;
 
                     // [REGEX] - Checks if variable matches a regex pattern
                     case 'regex':
                         if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "regex" rule');
-                        if(!is_string($data)){
-                            $result[] = 'regex';
-                        }else{
-                            if(!preg_match($rule[1], $data)) $result[] = 'regex';
-                        }
+                        if(!is_string($data) || !preg_match($rule[1], $data)) $result[] = 'regex';
                         break;
 
                     // [ARRAY] - Checks if variable is an array
@@ -289,11 +240,19 @@
 
                     // [DATE] - Checks if variable is a valid date
                     case 'date':
-                        if(!is_string($data)){
-                            $result[] = 'date';
-                        }else{
-                            if (!strtotime($data)) $result[] = 'date';
-                        }
+                        if (!is_string($data) || !strtotime($data)) $result[] = 'date';
+                        break;
+
+                    // [BEFORE] - Checks if date is before a specific date
+                    case 'before':
+                        if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "before" rule');
+                        if(!is_string($data) || strtotime($data) >= strtotime($rule[1])) $result[] = 'before';
+                        break;
+
+                    // [AFTER] - Checks if date is after a specific date
+                    case 'after':
+                        if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "after" rule');
+                        if(!is_string($data) || strtotime($data) <= strtotime($rule[1])) $result[] = 'after';
                         break;
 
                     // [STRING] - Checks if variable is a string
@@ -313,48 +272,40 @@
 
                     // [FILE] - Checks if path is an existing file
                     case 'file':
-                        if (!is_string($data)){
-                            $result[] = 'file';
-                        }else{
-                            if(!is_file($data)) $result[] = 'file';
-                        }
+                        if(!is_string($data) || !is_file($data)) $result[] = 'file';
                         break;
 
                     // [UPLOAD] - Checks if variable is an uploaded file through HTTP POST
                     case 'upload':
-                        if(!is_string($data)){
-                            $result[] = 'upload';
-                        }else{
-                            if(!is_uploaded_file($data)) $result[] = 'upload';
-                        }
+                        if(!is_string($data) || !is_uploaded_file($data)) $result[] = 'upload';
                         break;
 
                     // [DIRECTORY] - Checks if path is an existing directory
                     case 'directory':
-                        if(!is_string($data)){
-                            $result[] = 'directory';
-                        }else{
-                            if(!is_dir($data)) $result[] = 'directory';
-                        }
+                        if(!is_string($data) || !is_dir($data)) $result[] = 'directory';
                         break;
 
                     // [MIME] - Checks if file matches a list of mime types
                     case 'mime':
                         if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "mime" rule');
-                        if(!is_string($data) || !is_file($data)){
-                            $result[] = 'mime';
-                        }else{
-                            if(!in_array(mime_content_type($data), explode(',', $rule[1]))) $result[] = 'mime';
-                        }
+                        if(!is_string($data) || !is_file($data) || !in_array(mime_content_type($data), explode(',', $rule[1]))) $result[] = 'mime';
+                        break;
+
+                    // [IN] - Checks if string matches a list of values
+                    case 'in':
+                        if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "in" rule');
+                        if(!is_string($data) || !in_array(trim($data), explode(',', $rule[1]))) $result[] = 'in';
+                        break;
+
+                    // [NOTIN] - Checks if string is not in a list of values
+                    case 'notin':
+                        if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "notin" rule');
+                        if(!is_string($data) || in_array(trim($data), explode(',', $rule[1]))) $result[] = 'notin';
                         break;
 
                     // [WRITABLE] - Checks if path is a writable directory or file
                     case 'writable':
-                        if(!is_string($data)){
-                            $result[] = 'writable';
-                        }else{
-                            if(!is_writable($data)) $result[] = 'writable';
-                        }
+                        if(!is_string($data) || !is_writable($data)) $result[] = 'writable';
                         break;
 
                     // [OBJECT] - Checks if variable is an object
@@ -402,13 +353,13 @@
                     // [ENDSWITH] - Check if variable ends with string
                     case 'endswith':
                         if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "endswith" rule');
-                        if (Util::endsWith($data, $rule[1])) $result[] = 'endswith';
+                        if (!is_string($data) || Util::endsWith($data, $rule[1])) $result[] = 'endswith';
                         break;
 
                     // [STARTSWITH] - Check if variable starts with string
                     case 'startswith':
                         if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "startswith" rule');
-                        if (Util::startsWith($data, $rule[1])) $result[] = 'startswith';
+                        if (!is_string($data) || Util::startsWith($data, $rule[1])) $result[] = 'startswith';
                         break;
                 }
 

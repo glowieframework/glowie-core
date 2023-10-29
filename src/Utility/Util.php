@@ -911,6 +911,24 @@
         }
 
         /**
+         * Gets the size of a variable. For strings, the text length. For files, the filesize in kilobytes.\
+         * For countable objects/arrays, the number of items. For numeric values, the number itself.
+         * @param mixed $variable Variable to get the size from.
+         * @return int Returns the variable size depending on its type.
+         */
+        public static function getSize($variable){
+            if($variable instanceof Countable){
+                return count($variable);
+            }else if(is_string($variable) && is_file($variable)){
+                return(round(filesize($variable) / 1024, 2));
+            }else if(is_string($variable)){
+                return mb_strlen($variable);
+            }else if(is_numeric($variable)){
+                return $variable;
+            }
+        }
+
+        /**
          * Returns the basename from a class (without its namespace).
          * @param string|object $class Classname or an object to get the class.
          * @return string Returns the class basename.
