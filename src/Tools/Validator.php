@@ -275,6 +275,11 @@
                         if(!is_string($data) || !is_file($data)) $result[] = 'file';
                         break;
 
+                    // [NOTFILE] - Check if path is not an existing file
+                    case 'notfile':
+                        if(is_string($data) && is_file($data)) $result[] = 'notfile';
+                        break;
+
                     // [UPLOAD] - Checks if variable is an uploaded file through HTTP POST
                     case 'upload':
                         if(!is_string($data) || !is_uploaded_file($data)) $result[] = 'upload';
@@ -285,10 +290,21 @@
                         if(!is_string($data) || !is_dir($data)) $result[] = 'directory';
                         break;
 
+                    // [NOTDIRECTORY] - Checks if path is not an existing directory
+                    case 'notdirectory':
+                        if(is_string($data) && !is_dir($data)) $result[] = 'notdirectory';
+                        break;
+
                     // [MIME] - Checks if file matches a list of mime types
                     case 'mime':
                         if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "mime" rule');
                         if(!is_string($data) || !is_file($data) || !in_array(mime_content_type($data), explode(',', $rule[1]))) $result[] = 'mime';
+                        break;
+
+                    // [NOTMIME] - Checks if file is not a list of mime types
+                    case 'notmime':
+                        if(!isset($rule[1])) throw new Exception('Validator: Missing parameter for "notmime" rule');
+                        if(!is_string($data) || !is_file($data) || in_array(mime_content_type($data), explode(',', $rule[1]))) $result[] = 'notmime';
                         break;
 
                     // [IN] - Checks if string matches a list of values

@@ -81,6 +81,12 @@
         private static $prefix = '';
 
         /**
+         * Global middlewares.
+         * @var array
+         */
+        private static $middlewares = [];
+
+        /**
          * Loads the route configuration file.
          */
         public static function load(){
@@ -260,6 +266,15 @@
         }
 
         /**
+         * Sets a middleware to all application routes.
+         * @param string|array $middleware (Optional) The namespaced middleware name that all routes will use to protect themself.\
+         * You can use `MiddlewareName::class` to get this property correctly. You can also use an array of multiple middlewares.
+         */
+        public static function setGlobalMiddleware($middleware){
+            self::$middlewares = array_merge(self::$middlewares, (array)$middleware);
+        }
+
+        /**
          * Sets the auto routing feature on or off.
          * @param bool $option (Optional) **True** for turning on auto routing or **false** for turning it off.
          */
@@ -400,6 +415,7 @@
                 self::$controller = new $controller;
 
                 // Checks for the route middlewares
+                $config['middleware'] = array_merge(self::$middlewares, $config['middleware'] ?? []);
                 if(!empty($config['middleware'])){
                     // Runs each middleware
                     foreach($config['middleware'] as $middleware){
@@ -519,7 +535,12 @@
             // Check if method is implemented
             self::$response->notFound();
             $controller = 'Glowie\Controllers\Error';
-            if(!class_exists($controller) || !is_callable([$controller, 'notFound'])) return self::loadDefaultErrorView('Not Found', '404 | Not Found');
+            if(!class_exists($controller) || !is_callable([$controller, 'notFound'])){
+                return self::loadDefaultErrorView([
+                    'title' => 'Not Found',
+                    'text' => '404 | Not Found'
+                ]);
+            }
 
             // Create Error controller and dispatch method
             self::$controller = new $controller;
@@ -534,7 +555,12 @@
             // Check if method is implemented
             self::$response->deny();
             $controller = 'Glowie\Controllers\Error';
-            if (!class_exists($controller) || !is_callable([$controller, 'forbidden'])) return self::loadDefaultErrorView('Forbidden', '403 | Forbidden');
+            if (!class_exists($controller) || !is_callable([$controller, 'forbidden'])){
+                return self::loadDefaultErrorView([
+                    'title' => 'Forbidden',
+                    'text' => '403 | Forbidden'
+                ]);
+            }
 
             // Create Error controller and dispatch method
             self::$controller = new $controller;
@@ -549,7 +575,12 @@
             // Check if method is implemented
             self::$response->setStatusCode(Response::HTTP_METHOD_NOT_ALLOWED);
             $controller = 'Glowie\Controllers\Error';
-            if (!class_exists($controller) || !is_callable([$controller, 'methodNotAllowed'])) return self::loadDefaultErrorView('Method Not Allowed', '405 | Method Not Allowed');
+            if (!class_exists($controller) || !is_callable([$controller, 'methodNotAllowed'])){
+                return self::loadDefaultErrorView([
+                    'title' => 'Method Not Allowed',
+                    'text' => '405 | Method Not Allowed'
+                ]);
+            }
 
             // Create Error controller and dispatch method
             self::$controller = new $controller;
@@ -564,7 +595,12 @@
             // Check if method is implemented
             self::$response->setStatusCode(Response::HTTP_SERVICE_UNAVAILABLE);
             $controller = 'Glowie\Controllers\Error';
-            if (!class_exists($controller) || !is_callable([$controller, 'serviceUnavailable'])) return self::loadDefaultErrorView('Service Unavailable', '405 | Service Unavailable');
+            if (!class_exists($controller) || !is_callable([$controller, 'serviceUnavailable'])){
+                return self::loadDefaultErrorView([
+                    'title' => 'Service Unavailable',
+                    'text' => '405 | Service Unavailable'
+                ]);
+            }
 
             // Create Error controller and dispatch method
             self::$controller = new $controller;
@@ -598,10 +634,10 @@
 
         /**
          * Loads the default error view.
-         * @param string $title Window title.
-         * @param string $text Window text.
+         * @param array $params Array of parameters to parse into the view.
          */
-        private static function loadDefaultErrorView(string $title, string $text){
+        private static function loadDefaultErrorView(array $params){
+            extract($params);
             include(__DIR__ . '/../Error/Views/default.phtml');
         }
     }
