@@ -4,6 +4,7 @@
     use Glowie\Core\Element;
     use Glowie\Core\Traits\DatabaseTrait;
     use Glowie\Core\Exception\QueryException;
+    use Glowie\Core\Collection;
     use Closure;
     use stdClass;
     use Exception;
@@ -1131,11 +1132,11 @@
 
         /**
          * Fetches all results from a SELECT query.
-         * @return array Returns an array with all resulting rows.
+         * @return Collection Returns a Collection with all resulting rows.
          * @throws QueryException Throws an exception if the query fails.
          */
         public function fetchAll(){
-            return $this->execute(true, false);
+            return new Collection($this->execute(true, false));
         }
 
         /**
@@ -1509,7 +1510,7 @@
                 'page' => $currentPage,
                 'is_valid' => !empty($results),
                 'data' => $results,
-                'pages' => $pages,
+                'pages' => new Collection($pages),
                 'from' => empty($results) ? 0 : $offset + 1,
                 'to' => empty($results) ? 0 : count($results) + $offset,
                 'total_pages' => (int)$totalPages,

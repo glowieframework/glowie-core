@@ -770,7 +770,7 @@
         public static function stripAccents(string $string){
             $accents = 'àáâãäçèéêëìíîïñòóôõöùúûüýÿÀÁÂÃÄÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝ';
             $replace = 'aaaaaceeeeiiiinooooouuuuyyAAAAACEEEEIIIINOOOOOUUUUY';
-            return strtr(utf8_decode($string), utf8_decode($accents), $replace);
+            return utf8_encode(strtr(utf8_decode($string), utf8_decode($accents), $replace));
         }
 
         /**

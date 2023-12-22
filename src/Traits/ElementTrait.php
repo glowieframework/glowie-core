@@ -104,9 +104,7 @@
          * @return Element Current Element instance for nested calls.
          */
         public function only($key){
-            foreach($this->__data as $field => $value){
-                if(!in_array($field, (array)$key)) $this->remove($field);
-            }
+            $this->__data = array_intersect_key($this->__data, array_flip((array)$key));
             return $this;
         }
 

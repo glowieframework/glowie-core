@@ -140,9 +140,7 @@
          * @return Cookies Current Cookies instance for nested calls.
          */
         public function only($key){
-            foreach($_COOKIE as $field => $value){
-                if(!in_array($field, (array)$key)) $this->remove($field);
-            }
+            $_COOKIE = array_intersect_key($_COOKIE, array_flip((array)$key));
             return $this;
         }
 

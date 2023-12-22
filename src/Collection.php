@@ -4,6 +4,7 @@
     use ArrayAccess;
     use Countable;
     use JsonSerializable;
+    use Closure;
     use Iterator;
     use Util;
 
@@ -45,13 +46,14 @@
         /**
          * Sets the value for a key in the Collection data.
          * @param mixed $key Key to set value (accepts dot notation keys). You can also pass an array\
-         * of values to set at once and they will be merged into the Collection data.
+         * of values (or another Collection) to set at once and they will be merged into the Collection data.
          * @param mixed $value (Optional) Value to set.
          * @param bool $ignoreDot (Optional) Ignore dot notation keys.
          * @return Collection Current Collection instance for nested calls.
          */
         public function set($key, $value = null, bool $ignoreDot = false){
-            if(is_array($key)){
+            if(is_array($key) || $key instanceof Collection){
+                if($key instanceof Collection) $key = $key->toArray();
                 $this->__data = array_merge($this->__data, $key);
             }else{
                 if($ignoreDot){
@@ -81,9 +83,7 @@
          * @return Collection Current Collection instance for nested calls.
          */
         public function only($key){
-            foreach($this->__data as $field => $value){
-                if(!in_array($field, (array)$key)) $this->remove($field);
-            }
+            $this->__data = array_intersect_key($this->__data, array_flip((array)$key));
             return $this;
         }
 
@@ -270,6 +270,74 @@
          */
         public function flatten(){
             return new Collection(Util::dotArray($this->__data));
+        }
+
+        /**
+         * Removes duplicate values from the Collection.
+         * @return Collection Returns a new unique Collection.
+         */
+        public function unique(){
+            return new Collection(array_unique($this->__data));
+        }
+
+        /**
+         * Removes duplicate values from the Collection matching a key value.
+         * @param mixed $key Key to check.
+         * @return Collection Returns a new unique Collection.
+         */
+        public function uniqueBy($key){
+            $result = [];
+            $i = 0;
+            $keys = [];
+            foreach($this->__data as $val) {
+                if (!in_array($val[$key], $keys)) {
+                    $keys[$i] = $val[$key];
+                    $result[$i] = $val;
+                }
+                $i++;
+            }
+            return new Collection($result);
+        }
+
+        /**
+         * Combines two Collections into a new associative Collection.
+         * @param Collection $values A Collection of values to be combined with the current Collection keys.
+         * @return Collection Returns a new Collection.
+         */
+        public function combine(Collection $values){
+            $values = $values->toArray();
+            return new Collection(array_combine($this->__data, $values));
+        }
+
+        public function diff(Collection $compare, ?Closure $callback){
+            $compare = $compare->toArray();
+            if($callback){
+                return new Collection(array_udiff($this->__data, $compare, $callback));
+            }else{
+                return new Collection(array_diff($this->__data, $compare));
+            }
+        }
+
+        public function diffAssoc(Collection $compare, ?Closure $callback){
+            $compare = $compare->toArray();
+            if($callback){
+                return new Collection(array_diff_uassoc($this->__data, $compare, $callback));
+            }else{
+                return new Collection(array_diff_assoc($this->__data, $compare));
+            }
+        }
+
+        public function diffKeys(Collection $compare, ?Closure $callback){
+            $compare = $compare->toArray();
+            if($callback){
+                return new Collection(array_diff_ukey($this->__data, $compare, $callback));
+            }else{
+                return new Collection(array_diff_key($this->__data, $compare));
+            }
+        }
+
+        public function slice(int $offset, ?int $length, bool $preserveKeys = false){
+            return new Collection(array_slice($this->__data, $offset, $length, $preserveKeys));
         }
 
         /**

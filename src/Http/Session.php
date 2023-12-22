@@ -153,9 +153,7 @@
          * @return Session Current Session instance for nested calls.
          */
         public function only($key){
-            foreach($_SESSION as $field => $value){
-                if(!in_array($field, (array)$key)) $this->remove($field);
-            }
+            $_SESSION = array_intersect_key($_SESSION, array_flip((array)$key));
             return $this;
         }
 

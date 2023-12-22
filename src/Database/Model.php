@@ -6,6 +6,7 @@
     use Glowie\Core\Traits\ElementTrait;
     use Util;
     use Exception;
+    use Glowie\Core\Collection;
     use JsonSerializable;
 
     /**
@@ -139,7 +140,7 @@
 
         /**
          * Fetches all results from a SELECT query. Results will be casted, if available.
-         * @return array Returns an array with all resulting rows.
+         * @return Collection Returns a Collection with all resulting rows.
          * @throws QueryException Throws an exception if the query fails.
          */
         public function fetchAll(){
@@ -202,7 +203,7 @@
         /**
          * Gets all rows from the model table.
          * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
-         * @return array Returns an array with all rows.
+         * @return Collection Returns a Collection with all rows.
          */
         public function all(bool $deleted = false){
             $fields = !Util::isEmpty($this->_select) ? $this->_select : (!Util::isEmpty($this->_fields) ? $this->_fields : '*');
@@ -215,7 +216,7 @@
          * @param string|array $field Field name to use while searching or an associative array relating fields and values to search.
          * @param mixed $value (Optional) Value to search for.
          * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
-         * @return array Returns an array with the filtered rows.
+         * @return Collection Returns a Collection with the filtered rows.
          */
         public function allBy($field, $value = null, bool $deleted = false){
             $this->filterFields($field, $value);
@@ -225,7 +226,7 @@
         /**
          * Gets all rows from the model table ordering by the newest **created at** field.
          * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
-         * @return array Returns an array with all rows.
+         * @return Collection Returns a Collection with all rows.
          * @throws Exception Throws an exception if the model is not handling timestamp fields.
          */
         public function latest(bool $deleted = false){
@@ -236,7 +237,7 @@
         /**
          * Gets all rows from the model table ordering by the oldest **created at** field.
          * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
-         * @return array Returns an array with all rows.
+         * @return Collection Returns a Collection with all rows.
          * @throws Exception Throws an exception if the model is not handling timestamp fields.
          */
         public function oldest(bool $deleted = false){
@@ -289,7 +290,7 @@
 
         /**
          * Gets only a list of soft deleted rows (if enabled).
-         * @return array Returns an array with the filtered rows.
+         * @return Collection Returns a Collection with the filtered rows.
          */
         public function getDeleted(){
             if(!$this->_softDeletes) throw new Exception('getDeleted(): Model "' . get_class($this) . '" soft deletes are not enabled');
@@ -455,21 +456,26 @@
 
         /**
          * Casts data types of fields from a row or an array of rows using model casts setting.
-         * @param array|Element $data A single row as an Element/associative array or a multi-dimensional of rows.
-         * @return array|Element Returns the data with the casted fields.
+         * @param mixed $data A single row as an Element/associative array or a multi-dimensional of rows.
+         * @return mixed Returns the data with the casted fields.
          */
         private function castData($data){
             // Checks if data or casts property is empty
             if(empty($data) || empty($this->_casts)) return $data;
 
+            // Checks for Collection
+            $isCollection = $data instanceof Collection;
+            if($isCollection) $data = $data->toArray();
+
             // Checks if is an array of rows
             if(is_array($data) && !Util::isAssociativeArray($data)){
                 $result = [];
                 foreach($data as $item) $result[] = $this->castData($item);
+                if($isCollection) $result = new Collection($result);
                 return $result;
             }
 
-            // Converts the element to an array
+            // Converts the Element to an array
             $isElement = is_callable([$data, 'toArray']);
             if($isElement) $data = $data->toArray();
 
