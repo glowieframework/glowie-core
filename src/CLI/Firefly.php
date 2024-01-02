@@ -254,7 +254,7 @@
          * Clears the whole console screen.
          */
         public static function clearScreen(){
-            if(Util::isCLI()) DIRECTORY_SEPARATOR === '\\' ? popen('cls', 'w') : exec('clear');
+            if(Util::isCLI()) stripos(PHP_OS, 'WIN') === 0 ? popen('cls', 'w') : exec('clear');
         }
 
         /**

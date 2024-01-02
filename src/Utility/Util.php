@@ -199,7 +199,7 @@
          * @return string Full location.
          */
         public static function location(string $path = ''){
-            return self::directorySeparator(APP_LOCATION . rtrim($path, DIRECTORY_SEPARATOR));
+            return APP_LOCATION . rtrim($path, '/');
         }
 
         /**
@@ -954,15 +954,6 @@
             }else{
                 return false;
             }
-        }
-
-        /**
-         * Replaces the correct OS directory separator in a path.
-         * @param string $path Path to replace.
-         * @return string Returns the path with the correct separator.
-         */
-        public static function directorySeparator(string $path){
-            return str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
         }
 
         /**

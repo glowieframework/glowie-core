@@ -31,7 +31,7 @@
         public function __construct(array $data = []){
             if(!isset($_SESSION)) session_start();
             if(!empty($data)) $_SESSION = $data;
-            self::$flash = $this->get('app_flash_data') ?? [];
+            self::$flash = $this->get('glowie.flash') ?? [];
         }
 
         /**
@@ -246,9 +246,9 @@
          * @return Session Current Session instance for nested calls.
          */
         public function setFlash(string $key, $value){
-            self::$flash = $this->get('app_flash_data') ?? [];
+            self::$flash = $this->get('glowie.flash') ?? [];
             self::$flash[$key] = $value;
-            return $this->set('app_flash_data', self::$flash);
+            return $this->set('glowie.flash', self::$flash);
         }
 
         /**
@@ -258,11 +258,11 @@
          * @return mixed Returns the value if exists or the default if not.
          */
         public function getFlash(string $key, $default = null){
-            self::$flash = $this->get('app_flash_data') ?? [];
+            self::$flash = $this->get('glowie.flash') ?? [];
             if(isset(self::$flash[$key])){
                 $value = self::$flash[$key];
                 unset(self::$flash[$key]);
-                $this->set('app_flash_data', self::$flash);
+                $this->set('glowie.flash', self::$flash);
                 return $value;
             }else{
                 return $default;

@@ -418,6 +418,24 @@
         }
 
         /**
+         * Refills the model entity data back from the database.\
+         * **Note:** this will delete all modifications made to the model entity data.
+         * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
+         * @return mixed Returns the current Model instance if the row is found, false otherwise.
+         */
+        public function refill(bool $deleted = false){
+            // Checks if filled model entity
+            if(!$this->_initialData) throw new Exception('refill(): Model "' . get_class($this) . '" entity was not filled with a row data');
+
+            // Get primary key value
+            $primary = $this->_initialData->get($this->_primaryKey);
+            if (is_null($primary)) throw new Exception('refill(): Model "' . get_class($this) . '" entity primary key was not filled');
+
+            // Refills the model
+            return $this->findAndFill($primary, $deleted, true);
+        }
+
+        /**
          * Saves the model entity data to the database.
          * @return bool Returns the last inserted `AUTO_INCREMENT` value (or true) if the row is created, otherwise returns true on success or false on failure.
          */
