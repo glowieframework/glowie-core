@@ -11,6 +11,10 @@
      * @copyright Copyright (c) Glowie
      * @license MIT
      * @link https://eugabrielsilva.tk/glowie
+     *
+     * @method void init() This method will be called before any other methods from this middleware.
+     * @method void success() Called if the middleware handler returns true.
+     * @method void fail() Called if the middleware handler returns false.
      */
     abstract class Middleware{
 

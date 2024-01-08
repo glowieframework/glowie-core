@@ -59,10 +59,11 @@
 
         /**
          * Gets the token from the request body.
+         * @param string $param (Optional) Name of the token parameter.
          * @return string|null Returns the token if exists or null if there is none.
          */
-        public function getToken(){
-            return Rails::getRequest()->get('token');
+        public function getToken(string $param = 'token'){
+            return Rails::getRequest()->get($param);
         }
 
         /**

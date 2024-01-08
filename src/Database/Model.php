@@ -4,9 +4,9 @@
     use BadMethodCallException;
     use Glowie\Core\Element;
     use Glowie\Core\Traits\ElementTrait;
+    use Glowie\Core\Collection;
     use Util;
     use Exception;
-    use Glowie\Core\Collection;
     use JsonSerializable;
 
     /**
@@ -300,7 +300,7 @@
 
         /**
          * Inserts a new row in the model table.
-         * @param Element|array $data An Element or associative array relating fields and values to insert.
+         * @param mixed $data An Element or associative array/Collection relating fields and values to insert.
          * @return mixed Returns the last inserted `AUTO_INCREMENT` value (or true) on success or false on failure.
          */
         public function create($data){
@@ -408,28 +408,28 @@
         }
 
         /**
-         * Refreshes the model entity back to the original filled data.\
+         * Resets the model entity back to the original filled data.\
          * **Note:** this will delete all modifications made to the model entity data.
          * @return $this Current Model instance for nested calls.
          */
-        public function refresh(){
-            if(!$this->_initialData) throw new Exception('refresh(): Model "' . get_class($this) . '" entity was not filled with a row data');
+        public function reset(){
+            if(!$this->_initialData) throw new Exception('reset(): Model "' . get_class($this) . '" entity was not filled with a row data');
             return $this->fill($this->_initialData, true);
         }
 
         /**
-         * Refills the model entity data back from the database.\
+         * Refreshes and refills the model entity data back from the database using its primary key.\
          * **Note:** this will delete all modifications made to the model entity data.
          * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
          * @return mixed Returns the current Model instance if the row is found, false otherwise.
          */
-        public function refill(bool $deleted = false){
+        public function refresh(bool $deleted = false){
             // Checks if filled model entity
-            if(!$this->_initialData) throw new Exception('refill(): Model "' . get_class($this) . '" entity was not filled with a row data');
+            if(!$this->_initialData) throw new Exception('refresh(): Model "' . get_class($this) . '" entity was not filled with a row data');
 
             // Get primary key value
             $primary = $this->_initialData->get($this->_primaryKey);
-            if (is_null($primary)) throw new Exception('refill(): Model "' . get_class($this) . '" entity primary key was not filled');
+            if (is_null($primary)) throw new Exception('refresh(): Model "' . get_class($this) . '" entity primary key was not filled');
 
             // Refills the model
             return $this->findAndFill($primary, $deleted, true);
@@ -613,10 +613,11 @@
 
         /**
          * Sets fields filters in the query.
-         * @param string|array $field Field name or associative array relating fields and values.
+         * @param mixed $field Field name or associative array/Collection relating fields and values.
          * @param mixed $value (Optional) Value to search for.
          */
         private function filterFields($field, $value = null){
+            if($field instanceof Collection) $field = $field->toArray();
             if(Util::isAssociativeArray($field)){
                 foreach($field as $key => $value){
                     $key = $this->_table . '.' . $key;

@@ -14,6 +14,13 @@
      * @copyright Copyright (c) Glowie
      * @license MIT
      * @link https://eugabrielsilva.tk/glowie
+     *
+     * @method void init() This method will be called before any other methods from this controller.
+     * @method void action($callback) Calls the action callback.
+     * @method void notFound() Handler for 404 Not Found errors.
+     * @method void forbidden() Handler for 403 Forbidden errors.
+     * @method void methodNotAllowed() Handler for 405 Method Not Allowed errors.
+     * @method void serviceUnavailable() Handler for 503 Service Unavailable errors.
      */
     class Controller{
 
