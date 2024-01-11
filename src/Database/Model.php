@@ -196,8 +196,7 @@
         public function findAndFillBy($field, $value = null, bool $deleted = false, bool $overwrite = false){
             $result = $this->findBy($field, $value, $deleted);
             if(!$result) return false;
-            $this->fill($result, $overwrite);
-            return true;
+            return $this->fill($result, $overwrite);
         }
 
         /**
@@ -456,7 +455,7 @@
          * @throws Exception Throws an exception if the model entity primary key is not filled.
          */
         public function destroy(){
-            $primary = $this->get($this->_primaryKey);
+            $primary = $this->getPrimary();
             if (is_null($primary)) throw new Exception('destroy(): Model "' . get_class($this) . '" entity primary key was not filled');
             return $this->drop($primary);
         }
@@ -470,6 +469,14 @@
             $model = clone $this;
             $model->remove([$this->_primaryKey, $this->_createdField, $this->_updatedField, $this->_deletedField, ...$fields]);
             return $model;
+        }
+
+        /**
+         * Gets the primary key value from the model entity.
+         * @return mixed Returns the primary key value, null otherwise.
+         */
+        public function getPrimary(){
+            return $this->get($this->_primaryKey);
         }
 
         /**

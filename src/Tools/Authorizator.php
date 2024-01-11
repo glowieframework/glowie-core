@@ -37,6 +37,48 @@
         public const EXPIRES_DAY = 86400;
 
         /**
+         * Authentication success code.
+         * @var int
+         */
+        public const ERR_AUTH_SUCCESS = 0;
+
+        /**
+         * Empty login credentials error code.
+         * @var int
+         */
+        public const ERR_EMPTY_DATA = 1;
+
+        /**
+         * User not found error code.
+         * @var int
+         */
+        public const ERR_NO_USER = 2;
+
+        /**
+         * Wrong password error code.
+         * @var int
+         */
+        public const ERR_WRONG_PASSWORD = 3;
+
+        /**
+         * Invalid token error code.
+         * @var int
+         */
+        public const ERR_INVALID_TOKEN = 4;
+
+        /**
+         * Last authentication error.
+         * @var int|null
+         */
+        private $error = null;
+
+        /**
+         * Current authenticated user.
+         * @var Model|null
+         */
+        private static $user = null;
+
+        /**
          * JWT hashing methods.
          * @var array
          */
@@ -64,6 +106,139 @@
          */
         public function getToken(string $param = 'token'){
             return Rails::getRequest()->get($param);
+        }
+
+        /**
+         * Authenticates an user from the database and returns an authentication token.
+         * @param string $user Username to authenticate.
+         * @param string $password Password to authenticate.
+         * @param array $conditions (Optional) Associative array of aditional fields to use while searching for the user.
+         * @param int $expires (Optional) Token expiration time in seconds, leave empty for no expiration.
+         * @return string|bool Returns the token if authentication is successful, false otherwise.
+         */
+        public function login(string $user, string $password, array $conditions = [], int $expires = self::EXPIRES_DAY){
+            // Check for empty login credentials
+            if(Util::isEmpty($user) || Util::isEmpty($password)){
+                $this->error = self::ERR_EMPTY_DATA;
+                $this->user = null;
+                return false;
+            }
+
+            // Create model instance
+            $model = Config::get('auth.model');
+            if(!$model || !class_exists($model)) throw new Exception("Authenticator: \"{$model}\" was not found");
+            $model = new $model;
+
+            // Get auth fields
+            $userField = Config::get('auth.user_field', 'email');
+            $passwordField = Config::get('auth.password_field', 'password');
+
+            // Fetch user information
+            $user = $model->findAndFillBy([$userField => $user, ...$conditions]);
+            if(!$user){
+                $this->error = self::ERR_NO_USER;
+                self::$user = null;
+                return false;
+            }
+
+            // Check password
+            if(password_verify($password, $user->get($passwordField))){
+                $this->error = self::ERR_AUTH_SUCCESS;
+                self::$user = $user;
+                return $this->generateJwt(['user' => $user->getPrimary()], $expires, 'HS256', ['glowie' => 'auth']);
+            }else{
+                $this->error = self::ERR_WRONG_PASSWORD;
+                self::$user = null;
+                return false;
+            }
+        }
+
+        /**
+         * Authorizes a previously generated token.
+         * @param string $token Token to authorize.
+         * @return bool Returns true on authentication success, false otherwise.
+         */
+        public function authorize(string $token){
+            // Decode JWT token
+            $token = $this->decodeJwt($token, true, ['glowie' => 'auth']);
+            if(!$token || Util::isEmpty($token->user)){
+                $this->error = self::ERR_INVALID_TOKEN;
+                self::$user = null;
+                return false;
+            }
+
+            // Create model instance
+            $model = Config::get('auth.model');
+            if(!$model || !class_exists($model)) throw new Exception("Authenticator: \"{$model}\" was not found");
+            $model = new $model;
+
+            // Find user from token
+            $user = $model->findAndFill($token->user);
+            if(!$user){
+                $this->error = self::ERR_NO_USER;
+                self::$user = null;
+                return false;
+            }
+
+            // Save user and return success
+            $this->error = self::ERR_AUTH_SUCCESS;
+            self::$user = $user;
+            return true;
+        }
+
+        /**
+         * Checks if an user is authenticated.
+         * @return bool True or false.
+         */
+        public function check(){
+            return !is_null(self::$user);
+        }
+
+        /**
+         * Gets the current authenticated user.
+         * @return Model|null Returns the user Model instance if authenticated, null otherwise.
+         */
+        public function getUser(){
+            return self::$user;
+        }
+
+        /**
+         * Gets the id (or other primary key value) from the authenticated user.
+         * @return mixed Returns the primary key value if authenticated, null otherwise.
+         */
+        public function getUserId(){
+            $user = self::$user;
+            if(!$user) return null;
+            return $user->getPrimay();
+        }
+
+        /**
+         * Refreshes the authenticated user model from the database using its primary key.
+         * @return bool Returns true on success, false otherwise.
+         */
+        public function refresh(){
+            $user = self::$user;
+            if(!$user || !$user->refresh()) return false;
+            self::$user = $user;
+            return true;
+        }
+
+        /**
+         * Logout the authenticated user.
+         * @return bool Returns true on success, false if user is not authenticated yet.
+         */
+        public function logout(){
+            if(!self::$user) return false;
+            self::$user = null;
+            return true;
+        }
+
+        /**
+         * Returns the last authentication error registered, or null if not.
+         * @return int|null Last authentication error, null if no auth process has been registered.
+         */
+        public function getError(){
+            return $this->error;
         }
 
         /**
@@ -96,9 +271,10 @@
          * Decodes a JSON Web Token.
          * @param string $token Token to decode.
          * @param bool $validate (Optional) Validate the token signature and expiration time (if available) before decoding.
+         * @param array $headers (Optional) Array of additional headers to check.
          * @return Element|null Returns the JWT payload as an Element or null if the token is invalid.
          */
-        public function decodeJwt(string $token, bool $validate = true){
+        public function decodeJwt(string $token, bool $validate = true, array $headers = []){
             // Validate data
             if(empty($token)) return null;
 
@@ -111,7 +287,7 @@
             if(empty($header['typ']) || $header['typ'] !== 'JWT') return null;
 
             // Validate the signature and expiration time
-            if($validate && !$this->validateJwt($token)) return null;
+            if($validate && !$this->validateJwt($token, $headers)) return null;
 
             // Decode the payload
             $payload = json_decode($this->base64UrlDecode($parsed[1]), true);
@@ -121,10 +297,11 @@
 
         /**
          * Validates a JSON Web Token using your application secret keys.
-         * @param $token Token to validate.
+         * @param string $token Token to validate.
+         * @param array $headers (Optional) Array of additional headers to check.
          * @return bool Returns true if the token signature is valid, false otherwise.
          */
-        public function validateJwt(string $token){
+        public function validateJwt(string $token, array $headers = []){
             // Validate data
             if(empty($token)) return false;
 
@@ -140,6 +317,13 @@
             $header = json_decode($this->base64UrlDecode($parsed[0]), true);
             if(empty($header['typ']) || $header['typ'] !== 'JWT' || empty($header['alg']) || !isset(self::METHODS[strtoupper($header['alg'])])) return false;
             $alg = strtoupper($header['alg']);
+
+            // Validate custom headers
+            if(!empty($headers)){
+                foreach($headers as $name => $value){
+                    if(!isset($header[$name]) || $header[$name] !== $value) return false;
+                }
+            }
 
             // Decode the payload
             $payload = json_decode($this->base64UrlDecode($parsed[1]), true);

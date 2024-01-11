@@ -69,7 +69,7 @@
 
             // Get auth fields
             $userField = Config::get('auth.user_field', 'email');
-            $passwordField = Config::get('auth.password_field');
+            $passwordField = Config::get('auth.password_field', 'password');
 
             // Fetch user information
             $user = $model->findAndFillBy([$userField => $user, ...$conditions]);
@@ -109,14 +109,26 @@
         }
 
         /**
+         * Gets the id (or other primary key value) from the authenticated user.
+         * @return mixed Returns the primary key value if authenticated, null otherwise.
+         */
+        public function getUserId(){
+            $session = new Session();
+            $user = $session->get('glowie.auth');
+            if(!$user) return null;
+            return $user->getPrimay();
+        }
+
+        /**
          * Refreshes the authenticated user model from the database using its primary key.
          * @return bool Returns true on success, false otherwise.
          */
         public function refresh(){
             $session = new Session();
             $user = $session->get('glowie.auth');
-            if(!$user) return false;
-            return $user->refresh();
+            if(!$user || !$user->refresh()) return false;
+            $session->set('glowie.auth', $user);
+            return true;
         }
 
         /**
