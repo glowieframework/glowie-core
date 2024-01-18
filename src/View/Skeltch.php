@@ -30,7 +30,7 @@
         public static function run(string $filename){
             // Checks for file and cache folder permissions
             $tmpdir = Config::get('skeltch.path', Util::location('storage/cache'));
-            if(!is_writable($tmpdir)) throw new FileException('Directory "' . $tmpdir . '" is not writable, please check your chmod settings');
+            if(!is_writable($tmpdir)) throw new FileException(sprintf('Directory "%s" is not writable, please check your chmod settings', $tmpdir));
 
             // Checks if cache is enabled or should be recompiled
             $tmpfile = $tmpdir . '/' . md5($filename) . '.tmp';

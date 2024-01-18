@@ -86,7 +86,7 @@
                             Firefly::print('>> $' . self::$__scope['key'] . ' = ', false);
 
                             Buffer::start();
-                            var_dump(self::$__scope['value']);
+                            Util::dump(self::$__scope['value'], false, true);
                             self::$__scope['value'] = Buffer::get();
 
                             Firefly::print(trim(self::$__scope['value']));
@@ -122,7 +122,7 @@
                     self::$__scope['return'] = eval(self::$__scope['command']);
 
                     // Flushes the buffer
-                    if(self::$__scope['return']) var_dump(self::$__scope['return']);
+                    if(self::$__scope['return']) Util::dump(self::$__scope['return'], false, true);
                     self::$__scope['return'] = Buffer::get();
                     if(!Util::isEmpty(self::$__scope['return'])) Firefly::print('<color="yellow">>> ' . trim(self::$__scope['return']) . '</color>');
                 } catch (Throwable $__exception) {

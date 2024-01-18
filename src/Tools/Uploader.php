@@ -252,6 +252,7 @@
          * @return array Returns the new array.
          */
         public function arrangeFiles(array $files){
+            if(Util::isEmpty($files['name'])) return [];
             if(is_array($files['name'])){
                 $result = [];
                 for ($i=0; $i < count($files['name']); $i++) {
@@ -267,7 +268,7 @@
                     $result[] = new Element($item);
                 }
                 return $result;
-            }else if(!empty($files['name'])) {
+            }else {
                 $files['name'] = Util::sanitizeFilename($files['name']);
                 $files['extension'] = $this->getExtension($files['name']);
                 $files['size_string'] = $this->parseSize($files['size']);

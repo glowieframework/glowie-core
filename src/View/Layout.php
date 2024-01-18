@@ -93,7 +93,7 @@
             if(is_callable([self::$_helpers, $method])){
                 return call_user_func_array([self::$_helpers, $method], $args);
             }else{
-                throw new BadMethodCallException('Helper method "' . $method .'()" is not defined (Layout: "' . $this->_filename . '")');
+                throw new BadMethodCallException(sprintf('Helper method "%s()" is not defined (Layout: "%s")', $method, $this->_filename));
             }
         }
 

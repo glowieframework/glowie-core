@@ -157,7 +157,7 @@
         public function select(string $message = '', array $options, int $default = 1){
             // Validate args
             if(empty($options)) throw new ConsoleException(Firefly::getCommand(), Firefly::getArgs(), 'select(): Options array cannot be empty');
-            if(!isset($options[$default - 1])) throw new ConsoleException(Firefly::getCommand(), Firefly::getArgs(), 'select(): Invalid default value');
+            if(!isset($options[$default - 1])) throw new ConsoleException(Firefly::getCommand(), Firefly::getArgs(), 'select(): Invalid default value "' . $default . '"');
             $options = array_values($options);
 
             // Create prompt

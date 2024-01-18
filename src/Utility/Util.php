@@ -31,8 +31,9 @@
          * Dumps a variable in a human-readable way and ends the script execution.
          * @param mixed $var Variable to be dumped.
          * @param bool $plain (Optional) Dump variable as plain text instead of HTML.
+         * @param bool $continue (Optional) Continue script execution after dump.
          */
-        public static function dump($var, bool $plain = false){
+        public static function dump($var, bool $plain = false, bool $continue = false){
             // Dumps the content
             if(self::isCLI()){
                 Firefly::print(self::parseDump($var, true), false);
@@ -61,7 +62,7 @@
             }
 
             // Stop script
-            die();
+            if(!$continue) die();
         }
 
         /**

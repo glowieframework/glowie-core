@@ -63,8 +63,10 @@
             if(error_reporting()){
                 include(__DIR__ . '/Views/error.phtml');
             }else{
-                $title = 'Server Error';
-                $text = '500 | Server Error';
+                extract([
+                    'title' => 'Server Error',
+                    'text' => '500 | Server Error'
+                ]);
                 include(__DIR__ . '/Views/default.phtml');
             }
         }
@@ -139,13 +141,13 @@
         }
 
         /**
-         * Returns the value of `var_dump()` method to a string.
+         * Returns the value of `Util::dump()` method to a string.
          * @param mixed $var Variable to dump.
          * @return string The variable dump as string.
          */
         private static function getDump($var){
             Buffer::start();
-            var_dump($var);
+            Util::dump($var, false, true);
             return Buffer::get();
         }
 

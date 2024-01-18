@@ -120,7 +120,7 @@
             // Check for empty login credentials
             if(Util::isEmpty($user) || Util::isEmpty($password)){
                 $this->error = self::ERR_EMPTY_DATA;
-                $this->user = null;
+                self::$user = null;
                 return false;
             }
 
@@ -161,7 +161,7 @@
         public function authorize(string $token){
             // Decode JWT token
             $token = $this->decodeJwt($token, true, ['glowie' => 'auth']);
-            if(!$token || Util::isEmpty($token->user)){
+            if(!$token || Util::isEmpty($token->user ?? '')){
                 $this->error = self::ERR_INVALID_TOKEN;
                 self::$user = null;
                 return false;

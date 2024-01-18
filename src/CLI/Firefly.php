@@ -384,7 +384,7 @@
             // Starts the server
             self::print('<color="green">Local development server started!</color>');
             self::print('<color="yellow">To shutdown the server press Ctrl/Command+C</color>');
-            system('php -S ' . $host . ':' . $port .' -t app/public ' . __DIR__ . '/Server.php');
+            passthru(sprintf('php -S %s:%s -t app/public %s/Server.php', $host, $port, __DIR__));
         }
 
         /**

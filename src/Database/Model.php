@@ -255,7 +255,7 @@
             if($this->_softDeletes && !$force){
                 return $this->update([$this->_table . '.' . $this->_deletedField => self::raw('NOW()')]);
             }else{
-                return $this->delete();
+                return $this->delete($this->_table);
             }
         }
 
@@ -271,7 +271,7 @@
             if($this->_softDeletes && !$force){
                 return $this->update([$this->_table . '.' . $this->_deletedField => self::raw('NOW()')]);
             }else{
-                return $this->delete();
+                return $this->delete($this->_table);
             }
         }
 
