@@ -20,13 +20,28 @@
     class Sandbox{
 
         /**
-         * Private scope of variables.
+         * Command history.
          * @var array
          */
-        private static $__scope = [
-            'history' => [],
-            'exception' => null
-        ];
+        private static $history = [];
+
+        /**
+         * Last thrown exception.
+         * @var Throwable|null
+         */
+        private static $exception = null;
+
+        /**
+         * Handler for continuous commands.
+         * @var string
+         */
+        private static $continuous = '';
+
+        /**
+         * Last result.
+         * @var string
+         */
+        private static $result = '';
 
         /**
          * Run the CLI Sandbox.
@@ -36,8 +51,8 @@
             if(!Util::isCLI()) throw new ConsoleException(Firefly::getCommand(), Firefly::getArgs(), 'This command cannot be used from outside the console');
 
             // Register class alias
-            foreach(Config::get('sandbox.alias', []) as self::$__scope['key'] => self::$__scope['value']){
-                if(!class_exists(self::$__scope['key'])) class_alias(self::$__scope['value'], self::$__scope['key']);
+            foreach(Config::get('sandbox.alias', []) as $__key => $__value){
+                if(!class_exists($__key)) class_alias($__value, $__key);
             }
 
             // Starts the interactive mode
@@ -46,30 +61,41 @@
 
             // REPL
             while (true) {
+                // Inject last exception and last result
+                $__e = self::$exception;
+                $__ = self::$result;
+
                 // Starting tag
                 Firefly::print('<color="cyan">sandbox >> </color>', false);
 
                 // Gets the current command
-                self::$__scope['command'] = trim(fgets(STDIN));
-                if(Util::isEmpty(self::$__scope['command'])) continue;
+                $__command = trim(fgets(STDIN));
+                if(Util::isEmpty($__command)) continue;
 
                 // Add command to the history
-                self::$__scope['history'][] = self::$__scope['command'];
+                self::$history[] = $__command;
+
+                // Fill continuous command
+                if(!Util::isEmpty(self::$continuous)) $__command = self::$continuous .= "\n" . $__command;
 
                 // Checks for predefined commands
-                switch(self::$__scope['command']){
+                switch($__command){
                     case 'history':
                         Firefly::print('<color="blue">', false);
 
-                        foreach(self::$__scope['history'] as self::$__scope['key'] => self::$__scope['value']){
-                            Firefly::print((self::$__scope['key'] + 1) . ': ' . self::$__scope['value']);
+                        foreach(self::$history as $__key => $__value){
+                            Firefly::print(($__key + 1) . ': ' . $__value);
                         }
 
                         Firefly::print('</color>', false);
                         continue 2;
 
                     case 'exception':
-                        if(self::$__scope['exception']) HandlerCLI::exceptionHandler(self::$__scope['exception']);
+                        if($__e){
+                            HandlerCLI::exceptionHandler($__e);
+                        }else{
+                            Firefly::print('<color="green">No exception was thrown.</color>');
+                        }
                         continue 2;
 
                     case 'clear':
@@ -78,18 +104,16 @@
                         continue 2;
 
                     case 'ls':
-                        Firefly::print('<color="magenta">', false);
-
-                        foreach(get_defined_vars() as self::$__scope['key'] => self::$__scope['value']){
-                            if(self::$__scope['key'] == '__exception') continue;
-
-                            Firefly::print('>> $' . self::$__scope['key'] . ' = ', false);
+                        foreach(get_defined_vars() as $__key => $__value){
+                            if(in_array($__key, ['__key', '__value', '__e'])) continue;
+                            Firefly::print('<color="magenta">', false);
+                            Firefly::print('>> $' . $__key . ' = ', false);
 
                             Buffer::start();
-                            Util::dump(self::$__scope['value'], false, true);
-                            self::$__scope['value'] = Buffer::get();
+                            Util::dump($__value, false, true);
+                            $__value = Buffer::get();
 
-                            Firefly::print(trim(self::$__scope['value']));
+                            Firefly::print(trim($__value));
                         }
 
                         Firefly::print('</color>', false);
@@ -97,18 +121,32 @@
 
                     case 'quit':
                     case 'exit':
+                        Firefly::print('<color="green">Good bye!</color>');
                         exit;
 
                     default:
                         break;
                 }
 
-                // Checks for console command
-                if(Util::startsWith(self::$__scope['command'], '`') && Util::endsWith(self::$__scope['command'], '`')){
-                    self::$__scope['command'] = Util::replaceFirst(self::$__scope['command'], '`', '');
-                    self::$__scope['command'] = Util::replaceLast(self::$__scope['command'], '`', '');
+                // Clear previous variables
+                if(isset($__key)) unset($__key);
+                if(isset($__value)) unset($__value);
 
-                    passthru(self::$__scope['command']);
+                // Checks for continuous command
+                if(Util::endsWith($__command, ['{', '(', '[', '\\'])){
+                    if(Util::endsWith($__command, '\\')) $__command = rtrim($__command, '\\');
+                    self::$continuous .= $__command;
+                    continue;
+                }else{
+                    self::$continuous = '';
+                }
+
+                // Checks for console command
+                if(Util::startsWith($__command, '`') && Util::endsWith($__command, '`')){
+                    $__command = Util::replaceFirst($__command, '`', '');
+                    $__command = Util::replaceLast($__command, '`', '');
+
+                    passthru($__command);
                     continue;
                 }
 
@@ -117,23 +155,26 @@
 
                 try {
                     // Evaluates the command
-                    if(!Util::startsWith(self::$__scope['command'], ['return', 'echo', 'print'])) self::$__scope['command'] = 'return ' . self::$__scope['command'];
-                    if(!Util::endsWith(self::$__scope['command'], ';')) self::$__scope['command'] .= ';';
-                    self::$__scope['return'] = eval(self::$__scope['command']);
+                    if(!Util::startsWith($__command, ['return', 'echo', 'print'])) $__command = 'return ' . $__command;
+                    if(!Util::endsWith($__command, ';')) $__command .= ';';
+                    $__ = eval($__command);
 
                     // Flushes the buffer
-                    if(self::$__scope['return']) Util::dump(self::$__scope['return'], false, true);
-                    self::$__scope['return'] = Buffer::get();
-                    if(!Util::isEmpty(self::$__scope['return'])) Firefly::print('<color="yellow">>> ' . trim(self::$__scope['return']) . '</color>');
-                } catch (Throwable $__exception) {
+                    if($__) Util::dump($__, false, true);
+                    $__ = Buffer::get();
+
+                    // Prints the result
+                    self::$result = trim($__);
+                    Firefly::print('<color="yellow">>> ' . self::$result . '</color>');
+                } catch (Throwable $__e) {
                     // Clears the output buffer
                     Buffer::clean();
 
                     // Saves the current exception
-                    self::$__scope['exception'] = $__exception;
+                    self::$exception = $__e;
 
                     // Prints the error
-                    Firefly::print('<color="red">>></color> <bg="red"><color="black">' . get_class($__exception) . ':</color></bg><color="red"> ' . $__exception->getMessage() . '</color>');
+                    Firefly::print('<color="red">>></color> <bg="red"><color="black">' . get_class($__e) . ':</color></bg><color="red"> ' . $__e->getMessage() . '</color>');
                 }
             }
         }

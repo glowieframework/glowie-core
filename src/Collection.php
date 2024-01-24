@@ -309,6 +309,12 @@
             return new Collection(array_combine($this->__data, $values));
         }
 
+        /**
+         * Gets the difference between two Collections using only its values.
+         * @param Collection $compare Collection to be compared with.
+         * @param Closure $callback (Optional) Custom comparison function callback.
+         * @return Collection Returns a new Collection containing the difference.
+         */
         public function diff(Collection $compare, ?Closure $callback){
             $compare = $compare->toArray();
             if($callback){
@@ -318,6 +324,12 @@
             }
         }
 
+        /**
+         * Gets the difference between two Collections using its keys and values.
+         * @param Collection $compare Collection to be compared with.
+         * @param Closure $callback (Optional) Custom comparison function callback.
+         * @return Collection Returns a new Collection containing the difference.
+         */
         public function diffAssoc(Collection $compare, ?Closure $callback){
             $compare = $compare->toArray();
             if($callback){
@@ -327,6 +339,12 @@
             }
         }
 
+        /**
+         * Gets the difference between two Collections using only its keys.
+         * @param Collection $compare Collection to be compared with.
+         * @param Closure $callback (Optional) Custom comparison function callback.
+         * @return Collection Returns a new Collection containing the difference.
+         */
         public function diffKeys(Collection $compare, ?Closure $callback){
             $compare = $compare->toArray();
             if($callback){
@@ -336,6 +354,13 @@
             }
         }
 
+        /**
+         * Extracts a portion from the Collection.
+         * @param int $offset Starting index.
+         * @param int|null $length (Optional) Slice length.
+         * @param bool $preserveKeys (Optional) Keep current keys in slice.
+         * @return Collection Returns a new Collection.
+         */
         public function slice(int $offset, ?int $length, bool $preserveKeys = false){
             return new Collection(array_slice($this->__data, $offset, $length, $preserveKeys));
         }
