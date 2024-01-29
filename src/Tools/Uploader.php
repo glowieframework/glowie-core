@@ -325,7 +325,18 @@
          * @return bool Returns true if the mime type is allowed, false otherwise.
          */
         private function checkMime(string $mime){
-            return empty($this->mimes) || in_array($mime, $this->mimes);
+            $mime = trim(strtolower($mime));
+            if(empty($this->mimes) || in_array($mime, $this->mimes)) return true;
+
+            // Check for wildcard mimes
+            foreach($this->mimes as $item){
+                $item = trim(strtolower($item));
+                $regex = str_replace('/', '\/', $item);
+                $regex = '/^' . str_replace('*', '.*', $regex) . '$/';
+                if (preg_match($regex, $mime)) return true;
+            }
+
+            return false;
         }
 
         /**

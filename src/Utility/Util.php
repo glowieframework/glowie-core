@@ -55,8 +55,10 @@
                         include(__DIR__ . '/Views/dump.phtml');
                     }
                 }else{
-                    $title = 'Server Error';
-                    $text = '500 | Server Error';
+                    extract([
+                        'title' => 'Server Error',
+                        'text' => '500 | Server Error'
+                    ]);
                     include(__DIR__ . '/../Error/Views/default.phtml');
                 }
             }

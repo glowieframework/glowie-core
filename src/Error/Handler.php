@@ -141,13 +141,13 @@
         }
 
         /**
-         * Returns the value of `Util::dump()` method to a string.
+         * Returns the value of `var_dump()` method to a string.
          * @param mixed $var Variable to dump.
          * @return string The variable dump as string.
          */
         private static function getDump($var){
             Buffer::start();
-            Util::dump($var, false, true);
+            var_dump($var);
             return Buffer::get();
         }
 
