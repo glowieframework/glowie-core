@@ -97,10 +97,22 @@
         private $extensions = [];
 
         /**
+         * Unallowed extensions.
+         * @var array
+         */
+        private $blockedExtensions = ['php', 'html'];
+
+        /**
          * Allowed mime types.
          * @var array
          */
         private $mimes = [];
+
+        /**
+         * Unallowed mime types.
+         * @var array
+         */
+        private $blockedMimes = ['application/x-httpd-php', 'text/html'];
 
         /**
          * Maximum allowed file size.
@@ -144,6 +156,16 @@
         }
 
         /**
+         * Sets the extensions that the uploader will NOT accept.
+         * @param array $extensions Array of blocked file extensions. Use an empty array to don't block any.
+         * @return Uploader Current Uploader instance for nested calls.
+         */
+        public function setBlockedExtensions(array $extensions){
+            $this->blockedExtensions = $extensions;
+            return $this;
+        }
+
+        /**
          * Sets the maximum file size that the uploader will accept.
          * @param float $maxFileSize Maximum allowed file size **in megabytes**. Use `0` for unlimited (not recommended).\
          * **Important:** This setting cannot be higher than your php.ini `upload_max_filesize` directive.
@@ -156,11 +178,22 @@
 
         /**
          * Sets the allowed mime types that the uploader will accept.
-         * @param array $mimes Array of allowed mime types. Use an empty array to allow any.
+         * @param array $mimes Array of allowed mime types. Use an empty array to allow any.\
+         * This also accepts wildcard mimes, like `image/*`.
          * @return Uploader Current Uploader instance for nested calls.
          */
         public function setMimes(array $mimes){
             $this->mimes = $mimes;
+            return $this;
+        }
+
+        /**
+         * Sets the mime types that the uploader will NOT accept.
+         * @param array $mimes Array of blocked mime types. Use an empty array to don't block any.
+         * @return Uploader Current Uploader instance for nested calls.
+         */
+        public function setBlockedMimes(array $mimes){
+            $this->blockedMimes = $mimes;
             return $this;
         }
 
@@ -316,7 +349,7 @@
          * @return bool Returns true if the file extension is allowed, false otherwise.
          */
         private function checkExtension(string $extension){
-            return empty($this->extensions) || in_array($extension, $this->extensions);
+            return (empty($this->extensions) || in_array($extension, $this->extensions)) && !in_array($extension, $this->blockedExtensions);
         }
 
         /**
@@ -326,7 +359,7 @@
          */
         private function checkMime(string $mime){
             $mime = trim(strtolower($mime));
-            if(empty($this->mimes) || in_array($mime, $this->mimes)) return true;
+            if((empty($this->mimes) || in_array($mime, $this->mimes)) && !in_array($mime, $this->blockedMimes)) return true;
 
             // Check for wildcard mimes
             foreach($this->mimes as $item){
