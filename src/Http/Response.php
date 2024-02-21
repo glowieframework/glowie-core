@@ -228,6 +228,19 @@
         }
 
         /**
+         * Gets a list of the response headers.
+         * @return array Returns an associative array with the headers.
+         */
+        public function getHeaders(){
+            $list = [];
+            foreach(headers_list() as $header){
+                $header = explode(':', $header, 2);
+                $list[$header[0]] = $header[1] ?? '';
+            }
+            return $list;
+        }
+
+        /**
          * Sets a basic `Authorization` header with username and password.
          * @param string $username Username to set.
          * @param string $password Password to set.

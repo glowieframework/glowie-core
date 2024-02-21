@@ -132,6 +132,22 @@
         }
 
         /**
+         * Gets the request vars from `GET` method only.
+         * @return Element Returns an Element with the request vars.
+         */
+        public function fromGet(){
+            return new Element($_GET);
+        }
+
+        /**
+         * Gets the request vars from `POST` method only.
+         * @return Element Returns an Element with the request vars.
+         */
+        public function fromPost(){
+            return new Element($_POST);
+        }
+
+        /**
          * Returns a JSON key from the request.
          * @param string|null $key (Optional) Key to get value (accepts dot notation keys). Leave empty to get the whole JSON Element.
          * @param mixed $default (Optional) Default value to return if the key does not exist.

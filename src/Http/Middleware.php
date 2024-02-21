@@ -71,9 +71,9 @@
          */
         final public function __construct(){
             $this->controller = Rails::getController();
-            $this->get = new Element($_GET);
+            $this->get = Rails::getRequest()->fromGet();
             $this->params = new Element(Rails::getParams());
-            $this->post = new Element($_POST);
+            $this->post = Rails::getRequest()->fromPost();
             $this->request = Rails::getRequest();
             $this->response = Rails::getResponse();
             $this->route = Rails::getCurrentRoute();

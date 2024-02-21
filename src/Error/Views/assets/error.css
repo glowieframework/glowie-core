@@ -17,6 +17,26 @@ body {
 	color: #fff;
 	padding: 10px 20px;
 }
+.wrapper .details .tabs {
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+	margin-bottom: 20px;
+}
+.wrapper .details .tabs a {
+	display: inline-block;
+	color: #ed578b;
+	background-color: transparent;
+	border: 1px solid lightgray;
+	text-decoration: none;
+	font-size: 14px;
+	padding: 5px 10px;
+}
+.wrapper .details .tabs a.active {
+	background-color: #ed578b;
+	color: white;
+	border-color: #ed578b;
+}
 .wrapper .title span {
 	font-size: 13px;
 	display: block;
@@ -98,6 +118,10 @@ body {
 	color: #ed578b;
 	width: 40px;
 }
+.wrapper .details table th.auto {
+	width: auto;
+	text-align: left;
+}
 .wrapper .details table td {
 	border: 1px solid #d3d3d3;
 	padding: 10px;
@@ -114,6 +138,22 @@ body {
 }
 .wrapper .details table td code {
 	margin: 10px 0;
+}
+.wrapper .details .tab {
+	display: none;
+}
+.wrapper .details .tab pre {
+	white-space: wrap;
+}
+.wrapper .details .tab.active {
+	display: block;
+}
+.wrapper .details .tab .stack-title {
+	display: block;
+	margin-top: 30px;
+}
+.wrapper .details .tab .stack-title:first-of-type {
+	margin-top: 0;
 }
 @media (prefers-color-scheme: dark) {
 	body {
@@ -147,6 +187,14 @@ body {
 	}
 	.wrapper .details table td .method {
 		color: #90a4ae;
+	}
+	.wrapper .details .tabs a {
+		color: #90a4ae;
+		border-color: #90a4ae;
+	}
+	.wrapper .details .tabs a.active {
+		background-color: #455a64;
+		border-color: #455a64;
 	}
 }
 pre code.hljs {

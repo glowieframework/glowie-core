@@ -2,31 +2,55 @@
 <?= "[{$date}] {$e}\n"; ?>
 -->
 <html>
-    <head>
-        <title><?= get_class($e); ?>: <?= $e->getMessage(); ?></title>
-        <link rel="shortcut icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABNUlEQVQ4jZ3Tv0pcQRQG8N8Ml2CV6tYiEmwMksInMD6AjY9grAbyp0wZxC4Wt9H4CGnyALL4DEEsLMQi5TSBIBbL3hQ7K3cvdxX3g4HhfN/5zuGcmaCHtm7WcIBdrJXwHUY4DznddvWhk1jhGz7jVd+4YIzv+BpyGj8alOSf2OuIHzCrto6VDvcL+yGncSyBo14y3IScNkNOm7jpcXs4htjWzZvS9kvxsa2bjYhDVEsYVDiIptNeFrvRdEDLYj0+r3kSsTJ9JFtDZFs3r2f3BQZ3FS4XGLzF32c6GEWcYTJA3uN9Of8G+AnOY8jpGqcDgquQ0yjkNML1AH8acrqa7f8LNsyvdLutm+NSabvfesmZ+0wrOMEHi4c2wQ98Cjk9zBl0jN6ZfucdrJbwH1zgLOT0u6v/D0mmTb6gKDocAAAAAElFTkSuQmCC" />
-        <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
-        <style><?= str_replace(["\n","\r","\t"], '', file_get_contents(__DIR__ . '/assets/error.css')); ?></style>
-    </head>
-    <body>
-        <div class="wrapper">
-            <div class="title">
-                <strong><?= get_class($e); ?></strong>
-                <?= $e->getMessage(); ?>
+
+<head>
+    <title><?= get_class($e); ?>: <?= $e->getMessage(); ?></title>
+    <link rel="shortcut icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABNUlEQVQ4jZ3Tv0pcQRQG8N8Ml2CV6tYiEmwMksInMD6AjY9grAbyp0wZxC4Wt9H4CGnyALL4DEEsLMQi5TSBIBbL3hQ7K3cvdxX3g4HhfN/5zuGcmaCHtm7WcIBdrJXwHUY4DznddvWhk1jhGz7jVd+4YIzv+BpyGj8alOSf2OuIHzCrto6VDvcL+yGncSyBo14y3IScNkNOm7jpcXs4htjWzZvS9kvxsa2bjYhDVEsYVDiIptNeFrvRdEDLYj0+r3kSsTJ9JFtDZFs3r2f3BQZ3FS4XGLzF32c6GEWcYTJA3uN9Of8G+AnOY8jpGqcDgquQ0yjkNML1AH8acrqa7f8LNsyvdLutm+NSabvfesmZ+0wrOMEHi4c2wQ98Cjk9zBl0jN6ZfucdrJbwH1zgLOT0u6v/D0mmTb6gKDocAAAAAElFTkSuQmCC" />
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+    <style>
+        <?= str_replace(["\n", "\r", "\t"], '', file_get_contents(__DIR__ . '/assets/error.css')); ?>
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="title">
+            <strong><?= get_class($e); ?></strong>
+            <?= $e->getMessage(); ?>
+        </div>
+        <div class="details">
+            <div class="tabs">
+                <a href="#tab1" class="active">Exception</a>
+                <a href="#tab2">Request</a>
+                <a href="#tab3">Response</a>
             </div>
-            <div class="details">
+            <div class="tab active" id="#tab1">
                 <i>File: <b><?= $e->getFile(); ?></b> at line <b><?= $e->getLine(); ?></b>.</i>
                 <span class="time">Exception thrown in <strong><?= self::getExceptionTime(); ?></strong></span>
                 <pre><code class="language-php"><?= self::highlight($e->getFile(), $e->getLine()); ?></code></pre>
                 <?= self::parseTrace($e->getTrace()); ?>
             </div>
-            <div class="title">
-                <span>Glowie <?= Util::getVersion(); ?> | PHP <?= phpversion(); ?></span>
+            <div class="tab" id="#tab2">
+                <?= self::parseRequest(); ?>
+                <?= self::parseRoute(); ?>
+                <?= self::parseRequestHeaders(); ?>
+            </div>
+            <div class="tab" id="#tab3">
+                <?= self::parseResponseHeaders(); ?>
             </div>
         </div>
-        <script><?= str_replace(["\r","\n","\t"], '', file_get_contents(__DIR__ . '/assets/script.js')); ?></script>
-        <script><?= file_get_contents(__DIR__ . '/assets/hljs.min.js'); ?></script>
-    </body>
+        <div class="title">
+            <span>Glowie <?= Util::getVersion(); ?> | PHP <?= phpversion(); ?></span>
+        </div>
+    </div>
+    <script>
+        <?= str_replace(["\r", "\n", "\t"], '', file_get_contents(__DIR__ . '/assets/script.js')); ?>
+    </script>
+    <script>
+        <?= file_get_contents(__DIR__ . '/assets/hljs.min.js'); ?>
+    </script>
+</body>
+
 </html>
 <!--
 <?= "[{$date}] {$e}"; ?>

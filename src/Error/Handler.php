@@ -3,7 +3,7 @@
 
     use Config;
     use Util;
-    use Glowie\Core\Http\Response;
+    use Glowie\Core\Http\Rails;
     use Glowie\Core\View\Buffer;
     use ErrorException;
 
@@ -59,7 +59,7 @@
             if(Buffer::isActive()) Buffer::clean();
 
             // Display the error or the default error page
-            http_response_code(Response::HTTP_INTERNAL_SERVER_ERROR);
+            Rails::getResponse()->fail();
             if(error_reporting()){
                 include(__DIR__ . '/Views/error.phtml');
             }else{
@@ -98,7 +98,6 @@
          */
         protected static function parseTrace(array $trace){
             // Prepare result
-            $isTraceable = false;
             $result =    '<strong class="stack-title">Stack trace:</strong>
                           <a href="" class="args-toggle vendor-toggle">Toggle vendor ⏷</a>
                           <table cellspacing="0" cellpadding="0"><tbody>';
@@ -109,9 +108,6 @@
                 $vendor = false;
                 if(!empty($item['class']) && $item['class'] == self::class) continue;
                 if(!empty($item['class']) && Util::startsWith($item['class'], 'Glowie\Core')) $vendor = true;
-
-                // Change traceable status
-                if(!$isTraceable) $isTraceable = true;
 
                 // Add result to the HTML table
                 $result .=   '<tr class="' . ($vendor ? 'vendor hide' : '') . '">' .
@@ -137,7 +133,77 @@
             $result .= '</tbody></table>';
 
             // Return result
-            return $isTraceable ? $result : '';
+            return !empty($trace) ? $result : '';
+        }
+
+        /**
+         * Parses the request body to a table.
+         * @return string Table content as HTML.
+         */
+        protected static function parseRequest(){
+            $data = Rails::getRequest()->toArray();
+            if(!empty($data)){
+                return '<strong class="stack-title">Body</strong>' . self::tableVars($data);
+            }else{
+                return self::tableVars($data);
+            }
+        }
+
+        /**
+         * Parses the request headers to a table.
+         * @return string Table content as HTML.
+         */
+        protected static function parseRequestHeaders(){
+            $data = Rails::getRequest()->getHeaders();
+            if(!empty($data)){
+                return '<strong class="stack-title">Headers</strong>' . self::tableVars($data);
+            }else{
+                return self::tableVars($data);
+            }
+        }
+
+        /**
+         * Parses the response headers to a table.
+         * @return string Table content as HTML.
+         */
+        protected static function parseResponseHeaders(){
+            $data = Rails::getResponse()->getHeaders();
+            if(!empty($data)){
+                return '<strong class="stack-title">Headers</strong>' . self::tableVars($data);
+            }else{
+                return self::tableVars($data);
+            }
+        }
+
+        /**
+         * Parses the route parameters to a table.
+         * @return string Table content as HTML.
+         */
+        protected static function parseRoute(){
+            $data = Rails::getParams();
+            if(!empty($data)){
+                return '<strong class="stack-title">Route Parameters</strong>' . self::tableVars($data);
+            }else{
+                return self::tableVars($data);
+            }
+        }
+
+        /**
+         * Parses an associative array to a table.
+         * @return string Table content as HTML.
+         */
+        private static function tableVars(array $vars){
+            $result = '<table cellpadding="0" cellspacing="0"><tbody>';
+
+            foreach($vars as $key => $value){
+                $result .= '<tr>';
+                $result .= '<th class="auto">' . $key . '</th>';
+                $result .= '<td><pre>' . $value . '</pre></td>';
+                $result .= '</tr>';
+            }
+
+            $result .= '</tbody></table>';
+            return $result;
         }
 
         /**
