@@ -172,6 +172,14 @@
         }
 
         /**
+         * Returns the current HTTP status code set for the response.
+         * @return int Current status code.
+         */
+        public function getStatusCode(){
+            return http_response_code();
+        }
+
+        /**
          * Sets a **403 Forbidden** HTTP response code.
          * @return Response Current Response instance for nested calls.
          */
@@ -235,7 +243,7 @@
             $list = [];
             foreach(headers_list() as $header){
                 $header = explode(':', $header, 2);
-                $list[$header[0]] = $header[1] ?? '';
+                $list[trim($header[0])] = trim($header[1] ?? '');
             }
             return $list;
         }

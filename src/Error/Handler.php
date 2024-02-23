@@ -5,6 +5,7 @@
     use Util;
     use Glowie\Core\Http\Rails;
     use Glowie\Core\View\Buffer;
+    use Glowie\Core\Http\Response;
     use ErrorException;
 
     /**
@@ -59,7 +60,7 @@
             if(Buffer::isActive()) Buffer::clean();
 
             // Display the error or the default error page
-            Rails::getResponse()->fail();
+            http_response_code(Response::HTTP_INTERNAL_SERVER_ERROR);
             if(error_reporting()){
                 include(__DIR__ . '/Views/error.phtml');
             }else{
@@ -80,7 +81,7 @@
         private static function highlight(string $file, int $line){
             // Checks for the line
             if(!is_readable($file)) return '';
-            $text = file($file, FILE_IGNORE_NEW_LINES);
+            $text = @file($file, FILE_IGNORE_NEW_LINES);
             if($text === false) return '';
             if(empty($text[$line - 1])) return '';
 
@@ -141,11 +142,12 @@
          * @return string Table content as HTML.
          */
         protected static function parseRequest(){
-            $data = Rails::getRequest()->toArray();
-            if(!empty($data)){
-                return '<strong class="stack-title">Body</strong>' . self::tableVars($data);
-            }else{
-                return self::tableVars($data);
+            try {
+                $data = Rails::getRequest()->toArray();
+                if(!empty($data)) return '<strong class="stack-title">Request Body</strong>' . self::tableVars($data);
+                return '';
+            } catch (\Throwable $th) {
+                return '';
             }
         }
 
@@ -154,11 +156,12 @@
          * @return string Table content as HTML.
          */
         protected static function parseRequestHeaders(){
-            $data = Rails::getRequest()->getHeaders();
-            if(!empty($data)){
-                return '<strong class="stack-title">Headers</strong>' . self::tableVars($data);
-            }else{
-                return self::tableVars($data);
+            try {
+                $data = Rails::getRequest()->getHeaders();
+                if(!empty($data)) return '<strong class="stack-title">Request Headers</strong>' . self::tableVars($data);
+                return '';
+            } catch (\Throwable $th) {
+                return '';
             }
         }
 
@@ -167,11 +170,12 @@
          * @return string Table content as HTML.
          */
         protected static function parseResponseHeaders(){
-            $data = Rails::getResponse()->getHeaders();
-            if(!empty($data)){
-                return '<strong class="stack-title">Headers</strong>' . self::tableVars($data);
-            }else{
-                return self::tableVars($data);
+            try {
+                $data = Rails::getResponse()->getHeaders();
+                if(!empty($data)) return '<strong class="stack-title">Response Headers</strong>' . self::tableVars($data);
+                return '';
+            } catch (\Throwable $th) {
+                return '';
             }
         }
 
@@ -180,11 +184,12 @@
          * @return string Table content as HTML.
          */
         protected static function parseRoute(){
-            $data = Rails::getParams();
-            if(!empty($data)){
-                return '<strong class="stack-title">Route Parameters</strong>' . self::tableVars($data);
-            }else{
-                return self::tableVars($data);
+            try {
+                $data = Rails::getParams();
+                if(!empty($data)) return '<strong class="stack-title">Route Parameters</strong>' . self::tableVars($data);
+                return '';
+            } catch (\Throwable $th) {
+                return '';
             }
         }
 

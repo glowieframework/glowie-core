@@ -255,6 +255,41 @@
         }
 
         /**
+         * Changes the case of all keys in the Collection.
+         * @param int $case (Optional) Either `CASE_UPPER` or `CASE_LOWER`.
+         * @return Collection Returns a new Collection with the changed keys.
+         */
+        public function changeKeyCase(int $case = CASE_LOWER){
+            return new Collection(array_change_key_case($this->__data, $case));
+        }
+
+        /**
+         * Return the values of a single column in the Collection data.
+         * @param mixed $key The column of values to return.
+         * @param mixed $index (Optional) The column to use as the index key in the returned Collection.
+         * @return Collection Returns a new Collection with the selected column.
+         */
+        public function column($key, $index = null){
+            return new Collection(array_column($this->__data, $key, $index));
+        }
+
+        /**
+         * Returns the keys from the Collection.
+         * @return Collection Returns a new Collection with the keys.
+         */
+        public function keys(){
+            return new Collection(array_keys($this->__data));
+        }
+
+        /**
+         * Returns the values from the Collection.
+         * @return Collection Returns a new Collection with the values.
+         */
+        public function values(){
+            return new Collection(array_values($this->__data));
+        }
+
+        /**
          * Searches the Collection for the first item that matches a key value.
          * @param mixed $key Key to match value.
          * @param mixed $value Value to search.
