@@ -66,6 +66,26 @@
         }
 
         /**
+         * Merges two Collections or arrays.
+         * @param Collection|array A Collection or array to merge with the current Collection.
+         * @return Collection Returns a new Collection with the merget data.
+         */
+        public function merge($data){
+            if($data instanceof Collection) $data = $data->toArray();
+            return new Collection(array_merge($this->__data, $data));
+        }
+
+        /**
+         * Shuffle the Collection data.
+         * @return Collection Returns a new Collection with shuffled data.
+         */
+        public function shuffle(){
+            $arr = $this->__data;
+            shuffle($arr);
+            return new Collection($arr);
+        }
+
+        /**
          * Removes the associated key value from the Collection data.
          * @param mixed $key Key to delete value. You can also use an array of keys to remove.
          * @return Collection Current Collection instance for nested calls.
@@ -231,6 +251,32 @@
             }
 
             return new Collection($arr);
+        }
+
+        /**
+         * Sorts the Collection by keys.
+         * @param int $order (Optional) Sort direction `SORT_ASC` (ascending) or `SORT_DESC` (descending).
+         * @return Collection Returns a new Collection with the sorted data.
+         */
+        public function sortKeys(int $order = SORT_ASC){
+            $arr = $this->__data;
+
+            if($order == SORT_ASC){
+                ksort($arr);
+            }else{
+                krsort($arr);
+            }
+
+            return new Collection($arr);
+        }
+
+        /**
+         * Reverse the Collection data order.
+         * @param bool $preserveKeys (Optional) Keep keys association.
+         * @return Collection Returns a new Collection with reversed data.
+         */
+        public function reverse(bool $preserveKeys = false){
+            return new Collection(array_reverse($this->__data, $preserveKeys));
         }
 
         /**
@@ -456,6 +502,31 @@
             $result = array_chunk($this->__data, $length, $preserveKeys);
             foreach($result as &$arr) $arr = new Collection($arr);
             return new Collection($result);
+        }
+
+        /**
+         * Returns the Collection data as a string joined with a separator.
+         * @param string $separator Separator to use to "glue" the data.
+         * @return string Returns the imploded data.
+         */
+        public function implode(string $separator){
+            return implode($separator, $this->__data);
+        }
+
+        /**
+         * Checks if current Collection is empty.
+         * @return bool True or false for empty Collection.
+         */
+        public function isEmpty(){
+            return empty($this->__data);
+        }
+
+        /**
+         * Checks if current Collection is not empty.
+         * @return bool True or false for not empty Collection.
+         */
+        public function isNotEmpty(){
+            return !empty($this->__data);
         }
 
         /**
