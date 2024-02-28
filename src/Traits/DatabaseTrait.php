@@ -11,6 +11,7 @@
     use Config;
     use Glowie\Core\Exception\QueryException;
     use Glowie\Core\Element;
+    use Glowie\Core\Database\Factory;
     use Glowie\Core\Exception\DatabaseException;
 
     /**
@@ -47,18 +48,6 @@
          * @var string
          */
         private $_connection;
-
-        /**
-         * Database connection handlers.
-         * @var array
-         */
-        public static $_handlers = [];
-
-        /**
-         * Query listeners.
-         * @var array
-         */
-        public static $_listeners = [];
 
         /**
          * Raw query.
@@ -114,16 +103,16 @@
          */
         public function database(string $database){
             $this->_connection = $database;
-            if(!isset(DatabaseTrait::$_handlers[$this->_connection])) $this->reconnect();
+            if(!Factory::getHandler($this->_connection)) $this->reconnect();
             return $this;
         }
 
         /**
          * Returns the current database connection handler.
-         * @return mysqli The connection object.
+         * @return mysqli|null The connection instance or null on errors.
          */
         public function getConnection(){
-            return DatabaseTrait::$_handlers[$this->_connection];
+            return Factory::getHandler($this->_connection);
         }
 
         /**
@@ -147,7 +136,7 @@
             // Saves the database connection
             try {
                 // Creates the connection
-                DatabaseTrait::$_handlers[$this->_connection] = new mysqli($database['host'], $database['username'], $database['password'], $database['db'], $database['port']);
+                Factory::setHandler($this->_connection, new mysqli($database['host'], $database['username'], $database['password'], $database['db'], $database['port']));
 
                 // Sets the charset
                 $this->getConnection()->set_charset($database['charset']);
@@ -284,14 +273,6 @@
         }
 
         /**
-         * Setup a query listener.
-         * @param Closure $callback Listener callback function. It receives the query, bindings, duration (ms) and status as parameters.
-         */
-        public static function listen(Closure $callback){
-            DatabaseTrait::$_listeners[] = $callback;
-        }
-
-        /**
          * Runs the current built query.
          * @param bool $returns (Optional) If the query should return a result.
          * @param bool $returnsFirst (Optional) If the query should return a single result.
@@ -327,12 +308,12 @@
                     $queryStart = microtime(true);
                     $stmt->execute();
                     $query = $stmt->get_result();
-                    $this->notifyListeners($this->_prepared[0], $this->_prepared[1], (microtime(true) - $queryStart), ($query !== false));
+                    Factory::notifyListeners($this->_prepared[0], $this->_prepared[1], (microtime(true) - $queryStart), ($query !== false));
                 }else{
                     $built = $this->getQuery();
                     $queryStart = microtime(true);
                     $query = $this->getConnection()->query($built);
-                    $this->notifyListeners($built, [], (microtime(true) - $queryStart), ($query !== false));
+                    Factory::notifyListeners($built, [], (microtime(true) - $queryStart), ($query !== false));
                 }
 
                 // Clear query data
@@ -377,20 +358,6 @@
             } catch (mysqli_sql_exception $e) {
                 // Query failed with error
                 throw new QueryException($built, $e->getMessage(), $e->getCode(), $e);
-            }
-        }
-
-        /**
-         * Notify query listeners that a query ran.
-         * @param string $query SQL query.
-         * @param array $bindings Prepared bindings.
-         * @param float $time Query duration in microsseconds.
-         * @param bool $status Query status, true for success, false for fail.
-         */
-        private function notifyListeners(string $query, array $bindings, float $time, bool $status){
-            if(empty(DatabaseTrait::$_listeners)) return;
-            foreach(DatabaseTrait::$_listeners as $listener){
-                call_user_func_array($listener, [$query, $bindings, round($time * 1000, 2), $status]);
             }
         }
 

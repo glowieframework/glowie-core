@@ -82,7 +82,9 @@
             // Render layout
             if(Config::get('skeltch.enabled', true)) $layout = Skeltch::run($layout);
             $this->_content = $this->getBuffer($layout);
-            View::$_renderedViews[] = $this->_filename;
+
+            // Add to rendered views
+            View::addRendered($this->_filename, $this->toArray());
         }
 
         /**

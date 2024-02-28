@@ -81,7 +81,7 @@
          * List of rendered view filenames.
          * @var array
          */
-        public static $_renderedViews = [];
+        private static $_renderedViews = [];
 
         /**
          * Instantiates a new View.
@@ -108,7 +108,9 @@
             // Render view
             if(Config::get('skeltch.enabled', true)) $view = Skeltch::run($view);
             $this->_content = $this->getBuffer($view);
-            View::$_renderedViews[] = $this->_filename;
+
+            // Add to rendered views
+            self::addRendered($this->_filename, $this->toArray());
         }
 
         /**
@@ -259,6 +261,26 @@
         public static function getStack(string $name, string $default = ''){
             if(empty(self::$_stacks[$name])) return $default;
             return implode(PHP_EOL, self::$_stacks[$name]);
+        }
+
+        /**
+         * Adds a view to the rendered views list.
+         * @param string $file View filename.
+         * @param array $params View parameters.
+         */
+        public static function addRendered(string $file, array $params){
+            self::$_renderedViews[] = [
+                'file' => $file,
+                'params' => array_keys($params)
+            ];
+        }
+
+        /**
+         * Gets a list of rendered views.
+         * @return array Returns a multidimensional array of rendered views data.
+         */
+        public static function getRendered(){
+            return self::$_renderedViews;
         }
 
     }
