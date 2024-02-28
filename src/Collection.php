@@ -157,6 +157,14 @@
         }
 
         /**
+         * Transforms the Collection into an Element.
+         * @return Element Element with the Collection data.
+         */
+        public function toElement(){
+            return new Element($this->__data);
+        }
+
+        /**
          * Dumps the Collection data.
          * @param bool $plain (Optional) Dump data as plain text instead of HTML.
          */

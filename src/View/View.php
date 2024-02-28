@@ -78,6 +78,12 @@
         private static $_prependStack = false;
 
         /**
+         * List of rendered view filenames.
+         * @var array
+         */
+        public static $_renderedViews = [];
+
+        /**
          * Instantiates a new View.
          * @param string $view View filename to instantiate.
          * @param array $params (Optional) View parameters to parse.
@@ -102,6 +108,7 @@
             // Render view
             if(Config::get('skeltch.enabled', true)) $view = Skeltch::run($view);
             $this->_content = $this->getBuffer($view);
+            View::$_renderedViews[] = $this->_filename;
         }
 
         /**

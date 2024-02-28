@@ -104,9 +104,8 @@
             // Store application start time
             define('APP_START_TIME', microtime(true));
 
-            // Store application folder and base URL
+            // Store application folder and location
             define('APP_FOLDER', '');
-            define('APP_BASE_URL', '');
             define('APP_LOCATION', getcwd() . '/app/');
 
             // Load environment configuration
@@ -114,6 +113,9 @@
 
             // Loads the configuration file
             Config::load();
+
+            // Store app base URL
+            define('APP_BASE_URL', Config::get('other.url', 'http://localhost'));
 
             // Register error handling
             HandlerCLI::register();

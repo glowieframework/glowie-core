@@ -55,6 +55,12 @@
         public static $_handlers = [];
 
         /**
+         * Query listeners.
+         * @var array
+         */
+        public static $_listeners = [];
+
+        /**
          * Raw query.
          * @var string
          */
@@ -278,6 +284,14 @@
         }
 
         /**
+         * Setup a query listener.
+         * @param Closure $callback Listener callback function. It receives the query, bindings, duration (ms) and status as parameters.
+         */
+        public static function listen(Closure $callback){
+            DatabaseTrait::$_listeners[] = $callback;
+        }
+
+        /**
          * Runs the current built query.
          * @param bool $returns (Optional) If the query should return a result.
          * @param bool $returnsFirst (Optional) If the query should return a single result.
@@ -310,11 +324,15 @@
                     }
 
                     $stmt->bind_param($types, ...$this->_prepared[1]);
+                    $queryStart = microtime(true);
                     $stmt->execute();
                     $query = $stmt->get_result();
+                    $this->notifyListeners($this->_prepared[0], $this->_prepared[1], (microtime(true) - $queryStart), ($query !== false));
                 }else{
                     $built = $this->getQuery();
+                    $queryStart = microtime(true);
                     $query = $this->getConnection()->query($built);
+                    $this->notifyListeners($built, [], (microtime(true) - $queryStart), ($query !== false));
                 }
 
                 // Clear query data
@@ -359,6 +377,20 @@
             } catch (mysqli_sql_exception $e) {
                 // Query failed with error
                 throw new QueryException($built, $e->getMessage(), $e->getCode(), $e);
+            }
+        }
+
+        /**
+         * Notify query listeners that a query ran.
+         * @param string $query SQL query.
+         * @param array $bindings Prepared bindings.
+         * @param float $time Query duration in microsseconds.
+         * @param bool $status Query status, true for success, false for fail.
+         */
+        private function notifyListeners(string $query, array $bindings, float $time, bool $status){
+            if(empty(DatabaseTrait::$_listeners)) return;
+            foreach(DatabaseTrait::$_listeners as $listener){
+                call_user_func_array($listener, [$query, $bindings, round($time * 1000, 2), $status]);
             }
         }
 
