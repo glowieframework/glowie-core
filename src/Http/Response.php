@@ -296,10 +296,11 @@
         /**
          * Sends a raw plain text body to the response.
          * @param string $content Content to set as the body.
+         * @param string $type (Optional) Content type header to set, defaults to `text/plain`.
          */
-        public function setBody(string $content){
+        public function setBody(string $content, string $type = self::CONTENT_PLAIN){
             if(Buffer::isActive()) Buffer::clean();
-            $this->setContentType(self::CONTENT_PLAIN);
+            $this->setContentType($type);
             echo $content;
         }
 

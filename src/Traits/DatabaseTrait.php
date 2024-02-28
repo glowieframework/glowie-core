@@ -103,7 +103,7 @@
          */
         public function database(string $database){
             $this->_connection = $database;
-            if(!Factory::getHandler($this->_connection)) $this->reconnect();
+            if(!$this->getConnection()) $this->reconnect();
             return $this;
         }
 
