@@ -2,6 +2,7 @@
     namespace Glowie\Core\Http;
 
     use Glowie\Core\Exception\FileException;
+    use Glowie\Core\Collection;
     use Config;
     use Util;
     use JsonSerializable;
@@ -206,6 +207,14 @@
         }
 
         /**
+         * Gets the session data as a Collection.
+         * @return Collection The session data as a Collection.
+         */
+        public function toCollection(){
+            return new Collection($_SESSION);
+        }
+
+        /**
          * Returns the serializable JSON data for the session.
          * @return array Session data as an associative array.
          */
@@ -266,7 +275,7 @@
          */
         public function getFlash(string $key, $default = null){
             self::$flash = $this->get('glowie.flash') ?? [];
-            if(isset(self::$flash[$key])){
+            if(array_key_exists($key, self::$flash)){
                 $value = self::$flash[$key];
                 unset(self::$flash[$key]);
                 $this->set('glowie.flash', self::$flash);

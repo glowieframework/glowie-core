@@ -5,6 +5,7 @@
     use Config;
     use SimpleXMLElement;
     use Glowie\Core\View\Buffer;
+    use Glowie\Core\Collection;
 
     /**
      * Response handler for Glowie application.
@@ -237,7 +238,7 @@
 
         /**
          * Gets a list of the response headers.
-         * @return array Returns an associative array with the headers.
+         * @return Collection Returns a Collection with the headers.
          */
         public function getHeaders(){
             $list = [];
@@ -245,7 +246,7 @@
                 $header = explode(':', $header, 2);
                 $list[trim($header[0])] = trim($header[1] ?? '');
             }
-            return $list;
+            return new Collection($list);
         }
 
         /**
@@ -322,7 +323,7 @@
          * @param array|Element $data Associative array with data to encode to XML. You can also use an Element.
          * @param string $root (Optional) Name of the XML root element.
          */
-        public function setXML($data, string $root = 'data'){
+        public function setXML($data, string $root = 'root'){
             if(Buffer::isActive()) Buffer::clean();
             $this->setContentType(self::CONTENT_XML);
             $xml = new SimpleXMLElement("<?xml version=\"1.0\"?><{$root}></{$root}>");

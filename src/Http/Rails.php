@@ -7,6 +7,7 @@
     use Closure;
     use Glowie\Core\Exception\RoutingException;
     use Glowie\Core\Exception\FileException;
+    use Glowie\Core\Collection;
     use Glowie\Core\Element;
 
     /**
@@ -292,11 +293,11 @@
         }
 
         /**
-         * Gets all routes configuration as an associative array.
-         * @return array Returns all routes.
+         * Gets all routes configuration as a Collection.
+         * @return Collection Returns all routes.
          */
         public static function getAllRoutes(){
-            return self::$routes;
+            return new Collection(self::$routes);
         }
 
         /**
@@ -317,10 +318,10 @@
 
         /**
          * Gets the current route params.
-         * @return array Associative array with the current route params.
+         * @return Element An Element with the current route params.
          */
         public static function getParams(){
-            return self::$currentParams;
+            return new Element(self::$currentParams);
         }
 
         /**

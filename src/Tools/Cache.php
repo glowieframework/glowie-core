@@ -6,6 +6,7 @@
     use SQLite3;
     use Exception;
     use JsonSerializable;
+    use Glowie\Core\Collection;
 
     /**
      * Cache for Glowie application.
@@ -260,6 +261,14 @@
             $return = [];
             while($row = $result->fetchArray(SQLITE3_ASSOC)) $return[] = $row;
             return array_combine(array_column($return, 'key'), array_column($return, 'value'));
+        }
+
+        /**
+         * Gets the cache data as a Collection.
+         * @return Collection Returns the cache data as a Collection.
+         */
+        public function toCollection(){
+            return new Collection($this->toArray());
         }
 
         /**

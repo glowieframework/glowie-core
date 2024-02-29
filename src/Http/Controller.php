@@ -77,7 +77,7 @@
          */
         final public function __construct(){
             $this->get = Rails::getRequest()->fromGet();
-            $this->params = new Element(Rails::getParams());
+            $this->params = Rails::getParams();
             $this->post = Rails::getRequest()->fromPost();
             $this->request = Rails::getRequest();
             $this->response = Rails::getResponse();

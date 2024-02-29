@@ -486,7 +486,7 @@
          */
         public static function arrayGet(array $array, $key, $default = null){
             // Checks if the key does not exist already
-            if(isset($array[$key])) return $array[$key];
+            if(array_key_exists($key, $array)) return $array[$key];
 
             // Loops through each key
             foreach(explode('.', $key) as $segment){

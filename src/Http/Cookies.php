@@ -1,6 +1,7 @@
 <?php
     namespace Glowie\Core\Http;
 
+    use Glowie\Core\Collection;
     use Config;
     use Util;
     use JsonSerializable;
@@ -126,7 +127,7 @@
          */
         public function remove($key){
             foreach((array)$key as $item){
-                if (isset($_COOKIE[$item])){
+                if (array_key_exists($item, $_COOKIE)){
                     $this->set($item, null, -self::EXPIRES_HOUR);
                     unset($_COOKIE[$item]);
                 }
@@ -150,7 +151,7 @@
          * @return bool Returns true or false.
          */
         public function __isset(string $key){
-            return isset($_COOKIE[$key]);
+            return array_key_exists($key, $_COOKIE);
         }
 
         /**
@@ -181,6 +182,14 @@
          */
         public function toArray(){
             return $_COOKIE;
+        }
+
+        /**
+         * Gets the cookies data as a Collection.
+         * @return Collection The cookies data as a Collection.
+         */
+        public function toCollection(){
+            return new Collection($_COOKIE);
         }
 
         /**

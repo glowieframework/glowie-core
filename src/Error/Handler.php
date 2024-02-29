@@ -185,7 +185,7 @@
          */
         protected static function parseRoute(){
             try {
-                $data = Rails::getParams();
+                $data = Rails::getParams()->toArray();
                 if(!empty($data)) return '<strong class="stack-title">Route Parameters</strong>' . self::tableVars($data);
                 return '';
             } catch (\Throwable $th) {

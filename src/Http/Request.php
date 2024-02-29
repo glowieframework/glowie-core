@@ -2,6 +2,7 @@
     namespace Glowie\Core\Http;
 
     use Util;
+    use Glowie\Core\Collection;
     use Glowie\Core\Element;
     use Glowie\Core\Tools\Uploader;
     use Glowie\Core\Traits\ElementTrait;
@@ -243,11 +244,11 @@
         }
 
         /**
-         * Gets all the request headers as an associative array.
-         * @return array Returns an associative array with all headers.
+         * Gets all the request headers as a Collection.
+         * @return Collection Returns a Collection with the headers.
          */
         public function getHeaders(){
-            return getallheaders();
+            return new Collection(getallheaders());
         }
 
         /**

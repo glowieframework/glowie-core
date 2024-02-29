@@ -88,12 +88,19 @@
 
         /**
          * Removes the associated key value from the Element data.
-         * @param string|array $key Key to delete value. You can also use an array of keys to remove.
+         * @param string|array $key Key to delete value (accepts dot notation keys). You can also use an array of keys to remove.
+         * @param bool $ignoreDot (Optional) Ignore dot notation keys.
          * @return Element Current Element instance for nested calls.
          */
-        public function remove($key){
-            foreach((array)$key as $item){
-                if (isset($this->__data[$item])) unset($this->__data[$item]);
+        public function remove($key, bool $ignoreDot = false){
+            if(is_array($key)){
+                foreach((array)$key as $item) $this->remove($item, $ignoreDot);
+            }else{
+                if(!$ignoreDot){
+                    Util::arrayDelete($this->__data, $key);
+                }else if(array_key_exists($key, $this->__data)){
+                    unset($this->__data[$key]);
+                }
             }
             return $this;
         }
