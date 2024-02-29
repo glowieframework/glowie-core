@@ -176,6 +176,7 @@
             $session = new Session();
             if(!$session->has('glowie.auth')) return false;
             $session->remove('glowie.auth');
+            self::$user = null;
             return true;
         }
 
