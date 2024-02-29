@@ -33,9 +33,6 @@ Glowie is a PHP framework designed to be as light, fast and powerful as possible
 - Large compatibility with all basic hosting providers
 - and many more...
 
-## Only what you need
-Forget about those fancy frameworks with thousands of useless functions and classes with stuff you will never use. Glowie is packed with only what you need for your application to run smoothly.
-
 ## Getting started
 [Explore the documentation](https://eugabrielsilva.tk/glowie/docs) to know how to start using Glowie to create something awesome.
 

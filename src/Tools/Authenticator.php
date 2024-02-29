@@ -105,8 +105,7 @@
          * @return bool True or false.
          */
         public function check(){
-            $session = new Session();
-            return $session->has('glowie.auth');
+            return !is_null($this->getUser());
         }
 
         /**
