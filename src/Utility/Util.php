@@ -490,7 +490,7 @@
 
             // Loops through each key
             foreach(explode('.', $key) as $segment){
-                if(!is_array($array) || !isset($array[$segment])) return $default;
+                if(!is_array($array) || !array_key_exists($segment, $array)) return $default;
                 $array = $array[$segment];
             }
 
@@ -507,10 +507,26 @@
         public static function arraySet(array &$array, $key, $value){
             $item = &$array;
             foreach(explode('.', $key) as $segment){
-                if(isset($item[$segment]) && !is_array($item[$segment])) $item[$segment] = [];
+                if(array_key_exists($segment, $item) && !is_array($item[$segment])) $item[$segment] = [];
                 $item = &$item[$segment];
             }
             $item = $value;
+        }
+
+        /**
+         * Deletes a key from a multi-dimensional array using dot notation.
+         * @param array $array Array to delete the value.
+         * @param mixed $key Key to delete in dot notation.
+         */
+        public static function arrayDelete(array &$array, $key){
+            $keys = explode('.', $key);
+            $lastKey = array_pop($keys);
+            $item = &$array;
+            foreach ($keys as $segment) {
+                if (!is_array($item) || !array_key_exists($segment, $item)) return;
+                $item = &$item[$segment];
+            }
+            unset($item[$lastKey]);
         }
 
         /**

@@ -132,17 +132,24 @@
          * @param string $key Key to delete value.
          */
         public function __unset(string $key){
-            $this->remove($key);
+            $this->remove($key, true);
         }
 
         /**
          * Removes the associated key value from the session data.
-         * @param string|array $key Key to delete value. You can also use an array of keys to remove.
+         * @param string|array $key Key to delete value (accepts dot notation keys). You can also use an array of keys to remove.
+         * @param bool $ignoreDot (Optional) Ignore dot notation keys.
          * @return Session Current Session instance for nested calls.
          */
-        public function remove($key){
-            foreach((array)$key as $item){
-                if (isset($_SESSION[$item])) unset($_SESSION[$item]);
+        public function remove($key, bool $ignoreDot = false){
+            if(is_array($key)){
+                foreach($key as $item) $this->remove($item, $ignoreDot);
+            }else{
+                if(!$ignoreDot){
+                    Util::arrayDelete($_SESSION, $key);
+                }else if(array_key_exists($key, $_SESSION)){
+                    unset($_SESSION[$key]);
+                }
             }
             return $this;
         }

@@ -42,7 +42,7 @@
          * @param mysql $connection Connection instance.
          */
         public static function setHandler(string $name, mysqli $connection){
-            self::$listeners[$name] = $connection;
+            self::$handlers[$name] = $connection;
         }
 
         /**
