@@ -130,6 +130,49 @@
         }
 
         /**
+         * Calls a magic method.
+         * @param string $name Method name.
+         * @param array $args Method arguments.
+         * @return $this Current instance for nested calls.
+         */
+        public function __call(string $name, array $args){
+            // Magic where()
+            if(Util::startsWith($name, 'where')){
+                $field = Util::snakeCase(Util::replaceFirst($name, 'where', ''));
+                return $this->where($field, $args[0] ?? null, $args[1] ?? null, $args[2] ?? 'AND');
+
+            // Magic orWhere()
+            }else if(Util::startsWith($name, 'orWhere')){
+                $field = Util::snakeCase(Util::replaceFirst($name, 'orWhere', ''));
+                return $this->orWhere($field, $args[0] ?? null, $args[1] ?? null);
+
+            // Magic findBy()
+            }else if(Util::startsWith($name, 'findBy')){
+                $field = Util::snakeCase(Util::replaceFirst($name, 'findBy', ''));
+                return $this->findBy($field, $args[0] ?? null, $args[1] ?? false);
+
+            // Magic findAndFillBy()
+            }else if(Util::startsWith($name, 'findAndFillBy')){
+                $field = Util::snakeCase(Util::replaceFirst($name, 'findAndFillBy', ''));
+                return $this->findAndFillBy($field, $args[0] ?? null, $args[1] ?? false, $args[2] ?? false);
+
+            // Magic allBy()
+            }else if(Util::startsWith($name, 'allBy')){
+                $field = Util::snakeCase(Util::replaceFirst($name, 'allBy', ''));
+                return $this->allBy($field, $args[0] ?? null, $args[1] ?? false);
+
+            // Magic dropBy()
+            }else if(Util::startsWith($name, 'dropBy')){
+                $field = Util::snakeCase(Util::replaceFirst($name, 'allBy', ''));
+                return $this->dropBy($field, $args[0] ?? null, $args[1] ?? false);
+
+            // Method not found
+            }else{
+                throw new BadMethodCallException(sprintf('Call to undefined method %s::%s()', get_class($this), $name));
+            }
+        }
+
+        /**
          * Fetches the first result from a SELECT query. Results will be casted, if available.
          * @return mixed Returns the first resulting row on success or null if not found.
          * @throws QueryException Throws an exception if the query fails.

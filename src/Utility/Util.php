@@ -802,17 +802,18 @@
         public static function slug(string $string, string $separator = '-', bool $keepOther = false){
             $string = self::stripAccents(strtolower($string));
             $string = str_replace(' ', $separator, $string);
-            $string = preg_replace('/[^a-zA-Z0-9' . preg_quote($separator) . ']/', $keepOther ? $separator : '', $string);
+            $string = preg_replace('/[^a-zA-Z0-9' . preg_quote($separator) . ']/u', ($keepOther ? $separator : ''), $string);
             return $string;
         }
 
         /**
          * Converts a string into **kebab-case** convention. It also removes all accents and characters that are not\
-         * valid letters, numbers or underscores, and converts spaces into underscores.
+         * valid letters, numbers or dashes, and converts spaces into dashes.
          * @param string $string String to convert.
          * @return string Returns the resulting string.
          */
         public static function kebabCase(string $string){
+            $string = preg_replace('/(.)(?=[A-Z])/u', '$1-', $string);
             return self::slug($string);
         }
 
@@ -823,6 +824,7 @@
          * @return string Returns the resulting string.
          */
         public static function snakeCase(string $string){
+            $string = preg_replace('/(.)(?=[A-Z])/u', '$1_', $string);
             return self::slug($string, '_');
         }
 
@@ -834,7 +836,7 @@
          */
         public static function camelCase(string $string){
             $string = self::stripAccents($string);
-            $string = preg_replace('/[^a-zA-Z0-9_]/', ' ', $string);
+            $string = preg_replace('/[^a-zA-Z0-9_]/u', ' ', $string);
             return str_replace(' ', '', lcfirst(ucwords($string)));
         }
 
