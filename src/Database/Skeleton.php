@@ -205,6 +205,12 @@
         private $_database;
 
         /**
+         * Table modifies.
+         * @var array
+         */
+        private $_modifiers;
+
+        /**
          * Creates a new Skeleton database instance.
          * @param string $table (Optional) Table name to set as default.
          * @param string $database (Optional) Database connection name (from your app configuration).
@@ -223,14 +229,15 @@
          * @return Skeleton Current Skeleton instance for nested calls.
          */
         public function createColumn(string $name, string $type, ?int $size = null, $default = null){
-            return $this->modifyColumns([
+            $this->_modifiers[] = [
                 'operation' => 'create',
                 'name' => $name,
                 'type' => $type,
                 'size' => $size,
                 'default' => $default,
                 'nullable' => false
-            ]);
+            ];
+            return $this;
         }
 
         /**
@@ -242,14 +249,15 @@
          * @return Skeleton Current Skeleton instance for nested calls.
          */
         public function createNullableColumn(string $name, string $type, ?int $size = null, $default = null){
-            return $this->modifyColumns([
+            $this->_modifiers[] = [
                 'operation' => 'create',
                 'name' => $name,
                 'type' => $type,
                 'size' => $size,
                 'default' => $default,
                 'nullable' => true
-            ]);
+            ];
+            return $this;
         }
 
         /**
@@ -344,7 +352,7 @@
          * @return Skeleton Current Skeleton instance for nested calls.
          */
         public function addColumn(string $name, string $type, ?int $size = null, $default = null, ?string $after = null){
-            return $this->modifyColumns([
+            $this->_modifiers[] = [
                 'operation' => 'add',
                 'name' => $name,
                 'type' => $type,
@@ -352,7 +360,8 @@
                 'default' => $default,
                 'after' => $after,
                 'nullable' => false
-            ]);
+            ];
+            return $this;
         }
 
         /**
@@ -365,7 +374,7 @@
          * @return Skeleton Current Skeleton instance for nested calls.
          */
         public function addNullableColumn(string $name, string $type, ?int $size = null, $default = null, ?string $after = null){
-            return $this->modifyColumns([
+            $this->_modifiers[] = [
                 'operation' => 'add',
                 'name' => $name,
                 'type' => $type,
@@ -373,7 +382,7 @@
                 'default' => $default,
                 'after' => $after,
                 'nullable' => true
-            ]);
+            ];
         }
 
         /**
@@ -388,7 +397,7 @@
          * @return Skeleton Current Skeleton instance for nested calls.
          */
         public function changeColumn(string $name, string $new_name, string $type, ?int $size = null, bool $nullable = true, $default = null, ?string $after = null){
-            return $this->modifyColumns([
+            $this->_modifiers[] = [
                 'operation' => 'change',
                 'name' => $name,
                 'new_name' => $new_name,
@@ -397,7 +406,7 @@
                 'nullable' => $nullable,
                 'default' => $default,
                 'after' => $after
-            ]);
+            ];
         }
 
         /**
@@ -406,10 +415,11 @@
          * @return Skeleton Current Skeleton instance for nested calls.
          */
         public function dropColumn(string $name){
-            return $this->modifyColumns([
+            $this->_modifiers[] = [
                 'operation' => 'drop',
                 'name' => $name
-            ]);
+            ];
+            return $this;
         }
 
         /**
@@ -434,9 +444,16 @@
         }
 
         /**
+         * Parse column modifiers into the query.
+         */
+        private function parseModifiers(){
+            if(empty($this->_modifiers)) return;
+            foreach($this->_modifiers as $item) $this->modifyColumns($item);
+        }
+
+        /**
          * Parse column operations.
          * @param array $data Associative array of data to parse.
-         * @return Skeleton Current Skeleton instance for nested calls.
          */
         private function modifyColumns(array $data){
             // Column name
@@ -456,7 +473,7 @@
                 case 'drop':
                     $field = "DROP COLUMN `{$data['name']}`";
                     $this->_fields[] = $field;
-                    return $this;
+                    return;
             }
 
             // Field type and size
@@ -492,7 +509,6 @@
 
             // Saves the result
             $this->_fields[] = $field;
-            return $this;
         }
 
         /**
@@ -651,6 +667,7 @@
          */
         public function create(){
             $this->_instruction = 'CREATE TABLE';
+            $this->parseModifiers();
             return $this->execute();
         }
 
@@ -661,6 +678,7 @@
          */
         public function createTemporary(){
             $this->_instruction = 'CREATE TEMPORARY TABLE';
+            $this->parseModifiers();
             return $this->execute();
         }
 
@@ -671,6 +689,7 @@
          */
         public function alter(){
             $this->_instruction = 'ALTER TABLE';
+            $this->parseModifiers();
             return $this->execute();
         }
 
