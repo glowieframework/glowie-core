@@ -1,6 +1,7 @@
 <?php
     namespace Glowie\Core\Database;
 
+    use Exception;
     use stdClass;
     use Util;
     use Glowie\Core\Traits\DatabaseTrait;
@@ -223,12 +224,12 @@
         /**
          * Creates a column in a new table.
          * @param string $name Column name to create.
-         * @param string $type Column data type. Must be a valid type supported by your current MySQL version.
+         * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
          * @param int|null $size (Optional) Field maximum length.
          * @param mixed $default (Optional) Default field value.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
-        public function createColumn(string $name, string $type, ?int $size = null, $default = null){
+        public function createColumn(string $name, string $type = self::TYPE_STRING, ?int $size = null, $default = null){
             $this->_modifiers[] = [
                 'operation' => 'create',
                 'name' => $name,
@@ -243,12 +244,12 @@
         /**
          * Creates a nullable column in a new table.
          * @param string $name Column name to create.
-         * @param string $type Column data type. Must be a valid type supported by your current MySQL version.
+         * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
          * @param int|null $size (Optional) Field maximum length.
          * @param mixed $default (Optional) Default field value.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
-        public function createNullableColumn(string $name, string $type, ?int $size = null, $default = null){
+        public function createNullableColumn(string $name, string $type = self::TYPE_STRING, ?int $size = null, $default = null){
             $this->_modifiers[] = [
                 'operation' => 'create',
                 'name' => $name,
@@ -345,13 +346,13 @@
         /**
          * Adds a column into an existing table.
          * @param string $name Column name to add.
-         * @param string $type Column data type. Must be a valid type supported by your current MySQL version.
+         * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
          * @param int|null $size (Optional) Field maximum length.
          * @param mixed $default (Optional) Default field value.
          * @param string|null $after (Optional) Name of other column to place this column after it.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
-        public function addColumn(string $name, string $type, ?int $size = null, $default = null, ?string $after = null){
+        public function addColumn(string $name, string $type = self::TYPE_STRING, ?int $size = null, $default = null, ?string $after = null){
             $this->_modifiers[] = [
                 'operation' => 'add',
                 'name' => $name,
@@ -367,13 +368,13 @@
         /**
          * Adds a nullable column to an existing table.
          * @param string $name Column name to add.
-         * @param string $type Column data type. Must be a valid type supported by your current MySQL version.
+         * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
          * @param int|null $size (Optional) Field maximum length.
          * @param mixed $default (Optional) Default field value.
          * @param string|null $after (Optional) Name of other column to place this column after it.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
-        public function addNullableColumn(string $name, string $type, ?int $size = null, $default = null, ?string $after = null){
+        public function addNullableColumn(string $name, string $type = self::TYPE_STRING, ?int $size = null, $default = null, ?string $after = null){
             $this->_modifiers[] = [
                 'operation' => 'add',
                 'name' => $name,
@@ -388,19 +389,19 @@
         /**
          * Changes an existing column in a table.
          * @param string $name Column name to change.
-         * @param string $new_name New column name.
-         * @param string $type Column data type. Must be a valid type supported by your current MySQL version.
+         * @param string|null $new_name (Optional) New column name. Leave empty for keeping the current name.
+         * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
          * @param int|null $size (Optional) Field maximum length.
          * @param bool $nullable (Optional) Set to **true** if the field should accept `NULL` values.
          * @param mixed $default (Optional) Default field value.
          * @param string|null $after (Optional) Name of other column to move this column below it.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
-        public function changeColumn(string $name, string $new_name, string $type, ?int $size = null, bool $nullable = true, $default = null, ?string $after = null){
+        public function changeColumn(string $name, ?string $new_name = null, string $type = self::TYPE_STRING, ?int $size = null, bool $nullable = true, $default = null, ?string $after = null){
             $this->_modifiers[] = [
                 'operation' => 'change',
                 'name' => $name,
-                'new_name' => $new_name,
+                'new_name' => $new_name ?? $name,
                 'type' => $type,
                 'size' => $size,
                 'nullable' => $nullable,
@@ -449,6 +450,80 @@
         private function parseModifiers(){
             if(empty($this->_modifiers)) return;
             foreach($this->_modifiers as $item) $this->modifyColumns($item);
+        }
+
+        /**
+         * Sets the type of the last added/changed column.
+         * @param string $type Column data type. Must be a valid type supported by your current MySQL version.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function type(string $type){
+            return $this->changeModifier('type', $type);
+        }
+
+        /**
+         * Sets the size of the last added/changed column.
+         * @param int|null $size Field maximum length.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function size(?int $size){
+            return $this->changeModifier('size', $size);
+        }
+
+        /**
+         * Sets the default value of the last added/changed column.
+         * @param mixed $value Default field value.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function default($value){
+            return $this->changeModifier('default', $value);
+        }
+
+        /**
+         * Sets the last added/changed column to be placed after an existing column.
+         * @param string|null $column Name of other column to place this column after it.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function after(?string $column){
+            return $this->changeModifier('after', $column);
+        }
+
+        /**
+         * Sets the last added/changed column to accept `NULL` values.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function nullable(){
+            return $this->changeModifier('nullable', true);
+        }
+
+        /**
+         * Sets the last added/changed column to not accept `NULL` values.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function notNull(){
+            return $this->changeModifier('nullable', false);
+        }
+
+        /**
+         * Renames the last changed column.
+         * @param string|null $name New column name. Leave empty for keeping the current name.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function name(?string $name){
+            return $this->changeModifier('new_name', $name);
+        }
+
+        /**
+         * Changes a column modifier property.
+         * @param string $property Property name to change.
+         * @param mixed $value Column value.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        private function changeModifier(string $property, $value){
+            if(empty($this->_modifiers)) throw new Exception('Skeleton: No column was added/changed to be modified');
+            $i = count($this->_modifiers) - 1;
+            $this->_modifiers[$i][$property] = $value;
+            return $this;
         }
 
         /**
@@ -787,6 +862,7 @@
             $this->_foreign = [];
             $this->_drops = [];
             $this->_rename = '';
+            $this->_modifiers = [];
             $this->_like = '';
             $this->_database = '';
             $this->_raw = '';
