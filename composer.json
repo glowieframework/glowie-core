@@ -7,7 +7,7 @@
         "glowie",
         "mvc"
     ],
-    "homepage": "https://eugabrielsilva.tk/glowie",
+    "homepage": "https://gabrielsilva.dev.br/glowie",
     "support": {
         "issues": "https://github.com/glowieframework/glowie-core/issues",
         "source": "https://github.com/glowieframework/glowie-core"
@@ -15,8 +15,8 @@
     "authors": [
         {
             "name": "Gabriel Silva",
-            "email": "glowie@eugabrielsilva.tk",
-            "homepage": "https://eugabrielsilva.tk/glowie"
+            "email": "glowie@gabrielsilva.dev.br",
+            "homepage": "https://gabrielsilva.dev.br/glowie"
         }
     ],
     "require": {

@@ -13,7 +13,7 @@
      * @author Glowie
      * @copyright Copyright (c) Glowie
      * @license MIT
-     * @link https://eugabrielsilva.tk/glowie
+     * @link https://gabrielsilva.dev.br/glowie
      */
     class Validator{
 

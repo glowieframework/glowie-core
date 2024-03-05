@@ -10,7 +10,7 @@
      * @author Glowie
      * @copyright Copyright (c) Glowie
      * @license MIT
-     * @link https://eugabrielsilva.tk/glowie
+     * @link https://gabrielsilva.dev.br/glowie
      *
      * @method void init() This method will be called before any other methods from this middleware.
      * @method void success() Called if the middleware handler returns true.
