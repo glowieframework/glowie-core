@@ -25,7 +25,7 @@
          * Layout content.
          * @var string
          */
-        private $_content;
+        private $_content = '';
 
         /**
          * Internal view content
@@ -60,18 +60,23 @@
         public function __construct(string $layout, ?string $view = null, array $params = [], bool $absolute = false){
             // Save original filename
             $this->_filename = $layout;
-            $layout = !$absolute ? Util::location('views/layouts/' . $layout) : $layout;
-            $layout .= !Util::endsWith($layout, '.phtml') ? '.phtml' : '';
+            $layout = $absolute ? $layout : Util::location('views/layouts/' . $layout);
+            if(!Util::endsWith(strtolower($layout), '.phtml')) $layout .= '.phtml';
             if(!is_file($layout)) throw new FileException(sprintf('Layout file "%s" not found', $this->_filename));
 
             // Instantiate helpers
-            $helpers = 'Glowie\Helpers\Helpers';
-            if(!self::$_helpers && is_file(Util::location('views/helpers/Helpers.php'))) self::$_helpers = new $helpers;
+            if(!self::$_helpers && is_file(Util::location('views/helpers/Helpers.php'))){
+                $helpers = 'Glowie\Helpers\Helpers';
+                self::$_helpers = new $helpers;
+            }
 
             // Parse parameters
             $this->_params = $params;
             $globalParams = Rails::getController()->view->toArray();
             $this->__constructTrait(array_merge($globalParams, $this->_params));
+
+            // Add to rendered views
+            View::addRendered($this->_filename, $this->toArray());
 
             // Parse view
             if(!empty($view)){
@@ -82,9 +87,6 @@
             // Render layout
             if(Config::get('skeltch.enabled', true)) $layout = Skeltch::run($layout);
             $this->_content = $this->getBuffer($layout);
-
-            // Add to rendered views
-            View::addRendered($this->_filename, $this->toArray());
         }
 
         /**

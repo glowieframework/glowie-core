@@ -143,7 +143,7 @@
          */
         protected static function parseRequest(){
             try {
-                $data = Rails::getRequest()->toArray();
+                $data = Rails::getRequest()->toCollection()->sortKeys();
                 if(!empty($data)) return '<strong class="stack-title">Request Body</strong>' . self::tableVars($data);
                 return '';
             } catch (\Throwable $th) {
@@ -157,7 +157,7 @@
          */
         protected static function parseRequestHeaders(){
             try {
-                $data = Rails::getRequest()->getHeaders();
+                $data = Rails::getRequest()->getHeaders()->sortKeys();
                 if(!empty($data)) return '<strong class="stack-title">Request Headers</strong>' . self::tableVars($data);
                 return '';
             } catch (\Throwable $th) {
@@ -171,7 +171,7 @@
          */
         protected static function parseResponseHeaders(){
             try {
-                $data = Rails::getResponse()->getHeaders();
+                $data = Rails::getResponse()->getHeaders()->sortKeys();
                 if(!empty($data)) return '<strong class="stack-title">Response Headers</strong>' . self::tableVars($data);
                 return '';
             } catch (\Throwable $th) {
@@ -195,9 +195,10 @@
 
         /**
          * Parses an associative array to a table.
+         * @param array|Collection $vars Vars to be parsed.
          * @return string Table content as HTML.
          */
-        private static function tableVars(array $vars){
+        private static function tableVars($vars){
             $result = '<table cellpadding="0" cellspacing="0"><tbody>';
 
             foreach($vars as $key => $value){

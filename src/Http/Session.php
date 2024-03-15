@@ -183,7 +183,7 @@
             $result = false;
             foreach((array)$key as $item){
                 if($result) break;
-                $result = Util::arrayGet($_SESSION, $key) !== null;
+                $result = Util::arrayGet($_SESSION, $item) !== null;
             }
             return $result;
         }
