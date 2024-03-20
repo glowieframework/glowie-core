@@ -31,10 +31,10 @@
 
         /**
          * Prints a table of data in the console.
-         * @param array $headers Table headers.
-         * @param array $rows A multi-dimensional array of data to parse.
+         * @param array|Collection $headers Table headers.
+         * @param array|Collection $rows A multi-dimensional array or Collection of data to parse.
          */
-        public function table(array $headers, array $rows){
+        public function table($headers, $rows){
             Firefly::table($headers, $rows);
         }
 
@@ -156,9 +156,9 @@
          */
         public function select(string $message = '', array $options, int $default = 1){
             // Validate args
-            if(empty($options)) throw new ConsoleException(Firefly::getCommand(), Firefly::getArgs(), 'select(): Options array cannot be empty');
-            if(!isset($options[$default - 1])) throw new ConsoleException(Firefly::getCommand(), Firefly::getArgs(), 'select(): Invalid default value "' . $default . '"');
+            if(empty($options)) throw new ConsoleException(Firefly::getCommand(), Firefly::getArgs(), get_class($this) . '::select(): $options array cannot be empty');
             $options = array_values($options);
+            if(!array_key_exists($default - 1, $options)) throw new ConsoleException(Firefly::getCommand(), Firefly::getArgs(), get_class($this) . '::select(): Invalid default value "' . $default . '"');
 
             // Create prompt
             $this->print($message);
@@ -168,7 +168,7 @@
             $response = (int)$this->input('<color="yellow">[1-' . count($options) . '] </color>', $default);
 
             // Return response
-            if(!isset($options[$response - 1])) return null;
+            if(!array_key_exists($response - 1, $options)) return null;
             return $options[$response - 1];
         }
 
@@ -235,8 +235,8 @@
         }
 
         /**
-         * Gets all arguments as an associative array.
-         * @return array Returns an array of arguments.
+         * Gets all arguments as a Collection.
+         * @return Collection Returns a Collection of arguments.
          */
         public function getArgs(){
             return Firefly::getArgs();
@@ -247,7 +247,7 @@
          * @param int $ms Time to wait in ms.
          */
         public function wait(int $ms){
-            usleep(ceil($ms) * 1000);
+            usleep($ms * 1000);
         }
 
     }

@@ -7,6 +7,7 @@
     use Glowie\Core\Exception\PluginException;
     use Glowie\Core\Error\HandlerCLI;
     use Glowie\Core\Http\Rails;
+    use Glowie\Core\Collection;
     use Util;
     use Config;
     use Env;
@@ -84,13 +85,13 @@
          * Command arguments.
          * @var array
          */
-        private static $args;
+        private static $args = [];
 
         /**
          * Enable silent print mode.
          * @var bool
          */
-        private static $silent;
+        private static $silent = false;
 
         /**
          * Runs the command line tool and bootstraps Glowie modules.
@@ -227,7 +228,7 @@
                 self::$name();
             }else{
                 $command = self::$command;
-                throw new ConsoleException($command, self::$args, "Unknown command \"{$command}\"");
+                throw new ConsoleException(self::getCommand(), self::getArgs(), "Unknown command \"{$command}\"");
             }
         }
 
@@ -238,15 +239,15 @@
          */
         public static function print(string $text, bool $break = true){
             if(Util::isCLI()){
-                // If running in console, replace colors, backgrounds and closing tags
+                // If running in console, replace effects and closing tags
                 $text = preg_replace(array_keys(self::REGEX), array_values(self::REGEX), $text);
             }else{
                 // If outside the console, remove closing tags
-                $text = preg_replace(['/<\/color>/i', '/<\/bg>/i'], '', $text);
+                $text = preg_replace(array_slice(array_keys(self::REGEX), 24), '', $text);
             }
 
-            // Remove remaining colors or backgrounds
-            $text = preg_replace(['/<color="(.+)">/i', '/<bg="(.+)">/i'], '', $text);
+            // Remove remaining effects
+            $text = preg_replace(['/<color="(.+)">/i', '/<bg="(.+)">/i', '/<b>/i', '/<u>/i', '/<dim>/i', '/<blink>/i', '/<hidden>/i', '/<rev>/i'], '', $text);
 
             // Prints the text
             if(!self::$silent) echo $text . ($break ? PHP_EOL : '');
@@ -261,10 +262,14 @@
 
         /**
          * Prints a table of data in the console.
-         * @param array $headers Table headers.
-         * @param array $rows A multi-dimensional array of data to parse.
+         * @param array|Collection $headers Table headers.
+         * @param array|Collection $rows A multi-dimensional array of Collection of data to parse.
          */
-        public static function table(array $headers, array $rows){
+        public static function table($headers, $rows){
+            // Parse Collections
+            if($headers instanceof Collection) $headers = $headers->toArray();
+            if($rows instanceof Collection) $rows = $rows->toArray();
+
             // Remove associative indexes from the arrays
             $headers = array_values($headers);
             foreach($rows as $key => $row) $rows[$key] = array_values((array)$row);
@@ -340,7 +345,7 @@
          * @throws ConsoleException Throws an exception if the argument was not passed.
          */
         public static function argOrFail(string $arg){
-            if(!isset(self::$args[$arg])) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "' . $arg . '" for this command');
+            if(!isset(self::$args[$arg])) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "' . $arg . '" for this command');
             return self::$args[$arg];
         }
 
@@ -356,10 +361,10 @@
 
         /**
          * Gets all arguments as an associative array.
-         * @return array Returns an array of arguments.
+         * @return Collection Returns a Collection of arguments.
          */
         public static function getArgs(){
-            return self::$args;
+            return new Collection(self::$args);
         }
 
         /**
@@ -375,7 +380,7 @@
          */
         private static function __shine(){
             // Checks if CLI is running
-            if(!Util::isCLI()) throw new ConsoleException(self::$command, self::$args, 'This command cannot be used from outside the console');
+            if(!Util::isCLI()) throw new ConsoleException(self::getCommand(), self::getArgs(), 'This command cannot be used from outside the console');
 
             // Checks if host was filled
             $host = self::getArg('host', 'localhost');
@@ -496,9 +501,9 @@
 
             // Replaces the new keys
             $content = preg_replace([
-                '/APP_KEY=(.*)/',
-                '/APP_TOKEN=(.*)/',
-                '/MAINTENANCE_KEY=(.*)/'
+                '/^APP_KEY=(.*)$/',
+                '/^APP_TOKEN=(.*)$/',
+                '/^MAINTENANCE_KEY=(.*)$/'
             ], [$appKey, $appToken, $maintenanceKey], $content, 1);
 
             // Saves the new content
@@ -518,7 +523,7 @@
 
             // Generate key and hash it
             $key = self::getArg('key', Util::randomToken());
-            if(Util::isEmpty($key)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "key" for this command');
+            if(Util::isEmpty($key)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "key" for this command');
             $iv = substr($key, 0, 16);
 
             // Encrypts the data
@@ -538,7 +543,7 @@
         private static function __decryptEnv(){
             // Get key
             $key = self::argOrInput('key', 'Decryption key: ');
-            if(Util::isEmpty($key)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "key" for this command');
+            if(Util::isEmpty($key)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "key" for this command');
             $iv = substr($key, 0, 16);
 
             // Reads the encrypted config file content
@@ -548,7 +553,7 @@
 
             // Decrypts the data
             $content = openssl_decrypt($content, 'AES-256-CBC', $key, 0, $iv);
-            if($content === false) throw new ConsoleException(self::$command, self::$args, 'Unable to decrypt or wrong key used');
+            if($content === false) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Unable to decrypt or wrong key used');
 
             // Saves the new content
             $targetFile = Util::location('../.env');
@@ -589,12 +594,12 @@
             $name = self::argOrInput('name', 'Command name: ');
 
             // Validates the controller name
-            if(Util::isEmpty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
+            if(Util::isEmpty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
 
             // Checks if the file exists
             $name = Util::pascalCase($name);
             $targetFile = Util::location('commands/' . $name . '.php');
-            if(is_file($targetFile)) throw new ConsoleException(self::$command, self::$args, "Command {$name} already exists!");
+            if(is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Command {$name} already exists!");
 
             // Creates the file
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Command.php');
@@ -619,12 +624,12 @@
             $name = self::argOrInput('name', 'Controller name: ');
 
             // Validates the controller name
-            if(Util::isEmpty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
+            if(Util::isEmpty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
 
             // Checks if the file exists
             $name = Util::pascalCase($name);
             $targetFile = Util::location('controllers/' . $name . '.php');
-            if(is_file($targetFile)) throw new ConsoleException(self::$command, self::$args, "Controller {$name} already exists!");
+            if(is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Controller {$name} already exists!");
 
             // Creates the file
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Controller.php');
@@ -649,12 +654,12 @@
             $name = self::argOrInput('name', 'Language name: ');
 
             // Validates the language id
-            if(Util::isEmpty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
+            if(Util::isEmpty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
 
             // Checks if the file exists
             $name = trim(strtolower($name));
             $targetFile = Util::location('languages/' . $name . '.php');
-            if(is_file($targetFile)) throw new ConsoleException(self::$command, self::$args, "Language file {$name} already exists!");
+            if(is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Language file {$name} already exists!");
 
             // Creates the file
             copy(self::TEMPLATES_FOLDER . 'Language.php', $targetFile);
@@ -677,12 +682,12 @@
             $name = self::argOrInput('name', 'Middleware name: ');
 
             // Validates the middleware name
-            if(Util::isEmpty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
+            if(Util::isEmpty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
 
             // Checks if the file exists
             $name = Util::pascalCase($name);
             $targetFile = Util::location('middlewares/' . $name . '.php');
-            if(is_file($targetFile)) throw new ConsoleException(self::$command, self::$args, "Middleware {$name} already exists!");
+            if(is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Middleware {$name} already exists!");
 
             // Creates the file
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Middleware.php');
@@ -707,13 +712,13 @@
             $name = self::argOrInput('name', 'Migration name: ');
 
             // Validates the migration name
-            if(Util::isEmpty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
+            if(Util::isEmpty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
 
             // Checks if the file exists
             $cleanName = Util::pascalCase($name);
             $name = 'm' . date('Y_m_d_His_') . $cleanName;
             $targetFile = Util::location('migrations/' . $name . '.php');
-            if(is_file($targetFile)) throw new ConsoleException(self::$command, self::$args, "Migration {$cleanName} already exists!");
+            if(is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Migration {$cleanName} already exists!");
 
             // Creates the file
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Migration.php');
@@ -738,7 +743,7 @@
             $name = self::argOrInput('name', 'Model name: ');
 
             // Validates the model name
-            if(Util::isEmpty($name)) throw new ConsoleException(self::$command, self::$args, 'Missing required argument "name" for this command');
+            if(Util::isEmpty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
 
             // Checks if table was filled
             $default_table = Util::snakeCase($name);
@@ -752,7 +757,7 @@
             // Checks if the file exists
             $name = Util::pascalCase($name);
             $targetFile = Util::location('models/' . $name . '.php');
-            if(is_file($targetFile)) throw new ConsoleException(self::$command, self::$args, "Model {$name} already exists!");
+            if(is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Model {$name} already exists!");
 
             // Creates the file
             $template = file_get_contents(self::TEMPLATES_FOLDER . 'Model.php');

@@ -354,7 +354,7 @@
                 call_user_func_array($param1, [$this]);
                 $this->_where[] = ')';
                 return $this;
-            }else if(is_array($param1)){
+            }else if(is_array($param1) || $param1 instanceof Collection){
                 foreach($param1 as $condition){
                     if(!is_array($condition) || count($condition) < 2) throw new Exception('where(): Multiple WHERE conditions must be an array with at least two parameters');
                     $this->where($condition[0], $condition[1], $condition[2] ?? null);
@@ -370,7 +370,7 @@
 
             // Checks operation types
             $param2 = strtoupper($param2);
-            if(($param2 == 'BETWEEN' || $param2 == 'NOT BETWEEN') && is_array($param3)){
+            if(($param2 == 'BETWEEN' || $param2 == 'NOT BETWEEN') && (is_array($param3) || $param3 instanceof Collection)){
                 $values = [];
 
                 // Escaping values
@@ -385,7 +385,7 @@
                 }
 
                 $query .= "{$param1} {$param2} {$values[0]} AND {$values[1]}";
-            }else if(is_array($param3)){
+            }else if(is_array($param3) || $param3 instanceof Collection){
                 $values = [];
 
                 // Escaping values
@@ -456,40 +456,40 @@
         /**
          * Adds a WHERE IN condition to the query.
          * @param string $column Column name.
-         * @param array $values Array of values to check to.
+         * @param array|Collection $values Array or Collection of values to check to.
          * @return $this Current instance for nested calls.
          */
-        public function whereIn(string $column, array $values){
+        public function whereIn(string $column, $values){
             return $this->where($column, $values);
         }
 
         /**
          * Adds an OR WHERE IN condition to the query.
          * @param string $column Column name.
-         * @param array $values Array of values to check to.
+         * @param array|Collection $values Array or Collection of values to check to.
          * @return $this Current instance for nested calls.
          */
-        public function orWhereIn(string $column, array $values){
+        public function orWhereIn(string $column, $values){
             return $this->where($column, 'IN', $values, 'OR');
         }
 
         /**
          * Adds a WHERE NOT IN condition to the query.
          * @param string $column Column name.
-         * @param array $values Array of values to check to.
+         * @param array|Collection $values Array or Collection of values to check to.
          * @return $this Current instance for nested calls.
          */
-        public function whereNotIn(string $column, array $values){
+        public function whereNotIn(string $column, $values){
             return $this->where($column, 'NOT IN', $values);
         }
 
         /**
          * Adds an OR WHERE NOT IN condition to the query.
          * @param string $column Column name.
-         * @param array $values Array of values to check to.
+         *@param array|Collection $values Array or Collection of values to check to.
          * @return $this Current instance for nested calls.
          */
-        public function orWhereNotIn(string $column, array $values){
+        public function orWhereNotIn(string $column, $values){
             return $this->where($column, 'NOT IN', $values, 'OR');
         }
 
@@ -821,7 +821,7 @@
                 call_user_func_array($param1, [$this]);
                 $this->_having[] = ')';
                 return $this;
-            }else if(is_array($param1)){
+            }else if(is_array($param1) || $param1 instanceof Collection){
                 foreach($param1 as $condition){
                     if(!is_array($condition) || count($condition) < 2) throw new Exception('having(): Multiple HAVING conditions must be an array with at least two parameters');
                     $this->having($condition[0], $condition[1], $condition[2] ?? null);
@@ -837,7 +837,7 @@
 
             // Checks operation types
             $param2 = strtoupper($param2);
-            if(($param2 == 'BETWEEN' || $param2 == 'NOT BETWEEN') && is_array($param3)){
+            if(($param2 == 'BETWEEN' || $param2 == 'NOT BETWEEN') && (is_array($param3) || $param3 instanceof Collection)){
                 $values = [];
 
                 // Escaping values
@@ -852,7 +852,7 @@
                 }
 
                 $query .= "{$param1} {$param2} {$values[0]} AND {$values[1]}";
-            }else if(is_array($param3)){
+            }else if(is_array($param3) || $param3 instanceof Collection){
                 $values = [];
 
                 // Escaping values
@@ -923,40 +923,40 @@
         /**
          * Adds a HAVING IN condition to the query.
          * @param string $column Column name.
-         * @param array $values Array of values to check to.
+         * @param array|Collection $values Array or Collection of values to check to.
          * @return $this Current instance for nested calls.
          */
-        public function havingIn(string $column, array $values){
+        public function havingIn(string $column, $values){
             return $this->having($column, $values);
         }
 
         /**
          * Adds an OR HAVING IN condition to the query.
          * @param string $column Column name.
-         * @param array $values Array of values to check to.
+         * @param array|Collection $values Array or Collection of values to check to.
          * @return $this Current instance for nested calls.
          */
-        public function orHavingIn(string $column, array $values){
+        public function orHavingIn(string $column, $values){
             return $this->having($column, 'IN', $values, 'OR');
         }
 
         /**
          * Adds a HAVING NOT IN condition to the query.
          * @param string $column Column name.
-         * @param array $values Array of values to check to.
+         * @param array|Collection $values Array or Collection of values to check to.
          * @return $this Current instance for nested calls.
          */
-        public function havingNotIn(string $column, array $values){
+        public function havingNotIn(string $column, $values){
             return $this->having($column, 'NOT IN', $values);
         }
 
         /**
          * Adds an OR HAVING NOT IN condition to the query.
          * @param string $column Column name.
-         * @param array $values Array of values to check to.
+         * @param array|Collection $values Array or Collection of values to check to.
          * @return $this Current instance for nested calls.
          */
-        public function orHavingNotIn(string $column, array $values){
+        public function orHavingNotIn(string $column, $values){
             return $this->having($column, 'NOT IN', $values, 'OR');
         }
 
@@ -1141,14 +1141,19 @@
 
         /**
          * Inserts data into the table.
-         * @param array $data An associative array relating fields and values to insert. Also accepts a multi-dimensional insert array.
+         * @param array|Collection $data An associative array or Collection relating fields and values to insert.\
+         * Also accepts a multi-dimensional insert array.
          * @param bool $ignore (Optional) Ignore failing or existing rows while inserting data (INSERT IGNORE).
          * @param bool $replace (Optional) Replace existing rows matching the primary key or unique indexes (REPLACE).
-         * @param array $onDuplicate (Optional) Associative array with fields and values to update on existing rows (ON DUPLICATE KEY).
+         * @param array|Collection $onDuplicate (Optional) Associative array/Collection with fields and values to update on existing rows (ON DUPLICATE KEY).
          * @return bool Returns true on success or false on failure.
          * @throws QueryException Throws an exception if the query fails.
          */
-        public function insert(array $data, bool $ignore = false, bool $replace = false, array $onDuplicate = []){
+        public function insert($data, bool $ignore = false, bool $replace = false, $onDuplicate = []){
+            // Parse Collection
+            if($data instanceof Collection) $data = $data->toArray();
+            if($onDuplicate instanceof Collection) $onDuplicate = $onDuplicate->toArray();
+
             // Prepares instruction
             if($replace){
                 $this->_instruction = "REPLACE";
@@ -1230,43 +1235,48 @@
 
         /**
          * Inserts data into the table ignoring failing or existing rows.
-         * @param array $data An associative array relating fields and values to insert. Also accepts an array of multiple insert arrays.
+         * @param array $data An associative array or Collection relating fields and values to insert.\
+         * Also accepts an array of multiple insert arrays.
          * @return bool Returns true on success or false on failure.
          * @throws QueryException Throws an exception if the query fails.
          */
-        public function insertIgnore(array $data){
+        public function insertIgnore($data){
             return $this->insert($data, true);
         }
 
         /**
          * Inserts data into the table replacing existing rows matching the primary key or unique indexes.
-         * @param array $data An associative array relating fields and values to insert. Also accepts an array of multiple insert arrays.
+         * @param array $data An associative array or Collection relating fields and values to insert.\
+         * Also accepts an array of multiple insert arrays.
          * @return bool Returns true on success or false on failure.
          * @throws QueryException Throws an exception if the query fails.
          */
-        public function replace(array $data){
+        public function replace($data){
             return $this->insert($data, false, true);
         }
 
         /**
          * Inserts data into the table or updates if a primary key or unique index already exists.
-         * @param array $data An associative array relating fields and values to insert.
-         * @param array $update An associative array relating fields and values to update if the row already exists.
+         * @param array|Collection $data An associative array/Collection relating fields and values to insert.
+         * @param array|Collection $update An associative array/Collection relating fields and values to update if the row already exists.
          * @return bool Returns true on success or false on failure.
          * @throws QueryException Throws an exception if the query fails.
          */
-        public function upsert(array $data, array $update){
+        public function upsert($data, $update){
             return $this->insert($data, false, false, $update);
         }
 
         /**
          * Updates data in the table.\
          * **Do not forget to use WHERE statements before calling this function, otherwise all records will be updated.**
-         * @param array $data An associative array relating fields and values to update.
+         * @param array|Collection $data An associative array/Collection relating fields and values to update.
          * @return bool Returns true on success or false on failure.
          * @throws QueryException Throws an exception if the query fails.
          */
-        public function update(array $data){
+        public function update($data){
+            // Parse Collection
+            if($data instanceof Collection) $data = $data->toArray();
+
             // Check for safe mode
             if($this->_safe && empty($this->_where)) throw new Exception('update(): Safe mode reports missing WHERE statements before UPDATE query');
 

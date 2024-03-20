@@ -1,5 +1,5 @@
 body {
-	background-color: #ffdde9;
+	background-color: #eceff1;
 }
 .wrapper {
 	max-width: 1350px;
@@ -8,14 +8,36 @@ body {
 	background-color: #fff;
 	color: #000;
 	margin: 20px auto;
-	border: 1px solid #d04978;
+	border: 1px solid #ffcdd2;
+	box-shadow: 2px 2px 25px 2px rgb(207 207 207);
 }
 .wrapper .title {
 	font-size: 22px;
 	font-weight: 300;
-	background: linear-gradient(90deg, #ed578b 0, #ed576a 100%);
+	background-color: #ec407a;
 	color: #fff;
 	padding: 10px 20px;
+}
+.wrapper .details .hljs-ln {
+	width: 100%;
+	border-collapse: collapse;
+	table-layout: auto;
+}
+.wrapper .details .hljs-ln-numbers {
+	border-right: 1px solid lightgray;
+	white-space: nowrap;
+	width: auto;
+}
+.wrapper .details .hljs-ln-n {
+	color: gray;
+	padding-right: 15px;
+}
+.wrapper .details .hljs-ln-current {
+	background-color: rgb(237 87 139 / 10%);
+}
+.wrapper .details .hljs-ln-code {
+	padding-left: 15px;
+	width: 100%;
 }
 .wrapper .details .tabs {
 	display: flex;
@@ -62,6 +84,9 @@ body {
 .wrapper .details i {
 	color: #696969;
 }
+.wrapper .details i a {
+	text-decoration: none;
+}
 .wrapper .details .stack-title,
 .wrapper .details i b,
 .wrapper .details table td .method {
@@ -75,6 +100,7 @@ body {
 .wrapper .details code {
 	white-space: pre-wrap;
 	margin: 15px 0;
+	border: 1px solid gainsboro;
 	padding: 15px;
 }
 .wrapper .details .args-toggle {
@@ -87,6 +113,7 @@ body {
 	width: -moz-fit-content;
 	width: fit-content;
 	color: #fff;
+	transition: 0.3s all;
 	margin-top: 10px;
 }
 .wrapper .details .args-toggle:hover {
@@ -144,6 +171,8 @@ body {
 }
 .wrapper .details .tab pre {
 	white-space: wrap;
+	margin: 0;
+	font-size: 14px;
 }
 .wrapper .details .tab.active {
 	display: block;
@@ -159,13 +188,30 @@ body {
 	body {
 		background-color: #212121;
 	}
+	.wrapper .details .hljs-ln-current {
+		background-color: rgb(69 90 100 / 30%);
+	}
+	.wrapper {
+		box-shadow: 2px 2px 25px 2px rgb(18 18 18);
+	}
+	.wrapper .details code,
+	.wrapper .details table th,
+	.wrapper .details table td {
+		border-color: dimgray;
+	}
+	.wrapper .details .hljs-ln-numbers {
+		border-color: dimgray;
+	}
 	.wrapper .details .args {
 		background: #0d1117;
 		border: #000;
 	}
 	.wrapper .details .args-toggle,
 	.wrapper .title {
-		background: linear-gradient(90deg, #455a64 0, #37474f 100%);
+		background-color: #37474f;
+	}
+	.wrapper .details .args-toggle:hover {
+		background-color: #455a64;
 	}
 	.wrapper {
 		background-color: transparent;

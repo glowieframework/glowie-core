@@ -20,6 +20,12 @@
     class Handler{
 
         /**
+         * Start line number from context.
+         * @var int
+         */
+        protected static $startLine = 1;
+
+        /**
          * Registers the error handlers and INI settings.
          */
         public static function register(){
@@ -76,20 +82,36 @@
          * Highlights a single line from a PHP file.
          * @param string $file File path.
          * @param int $line Line to highlight.
+         * @param bool $context (Optional) Include previous and next lines.
          * @return string Highlighted result in HTML.
          */
-        private static function highlight(string $file, int $line){
-            // Checks for the line
-            if(!is_readable($file)) return '';
-            $text = @file($file, FILE_IGNORE_NEW_LINES);
-            if($text === false) return '';
-            if(empty($text[$line - 1])) return '';
+        private static function highlight(string $file, int $line, bool $context = false){
+            try {
+                // Checks for the file
+                if(!is_readable($file)) return '';
+                $text = @file($file);
+                if($text === false || !isset($text[$line - 1])) return '';
 
-            // Parses the code
-            $text = trim($text[$line - 1]);
+                // Single line print only
+                if(!$context || count($text) < 2){
+                    self::$startLine = $line;
+                    return trim($text[$line - 1]);
+                }
 
-            // Returns resulting block
-            return $line . ' ' . $text;
+                // Parses the context lines
+                $start = max(1, $line - 5);
+                $end = min(count($text), $line + 5);
+                self::$startLine = $start;
+
+                // Parses the code
+                $result = '';
+                for($i = $start; $i <= $end; $i++) $result .= ' ' . $text[$i - 1];
+
+                // Returns resulting block
+                return $result;
+            } catch (\Throwable $th) {
+                return '';
+            }
         }
 
         /**
@@ -119,10 +141,10 @@
                                     (!empty($item['file']) && !empty($item['line']) ? '<i>' . $item['file'] . ':' . $item['line'] . '</i>' : '') .
 
                                     // Class
-                                    (!empty($item['class']) ? '<span class="class">' . $item['class'] . '</span>-><span class="method">' . $item['function'] . '()</span>' : '') .
+                                    (!empty($item['class']) ? '<span class="class">' . $item['class'] . '</span>::<span class="method">' . $item['function'] . '()</span>' : '') .
 
                                     // Highlight
-                                    (!empty($item['file']) && !empty($item['line']) ? '<pre><code class="language-php">' . self::highlight($item['file'], $item['line']) . '</code></pre>' : '') .
+                                    (!empty($item['file']) && !empty($item['line']) ? '<pre><code data-ln-start-from="' . $item['line'] . '" class="language-php">' . self::highlight($item['file'], $item['line']) . '</code></pre>' : '') .
 
                                     // Args
                                     (!empty($item['args']) ? '<a href="" class="args-toggle">View args ⏷</a><pre class="args">' . self::getDump($item['args']) . '</pre>' : '') . '
@@ -144,7 +166,7 @@
         protected static function parseRequest(){
             try {
                 $data = Rails::getRequest()->toCollection()->sortKeys();
-                if(!empty($data)) return '<strong class="stack-title">Request Body</strong>' . self::tableVars($data);
+                if(!empty($data->toArray())) return '<strong class="stack-title">Request Body</strong>' . self::tableVars($data);
                 return '';
             } catch (\Throwable $th) {
                 return '';
@@ -158,7 +180,7 @@
         protected static function parseRequestHeaders(){
             try {
                 $data = Rails::getRequest()->getHeaders()->sortKeys();
-                if(!empty($data)) return '<strong class="stack-title">Request Headers</strong>' . self::tableVars($data);
+                if(!empty($data->toArray())) return '<strong class="stack-title">Request Headers</strong>' . self::tableVars($data);
                 return '';
             } catch (\Throwable $th) {
                 return '';
@@ -172,7 +194,7 @@
         protected static function parseResponseHeaders(){
             try {
                 $data = Rails::getResponse()->getHeaders()->sortKeys();
-                if(!empty($data)) return '<strong class="stack-title">Response Headers</strong>' . self::tableVars($data);
+                if(!empty($data->toArray())) return '<strong class="stack-title">Response Headers</strong>' . self::tableVars($data);
                 return '';
             } catch (\Throwable $th) {
                 return '';
@@ -203,8 +225,8 @@
 
             foreach($vars as $key => $value){
                 $result .= '<tr>';
-                $result .= '<th class="auto">' . $key . '</th>';
-                $result .= '<td><pre>' . $value . '</pre></td>';
+                $result .= '<th class="auto">' . (string)$key . '</th>';
+                $result .= '<td><pre>' . (string)$value . '</pre></td>';
                 $result .= '</tr>';
             }
 
@@ -229,7 +251,9 @@
          */
         private static function log(string $content){
             if(!Config::get('error_reporting.logging', true)) return;
-            file_put_contents(Config::get('error_reporting.file', Util::location('storage/error.log')), $content, FILE_APPEND);
+            $file = Config::get('error_reporting.file', Util::location('storage/error.log'));
+            if(!is_writable(dirname($file))) return;
+            @file_put_contents($file, $content, FILE_APPEND);
         }
 
         /**
@@ -238,6 +262,19 @@
          */
         protected static function getExceptionTime(){
             return round((microtime(true) - APP_START_TIME) * 1000, 2) . 'ms';
+        }
+
+        /**
+         * Gets the content and minifies an asset.
+         * @param string $filename Asset relative filename.
+         * @return string Returns the minified file content.
+         */
+        protected static function getAsset(string $filename){
+            $type = pathinfo($filename, PATHINFO_EXTENSION);
+            $content = file_get_contents(__DIR__ . '/Views/assets/' . $filename);
+            if($type == 'css') $content = str_replace([': ', ' {', ', '], [':', '{', ','], $content);
+            if($type == 'js') $content = preg_replace("/\/\*[\s\S]*?\*\//", '', $content);
+            return str_replace(["\r", "\n", "\t"], '', $content);
         }
 
     }

@@ -65,8 +65,8 @@
             if(!isset(self::$tableCreated[$this->database])){
                 if(!$this->forge->tableExists($this->table)){
                     $this->forge->table($this->table)
-                                ->createColumn('name', Skeleton::TYPE_STRING, 255)
-                                ->createColumn('applied_at', Skeleton::TYPE_DATETIME, null, Skeleton::raw('NOW()'))
+                                ->createColumn('name')->type(Skeleton::TYPE_STRING)->size(255)
+                                ->createColumn('applied_at')->type(Skeleton::TYPE_DATETIME)->default(Skeleton::raw('NOW()'))
                                 ->unique('name')
                                 ->create();
                 };
