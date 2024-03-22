@@ -507,7 +507,7 @@
         public static function arraySet(array &$array, $key, $value){
             $item = &$array;
             foreach(explode('.', $key) as $segment){
-                if(array_key_exists($segment, $item) && !is_array($item[$segment])) $item[$segment] = [];
+                if(!is_array($item) || !array_key_exists($segment, $item)) $item[$segment] = [];
                 $item = &$item[$segment];
             }
             $item = $value;
