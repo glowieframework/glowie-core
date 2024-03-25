@@ -61,7 +61,7 @@
          * Current route name.
          * @var string
          */
-        private static $currentRoute;
+        private static $currentRoute = '';
 
         /**
          * Current route params.
@@ -80,6 +80,12 @@
          * @var string
          */
         private static $prefix = '';
+
+        /**
+         * Current domain prefix.
+         * @var string|null
+         */
+        private static $domain = null;
 
         /**
          * Global middlewares.
@@ -117,7 +123,8 @@
                 'controller' => $controller,
                 'action' => $action,
                 'methods' => (array)$methods,
-                'group' => self::$group
+                'group' => self::$group,
+                'domain' => self::$domain
             ];
         }
 
@@ -139,7 +146,8 @@
                 'action' => 'action',
                 'callback' => $callback,
                 'methods' => (array)$methods,
-                'group' => self::$group
+                'group' => self::$group,
+                'domain' => self::$domain
             ];
         }
 
@@ -168,7 +176,8 @@
                 'action' => $action,
                 'middleware' => (array)$middleware,
                 'methods' => (array)$methods,
-                'group' => self::$group
+                'group' => self::$group,
+                'domain' => self::$domain
             ];
         }
 
@@ -194,7 +203,8 @@
                 'middleware' => (array)$middleware,
                 'callback' => $callback,
                 'methods' => (array)$methods,
-                'group' => self::$group
+                'group' => self::$group,
+                'domain' => self::$domain
             ];
         }
 
@@ -217,7 +227,8 @@
                 'redirect' => $target,
                 'code' => $code,
                 'methods' => (array)$methods,
-                'group' => self::$group
+                'group' => self::$group,
+                'domain' => self::$domain
             ];
         }
 
@@ -264,6 +275,18 @@
             call_user_func($callback);
             self::$group = null;
             self::$prefix = '';
+        }
+
+        /**
+         * Groups a collection of routes to a specific domain name.
+         * @param string $domain Domain name. Do not include http:// or https://.
+         * @param Closure $callback A function with the grouped route definition methods.
+         */
+        public static function domain(string $domain, Closure $callback){
+            if(Util::isEmpty($domain)) throw new RoutingException('Route domain name cannot be empty');
+            self::$domain = $domain;
+            call_user_func($callback);
+            self::$domain = null;
         }
 
         /**
@@ -509,6 +532,9 @@
                 // Creates a regex replacing dynamic parameters to valid regex patterns
                 $regex = '~^' . preg_replace('(\\\:[^\/\\\]+)', '([^\/]+)', preg_quote($item['uri'], '/')) . '$~';
                 if (preg_match_all($regex, trim($uri, '/'), $params)) {
+                    // Check route domain
+                    if(!is_null($item['domain']) && self::$request->getHostname() !== $item['domain']) continue;
+
                     // Parse route parameters
                     $result = [];
                     if(!empty($params)){
