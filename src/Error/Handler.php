@@ -269,7 +269,7 @@
          * @param string $filename Asset relative filename.
          * @return string Returns the minified file content.
          */
-        protected static function getAsset(string $filename){
+        public static function getAsset(string $filename){
             $type = pathinfo($filename, PATHINFO_EXTENSION);
             $content = file_get_contents(__DIR__ . '/Views/assets/' . $filename);
             if($type == 'css') $content = str_replace([': ', ' {', ', '], [':', '{', ','], $content);
