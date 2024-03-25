@@ -197,6 +197,20 @@
         }
 
         /**
+         * Returns the absolute URL of the application path for a custom domain.
+         * @param string $domain Domain name.
+         * @param string $path (Optional) Relative path to append to the base URL.
+         * @return string Full base URL.
+         */
+        public static function baseUrlDomain(string $domain, string $path = ''){
+            $domain = mb_strtolower($domain);
+            $http = isset($_SERVER['HTTPS']) ? 'https://' : 'http://';
+            $baseUrl = !self::startsWith($domain, ['http://', 'https://']) ? $http : '';
+            $baseUrl .= trim($domain, '/') . '/' . APP_FOLDER;
+            return trim($baseUrl, '/') . '/' . trim($path, '/');
+        }
+
+        /**
          * Returns the real application location in the file system.
          * @param string $path (Optional) Relative path to append to the location.
          * @return string Full location.
@@ -236,12 +250,17 @@
 
             // Checks if the route has any parameters
             if(!empty($result)){
-                // Parses remaining parameters and returns result
                 $remaining = array_diff_key($params, $result);
-                return self::baseUrl($uri . (!empty($remaining) ? '?' . http_build_query($remaining) : ''));
+                $url = $uri . (!empty($remaining) ? '?' . http_build_query($remaining) : '');
             }else{
-                // Returns result
-                return self::baseUrl($routeData['uri'] . (!empty($params) ? '?' . http_build_query($params) : ''));
+                $url = $routeData['uri'] . (!empty($params) ? '?' . http_build_query($params) : '');
+            }
+
+            // Checks if the route has a specific domain
+            if(!is_null($routeData['domain'])){
+                return self::baseUrlDomain($routeData['domain'], $url);
+            }else{
+                return self::baseUrl($url);
             }
         }
 
@@ -800,7 +819,7 @@
          * @return string Returns the resulting string.
          */
         public static function slug(string $string, string $separator = '-', bool $keepOther = false){
-            $string = self::stripAccents(strtolower($string));
+            $string = self::stripAccents(mb_strtolower($string));
             $string = str_replace(' ', $separator, $string);
             $string = preg_replace('/[^a-zA-Z0-9' . preg_quote($separator) . ']/u', ($keepOther ? $separator : ''), $string);
             return $string;
