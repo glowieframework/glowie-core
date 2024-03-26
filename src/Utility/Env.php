@@ -8,6 +8,7 @@
      * @copyright Copyright (c) Glowie
      * @license MIT
      * @link https://gabrielsilva.dev.br/glowie
+     * @see https://gabrielsilva.dev.br/glowie/docs/latest/getting-started/app-configuration
      */
     class Env{
 

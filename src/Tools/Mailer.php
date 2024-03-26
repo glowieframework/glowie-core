@@ -14,6 +14,7 @@
      * @copyright Copyright (c) Glowie
      * @license MIT
      * @link https://gabrielsilva.dev.br/glowie
+     * @see https://gabrielsilva.dev.br/glowie/docs/latest/extra/sending-mail
      */
     class Mailer{
 

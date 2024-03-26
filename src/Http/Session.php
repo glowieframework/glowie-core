@@ -15,6 +15,7 @@
      * @copyright Copyright (c) Glowie
      * @license MIT
      * @link https://gabrielsilva.dev.br/glowie
+     * @see https://gabrielsilva.dev.br/glowie/docs/latest/forms-and-data/session
      */
     class Session implements JsonSerializable{
 

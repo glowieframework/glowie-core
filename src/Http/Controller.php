@@ -14,6 +14,7 @@
      * @copyright Copyright (c) Glowie
      * @license MIT
      * @link https://gabrielsilva.dev.br/glowie
+     * @see https://gabrielsilva.dev.br/glowie/docs/latest/basic-application-modules/controllers
      *
      * @method void init() This method will be called before any other methods from this controller.
      * @method void action($callback) Calls the action callback.
@@ -90,6 +91,7 @@
          * Renders a view file.
          * @param string $view View filename. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
          * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
+         * @see https://gabrielsilva.dev.br/glowie/docs/latest/basic-application-modules/views
          */
         final public function renderView(string $view, array $params = [], bool $absolute = false){
             $view = new View($view, $params, false, $absolute);
@@ -103,6 +105,7 @@
          * inside the layout file. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
          * @param array $params (Optional) Parameters to pass into the rendered view and layout. Should be an associative array with each variable name and value.
          * @param bool $absolute (Optional) Use an absolute path for the view file.
+         * @see https://gabrielsilva.dev.br/glowie/docs/latest/basic-application-modules/layouts
          */
         final public function renderLayout(string $layout, ?string $view = null, array $params = [], bool $absolute = false){
             $layout = new Layout($layout, $view, $params, $absolute);
@@ -114,6 +117,7 @@
          * @param string $view View filename. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
          * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
          * @param bool $absolute (Optional) Use an absolute path for the view file.
+         * @see https://gabrielsilva.dev.br/glowie/docs/latest/basic-application-modules/views
          */
         final public function renderPartial(string $view, array $params = [], bool $absolute = false){
             $view = new View($view, $params, true, $absolute);
@@ -124,6 +128,7 @@
          * Renders a raw view code using Skeltch engine.
          * @param string $view View content in HTML.
          * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
+         * @see https://gabrielsilva.dev.br/glowie/docs/latest/basic-application-modules/views
          */
         final public function renderInline(string $content, array $params = []){
             $filename = Util::location('storage/cache/' . md5($content) . '.phtml');

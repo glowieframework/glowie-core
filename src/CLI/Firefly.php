@@ -21,6 +21,7 @@
      * @copyright Copyright (c) Glowie
      * @license MIT
      * @link https://gabrielsilva.dev.br/glowie
+     * @see https://gabrielsilva.dev.br/glowie/docs/latest/extra/cli
      */
     class Firefly{
 
@@ -501,9 +502,9 @@
 
             // Replaces the new keys
             $content = preg_replace([
-                '/^APP_KEY=(.*)$/',
-                '/^APP_TOKEN=(.*)$/',
-                '/^MAINTENANCE_KEY=(.*)$/'
+                '/^APP_KEY=(.*)$/m',
+                '/^APP_TOKEN=(.*)$/m',
+                '/^MAINTENANCE_KEY=(.*)$/m'
             ], [$appKey, $appToken, $maintenanceKey], $content, 1);
 
             // Saves the new content
@@ -631,8 +632,12 @@
             $targetFile = Util::location('controllers/' . $name . '.php');
             if(is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Controller {$name} already exists!");
 
+            // Checks if BaseController file exists
+            $baseFile = 'Controller_Basic.php';
+            if(is_file(Util::location('controllers/BaseController.php'))) $baseFile = 'Controller.php';
+
             // Creates the file
-            $template = file_get_contents(self::TEMPLATES_FOLDER . 'Controller.php');
+            $template = file_get_contents(self::TEMPLATES_FOLDER . $baseFile);
             $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
             file_put_contents($targetFile, $template);
 

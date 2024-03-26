@@ -18,6 +18,7 @@
      * @copyright Copyright (c) Glowie
      * @license MIT
      * @link https://gabrielsilva.dev.br/glowie
+     * @see https://gabrielsilva.dev.br/glowie/docs/latest/basic-application-modules/routes
      */
     class Rails{
 
@@ -402,12 +403,12 @@
 
                 // Saves the maintenance key in the cookies
                 if($route == $key){
-                    $cookies->set('MAINTENANCE_KEY', $key);
+                    $cookies->set('glowie.maintenance_key', $key);
                     return self::$response->redirectBase();
                 }
 
                 // Validates the cookie
-                if($cookies->get('MAINTENANCE_KEY') != $key) return self::callServiceUnavailable();
+                if($cookies->get('glowie.maintenance_key') != $key) return self::callServiceUnavailable();
             }
 
             // Matches a valid route pattern
