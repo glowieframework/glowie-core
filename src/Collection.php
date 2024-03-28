@@ -236,6 +236,13 @@
         }
 
         /**
+         * Shift an element off the beginning of the Collection.
+         */
+        public function shift(){
+            return array_shift($this->__data);
+        }
+
+        /**
          * Pushes an item to the beggining of the Collection.
          * @param mixed $value Value to push.
          * @return Collection Current Collection instance for nested calls.

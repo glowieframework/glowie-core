@@ -126,7 +126,7 @@
 
             // Get from session
             $session = new Session();
-            $this->login($session->getEncrypted('glowie.auth.user'), $session->getEncrypted('glowie.auth.password'));
+            $this->login($session->getEncrypted('glowie.auth.user', ''), $session->getEncrypted('glowie.auth.password', ''));
             return self::$user;
         }
 
@@ -135,7 +135,6 @@
          * @return mixed Returns the primary key value if authenticated, null otherwise.
          */
         public function getUserId(){
-            // Check for fetched user
             return self::$user ? self::$user->getPrimary() : null;
         }
 
