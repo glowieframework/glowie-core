@@ -236,6 +236,24 @@
         }
 
         /**
+         * Pushes an item to the beggining of the Collection.
+         * @param mixed $value Value to push.
+         * @return Collection Current Collection instance for nested calls.
+         */
+        public function unshift($value){
+            array_unshift($this->__data, $value);
+            return $this;
+        }
+
+        /**
+         * Pops the last element of the Collection and return its value.
+         * @return mixed Popped element value.
+         */
+        public function pop(){
+            return array_pop($this->__data);
+        }
+
+        /**
          * Sorts the Collection values.
          * @param int $order (Optional) Sort direction `SORT_ASC` (ascending) or `SORT_DESC` (descending).
          * @param bool $preserveKeys (Optional) Keep keys association.
@@ -351,6 +369,25 @@
          */
         public function search($key, $value){
             return Util::searchArray($this->__data, $key, $value);
+        }
+
+        /**
+         * Checks if the Collection contains a value.
+         * @param mixed $value Value to search for.
+         * @param bool $strict (Optional) Use type checking.
+         * @return bool Returns if the Collection contains the value or not.
+         */
+        public function contains($value, bool $strict = false){
+            return in_array($value, $this->__data, $strict);
+        }
+
+        /**
+         * Checks if the Collection contains a value with type checking.
+         * @param mixed $value Value to search for.
+         * @return bool Returns if the Collection contains the value or not.
+         */
+        public function containsStrict($value){
+            return $this->contains($value, true);
         }
 
         /**

@@ -286,7 +286,7 @@
          * @return string Returns the sanitized string.
          */
         public function sanitizeString(string $string){
-            return str_replace(["\r\n", "\r", "\n"], '', trim($string));
+            return str_replace(["\r", "\n"], '', trim($string));
         }
 
     }

@@ -80,6 +80,7 @@
             $passwordField = Config::get('auth.password_field', 'password');
 
             // Fetch user information
+            $username = $user;
             $user = $model->findAndFillBy([$userField => $user, ...$conditions]);
             if(!$user){
                 $this->error = self::ERR_NO_USER;
@@ -89,10 +90,16 @@
 
             // Check password
             if(password_verify($password, $user->get($passwordField))){
-                $session = new Session();
-                $session->set('glowie.auth', $user->getPrimary());
                 self::$user = $user;
                 $this->error = self::ERR_AUTH_SUCCESS;
+
+                // Save credentials in session
+                $session = new Session();
+                if(!$session->has('glowie.auth.user') || !$session->has('glowie.auth.password')){
+                    $session->setEncrypted('glowie.auth.user', $username);
+                    $session->setEncrypted('glowie.auth.password', $password);
+                }
+
                 return true;
             }else{
                 $this->error = self::ERR_WRONG_PASSWORD;
@@ -119,16 +126,8 @@
 
             // Get from session
             $session = new Session();
-            $id = $session->get('glowie.auth');
-            if(is_null($id)) return null;
-
-            // Create model and return
-            $model = Config::get('auth.model');
-            if(!$model || !class_exists($model)) throw new Exception("Authenticator: \"{$model}\" was not found");
-            $model = new $model;
-            $user = $model->findAndFill($id);
-            self::$user = $user ?: null;
-            return $user;
+            $this->login($session->getEncrypted('glowie.auth.user'), $session->getEncrypted('glowie.auth.password'));
+            return self::$user;
         }
 
         /**
@@ -137,11 +136,7 @@
          */
         public function getUserId(){
             // Check for fetched user
-            if(self::$user) return self::$user->getPrimary();
-
-            // Get from session
-            $session = new Session();
-            return $session->get('glowie.auth');
+            return self::$user ? self::$user->getPrimary() : null;
         }
 
         /**
