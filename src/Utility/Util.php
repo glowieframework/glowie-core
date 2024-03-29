@@ -234,7 +234,7 @@
             // Gets the route parameters
             $result = [];
             $missing = [];
-            if(preg_match_all('~:(\w)+)~', $routeData['uri'], $segments) && !empty($segments[1])){
+            if(preg_match_all('~:(\w+)~', $routeData['uri'], $segments) && !empty($segments[1])){
                 $uri = $routeData['uri'];
                 foreach($segments[1] as $item){
                     if(isset($params[$item])){
