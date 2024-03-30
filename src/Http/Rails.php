@@ -531,7 +531,7 @@
             // Loops through each route to match a valid pattern
             foreach (self::$routes as $item) {
                 // Creates a regex replacing dynamic parameters to valid regex patterns
-                $regex = '~^' . preg_replace('(\\\:\w+)', '(\w+)', preg_quote($item['uri'], '/')) . '$~';
+                $regex = '~^' . preg_replace('(\\\:\w+)', '([^\/]+)', preg_quote($item['uri'], '/')) . '$~';
                 if (preg_match_all($regex, trim($uri, '/'), $params)) {
                     // Check route domain
                     if(!is_null($item['domain']) && self::$request->getHostname() !== $item['domain']) continue;
