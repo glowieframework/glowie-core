@@ -2,6 +2,7 @@
     namespace Glowie\Core\View;
 
     use Glowie\Core\Exception\FileException;
+    use Glowie\Core\Element;
     use Config;
     use Util;
 
@@ -22,6 +23,12 @@
          * @var array
          */
         private static $directives = [];
+
+        /**
+         * Current loop pointer.
+         * @var int
+         */
+        private static $loop = -1;
 
         /**
          * Runs Skeltch view preprocessor.
@@ -96,7 +103,10 @@
             $code = preg_replace('~(?<!@){\s*env\s*\((.+?)\)\s*}~is', '<?php if(Config::get(\'env\') == $1): ?>', $code);
             $code = preg_replace('~(?<!@){\s*else\s*if\s*\((.+?)\)\s*}~is', '<?php elseif($1): ?>', $code);
             $code = preg_replace('~(?<!@){\s*else\s*}~is', '<?php else: ?>', $code);
-            $code = preg_replace('~(?<!@){\s*(/if|/isset|/empty|/notempty|/notset|/env)\s*}~is', '<?php endif; ?>', $code);
+            $code = preg_replace('~(?<!@){\s*auth\s*}~is', '<?php if((new \Glowie\Core\Tools\Authenticator())->check()): ?>', $code);
+            $code = preg_replace('~(?<!@){\s*guest\s*}~is', '<?php if(!(new \Glowie\Core\Tools\Authenticator())->check()): ?>', $code);
+            $code = preg_replace('~(?<!@){\s*session\s*\((.+?)\)\s*}~is', '<?php if((new \Glowie\Core\Http\Session())->has($1)): $value = (new \Glowie\Core\Http\Session())->get($1); ?>', $code);
+            $code = preg_replace('~(?<!@){\s*(/if|/isset|/empty|/notempty|/notset|/env|/auth|/guest|/session)\s*}~is', '<?php endif; ?>', $code);
             return $code;
         }
 
@@ -156,7 +166,7 @@
          * @return string Returns the compiled code.
          */
         private static function compileLoops(string $code){
-            $code = preg_replace('~(?<!@){\s*foreach\s*\((.+?)\)\s*}~is', '<?php foreach($1): ?>', $code);
+            $code = self::compileForEachs($code);
             $code = preg_replace('~(?<!@){\s*for\s*\((.+?)\)\s*}~is', '<?php for($1): ?>', $code);
             $code = preg_replace('~(?<!@){\s*switch\s*\((.+?)\)\s*}~is', '<?php switch($1): ?>', $code);
             $code = preg_replace('~(?<!@){\s*while\s*\((.+?)\)\s*}~is', '<?php while($1): ?>', $code);
@@ -169,6 +179,47 @@
             $code = preg_replace('~(?<!@){\s*break\s*}~is', '<?php break; ?>', $code);
             $code = preg_replace('~(?<!@){\s*continue\s*}~is', '<?php continue; ?>', $code);
             return $code;
+        }
+
+        /**
+         * Compiles foreach statements with loop variable.\
+         * example: `{foreach($variable as $key => $value)}` | `{/foreach}`
+         * @param string $code Code to compile.
+         * @return string Returns the compiled code.
+         */
+        private static function compileForEachs(string $code){
+            return preg_replace_callback('~(?<!@){\s*foreach\s*\((.+?)\s+as\s+(.+?)(\s+=> (.*?))?\)\s*}~is', function($matches){
+                if(isset($matches[4])){
+                    return sprintf('<?php \Glowie\Core\View\Skeltch::resetLoop(); foreach(%s as %s => %s): $loop = \Glowie\Core\View\Skeltch::getLoop(%s); ?>', $matches[1], $matches[2], $matches[4], $matches[1]);
+                }else{
+                    return sprintf('<?php \Glowie\Core\View\Skeltch::resetLoop(); foreach(%s as %s): $loop = \Glowie\Core\View\Skeltch::getLoop(%s); ?>', $matches[1], $matches[2], $matches[1]);
+                }
+            }, $code, -1, $count, PREG_UNMATCHED_AS_NULL);
+        }
+
+        /**
+         * Resets the loop pointer.
+         */
+        public static function resetLoop(){
+            self::$loop = -1;
+        }
+
+        /**
+         * Gets the loop info for the current foreach loop.
+         * @return Element Returns an Element with the loop data.
+         */
+        public static function getLoop($variable){
+            self::$loop++;
+            return new Element([
+                'index' => self::$loop,
+                'iteration' => self::$loop + 1,
+                'remaining' => count($variable) - self::$loop - 1,
+                'count' => count($variable),
+                'first' => self::$loop == 0,
+                'last' => self::$loop == (count($variable) - 1),
+                'even' => self::$loop % 2 == 0,
+                'odd' => self::$loop % 2 != 0
+            ]);
         }
 
         /**
