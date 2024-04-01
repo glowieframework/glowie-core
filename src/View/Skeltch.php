@@ -188,7 +188,7 @@
          * @return string Returns the compiled code.
          */
         private static function compileForEachs(string $code){
-            return preg_replace_callback('~(?<!@){\s*foreach\s*\((.+?)\s+as\s+(.+?)(\s+=> (.*?))?\)\s*}~is', function($matches){
+            return preg_replace_callback('~(?<!@){\s*foreach\s*\((.+?)\s+as\s+(.+?)(\s+=>\s+(.*?))?\)\s*}~is', function($matches){
                 if(isset($matches[4])){
                     return sprintf('<?php \Glowie\Core\View\Skeltch::resetLoop(); foreach(%s as %s => %s): $loop = \Glowie\Core\View\Skeltch::getLoop(%s); ?>', $matches[1], $matches[2], $matches[4], $matches[1]);
                 }else{

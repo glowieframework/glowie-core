@@ -135,7 +135,12 @@
          * @return mixed Returns the primary key value if authenticated, null otherwise.
          */
         public function getUserId(){
-            return self::$user ? self::$user->getPrimary() : null;
+            if(!self::$user){
+                $user = $this->getUser();
+                if(!$user) return null;
+            }
+
+            return self::$user->getPrimary();
         }
 
         /**
