@@ -344,7 +344,8 @@
         /**
          * Inserts a new row in the model table.
          * @param mixed $data An Element or associative array/Collection relating fields and values to insert.
-         * @return mixed Returns the last inserted `AUTO_INCREMENT` value (or true) on success or false on failure.
+         * @return mixed Returns the last inserted `AUTO_INCREMENT` value (or true) on success or false on failure.\
+         * If the model uses UUIDs, ypon success the last generated UUID will be returned.
          */
         public function create($data){
             // Clears the current built query
@@ -366,7 +367,7 @@
 
             // Return result
             if($result === false) return $result;
-            if($this->_uuid) return $data[$this->_primaryKey];
+            if(isset($data[$this->_primaryKey])) return $data[$this->_primaryKey];
             if($this->lastInsertId()) return $this->lastInsertId();
             return $result;
         }
@@ -521,6 +522,32 @@
          */
         public function getPrimary(){
             return $this->get($this->_primaryKey);
+        }
+
+        /**
+         * Gets the model table name.
+         * @return string Table name.
+         */
+        public function getTable(){
+            return $this->_table;
+        }
+
+        /**
+         * Checks if a given field is retriavable from the model.
+         * @param string $field Field name to search for.
+         * @return bool Returns true or false.
+         */
+        public function isReatriavable(string $field){
+            return empty($this->_fields) || in_array($field, $this->_fields);
+        }
+
+        /**
+         * Checks if a given field is updatable in the model.
+         * @param string $field Field name to search for.
+         * @return bool Returns true or false.
+         */
+        public function isUpdatable(string $field){
+            return empty($this->_updatable) || in_array($field, $this->_updatable);
         }
 
         /**

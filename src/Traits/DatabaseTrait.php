@@ -285,6 +285,7 @@
             try {
                 // Run query or prepared statement
                 if(!empty($this->_prepared)){
+                    $preparedQuery = $this->_prepared;
                     $stmt = $this->getConnection()->prepare($this->_prepared[0]);
                     $types = '';
 
@@ -311,6 +312,7 @@
                     $query = $stmt->get_result();
                     Factory::notifyListeners($this->_prepared[0], $this->_prepared[1], (microtime(true) - $queryStart), ($query !== false));
                 }else{
+                    $preparedQuery = null;
                     $built = $this->getQuery();
                     $queryStart = microtime(true);
                     $query = $this->getConnection()->query($built);
@@ -357,6 +359,13 @@
                     return false;
                 }
             } catch (mysqli_sql_exception $e) {
+                // Notify listeners
+                if($preparedQuery){
+                    Factory::notifyListeners($preparedQuery[0], $preparedQuery[1], (microtime(true) - $queryStart), false);
+                }else{
+                    Factory::notifyListeners($built, [], (microtime(true) - $queryStart), false);
+                }
+
                 // Query failed with error
                 throw new QueryException($built, $e->getMessage(), $e->getCode(), $e);
             }
