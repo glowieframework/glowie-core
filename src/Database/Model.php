@@ -345,7 +345,7 @@
          * Inserts a new row in the model table.
          * @param mixed $data An Element or associative array/Collection relating fields and values to insert.
          * @return mixed Returns the last inserted `AUTO_INCREMENT` value (or true) on success or false on failure.\
-         * If the model uses UUIDs, ypon success the last generated UUID will be returned.
+         * If the model uses UUIDs, upon success the last generated UUID will be returned.
          */
         public function create($data){
             // Clears the current built query
@@ -525,6 +525,14 @@
         }
 
         /**
+         * Gets the name of the model primary key.
+         * @return string Model primary key name.
+         */
+        public function getPrimaryName(){
+            return $this->_primaryKey;
+        }
+
+        /**
          * Gets the model table name.
          * @return string Table name.
          */
@@ -533,11 +541,11 @@
         }
 
         /**
-         * Checks if a given field is retriavable from the model.
+         * Checks if a given field is retrievable from the model.
          * @param string $field Field name to search for.
          * @return bool Returns true or false.
          */
-        public function isReatriavable(string $field){
+        public function isRetrievable(string $field){
             return empty($this->_fields) || in_array($field, $this->_fields);
         }
 

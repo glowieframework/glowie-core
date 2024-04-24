@@ -34,6 +34,10 @@ Glowie is a PHP framework designed to be as light, fast and powerful as possible
 - and many more...
 
 ## Getting started
+```shell
+composer create-project glowieframework/glowie
+```
+
 [Explore the documentation](https://gabrielsilva.dev.br/glowie/docs) to know how to start using Glowie to create something awesome.
 
 ## Credits
