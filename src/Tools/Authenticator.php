@@ -50,10 +50,35 @@
         private $error = null;
 
         /**
-         * Current authenticated user.
-         * @var Model|null
+         * Current auth guard.
+         * @var string
          */
-        private static $user = null;
+        private $guard = 'default';
+
+        /**
+         * Current authenticated users for each guard.
+         * @var array
+         */
+        private static $user = [];
+
+        /**
+         * Creates an Authenticator instance.
+         * @param string $guard (Optional) Authentication guard name (from your app configuration).
+         */
+        public function __construct(string $guard = 'default'){
+            $this->setGuard($guard);
+        }
+
+        /**
+         * Sets the authentication guard (from your app configuration).
+         * @param string $guard Guard name.
+         * @return Authenticator Current Authenticator instance for nested calls.
+         */
+        public function setGuard(string $guard){
+            if(!Config::has('auth.' . $guard)) throw new Exception('Authenticator: Unknown guard "' . $guard . '"');
+            $this->guard = $guard;
+            return $this;
+        }
 
         /**
          * Authenticates an user from the database and store its data in the session.
@@ -66,44 +91,44 @@
             // Check for empty login credentials
             if(Util::isEmpty($user) || Util::isEmpty($password)){
                 $this->error = self::ERR_EMPTY_DATA;
-                self::$user = null;
+                self::$user[$this->guard] = null;
                 return false;
             }
 
             // Create model instance
-            $model = Config::get('auth.model');
+            $model = Config::get('auth.'. $this->guard . '.model');
             if(!$model || !class_exists($model)) throw new Exception("Authenticator: \"{$model}\" was not found");
             $model = new $model;
 
             // Get auth fields
-            $userField = Config::get('auth.user_field', 'email');
-            $passwordField = Config::get('auth.password_field', 'password');
+            $userField = Config::get('auth.' . $this->guard . '.user_field', 'email');
+            $passwordField = Config::get('auth.' . $this->guard . '.password_field', 'password');
 
             // Fetch user information
             $username = $user;
             $user = $model->findAndFillBy([$userField => $user, ...$conditions]);
             if(!$user){
                 $this->error = self::ERR_NO_USER;
-                self::$user = null;
+                self::$user[$this->guard] = null;
                 return false;
             }
 
             // Check password
             if(password_verify($password, $user->get($passwordField))){
-                self::$user = $user;
+                self::$user[$this->guard] = $user;
                 $this->error = self::ERR_AUTH_SUCCESS;
 
                 // Save credentials in session
                 $session = new Session();
-                if(!$session->has('glowie.auth.user') || !$session->has('glowie.auth.password')){
-                    $session->setEncrypted('glowie.auth.user', $username);
-                    $session->setEncrypted('glowie.auth.password', $password);
+                if(!$session->has('glowie.auth.' . $this->guard . '.user') || !$session->has('glowie.auth.' . $this->guard . '.password')){
+                    $session->setEncrypted('glowie.auth.' . $this->guard . '.user', $username);
+                    $session->setEncrypted('glowie.auth.' . $this->guard . '.password', $password);
                 }
 
                 return true;
             }else{
                 $this->error = self::ERR_WRONG_PASSWORD;
-                self::$user = null;
+                self::$user[$this->guard] = null;
                 return false;
             }
         }
@@ -122,12 +147,16 @@
          */
         public function getUser(){
             // Check for fetched user
-            if(self::$user) return self::$user;
+            if(isset(self::$user[$this->guard])) return self::$user[$this->guard];
 
             // Get from session
             $session = new Session();
-            $this->login($session->getEncrypted('glowie.auth.user', ''), $session->getEncrypted('glowie.auth.password', ''));
-            return self::$user;
+            $user = $session->getEncrypted('glowie.auth.' . $this->guard . '.user', '');
+            $password = $session->getEncrypted('glowie.auth.' . $this->guard . '.password', '');
+
+            // Try to login from session
+            $this->login($user, $password);
+            return self::$user[$this->guard] ?? null;
         }
 
         /**
@@ -135,12 +164,12 @@
          * @return mixed Returns the primary key value if authenticated, null otherwise.
          */
         public function getUserId(){
-            if(!self::$user){
+            if(!isset(self::$user[$this->guard])){
                 $user = $this->getUser();
                 if(!$user) return null;
             }
 
-            return self::$user->getPrimary();
+            return self::$user[$this->guard]->getPrimary();
         }
 
         /**
@@ -148,12 +177,12 @@
          * @return bool Returns true on success, false otherwise.
          */
         public function refresh(){
-            if(!self::$user){
+            if(!isset(self::$user[$this->guard])){
                 $user = $this->getUser();
                 if(!$user) return false;
             }
 
-            return self::$user->refresh();
+            return self::$user[$this->guard]->refresh();
         }
 
         /**
@@ -163,7 +192,7 @@
          */
         public function remember(int $expires = Cookies::EXPIRES_DAY){
             $session = new Session();
-            if(!$session->has('glowie.auth')) return false;
+            if(!$session->has('glowie.auth.' . $this->guard)) return false;
             $session->persist($expires);
             return true;
         }
@@ -174,9 +203,9 @@
          */
         public function logout(){
             $session = new Session();
-            if(!$session->has('glowie.auth')) return false;
-            $session->remove('glowie.auth');
-            self::$user = null;
+            if(!$session->has('glowie.auth.' . $this->guard)) return false;
+            $session->remove('glowie.auth.' . $this->guard);
+            self::$user[$this->guard] = null;
             return true;
         }
 
