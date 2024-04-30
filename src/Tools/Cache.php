@@ -53,7 +53,7 @@
                 if(!extension_loaded('sqlite3')) throw new Exception('Cache: Missing "sqlite3" extension in your PHP installation');
 
                 // Create the connection
-                self::$db = new SQLite3(Config::get('cache.path', Util::location('storage/cache/cache.tmp')));
+                self::$db = new SQLite3(Config::get('cache.path', Util::location('storage/cache/cache.db')));
 
                 // Creates the cache table if not exists yet
                 $tableExists = self::$db->querySingle("SELECT name FROM sqlite_master WHERE type='table' AND name='cache'");

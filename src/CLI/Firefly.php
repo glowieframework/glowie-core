@@ -433,7 +433,9 @@
         private static function __clearCache(){
             $dir = Config::get('skeltch.path', Util::location('storage/cache'));
             if(!is_writable($dir)) throw new FileException('Directory "' . $dir . '" is not writable, please check your chmod settings');
-            foreach (Util::getFiles($dir . '/*.tmp') as $filename) unlink($filename);
+            foreach (Util::getFiles($dir . '/*.php') as $filename) unlink($filename);
+            $cachefile = Config::get('cache.path', Util::location('storage/cache/cache.db'));
+            if(is_file($cachefile)) unlink($cachefile);
             self::print('<color="green">Cache cleared successfully!</color>');
             return true;
         }

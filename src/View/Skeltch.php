@@ -41,7 +41,7 @@
             if(!is_writable($tmpdir)) throw new FileException(sprintf('Directory "%s" is not writable, please check your chmod settings', $tmpdir));
 
             // Checks if cache is enabled or should be recompiled
-            $tmpfile = $tmpdir . '/' . md5($filename) . '.tmp';
+            $tmpfile = $tmpdir . '/' . md5($filename) . '.php';
             if(!Config::get('skeltch.cache', true) || !is_file($tmpfile) || filemtime($tmpfile) < filemtime($filename)) self::compile($filename, $tmpfile);
 
             // Returns the processed file location
