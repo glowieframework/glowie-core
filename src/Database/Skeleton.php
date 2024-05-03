@@ -385,6 +385,7 @@
                 'after' => $after,
                 'nullable' => true
             ];
+            return $this;
         }
 
         /**
@@ -409,6 +410,7 @@
                 'default' => $default,
                 'after' => $after
             ];
+            return $this;
         }
 
         /**
@@ -460,6 +462,14 @@
          */
         public function type(string $type){
             return $this->changeModifier('type', $type);
+        }
+
+        /**
+         * Sets an UNSIGNED property to the type of the last added/changed column.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function unsigned(){
+            return $this->changeModifier('unsigned', true);
         }
 
         /**
@@ -523,7 +533,11 @@
         private function changeModifier(string $property, $value){
             if(empty($this->_modifiers)) throw new Exception('Skeleton: No column was added/changed to be modified');
             $i = count($this->_modifiers) - 1;
-            $this->_modifiers[$i][$property] = $value;
+            if($property == 'unsigned'){
+                $this->_modifiers[$i]['type'] = $this->_modifiers[$i]['type'] . ' UNSIGNED';
+            }else{
+                $this->_modifiers[$i][$property] = $value;
+            }
             return $this;
         }
 
