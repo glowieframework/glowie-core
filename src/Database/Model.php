@@ -23,7 +23,7 @@
         use ElementTrait;
 
         /**
-         * Model table name.
+         * Model table name. Leave empty for auto.
          * @var string
          */
         protected $_table = '';
@@ -81,6 +81,12 @@
          * @var bool
          */
         protected $_timestamps = false;
+
+        /**
+         * Timestamp fields date format.
+         * @var string
+         */
+        protected $_dateFormat = 'Y-m-d H:i:s';
 
         /**
          * Use soft deletes in the table.
@@ -355,8 +361,8 @@
             if(is_callable([$data, 'toArray'])) $data = $data->toArray();
             $data = $this->mutateData($this->filterData($data));
             if($this->_timestamps){
-                $data[$this->_createdField] = Kraken::raw('NOW()');
-                $data[$this->_updatedField] = Kraken::raw('NOW()');
+                $data[$this->_createdField] = date($this->_dateFormat);
+                $data[$this->_updatedField] = date($this->_dateFormat);
             }
 
             // Generate UUID if in use
@@ -401,7 +407,7 @@
             if(isset($data[$this->_primaryKey]) && $this->find($data[$this->_primaryKey])){
                 // Parse data and timestamps
                 $updatedData = $this->mutateData($this->filterData($data));
-                if($this->_timestamps) $updatedData[$this->_updatedField] = Kraken::raw('NOW()');
+                if($this->_timestamps) $updatedData[$this->_updatedField] = date($this->_dateFormat);
 
                 // Updates the element
                 return $this->where($this->_primaryKey, $data[$this->_primaryKey])->update($updatedData);
