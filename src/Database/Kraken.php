@@ -1080,9 +1080,27 @@
          */
         public function limit(int $param1, ?int $param2 = null){
             if(is_null($param2)){
-                $this->_limit = [0, $param1];
+                if(empty($this->_limit)){
+                    $this->_limit = [0, $param1];
+                }else{
+                    $this->_limit[1] = $param1;
+                }
             }else{
                 $this->_limit = [$param1, $param2];
+            }
+            return $this;
+        }
+
+        /**
+         * Sets the query OFFSET statement.
+         * @param int $offset Offset position to set.
+         * @return $this Current instance for nested calls.
+         */
+        public function offset(int $offset){
+            if(empty($this->_limit)){
+                $this->_limit = [$offset, null];
+            }else{
+                $this->_limit[0] = $offset;
             }
             return $this;
         }
@@ -1721,11 +1739,15 @@
             // Gets LIMIT statement
             if($this->_instruction == 'SELECT' || $this->_instruction == 'SELECT DISTINCT'){
                 if (!empty($this->_limit)) {
-                    $limit = implode(', ', $this->_limit);
-                    $query .= " LIMIT {$limit}";
+                    if(isset($this->_limit[1])){
+                        $limit = implode(', ', $this->_limit);
+                        $query .= " LIMIT {$limit}";
+                    }else{
+                        $query .= " OFFSET {$this->_limit[0]}";
+                    }
                 }
             }else if($this->_instruction == 'UPDATE' || $this->_instruction == 'DELETE'){
-                if (!empty($this->_limit)) {
+                if (isset($this->_limit[1])) {
                     $query .= " LIMIT {$this->_limit[1]}";
                 }
             }

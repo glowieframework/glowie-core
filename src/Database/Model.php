@@ -418,6 +418,67 @@
         }
 
         /**
+         * Counts the number of resulting rows from a SELECT query.
+         * @param string $column (Optional) Column to use as the counting base. Using `*` will count all rows including NULL values.\
+         * Setting a column name will count all rows excluding NULL values from that column. You can also use a raw COUNT expression.
+         * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
+         * @return int Returns the number of rows on success.
+         * @throws QueryException Throws an exception if the query fails.
+         */
+        public function count(string $column = '*', bool $deleted = false){
+            if($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
+            return Kraken::count($column);
+        }
+
+        /**
+         * Sums the value of all rows in a specific column.
+         * @param string $column Column to retrieve values. You can also use a raw SUM expression.
+         * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
+         * @return string Returns the sum result on success.
+         * @throws QueryException Throws an exception if the query fails.
+         */
+        public function sum(string $column, bool $deleted = false){
+            if($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
+            return Kraken::sum($column);
+        }
+
+        /**
+         * Returns the highest value from a specific column.
+         * @param string $column Column to retrieve the value. You can also use a raw MAX expression.
+         * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
+         * @return string Returns the highest value on success.
+         * @throws QueryException Throws an exception if the query fails.
+         */
+        public function max(string $column, bool $deleted = false){
+            if($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
+            return Kraken::max($column);
+        }
+
+        /**
+         * Returns the lowest value from a specific column.
+         * @param string $column Column to retrieve the value. You can also use a raw MIN expression.
+         * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
+         * @return string Returns the lowest value on success.
+         * @throws QueryException Throws an exception if the query fails.
+         */
+        public function min(string $column, bool $deleted = false){
+            if($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
+            return Kraken::min($column);
+        }
+
+        /**
+         * Returns the average value from a specific column.
+         * @param string $column Column to retrieve the value. You can also use a raw AVG expression.
+         * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
+         * @return string Returns the average value on success.
+         * @throws QueryException Throws an exception if the query fails.
+         */
+        public function avg(string $column, bool $deleted = false){
+            if($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
+            return Kraken::avg($column);
+        }
+
+        /**
          * Fills the model entity with a row data. This data will be merged into the existing model data, if any.
          * @param Element|array $row An Element or associative array with the row data to fill.
          * @param bool $overwrite (Optional) Set to `true` to overwrite the existing model data instead of merging.
