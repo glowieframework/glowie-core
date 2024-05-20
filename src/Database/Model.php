@@ -119,6 +119,18 @@
         private $_initialData = null;
 
         /**
+         * If casting data is enabled.
+         * @var bool
+         */
+        private $_castingEnabled = true;
+
+        /**
+         * If mutating data is enabled.
+         * @var bool
+         */
+        private $_mutateEnabled = true;
+
+        /**
          * Creates a new instance of the model.
          * @param Element|array $data An Element or associative array with the initial data to fill the model entity.\
          * This data will be merged into the initial model attributes, if filled.
@@ -418,6 +430,19 @@
         }
 
         /**
+         * Updates data in the model table.\
+         * **Do not forget to use WHERE statements before calling this function, otherwise all records will be updated.**
+         * @param mixed $data An associative array/Collection/Element relating fields and values to update.
+         * @return bool Returns true on success or false on failure.
+         * @throws QueryException Throws an exception if the query fails.
+         */
+        public function update($data){
+            if(is_callable([$data, 'toArray'])) $data = $data->toArray();
+            $data = $this->mutateData($this->filterData($data));
+            return Kraken::update($data);
+        }
+
+        /**
          * Counts the number of resulting rows from a SELECT query.
          * @param string $column (Optional) Column to use as the counting base. Using `*` will count all rows including NULL values.\
          * Setting a column name will count all rows excluding NULL values from that column. You can also use a raw COUNT expression.
@@ -476,6 +501,17 @@
         public function avg(string $column, bool $deleted = false){
             if($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
             return Kraken::avg($column);
+        }
+
+        /**
+         * Checks if there are any records that match a SELECT query.
+         * @return bool Returns true if exists or false if not.
+         * @throws QueryException Throws an exception if the query fails.
+         */
+        public function exists(bool $deleted = false){
+            if($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
+            $result = $this->count();
+            return (is_int($result) && $result >= 1);
         }
 
         /**
@@ -626,13 +662,31 @@
         }
 
         /**
+         * Disables data casting.
+         * @return $this Current Model instance for nested calls.
+         */
+        public function withoutCasting(){
+            $this->_castingEnabled = false;
+            return $this;
+        }
+
+        /**
+         * Enables data casting.
+         * @return $this Current Model instance for nested calls.
+         */
+        public function withCasting(){
+            $this->_castingEnabled = true;
+            return $this;
+        }
+
+        /**
          * Casts data types of fields from a row or an array of rows using model casts setting.
          * @param mixed $data A single row as an Element/associative array or a multi-dimensional of rows.
          * @return mixed Returns the data with the casted fields.
          */
         private function castData($data){
-            // Checks if data or casts property is empty
-            if(empty($data) || empty($this->_casts)) return $data;
+            // Checks if casting is disabled, or data / casts property is empty
+            if(!$this->_castingEnabled || empty($data) || empty($this->_casts)) return $data;
 
             // Checks for Collection
             $isCollection = $data instanceof Collection;
@@ -709,13 +763,31 @@
         }
 
         /**
+         * Disables data mutation.
+         * @return $this Current Model instance for nested calls.
+         */
+        public function withoutMutation(){
+            $this->_mutateEnabled = false;
+            return $this;
+        }
+
+        /**
+         * Enables data mutation.
+         * @return $this Current Model instance for nested calls.
+         */
+        public function withMutation(){
+            $this->_mutateEnabled = true;
+            return $this;
+        }
+
+        /**
          * Mutates data using model mutators setting.
          * @param array|Element $data An Element or associative array of data to mutate.
          * @return array|Element Returns the mutated data.
          */
         private function mutateData($data){
             // Checks if data or mutators property is empty
-            if(empty($data) || empty($this->_mutators)) return $data;
+            if(!$this->_mutateEnabled || empty($data) || empty($this->_mutators)) return $data;
 
             // Converts the element to an array
             $isElement = is_callable([$data, 'toArray']);

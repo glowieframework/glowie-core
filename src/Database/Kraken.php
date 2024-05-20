@@ -133,7 +133,7 @@
          * Disables WHERE checking in UPDATE or DELETE queries.
          * @return $this Current instance for nested calls.
          */
-        public function noSafeUpdateDeletes(){
+        public function withoutSafeUpdateDeletes(){
             $this->_safe = false;
             return $this;
         }
@@ -1117,6 +1117,11 @@
             return $this;
         }
 
+        /**
+         * Sets a raw UNION ALL statement.
+         * @param string $query Raw query to union all.
+         * @return $this Current instance for nested calls.
+         */
         public function rawUnionAll(string $query){
             return $this->rawUnion($query, true);
         }
@@ -1288,13 +1293,13 @@
         /**
          * Updates data in the table.\
          * **Do not forget to use WHERE statements before calling this function, otherwise all records will be updated.**
-         * @param array|Collection $data An associative array/Collection relating fields and values to update.
+         * @param mixed $data An associative array/Collection/Element relating fields and values to update.
          * @return bool Returns true on success or false on failure.
          * @throws QueryException Throws an exception if the query fails.
          */
         public function update($data){
-            // Parse Collection
-            if($data instanceof Collection) $data = $data->toArray();
+            // Parse Collection/Element
+            if(is_callable([$data, 'toArray'])) $data = $data->toArray();
 
             // Check for safe mode
             if($this->_safe && empty($this->_where)) throw new Exception('update(): Safe mode reports missing WHERE statements before UPDATE query');
