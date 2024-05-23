@@ -8,6 +8,7 @@
     use Glowie\Core\Error\HandlerCLI;
     use Glowie\Core\Http\Rails;
     use Glowie\Core\Collection;
+    use Glowie\Core\Queue\Queue;
     use Util;
     use Config;
     use Env;
@@ -594,7 +595,7 @@
             // Checks if name was filled
             $name = self::argOrInput('name', 'Command name: ');
 
-            // Validates the controller name
+            // Validates the command name
             if(Util::isEmpty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
 
             // Checks if the file exists
@@ -776,6 +777,36 @@
         }
 
         /**
+         * Creates a new job.
+         */
+        private static function __createJob(){
+            // Checks permissions
+            if(!is_dir(Util::location('jobs'))) mkdir(Util::location('jobs'), 0755, true);
+            if(!is_writable(Util::location('jobs'))) throw new FileException('Directory "app/jobs" is not writable, please check your chmod settings');
+
+            // Checks if name was filled
+            $name = self::argOrInput('name', 'Job name: ');
+
+            // Validates the job name
+            if(Util::isEmpty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
+
+            // Checks if the file exists
+            $name = Util::pascalCase($name);
+            $targetFile = Util::location('jobs/' . $name . '.php');
+            if(is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Job {$name} already exists!");
+
+            // Creates the file
+            $template = file_get_contents(self::TEMPLATES_FOLDER . 'Job.php');
+            $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
+            file_put_contents($targetFile, $template);
+
+            // Success message
+            self::print("<color=\"green\">Job {$name} created successfully!</color>");
+            self::print('<color="cyan">File: ' . $targetFile . '</color>');
+            return true;
+        }
+
+        /**
          * Runs pending migrations.
          */
         private static function __migrate(){
@@ -904,6 +935,15 @@
         }
 
         /**
+         * Run queue.
+         */
+        private static function __queue(){
+            $bail = filter_var(self::getArg('bail', false), FILTER_VALIDATE_BOOLEAN);
+            Queue::process(self::getArg('name', 'default'), $bail, true);
+            return true;
+        }
+
+        /**
          * Prints the current Glowie and PHP CLI versions.
          */
         private static function __version(){
@@ -935,8 +975,10 @@
             self::print('  <color="yellow">create-middleware</color> <color="blue">--name</color> | Creates a new middleware for your application');
             self::print('  <color="yellow">create-migration</color> <color="blue">--name</color> | Creates a new migration for your application');
             self::print('  <color="yellow">create-model</color> <color="blue">--name --table --primary</color> | Creates a new model for your application');
+            self::print('  <color="yellow">create-job</color> <color="blue">--name</color> | Creates a new job for your application');
             self::print('  <color="yellow">migrate</color> <color="blue">--steps</color> | Applies pending migrations from your application');
             self::print('  <color="yellow">rollback</color> <color="blue">--steps</color> | Rolls back the last applied migration');
+            self::print('  <color="yellow">queue</color> <color="blue">--name --bail</color> | Runs the queue');
             self::print('  <color="yellow">publish</color> <color="blue">--force</color> | Publishes plugin files to the application folder');
             self::print('  <color="yellow">version</color> | Displays current Firefly version');
             self::print('  <color="yellow">help</color> | Displays this help message');

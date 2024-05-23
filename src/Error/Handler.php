@@ -249,7 +249,7 @@
          * Logs the error to the error.log file.
          * @param string $content Content to append to the file.
          */
-        private static function log(string $content){
+        public static function log(string $content){
             if(!Config::get('error_reporting.logging', true)) return;
             $file = Config::get('error_reporting.file', Util::location('storage/error.log'));
             if(!is_writable(dirname($file))) return;

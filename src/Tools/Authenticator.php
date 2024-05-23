@@ -4,6 +4,7 @@
     use Glowie\Core\Http\Session;
     use Glowie\Core\Http\Cookies;
     use Exception;
+    use Closure;
     use Util;
     use Config;
 
@@ -84,10 +85,11 @@
          * Authenticates an user from the database and store its data in the session.
          * @param string $user Username to authenticate.
          * @param string $password Password to authenticate.
-         * @param array $conditions (Optional) Associative array of aditional fields to use while searching for the user.
+         * @param array|Closure $conditions (Optional) Associative array of aditional fields to use while querying for the user.\
+         * You can also pass a Closure to directly modify the query builder.
          * @return bool Returns true if authentication is successful, false otherwise.
          */
-        public function login(string $user, string $password, array $conditions = []){
+        public function login(string $user, string $password, $conditions = []){
             // Check for empty login credentials
             if(Util::isEmpty($user) || Util::isEmpty($password)){
                 $this->error = self::ERR_EMPTY_DATA;
@@ -106,7 +108,13 @@
 
             // Fetch user information
             $username = $user;
-            $user = $model->findAndFillBy([$userField => $user, ...$conditions]);
+            if($conditions instanceof Closure){
+                call_user_func_array($conditions, [$model, $user, $password]);
+                $user = $model->findAndFillBy([$userField => $user]);
+            }else{
+                $user = $model->findAndFillBy([$userField => $user, ...$conditions]);
+            }
+
             if(!$user){
                 $this->error = self::ERR_NO_USER;
                 self::$user[$this->guard] = null;
