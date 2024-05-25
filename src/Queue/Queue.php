@@ -20,6 +20,24 @@
     class Queue{
 
         /**
+         * Delay time for **1 minute**.
+         * @var int
+         */
+        public const DELAY_MINUTE = 60;
+
+        /**
+         * Delay time for **1 hour**.
+         * @var int
+         */
+        public const DELAY_HOUR = 3600;
+
+        /**
+         * Delay time for **1 day**.
+         * @var int
+         */
+        public const DELAY_DAY = 86400;
+
+        /**
          * Queue table name.
          * @var string
          */
@@ -58,7 +76,7 @@
         }
 
         /**
-         * Processes the next jobs in the queue.
+         * Processes the pending jobs in the queue.
          * @param string $queue (Optional) Queue name.
          * @param bool $bail (Optional) Stop queue processing on job fail.
          * @param bool $verbose (Optional) Print status messages during execution.
@@ -70,13 +88,17 @@
 
             // Get pending jobs from the queue
             $db = new Kraken(self::$table);
-            $jobs = $db->where('queue', $queue)->whereNull('ran_at')->orderBy('id')->fetchAll();
+            $jobs = $db->where('queue', $queue)->whereNull('ran_at')->where('attempts', '<', Config::get('queue.max_attempts', 3))->orderBy('id')->fetchAll();
+
             if(count($jobs) == 0){
                 if($verbose) Firefly::print('<color="yellow">There are no pending jobs in this queue.</color>');
                 return;
             }
 
             // Runs each job
+            $success = 0;
+            $failed = 0;
+
             foreach($jobs as $jobRow){
                 try {
                     // Checks if job is delayed
@@ -92,12 +114,16 @@
                     $job->run();
 
                     // Saves the state to the database on success
-                    $db->where('id', $jobRow->id)->update(['ran_at' => date('Y-m-d H:i:s'), 'status' => 1]);
+                    $db->where('id', $jobRow->id)->update(['ran_at' => date('Y-m-d H:i:s'), 'attempts' => $jobRow->attempts + 1]);
 
                     // Prints result if in verbose mode
                     $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
                     if($verbose) Firefly::print('<color="green">' . $jobRow->job . ' job ran successfully in ' . $time . '!</color>');
+                    $success++;
                 } catch (\Throwable $th) {
+                    // Sets the attempts
+                    $db->where('id', $jobRow->id)->update(['attempts' => $jobRow->attempts + 1]);
+
                     // Checks to stop execution of queue on fail
                     if($bail) throw new QueueException($th->getMessage(), $th->getCode(), $th);
 
@@ -105,13 +131,14 @@
                     if($verbose) Firefly::print('<color="red">' . $jobRow->job . ' failed! Skipping...</color>');
                     $date = date('Y-m-d H:i:s');
                     Handler::log("[{$date}] {$th->getMessage()} at file {$th->getFile()}:{$th->getLine()}\n{$th->getTraceAsString()}\n\n");
+                    $failed++;
                 }
             }
 
             // Finish message
             if($verbose){
                 Firefly::print('');
-                Firefly::print('<color="yellow">Queue finished.</color>');
+                Firefly::print('<color="yellow">Queue finished! ' . $success . ' jobs success, ' . $failed . ' failed.</color>');
             }
         }
 
@@ -126,11 +153,11 @@
                         ->id()
                         ->createColumn('job')->type(Skeleton::TYPE_STRING)->size(500)
                         ->createColumn('queue')->type(Skeleton::TYPE_STRING)->size(255)
-                        ->createNullableColumn('data')->type(Skeleton::TYPE_BLOB)
+                        ->createColumn('data')->type(Skeleton::TYPE_BLOB)->nullable()
                         ->createColumn('added_at')->type(Skeleton::TYPE_DATETIME)->default(Skeleton::raw('NOW()'))
-                        ->createNullableColumn('delayed_to')->type(Skeleton::TYPE_DATETIME)
-                        ->createNullableColumn('ran_at')->type(Skeleton::TYPE_DATETIME)
-                        ->createColumn('status')->type(Skeleton::TYPE_TINY_INTEGER_UNSIGNED)->default('0')
+                        ->createColumn('delayed_to')->type(Skeleton::TYPE_DATETIME)->nullable()
+                        ->createColumn('ran_at')->type(Skeleton::TYPE_DATETIME)->nullable()
+                        ->createColumn('attempts')->type(Skeleton::TYPE_INTEGER)->unsigned()->default('0')
                         ->create();
                 }
                 self::$tableCreated = true;
