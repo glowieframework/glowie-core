@@ -76,6 +76,12 @@
         protected $_timestamps = false;
 
         /**
+         * Timestamp fields date format.
+         * @var string
+         */
+        protected $_dateFormat = 'Y-m-d H:i:s';
+
+        /**
          * Use soft deletes in the table.
          * @var bool
          */

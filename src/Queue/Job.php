@@ -23,7 +23,7 @@
          * @param mixed $data (Optional) Data to pass to the job.
          */
         final public function __construct($data = null){
-            $this->$data = $data;
+            $this->data = $data;
         }
 
         /**

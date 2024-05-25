@@ -80,18 +80,22 @@
          * @param string $queue (Optional) Queue name.
          * @param bool $bail (Optional) Stop queue processing on job fail.
          * @param bool $verbose (Optional) Print status messages during execution.
+         * @param bool $watcher (Optional) Run queue in watcher mode (CLI only).
          */
-        public static function process(string $queue = 'default', bool $bail = false, bool $verbose = false){
+        public static function process(string $queue = 'default', bool $bail = false, bool $verbose = false, bool $watcher = false){
             // Stores the table name and checks its existence
             self::$table = Config::get('queue.table', 'queue');
             self::createTable();
+
+            // Cleanup jobs table
+            self::cleanup();
 
             // Get pending jobs from the queue
             $db = new Kraken(self::$table);
             $jobs = $db->where('queue', $queue)->whereNull('ran_at')->where('attempts', '<', Config::get('queue.max_attempts', 3))->orderBy('id')->fetchAll();
 
             if(count($jobs) == 0){
-                if($verbose) Firefly::print('<color="yellow">There are no pending jobs in this queue.</color>');
+                if($verbose && !$watcher) Firefly::print('<color="yellow">There are no pending jobs in this queue.</color>');
                 return;
             }
 
@@ -106,19 +110,21 @@
 
                     // Stores start time
                     $time = microtime(true);
-                    if($verbose) Firefly::print('<color="blue">Running ' . $jobRow->job . ' job...</color>');
+                    if($verbose) Firefly::print('<color="blue">[' . date('Y-m-d H:i:s') . '] Running ' . $jobRow->job . ' job...</color>');
 
                     // Create job instance and runs it
-                    if(!class_exists($jobRow->job)) throw new QueueException('"' . $jobRow->job . '" was not found');
-                    $job = new $jobRow->job(is_null($jobRow->data) ? null : unserialize($jobRow->data));
+                    $job = $jobRow->job;
+                    if(!class_exists($job)) throw new QueueException('"' . $job . '" was not found');
+                    $job = new $job(is_null($jobRow->data) ? null : unserialize($jobRow->data));
                     $job->run();
 
                     // Saves the state to the database on success
-                    $db->where('id', $jobRow->id)->update(['ran_at' => date('Y-m-d H:i:s'), 'attempts' => $jobRow->attempts + 1]);
+                    $date = date('Y-m-d H:i:s');
+                    $db->where('id', $jobRow->id)->update(['ran_at' => $date, 'attempts' => $jobRow->attempts + 1]);
 
                     // Prints result if in verbose mode
                     $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
-                    if($verbose) Firefly::print('<color="green">' . $jobRow->job . ' job ran successfully in ' . $time . '!</color>');
+                    if($verbose) Firefly::print('<color="green">[' . $date . ']' . $jobRow->job . ' job ran successfully in ' . $time . '!</color>');
                     $success++;
                 } catch (\Throwable $th) {
                     // Sets the attempts
@@ -128,18 +134,26 @@
                     if($bail) throw new QueueException($th->getMessage(), $th->getCode(), $th);
 
                     // Log error
-                    if($verbose) Firefly::print('<color="red">' . $jobRow->job . ' failed! Skipping...</color>');
                     $date = date('Y-m-d H:i:s');
+                    if($verbose) Firefly::print('<color="red">[' . $date . ']' . $jobRow->job . ' failed! Skipping...</color>');
                     Handler::log("[{$date}] {$th->getMessage()} at file {$th->getFile()}:{$th->getLine()}\n{$th->getTraceAsString()}\n\n");
                     $failed++;
                 }
             }
 
             // Finish message
-            if($verbose){
+            if($verbose && !$watcher){
                 Firefly::print('');
                 Firefly::print('<color="yellow">Queue finished! ' . $success . ' jobs success, ' . $failed . ' failed.</color>');
             }
+        }
+
+        /**
+         * Deletes from the queue those jobs that ran successfully after the `queue.keep_log` setting.
+         */
+        private static function cleanup(){
+            $db = new Kraken(self::$table);
+            $db->whereNotNull('ran_at')->where('ran_at', '<=', date('Y-m-d H:i:s', time() - Config::get('queue.keep_log', 300)))->delete();
         }
 
         /**

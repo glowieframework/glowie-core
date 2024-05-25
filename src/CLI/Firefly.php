@@ -944,6 +944,24 @@
         }
 
         /**
+         * Run queue watcher.
+         */
+        private static function __queueWatch(){
+            // Get bail arg
+            $bail = filter_var(self::getArg('bail', false), FILTER_VALIDATE_BOOLEAN);
+
+            // Print welcome message
+            Firefly::print('<color="green">[' . date('Y-m-d H:i:s') . '] Queue Watcher has started!</color>');
+            Firefly::print('<color="yellow">[' . date('Y-m-d H:i:s') . '] Use Ctrl/Command+Z to stop the service</color>');
+
+            // Run watcher
+            while (true) {
+                Queue::process(self::getArg('name', 'default'), $bail, true, true);
+                sleep((int)self::getArg('interval', 60));
+            }
+        }
+
+        /**
          * Prints the current Glowie and PHP CLI versions.
          */
         private static function __version(){
@@ -979,6 +997,7 @@
             self::print('  <color="yellow">migrate</color> <color="blue">--steps</color> | Applies pending migrations from your application');
             self::print('  <color="yellow">rollback</color> <color="blue">--steps</color> | Rolls back the last applied migration');
             self::print('  <color="yellow">queue</color> <color="blue">--name --bail</color> | Runs the queue');
+            self::print('  <color="yellow">queue-watch</color> <color="blue">--name --bail --interval</color> | Runs the queue watcher');
             self::print('  <color="yellow">publish</color> <color="blue">--force</color> | Publishes plugin files to the application folder');
             self::print('  <color="yellow">version</color> | Displays current Firefly version');
             self::print('  <color="yellow">help</color> | Displays this help message');
