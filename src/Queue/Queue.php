@@ -88,7 +88,7 @@
             self::createTable();
 
             // Cleanup jobs table
-            self::cleanup();
+            self::prune();
 
             // Get pending jobs from the queue
             $db = new Kraken(self::$table);
@@ -130,6 +130,9 @@
                     // Sets the attempts
                     $db->where('id', $jobRow->id)->update(['attempts' => $jobRow->attempts + 1]);
 
+                    // Calls the job fail method if exists
+                    if(is_callable([$job, 'fail'])) $job->fail($th);
+
                     // Checks to stop execution of queue on fail
                     if($bail) throw new QueueException($th->getMessage(), $th->getCode(), $th);
 
@@ -149,11 +152,39 @@
         }
 
         /**
-         * Deletes from the queue those jobs that ran successfully after the `queue.keep_log` setting.
+         * Clears the queue.
+         * @param bool $success (Optional) Clear successful jobs.
+         * @param bool $failed (Optional) Clear failed jobs.
+         * @param bool $pending (Optional) Clear pending jobs.
+         * @return bool Returns true on success, false on fail.
          */
-        private static function cleanup(){
+        public static function clear(bool $success = false, bool $failed = false, bool $pending = false){
+            // Creates the table instance if not yet
+            self::$table = Config::get('queue.table', 'queue');
+            self::createTable();
             $db = new Kraken(self::$table);
-            $db->whereNotNull('ran_at')->where('ran_at', '<=', date('Y-m-d H:i:s', time() - Config::get('queue.keep_log', 300)))->delete();
+
+            // Clear the whole queue
+            if($success && $failed && $pending) return $db->whereNotNull('id')->delete();
+
+            // Clear successful jobs
+            if($success) $db->whereNotNull('ran_at')->delete();
+
+            // Clear failed jobs
+            if($failed) $db->whereNull('ran_at')->where('attempts', '>=', Config::get('queue.max_attempts', 3))->delete();
+
+            // Clear pending jobs
+            if($pending) $db->whereNull('ran_at')->delete();
+
+            return true;
+        }
+
+        /**
+         * Deletes from the queue expired successful jobs.
+         */
+        private static function prune(){
+            $db = new Kraken(self::$table);
+            $db->whereNotNull('ran_at')->where('ran_at', '<=', date('Y-m-d H:i:s', time() - Config::get('queue.keep_log', self::DELAY_DAY)))->delete();
         }
 
         /**

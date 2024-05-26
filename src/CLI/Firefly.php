@@ -461,6 +461,18 @@
         }
 
         /**
+         * Clears the jobs queue.
+         */
+        private static function __clearQueue(){
+            $success = filter_var(self::getArg('success', false), FILTER_VALIDATE_BOOLEAN);
+            $failed = filter_var(self::getArg('failed', false), FILTER_VALIDATE_BOOLEAN);
+            $pending = filter_var(self::getArg('pending', false), FILTER_VALIDATE_BOOLEAN);
+            if(!$success && !$failed && !$pending) $success = $failed = $pending = true;
+            Queue::clear($success, $failed, $pending);
+            self::print('<color="green">Queue cleared successfully!</color>');
+        }
+
+        /**
          * Initializes the project.
          */
         private static function __init(){
@@ -983,6 +995,7 @@
             self::print('  <color="yellow">clear-cache</color> | Clears the application cache folder');
             self::print('  <color="yellow">clear-session</color> | Clears the application session folder');
             self::print('  <color="yellow">clear-log</color> | Clears the application error log');
+            self::print('  <color="yellow">clear-queue</color> <color="blue">--success --failed --pending</color> | Clears the jobs queue');
             self::print('  <color="yellow">generate-keys</color> | Regenerates the application secret keys');
             self::print('  <color="yellow">encrypt-env</color> <color="blue">--key</color> | Encrypts the environment config file');
             self::print('  <color="yellow">decrypt-env</color> <color="blue">--key</color> | Decrypts the environment config file');
