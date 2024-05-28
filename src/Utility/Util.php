@@ -888,6 +888,44 @@
         }
 
         /**
+         * Converts an English singular word into plural.
+         * @param string $word Word to be converted.
+         * @return string Returns the pluralized string.
+         */
+        public static function pluralize(string $word){
+            $last = strtolower($word[strlen($word) - 1]);
+            $last2 = strtolower(substr($word, -2));
+            if ($last === 'y' && !in_array(strtolower($word[strlen($word) - 2]), ['a', 'e', 'i', 'o', 'u'])) return substr($word, 0, -1) . 'ies';
+            if ($last2 === 'us') return substr($word, 0, -2) . 'i';
+            if ($last2 === 'is') return substr($word, 0, -2) . 'es';
+            if ($last2 === 'on') return substr($word, 0, -2) . 'a';
+            if (in_array($last, ['s', 'x', 'z', 'o']) || ($last === 'h' && in_array(strtolower($word[strlen($word) - 2]), ['c', 's']))) return $word . 'es';
+            return $word . 's';
+        }
+
+        /**
+         * Converts an English plural word into singular.
+         * @param string $word Word to be converted.
+         * @return string Returns the singularized string.
+         */
+        public static function singularize(string $word){
+            $last = strtolower($word[strlen($word) - 1]);
+            $last2 = strtolower(substr($word, -2));
+            if ($last2 === 'es') {
+                if (substr($word, -4) === 'sses' || substr($word, -4) === 'shes' || substr($word, -4) === 'ches') return substr($word, 0, -2);
+                if (substr($word, -3) === 'ies') return substr($word, 0, -3) . 'y';
+                if (substr($word, -3) === 'xes' || substr($word, -3) === 'ses' || substr($word, -3) === 'zes') return substr($word, 0, -2);
+                if (substr($word, -3) !== 'oes') return substr($word, 0, -2);
+            }
+            if (substr($word, -3) === 'ies') return substr($word, 0, -3) . 'y';
+            if (substr($word, -3) === 'ves') return substr($word, 0, -3) . 'f';
+            if ($last2 === 'us') return substr($word, 0, -2) . 'us';
+            if ($last2 === 'on') return substr($word, 0, -2) . 'on';
+            if ($last === 's') return substr($word, 0, -1);
+            return $word;
+        }
+
+        /**
          * Validates if a string is a valid JSON string.
          * @param mixed $string String to be validated.
          * @return bool Returns true if valid JSON, false otherwise.

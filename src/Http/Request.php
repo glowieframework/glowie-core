@@ -150,6 +150,14 @@
         }
 
         /**
+         * Gets the server variables.
+         * @return Element Returns an Element with the server vars.
+         */
+        public function fromServer(){
+            return new Element($_SERVER ?? []);
+        }
+
+        /**
          * Returns a JSON key from the request.
          * @param string|null $key (Optional) Key to get value (accepts dot notation keys). Leave empty to get the whole JSON Element.
          * @param mixed $default (Optional) Default value to return if the key does not exist.
@@ -292,6 +300,15 @@
          */
         public function isAjax(){
             return $this->getHeader('X-Requested-With') == 'XMLHttpRequest';
+        }
+
+        /**
+         * Return if the request body was made using JSON.\
+         * **Note:** This information relies in the `Content-Type` header, or the request body itself.
+         * @return bool True if JSON request.
+         */
+        public function isJson(){
+            return ($this->getContentType() == 'application/json' || Util::isJson($this->getBody()));
         }
 
         /**

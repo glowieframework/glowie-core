@@ -131,6 +131,18 @@
         private $_mutateEnabled = true;
 
         /**
+         * Model table associations.
+         * @var array
+         */
+        private $_associations = [];
+
+        /**
+         * If associating data is enabled.
+         * @var bool
+         */
+        private $_associationsEnabled = false;
+
+        /**
          * Creates a new instance of the model.
          * @param Element|array $data An Element or associative array with the initial data to fill the model entity.\
          * This data will be merged into the initial model attributes, if filled.
@@ -146,6 +158,9 @@
             if(is_callable([$data, 'toArray'])) $data = $data->toArray();
             $data = array_merge($this->_attributes, $data);
             if(!empty($data)) $this->fill($data);
+
+            // Create associations
+            $this->associate();
         }
 
         /**
@@ -197,7 +212,7 @@
          * @throws QueryException Throws an exception if the query fails.
          */
         public function fetchRow(){
-            return $this->castData(Kraken::fetchRow());
+            return $this->associateData($this->castData(Kraken::fetchRow()));
         }
 
         /**
@@ -206,7 +221,7 @@
          * @throws QueryException Throws an exception if the query fails.
          */
         public function fetchAll(){
-            return $this->castData(Kraken::fetchAll());
+            return $this->associateData($this->castData(Kraken::fetchAll()));
         }
 
         /**
@@ -620,6 +635,85 @@
         }
 
         /**
+         * Sets the Model table associations.
+         */
+        protected function associate(){
+            $this->_associations = [];
+        }
+
+        /**
+         * Enables associating data with other models.
+         * @return $this Current Model instance for nested calls.
+         */
+        public function withAssociations(){
+            $this->_associationsEnabled = true;
+            return $this;
+        }
+
+        /**
+         * Disables associating data with other models.
+         * @return $this Current Model instance for nested calls.
+         */
+        public function withoutAssociations(){
+            $this->_associationsEnabled = false;
+            return $this;
+        }
+
+        public function hasOne(string $model, ?string $name = null, ?string $column = null){
+            // Get primary key and names
+            $primary = $this->getPrimaryName();
+            if(empty($name)) $name = Util::snakeCase(Util::singularize(Util::classname($model)));
+            if(empty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $this->getPrimaryName();
+
+            // Set to associations array
+            $this->_associations[$name] = [
+                'type' => 'one',
+                'model' => $model,
+                'primary' => $primary,
+                'column' => $column
+            ];
+
+            // Return result
+            return $this;
+        }
+
+        public function hasMany(string $model, ?string $name = null, ?string $column = null){
+            // Get primary key and names
+            $primary = $this->getPrimaryName();
+            if(empty($name)) $name = Util::snakeCase(Util::pluralize(Util::classname($model)));
+            if(empty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $this->getPrimaryName();
+
+            // Set to associations array
+            $this->_associations[$name] = [
+                'type' => 'many',
+                'model' => $model,
+                'primary' => $primary,
+                'column' => $column
+            ];
+
+            // Return result
+            return $this;
+        }
+
+        public function belongsTo(string $model, ?string $name = null, ?string $column = null){
+            // Get primary key and names
+            $primary = (new $model)->getPrimaryName();
+            if(empty($name)) $name = Util::snakeCase(Util::singularize(Util::classname($model)));
+            if(empty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primary;
+
+            // Set to associations array
+            $this->_associations[$name] = [
+                'type' => 'belongs',
+                'model'=> $model,
+                'primary' => $primary,
+                'column' => $column
+            ];
+
+            // Return result
+            return $this;
+        }
+
+        /**
          * Gets the primary key value from the model entity.
          * @return mixed Returns the primary key value, null otherwise.
          */
@@ -734,6 +828,10 @@
                             $data[$field] = Util::decryptString($data[$field], 'sha256', $params[1] ?? null);
                             break;
 
+                        case 'serialize':
+                            $data[$field] = is_null($data[$field]) ? null : unserialize($data[$field]);
+                            break;
+
                         case 'callback':
                             if (empty($params[1])) throw new Exception('Missing function name in callback casting for "' . $field . '" field in "' . get_class($this) . '"');
                             if (is_callable([$this, $params[1]])) {
@@ -756,6 +854,68 @@
                             break;
                     }
                 }
+            }
+
+            // Returns the result
+            return $isElement ? new Element($data) : $data;
+        }
+
+        /**
+         * Performs data associations with other models.
+         * @param array|Element $data An Element or associative array of data to associate.
+         * @return array|Element Returns the associated data.
+         */
+        private function associateData($data){
+            // Checks if associations are enabled, or data / associations property is empty
+            if(!$this->_associationsEnabled || empty($data) || empty($this->_associations)) return $data;
+
+            // Checks for Collection
+            $isCollection = $data instanceof Collection;
+            if($isCollection) $data = $data->toArray();
+
+            // Checks if is an array of rows
+            if(is_array($data) && !Util::isAssociativeArray($data)){
+                $result = [];
+                foreach($data as $item) $result[] = $this->associateData($item);
+                if($isCollection) $result = new Collection($result);
+                return $result;
+            }
+
+            // Converts the Element to an array
+            $isElement = is_callable([$data, 'toArray']);
+            if($isElement) $data = $data->toArray();
+
+            // Performs the associations
+            foreach($this->_associations as $name => $item){
+                switch ($item['type']) {
+                    // hasOne relationship
+                    case 'one':
+                        $table = new $item['model'];
+                        $value = $data[$item['primary']] ?? null;
+                        if(!is_null($value)){
+                            $data[$name] = $table->findBy($item['column'], $value);
+                        }
+                        break;
+
+                    // hasMany relationship
+                    case 'many':
+                        $table = new $item['model'];
+                        $value = $data[$item['primary']] ?? null;
+                        if(!is_null($value)){
+                            $data[$name] = $table->allBy($item['column'], $value);
+                        }
+                        break;
+
+                    // belongsTo relationship
+                    case 'belongs':
+                        $table = new $item['model'];
+                        $value = $data[$item['column']] ?? null;
+                        if(!is_null($value)){
+                            $data[$name] = $table->findBy($item['primary'], $value);
+                        }
+                        break;
+                }
+
             }
 
             // Returns the result
@@ -808,6 +968,10 @@
 
                         case 'encrypted':
                             $data[$field] = Util::encryptString($data[$field], 'sha256', $params[1] ?? null);
+                            break;
+
+                        case 'serialize':
+                            $data[$field] = is_null($data[$field]) ? null : serialize($data[$field]);
                             break;
 
                         case 'callback':

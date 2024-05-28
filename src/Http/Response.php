@@ -6,6 +6,7 @@
     use SimpleXMLElement;
     use Glowie\Core\View\Buffer;
     use Glowie\Core\Collection;
+    use Glowie\Core\Exception\FileException;
 
     /**
      * Response handler for Glowie application.
@@ -331,6 +332,16 @@
             if(is_callable([$data, 'toArray'])) $data = $data->toArray();
             $this->arrayToXML($data, $xml);
             echo $xml->asXML();
+        }
+
+        /**
+         * Sets a file content as the response.
+         * @param string $filename Filename to get the content from.
+         */
+        public function setFile(string $filename){
+            if(!is_file($filename)) throw new FileException('"' . $filename . '" does not exist!');
+            $content = file_get_contents($filename);
+            $this->setBody($content, mime_content_type($filename));
         }
 
          /**

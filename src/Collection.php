@@ -557,6 +557,27 @@
         }
 
         /**
+         * Iterates through each item of the Collection. This mutates the original Collection values.
+         * @param Closure $callback Function to be called.
+         */
+        public function each(Closure $callback){
+            foreach ($this->__data as $key => &$value){
+                $result = $callback($value, $key);
+                if($result === false) break;
+            }
+        }
+
+        /**
+         * Applies a function to all items of the Collection.
+         * @param Closure $callback Function to be called.
+         * @return Collection Returns a new Collection with the new data.
+         */
+        public function map(Closure $callback){
+            $data = array_map($callback, $this->__data);
+            return new Collection($data);
+        }
+
+        /**
          * Returns the Collection data as a string joined with a separator.
          * @param string $separator Separator to use to "glue" the data.
          * @return string Returns the imploded data.
