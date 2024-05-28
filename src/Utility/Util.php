@@ -895,6 +895,7 @@
         public static function pluralize(string $word){
             $last = strtolower($word[strlen($word) - 1]);
             $last2 = strtolower(substr($word, -2));
+            if (substr($word, -3) === 'ies' || substr($word, -3) === 'ves' || substr($word, -2) === 'es' || substr($word, -1) === 's') return $word;
             if ($last === 'y' && !in_array(strtolower($word[strlen($word) - 2]), ['a', 'e', 'i', 'o', 'u'])) return substr($word, 0, -1) . 'ies';
             if ($last2 === 'us') return substr($word, 0, -2) . 'i';
             if ($last2 === 'is') return substr($word, 0, -2) . 'es';
@@ -911,6 +912,7 @@
         public static function singularize(string $word){
             $last = strtolower($word[strlen($word) - 1]);
             $last2 = strtolower(substr($word, -2));
+            if (!in_array($last, ['s', 'x', 'z']) && substr($word, -3) !== 'ies' && substr($word, -3) !== 'ves' && $last2 !== 'es') return $word;
             if ($last2 === 'es') {
                 if (substr($word, -4) === 'sses' || substr($word, -4) === 'shes' || substr($word, -4) === 'ches') return substr($word, 0, -2);
                 if (substr($word, -3) === 'ies') return substr($word, 0, -3) . 'y';

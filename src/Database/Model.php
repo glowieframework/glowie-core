@@ -149,7 +149,7 @@
          */
         final public function __construct($data = []){
             // Gets the table name
-            if(Util::isEmpty($this->_table)) $this->_table = Util::snakeCase(Util::classname($this));
+            if(Util::isEmpty($this->_table)) $this->_table = Util::snakeCase(Util::pluralize(Util::classname($this)));
 
             // Constructs the query builder
             Kraken::__construct($this->_table, $this->_database);
