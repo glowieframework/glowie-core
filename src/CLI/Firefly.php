@@ -764,7 +764,7 @@
             if(Util::isEmpty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
 
             // Checks if table was filled
-            $default_table = Util::snakeCase($name);
+            $default_table = Util::snakeCase(Util::pluralize($name));
             $table = self::argOrInput('table', "Model table ({$default_table}): ", $default_table);
             $table = trim($table);
 

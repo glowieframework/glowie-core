@@ -8,6 +8,7 @@
     use Util;
     use Exception;
     use JsonSerializable;
+    use Closure;
 
     /**
      * Model core for Glowie application.
@@ -159,8 +160,8 @@
             $data = array_merge($this->_attributes, $data);
             if(!empty($data)) $this->fill($data);
 
-            // Create associations
-            $this->associate();
+            // Initialize model
+            if(method_exists($this, 'init')) $this->init();
         }
 
         /**
@@ -635,13 +636,6 @@
         }
 
         /**
-         * Sets the Model table associations.
-         */
-        protected function associate(){
-            $this->_associations = [];
-        }
-
-        /**
          * Enables associating data with other models.
          * @return $this Current Model instance for nested calls.
          */
@@ -659,7 +653,19 @@
             return $this;
         }
 
-        public function hasOne(string $model, ?string $name = null, ?string $column = null){
+        /**
+         * Sets a condition to the last association created in the Model.
+         * @param Closure $callback A function that receives the associated model instance and joining value as references.
+         * @return $this Current Model instance for nested calls.
+         */
+        public function associateWhen(Closure $callback){
+            if(empty($this->_associations)) throw new Exception('Model: No association created to be modified');
+            $i = array_key_last($this->_associations);
+            $this->_associations[$i]['callback'] = $callback;
+            return $this;
+        }
+
+        public function hasOne(string $model, ?string $column = null, ?string $name = null, ?Closure $callback = null){
             // Get primary key and names
             $primary = $this->getPrimaryName();
             if(empty($name)) $name = Util::snakeCase(Util::singularize(Util::classname($model)));
@@ -670,14 +676,15 @@
                 'type' => 'one',
                 'model' => $model,
                 'primary' => $primary,
-                'column' => $column
+                'column' => $column,
+                'callback' => $callback
             ];
 
-            // Return result
+            // Return instance
             return $this;
         }
 
-        public function hasMany(string $model, ?string $name = null, ?string $column = null){
+        public function hasMany(string $model, ?string $column = null, ?string $name = null, ?Closure $callback = null){
             // Get primary key and names
             $primary = $this->getPrimaryName();
             if(empty($name)) $name = Util::snakeCase(Util::pluralize(Util::classname($model)));
@@ -688,14 +695,15 @@
                 'type' => 'many',
                 'model' => $model,
                 'primary' => $primary,
-                'column' => $column
+                'column' => $column,
+                'callback' => $callback
             ];
 
-            // Return result
+            // Return instance
             return $this;
         }
 
-        public function belongsTo(string $model, ?string $name = null, ?string $column = null){
+        public function belongsTo(string $model, ?string $column = null, ?string $name = null, ?Closure $callback = null){
             // Get primary key and names
             $primary = (new $model)->getPrimaryName();
             if(empty($name)) $name = Util::snakeCase(Util::singularize(Util::classname($model)));
@@ -706,10 +714,37 @@
                 'type' => 'belongs',
                 'model'=> $model,
                 'primary' => $primary,
-                'column' => $column
+                'column' => $column,
+                'callback' => $callback
             ];
 
-            // Return result
+            // Return instance
+            return $this;
+        }
+
+        public function belongsToMany(string $model, ?string $pivot = null, ?string $name = null, ?Closure $callback = null){
+            // Get primary key and names
+            $primary = 'id';
+            if(empty($name)) $name = Util::snakeCase(Util::pluralize(Util::classname($model)));
+            if(empty($pivot)) $pivot = Util::snakeCase(Util::pluralize(Util::classname($this))) . '_' . Util::snakeCase(Util::pluralize(Util::classname($model)));
+
+            // Get foreign keys
+            $foreign = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $this->getPrimaryName();
+            $foreignTarget = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primary;
+
+            // Set to associations array
+            $this->_associations[$name] = [
+                'type' => 'belongs-many',
+                'model'=> $model,
+                'primary-current' => $this->getPrimaryName(),
+                'primary-target' => $primary,
+                'pivot' => $pivot,
+                'current-foreign' => $foreign,
+                'target-foreign' => $foreignTarget,
+                'callback' => $callback
+            ];
+
+            // Return instance
             return $this;
         }
 
@@ -828,7 +863,7 @@
                             $data[$field] = Util::decryptString($data[$field], 'sha256', $params[1] ?? null);
                             break;
 
-                        case 'serialize':
+                        case 'serialized':
                             $data[$field] = is_null($data[$field]) ? null : unserialize($data[$field]);
                             break;
 
@@ -892,26 +927,35 @@
                     case 'one':
                         $table = new $item['model'];
                         $value = $data[$item['primary']] ?? null;
-                        if(!is_null($value)){
-                            $data[$name] = $table->findBy($item['column'], $value);
-                        }
+                        if(is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$value]);
+                        if(!is_null($value)) $data[$name] = $table->findBy($item['column'], $value);
                         break;
 
                     // hasMany relationship
                     case 'many':
                         $table = new $item['model'];
                         $value = $data[$item['primary']] ?? null;
-                        if(!is_null($value)){
-                            $data[$name] = $table->allBy($item['column'], $value);
-                        }
+                        if(is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$value]);
+                        if(!is_null($value)) $data[$name] = $table->allBy($item['column'], $value);
                         break;
 
                     // belongsTo relationship
                     case 'belongs':
                         $table = new $item['model'];
                         $value = $data[$item['column']] ?? null;
+                        if(is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$value]);
+                        if(!is_null($value)) $data[$name] = $table->findBy($item['primary'], $value);
+                        break;
+
+                    // belongsToMany relationship
+                    case 'belongs-many':
+                        $table = new $item['model'];
+                        $value = $data[$item['primary-current']] ?? null;
                         if(!is_null($value)){
-                            $data[$name] = $table->findBy($item['primary'], $value);
+                            $pivot = new Kraken($item['pivot'], $this->_database);
+                            $relations = $pivot->where($item['current-foreign'], $value)->fetchAll()->column($item['target-foreign']);
+                            if(is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$relations]);
+                            $data[$name] = $table->whereIn($item['primary-target'], $relations)->all();
                         }
                         break;
                 }
@@ -970,7 +1014,7 @@
                             $data[$field] = Util::encryptString($data[$field], 'sha256', $params[1] ?? null);
                             break;
 
-                        case 'serialize':
+                        case 'serialized':
                             $data[$field] = is_null($data[$field]) ? null : serialize($data[$field]);
                             break;
 

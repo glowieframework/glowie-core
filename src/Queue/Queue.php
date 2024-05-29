@@ -65,7 +65,7 @@
             $job = is_object($job) ? get_class($job) : $job;
 
             // Add to queue
-            $db = new Kraken(self::$table);
+            $db = new Kraken(self::$table, Config::get('queue.connection', 'default'));
             $db->insert([
                 'job' => $job,
                 'queue' => $queue,
@@ -91,7 +91,7 @@
             self::prune();
 
             // Get pending jobs from the queue
-            $db = new Kraken(self::$table);
+            $db = new Kraken(self::$table, Config::get('queue.connection', 'default'));
             $jobs = $db->where('queue', $queue)->whereNull('ran_at')->where('attempts', '<', Config::get('queue.max_attempts', 3))->orderBy('id')->fetchAll();
 
             if(count($jobs) == 0){
@@ -162,7 +162,7 @@
             // Creates the table instance if not yet
             self::$table = Config::get('queue.table', 'queue');
             self::createTable();
-            $db = new Kraken(self::$table);
+            $db = new Kraken(self::$table, Config::get('queue.connection', 'default'));
 
             // Clear the whole queue
             if($success && $failed && $pending) return $db->whereNotNull('id')->delete();
@@ -183,7 +183,7 @@
          * Deletes from the queue expired successful jobs.
          */
         private static function prune(){
-            $db = new Kraken(self::$table);
+            $db = new Kraken(self::$table, Config::get('queue.connection', 'default'));
             $db->whereNotNull('ran_at')->where('ran_at', '<=', date('Y-m-d H:i:s', time() - Config::get('queue.keep_log', self::DELAY_DAY)))->delete();
         }
 
@@ -192,10 +192,9 @@
          */
         private static function createTable(){
             if(!self::$tableCreated){
-                $db = new Skeleton();
-                if(!$db->tableExists(self::$table)){
-                    $db->table(self::$table)
-                        ->id()
+                $db = new Skeleton(self::$table, Config::get('queue.connection', 'default'));
+                if(!$db->tableExists()){
+                    $db->id()
                         ->createColumn('job')->type(Skeleton::TYPE_STRING)->size(500)
                         ->createColumn('queue')->type(Skeleton::TYPE_STRING)->size(255)
                         ->createColumn('data')->type(Skeleton::TYPE_BLOB)->nullable()
