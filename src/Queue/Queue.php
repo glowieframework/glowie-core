@@ -51,18 +51,15 @@
 
         /**
          * Adds a job to the queue.
-         * @param Job|string $job A job instance or job full classname with `Glowie\Jobs` namespace.
+         * @param string $job A job classname with namespace. You can use `JobName::class` to get this property correctly.
          * @param mixed $data (Optional) Data to pass to the job.
          * @param string $queue (Optional) Queue name to add this job to.
          * @param int $delay (Optional) Delay in seconds to run this job.
          */
-        public static function add($job, $data = null, string $queue = 'default', int $delay = 0){
+        public static function add(string $job, $data = null, string $queue = 'default', int $delay = 0){
             // Stores the table name and checks its existence
             self::$table = Config::get('queue.table', 'queue');
             self::createTable();
-
-            // Gets the job classname
-            $job = is_object($job) ? get_class($job) : $job;
 
             // Add to queue
             $db = new Kraken(self::$table, Config::get('queue.connection', 'default'));

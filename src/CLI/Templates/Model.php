@@ -105,6 +105,13 @@
          */
         protected $_deletedField = 'deleted_at';
 
+        /**
+         * Initializes the model and its associations (if any).
+         */
+        public function init(){
+            //
+        }
+
     }
 
 ?>

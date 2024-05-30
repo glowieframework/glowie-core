@@ -362,6 +362,16 @@
         }
 
         /**
+         * Gets an argument value casted to a boolean.
+         * @param string $arg Argument key to get.
+         * @param bool $default (Optional) Default value to return if the key does not exist.
+         * @return bool Returns the value if exists (as boolean) or false if not.
+         */
+        public static function getBool(string $arg, bool $default = false){
+            return filter_var(self::getArg($arg, $default), FILTER_VALIDATE_BOOLEAN);
+        }
+
+        /**
          * Gets all arguments as an associative array.
          * @return Collection Returns a Collection of arguments.
          */
@@ -464,9 +474,9 @@
          * Clears the jobs queue.
          */
         private static function __clearQueue(){
-            $success = filter_var(self::getArg('success', false), FILTER_VALIDATE_BOOLEAN);
-            $failed = filter_var(self::getArg('failed', false), FILTER_VALIDATE_BOOLEAN);
-            $pending = filter_var(self::getArg('pending', false), FILTER_VALIDATE_BOOLEAN);
+            $success = self::getBool('success');
+            $failed = self::getBool('failed');
+            $pending = self::getBool('pending');
             if(!$success && !$failed && !$pending) $success = $failed = $pending = true;
             Queue::clear($success, $failed, $pending);
             self::print('<color="green">Queue cleared successfully!</color>');
@@ -722,12 +732,18 @@
          * Creates a new migration.
          */
         private static function __createMigration(){
+            $name = self::argOrInput('name', 'Migration name: ');
+            self::doMigrationCreate($name);
+        }
+
+        /**
+         * Runs the migration creator.
+         * @param string $name Migration name.
+         */
+        private static function doMigrationCreate($name){
             // Checks permissions
             if(!is_dir(Util::location('migrations'))) mkdir(Util::location('migrations'), 0755, true);
             if(!is_writable(Util::location('migrations'))) throw new FileException('Directory "app/migrations" is not writable, please check your chmod settings');
-
-            // Checks if name was filled
-            $name = self::argOrInput('name', 'Migration name: ');
 
             // Validates the migration name
             if(Util::isEmpty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
@@ -785,6 +801,9 @@
             // Success message
             self::print("<color=\"green\">Model {$name} created successfully!</color>");
             self::print('<color="cyan">File: ' . $targetFile . '</color>');
+
+            // Create migration if asked
+            if(self::getBool('migration')) self::doMigrationCreate('Create' . Util::pascalCase($table) . 'Table');
             return true;
         }
 
@@ -925,7 +944,7 @@
          */
         private static function __publish(){
             // Get force flag
-            $force = filter_var(self::getArg('force', false), FILTER_VALIDATE_BOOLEAN);
+            $force = self::getBool('force');
 
             // Get plugins
             $plugins = Config::get('plugins', []);
@@ -950,8 +969,7 @@
          * Run queue.
          */
         private static function __queue(){
-            $bail = filter_var(self::getArg('bail', false), FILTER_VALIDATE_BOOLEAN);
-            Queue::process(self::getArg('name', 'default'), $bail, true);
+            Queue::process(self::getArg('name', 'default'), self::getBool('bail'), true);
             return true;
         }
 
@@ -960,7 +978,7 @@
          */
         private static function __queueWatch(){
             // Get bail arg
-            $bail = filter_var(self::getArg('bail', false), FILTER_VALIDATE_BOOLEAN);
+            $bail = self::getBool('bail');
 
             // Print welcome message
             Firefly::print('<color="green">[' . date('Y-m-d H:i:s') . '] Queue Watcher has started!</color>');
@@ -1005,7 +1023,7 @@
             self::print('  <color="yellow">create-language</color> <color="blue">--name</color> | Creates a new language file for your application');
             self::print('  <color="yellow">create-middleware</color> <color="blue">--name</color> | Creates a new middleware for your application');
             self::print('  <color="yellow">create-migration</color> <color="blue">--name</color> | Creates a new migration for your application');
-            self::print('  <color="yellow">create-model</color> <color="blue">--name --table --primary</color> | Creates a new model for your application');
+            self::print('  <color="yellow">create-model</color> <color="blue">--name --table --primary --migration</color> | Creates a new model for your application');
             self::print('  <color="yellow">create-job</color> <color="blue">--name</color> | Creates a new job for your application');
             self::print('  <color="yellow">migrate</color> <color="blue">--steps</color> | Applies pending migrations from your application');
             self::print('  <color="yellow">rollback</color> <color="blue">--steps</color> | Rolls back the last applied migration');

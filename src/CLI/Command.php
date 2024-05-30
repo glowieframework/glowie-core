@@ -236,6 +236,16 @@
         }
 
         /**
+         * Gets an argument value casted to a boolean.
+         * @param string $arg Argument key to get.
+         * @param bool $default (Optional) Default value to return if the key does not exist.
+         * @return bool Returns the value if exists (as boolean) or false if not.
+         */
+        public function getBool(string $key, bool $default = false){
+            return Firefly::getBool($key, $default);
+        }
+
+        /**
          * Gets all arguments as a Collection.
          * @return Collection Returns a Collection of arguments.
          */

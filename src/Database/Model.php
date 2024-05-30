@@ -665,11 +665,19 @@
             return $this;
         }
 
-        public function hasOne(string $model, ?string $column = null, ?string $name = null, ?Closure $callback = null){
+        /**
+         * Setup a one to one relationship with another model.
+         * @param string $model Associated model classname with namespace. You can use `ModelName::class` to get this property correctly.
+         * @param string $column (Optional) Foreign key column name from the associated model. Leave empty for auto.
+         * @param string $name (Optional) Name of this association to add to the query results. Leave empty for auto.
+         * @param Closure|null $callback (Optional) A function to interact with the associated model before querying the relationship.
+         * @return $this Current Model instance for nested calls.
+         */
+        public function hasOne(string $model, string $column = '', string $name = '', ?Closure $callback = null){
             // Get primary key and names
             $primary = $this->getPrimaryName();
-            if(empty($name)) $name = Util::snakeCase(Util::singularize(Util::classname($model)));
-            if(empty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $this->getPrimaryName();
+            if(Util::isEmpty($name)) $name = Util::snakeCase(Util::singularize(Util::classname($model)));
+            if(Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $this->getPrimaryName();
 
             // Set to associations array
             $this->_associations[$name] = [
@@ -684,11 +692,19 @@
             return $this;
         }
 
-        public function hasMany(string $model, ?string $column = null, ?string $name = null, ?Closure $callback = null){
+        /**
+         * Setup a one to many relationship with another model.
+         * @param string $model Associated model classname with namespace. You can use `ModelName::class` to get this property correctly.
+         * @param string $column (Optional) Foreign key column name from the associated model. Leave empty for auto.
+         * @param string $name (Optional) Name of this association to add to the query results. Leave empty for auto.
+         * @param Closure|null $callback (Optional) A function to interact with the associated model before querying the relationship.
+         * @return $this Current Model instance for nested calls.
+         */
+        public function hasMany(string $model, string $column = '', string $name = '', ?Closure $callback = null){
             // Get primary key and names
             $primary = $this->getPrimaryName();
-            if(empty($name)) $name = Util::snakeCase(Util::pluralize(Util::classname($model)));
-            if(empty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $this->getPrimaryName();
+            if(Util::isEmpty($name)) $name = Util::snakeCase(Util::pluralize(Util::classname($model)));
+            if(Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $this->getPrimaryName();
 
             // Set to associations array
             $this->_associations[$name] = [
@@ -703,11 +719,19 @@
             return $this;
         }
 
-        public function belongsTo(string $model, ?string $column = null, ?string $name = null, ?Closure $callback = null){
+        /**
+         * Setup a many to one relationship with another model.
+         * @param string $model Associated model classname with namespace. You can use `ModelName::class` to get this property correctly.
+         * @param string $column (Optional) Foreign key column name from the current model. Leave empty for auto.
+         * @param string $name (Optional) Name of this association to add to the query results. Leave empty for auto.
+         * @param Closure|null $callback (Optional) A function to interact with the associated model before querying the relationship.
+         * @return $this Current Model instance for nested calls.
+         */
+        public function belongsTo(string $model, string $column = '', string $name = '', ?Closure $callback = null){
             // Get primary key and names
             $primary = (new $model)->getPrimaryName();
-            if(empty($name)) $name = Util::snakeCase(Util::singularize(Util::classname($model)));
-            if(empty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primary;
+            if(Util::isEmpty($name)) $name = Util::snakeCase(Util::singularize(Util::classname($model)));
+            if(Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primary;
 
             // Set to associations array
             $this->_associations[$name] = [
@@ -722,11 +746,19 @@
             return $this;
         }
 
-        public function belongsToMany(string $model, ?string $pivot = null, ?string $name = null, ?Closure $callback = null){
+        /**
+         * Setup a many to many relationship with another model. **This requires an intermediate (pivot) table.**
+         * @param string $model Associated model classname with namespace. You can use `ModelName::class` to get this property correctly.
+         * @param string $pivot (Optional) Intermediate table name. Leave empty for auto.
+         * @param string $name (Optional) Name of this association to add to the query results. Leave empty for auto.
+         * @param Closure|null $callback (Optional) A function to interact with the associated model before querying the relationship.
+         * @return $this Current Model instance for nested calls.
+         */
+        public function belongsToMany(string $model, string $pivot = '', string $name = '', ?Closure $callback = null){
             // Get primary key and names
             $primary = 'id';
-            if(empty($name)) $name = Util::snakeCase(Util::pluralize(Util::classname($model)));
-            if(empty($pivot)) $pivot = Util::snakeCase(Util::pluralize(Util::classname($this))) . '_' . Util::snakeCase(Util::pluralize(Util::classname($model)));
+            if(Util::isEmpty($name)) $name = Util::snakeCase(Util::pluralize(Util::classname($model)));
+            if(Util::isEmpty($pivot)) $pivot = Util::snakeCase(Util::pluralize(Util::classname($this))) . '_' . Util::snakeCase(Util::pluralize(Util::classname($model)));
 
             // Get foreign keys
             $foreign = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $this->getPrimaryName();

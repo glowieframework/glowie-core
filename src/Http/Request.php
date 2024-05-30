@@ -169,6 +169,16 @@
         }
 
         /**
+         * Gets a value from the request body casted as a boolean.
+         * @param string $key Key to get value.
+         * @param bool $default (Optional) Default value to return if the key does not exist.
+         * @return bool Returns the value (casted as a boolean) if exists or the default if not.
+         */
+        public function getBool(string $key, bool $default = false){
+            return filter_var($this->get($key, $default), FILTER_VALIDATE_BOOLEAN);
+        }
+
+        /**
          * Returns the request method.
          * @return string Request method.
          */
