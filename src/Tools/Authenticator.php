@@ -112,7 +112,7 @@
                 call_user_func_array($conditions, [$model, $user, $password]);
                 $user = $model->findAndFillBy([$userField => $user]);
             }else{
-                $user = $model->findAndFillBy([$userField => $user, ...$conditions]);
+                $user = $model->findAndFillBy(array_merge([$userField => $user], $conditions));
             }
 
             if(!$user){
