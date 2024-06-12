@@ -226,6 +226,20 @@
         }
 
         /**
+         * Fetches all results from a SELECT query with pagination.
+         * @param int $currentPage (Optional) Current page to get results.
+         * @param int $resultsPerPage (Optional) Number of results to get per page.
+         * @param int|null $range (Optional) Pagination range interval (for `pages` array).
+         * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
+         * @return Element Returns an Element with the pagination result.
+         * @throws QueryException Throws an exception if the query fails.
+         */
+        public function paginate(int $currentPage = 1, int $resultsPerPage = 25, ?int $range = null, bool $deleted = false){
+            if($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
+            return Kraken::paginate($currentPage, $resultsPerPage, $range);
+        }
+
+        /**
          * Gets the first row that matches the model primary key value.
          * @param mixed $primary (Optional) Primary key value to search for.
          * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
@@ -521,6 +535,7 @@
 
         /**
          * Checks if there are any records that match a SELECT query.
+         * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
          * @return bool Returns true if exists or false if not.
          * @throws QueryException Throws an exception if the query fails.
          */
@@ -528,6 +543,16 @@
             if($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
             $result = $this->count();
             return (is_int($result) && $result >= 1);
+        }
+
+        /**
+         * Checks if there are not any records that match a SELECT query.
+         * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
+         * @return bool Returns true if does not exist or false if it does.
+         * @throws QueryException Throws an exception if the query fails.
+         */
+        public function doesntExist(bool $deleted = false){
+            return !$this->exists($deleted);
         }
 
         /**
@@ -872,6 +897,9 @@
                     $params = explode(':', $type, 2);
                     $type = strtolower($params[0]);
 
+                    // Checks if data is not null
+                    if(is_null($data[$field])) continue;
+
                     // Gets the rule
                     switch($type){
                         case 'array':
@@ -1036,10 +1064,13 @@
                     $params = explode(':', $mutator, 2);
                     $mutator = strtolower($params[0]);
 
+                    // Checks if data is not null
+                    if(is_null($data[$field])) continue;
+
                     // Gets the rule
                     switch($mutator){
                         case 'json':
-                            $data[$field] = json_encode($data[$field], JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
+                            $data[$field] = json_encode($data[$field], JSON_UNESCAPED_UNICODE);
                             break;
 
                         case 'encrypted':

@@ -285,7 +285,7 @@
          * @param int $depth (Optional) JSON encoding maximum depth (same as in `json_encode()` function).
          * @return string The resulting JSON string.
          */
-        public function toJson(int $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK, int $depth = 512){
+        public function toJson(int $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES, int $depth = 512){
             $data = $this->toArray();
             return empty($data) ? '{}' : json_encode($data, $flags, $depth);
         }

@@ -313,7 +313,7 @@
          * @param int $flags (Optional) JSON encoding flags (same as in `json_encode()` function).
          * @param int $depth (Optional) JSON encoding maximum depth (same as in `json_encode()` function).
          */
-        public function setJson($data, int $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK, int $depth = 512){
+        public function setJson($data, int $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES, int $depth = 512){
             if(Buffer::isActive()) Buffer::clean();
             $this->setContentType(self::CONTENT_JSON);
             if(is_callable([$data, 'toArray'])) $data = $data->toArray();

@@ -949,7 +949,7 @@
          * @param int $depth (Optional) JSON encoding maximum depth (same as in `json_encode()` function).
          * @return string The resulting JSON string.
          */
-        public static function jsonEncode($data, int $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK, int $depth = 512){
+        public static function jsonEncode($data, int $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES, int $depth = 512){
             if(is_callable([$data, 'toJson'])) return $data->toJson($flags, $depth);
             return json_encode($data, $flags, $depth);
         }
