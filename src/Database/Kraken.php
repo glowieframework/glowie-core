@@ -1358,7 +1358,7 @@
 
             // Returns the result
             if($result !== false){
-                return (int)$result->count;
+                return (int)($result->count ?? 0);
             }else{
                 return $result;
             }
@@ -1384,7 +1384,7 @@
 
             // Returns the result
             if($result !== false){
-                return $result->sum;
+                return (float)($result->sum ?? 0);
             }else{
                 return $result;
             }
@@ -1410,7 +1410,7 @@
 
             // Returns the result
             if($result !== false){
-                return $result->max;
+                return (float)($result->max ?? 0);
             }else{
                 return $result;
             }
@@ -1436,7 +1436,7 @@
 
             // Returns the result
             if($result !== false){
-                return $result->min;
+                return (float)($result->min ?? 0);
             }else{
                 return $result;
             }
@@ -1462,7 +1462,7 @@
 
             // Returns the result
             if($result !== false){
-                return $result->avg;
+                return (float)($result->avg ?? 0);
             }else{
                 return $result;
             }
