@@ -138,8 +138,8 @@
         private $_associations = [];
 
         /**
-         * If associating data is enabled.
-         * @var bool
+         * Array of enabled associations for the next queries.
+         * @var bool|array
          */
         private $_associationsEnabled = false;
 
@@ -662,10 +662,11 @@
 
         /**
          * Enables associating data with other models.
+         * @param string|array $names (Optional) Association name or an array of associations to enable. Leave empty to use all.
          * @return $this Current Model instance for nested calls.
          */
-        public function withAssociations(){
-            $this->_associationsEnabled = true;
+        public function withAssociations($names = []){
+            $this->_associationsEnabled = (array)$names;
             return $this;
         }
 
@@ -695,7 +696,8 @@
          * @param string $model Associated model classname with namespace. You can use `ModelName::class` to get this property correctly.
          * @param string $column (Optional) Foreign key column name from the associated model. Leave empty for auto.
          * @param string $name (Optional) Name of this association to add to the query results. Leave empty for auto.
-         * @param Closure|null $callback (Optional) A function to interact with the associated model before querying the relationship.
+         * @param Closure|null $callback (Optional) A function to interact with the associated model before querying the relationship.\
+         * It receives the related Model instance as the first parameter, and the current row as an associative array.
          * @return $this Current Model instance for nested calls.
          */
         public function hasOne(string $model, string $column = '', string $name = '', ?Closure $callback = null){
@@ -722,7 +724,8 @@
          * @param string $model Associated model classname with namespace. You can use `ModelName::class` to get this property correctly.
          * @param string $column (Optional) Foreign key column name from the associated model. Leave empty for auto.
          * @param string $name (Optional) Name of this association to add to the query results. Leave empty for auto.
-         * @param Closure|null $callback (Optional) A function to interact with the associated model before querying the relationship.
+         * @param Closure|null $callback (Optional) A function to interact with the associated model before querying the relationship.\
+         * It receives the related Model instance as the first parameter, and the current row as an associative array.
          * @return $this Current Model instance for nested calls.
          */
         public function hasMany(string $model, string $column = '', string $name = '', ?Closure $callback = null){
@@ -749,7 +752,8 @@
          * @param string $model Associated model classname with namespace. You can use `ModelName::class` to get this property correctly.
          * @param string $column (Optional) Foreign key column name from the current model. Leave empty for auto.
          * @param string $name (Optional) Name of this association to add to the query results. Leave empty for auto.
-         * @param Closure|null $callback (Optional) A function to interact with the associated model before querying the relationship.
+         * @param Closure|null $callback (Optional) A function to interact with the associated model before querying the relationship.\
+         * It receives the related Model instance as the first parameter, and the current row as an associative array.
          * @return $this Current Model instance for nested calls.
          */
         public function belongsTo(string $model, string $column = '', string $name = '', ?Closure $callback = null){
@@ -776,7 +780,8 @@
          * @param string $model Associated model classname with namespace. You can use `ModelName::class` to get this property correctly.
          * @param string $pivot (Optional) Intermediate table name. Leave empty for auto.
          * @param string $name (Optional) Name of this association to add to the query results. Leave empty for auto.
-         * @param Closure|null $callback (Optional) A function to interact with the associated model before querying the relationship.
+         * @param Closure|null $callback (Optional) A function to interact with the associated model before querying the relationship.\
+         * It receives the related Model instance as the first parameter, the current row as an associative array and an array with the pivot results.
          * @return $this Current Model instance for nested calls.
          */
         public function belongsToMany(string $model, string $pivot = '', string $name = '', ?Closure $callback = null){
@@ -962,7 +967,7 @@
          */
         private function associateData($data){
             // Checks if associations are enabled, or data / associations property is empty
-            if(!$this->_associationsEnabled || empty($data) || empty($this->_associations)) return $data;
+            if($this->_associationsEnabled === false || empty($data) || empty($this->_associations)) return $data;
 
             // Checks for Collection
             $isCollection = $data instanceof Collection;
@@ -982,28 +987,29 @@
 
             // Performs the associations
             foreach($this->_associations as $name => $item){
+                if(!empty($this->_associationsEnabled) && !in_array($name, $this->_associationsEnabled)) continue;
                 switch ($item['type']) {
                     // hasOne relationship
                     case 'one':
                         $table = new $item['model'];
+                        if(is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
                         $value = $data[$item['primary']] ?? null;
-                        if(is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$value]);
                         if(!is_null($value)) $data[$name] = $table->findBy($item['column'], $value);
                         break;
 
                     // hasMany relationship
                     case 'many':
                         $table = new $item['model'];
+                        if(is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
                         $value = $data[$item['primary']] ?? null;
-                        if(is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$value]);
                         if(!is_null($value)) $data[$name] = $table->allBy($item['column'], $value);
                         break;
 
                     // belongsTo relationship
                     case 'belongs':
                         $table = new $item['model'];
+                        if(is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
                         $value = $data[$item['column']] ?? null;
-                        if(is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$value]);
                         if(!is_null($value)) $data[$name] = $table->findBy($item['primary'], $value);
                         break;
 
@@ -1014,7 +1020,7 @@
                         if(!is_null($value)){
                             $pivot = new Kraken($item['pivot'], $this->_database);
                             $relations = $pivot->where($item['current-foreign'], $value)->fetchAll()->column($item['target-foreign']);
-                            if(is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$relations]);
+                            if(is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data, &$relations]);
                             $data[$name] = $table->whereIn($item['primary-target'], $relations)->all();
                         }
                         break;

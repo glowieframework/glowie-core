@@ -154,9 +154,8 @@
          * @return $this Current instance for nested calls.
          */
         public function select($columns = '*'){
-            $this->_instruction = 'SELECT';
-            $this->_select = implode(', ', (array)$columns);
-            return $this;
+            $this->_select = '';
+            return $this->addSelect($columns);
         }
 
         /**
@@ -166,8 +165,33 @@
          * @return $this Current instance for nested calls.
          */
         public function addSelect($columns = '*'){
-            $this->_instruction = 'SELECT';
+            if($this->_instruction != 'SELECT DISTINCT') $this->_instruction = 'SELECT';
             $value = implode(', ', (array)$columns);
+            $this->_select .= (!Util::isEmpty($this->_select) ? ', ' : '') . $value;
+            return $this;
+        }
+
+        /**
+         * Sets a SELECT query using the result of another subquery.
+         * @param string $name Column name to set the subquery result to.
+         * @param Kraken|string $query Kraken instance to get the subquery from or a raw SELECT subquery.
+         * @return $this Current instance for nested calls.
+         */
+        public function selectSub(string $name, $query){
+            $this->_select = '';
+            return $this->addSelectSub($name, $query);
+        }
+
+        /**
+         * Appends a SELECT statement to the query using the result of another subquery.
+         * @param string $name Column name to set the subquery result to.
+         * @param Kraken|string $query Kraken instance to get the subquery from or a raw SELECT subquery.
+         * @return $this Current instance for nested calls.
+         */
+        public function addSelectSub(string $name, $query){
+            if($this->_instruction != 'SELECT DISTINCT') $this->_instruction = 'SELECT';
+            if($query instanceof Kraken) $query = $query->getQuery();
+            $value = '(' . $query . ') AS ' . $name;
             $this->_select .= (!Util::isEmpty($this->_select) ? ', ' : '') . $value;
             return $this;
         }
@@ -188,6 +212,19 @@
          */
         public function from(string $table){
             $this->_from = $table;
+            return $this;
+        }
+
+        /**
+         * Sets the query FROM statement using the result of another subquery.
+         * @param string $name Table name to set the subquery result to.
+         * @param Kraken|string $query Kraken instance to get the subquery from or a raw SELECT subquery.
+         * @return $this Current instance for nested calls.
+         */
+        public function fromSub(string $name, $query){
+            if($query instanceof Kraken) $query = $query->getQuery();
+            $value = '(' . $query . ') AS ' . $name;
+            $this->_from = $value;
             return $this;
         }
 
@@ -755,6 +792,7 @@
          * @param string $column First column name to compare.
          * @param string $param1 If `$param2` isset, the operator used in the condition. Otherwise, the second column name to compare.
          * @param string|null $param2 (Optional) Second column name if `$param1` is the operator.
+         * @return $this Current instance for nested calls.
          */
         public function whereColumn(string $column, string $param1, $param2 = null){
             if(is_null($param2)){
@@ -769,6 +807,7 @@
          * @param string $column First column name to compare.
          * @param string $param1 If `$param2` isset, the operator used in the condition. Otherwise, the second column name to compare.
          * @param string|null $param2 (Optional) Second column name if `$param1` is the operator.
+         * @return $this Current instance for nested calls.
          */
         public function orWhereColumn(string $column, string $param1, $param2 = null){
             if(is_null($param2)){
@@ -776,6 +815,117 @@
                 $param1 = '=';
             }
             return $this->where($column, $param1, self::raw($param2), 'OR');
+        }
+
+        /**
+         * Adds a WHERE condition to the query using the result of another subquery.
+         * @param string $column Column name.
+         * @param string|Kraken $param1 If `$param2` isset, the operator used in the condition. Otherwise, a Kraken instance\
+         * to get the subquery from or a raw SELECT subquery.
+         * @param mixed $param2 (Optional) Kraken subquery instance (or a raw SELECT query) if `$param1` is the operator.
+         * @param string $type (Optional) Chaining type (AND or OR).
+         * @return $this Current instance for nested calls.
+         */
+        public function whereSub(string $column, $param1, $param2 = null, string $type = 'AND'){
+            if(is_null($param2)){
+                $param2 = $param1;
+                $param1 = '=';
+            }
+            if($param2 instanceof Kraken) $param2 = $param2->getQuery();
+            return $this->rawWhere($column . ' ' . $param1 . ' (' . $param2 . ')', $type);
+        }
+
+        /**
+         * Adds an OR WHERE condition to the query using the result of another subquery.
+         * @param string $column Column name.
+         * @param string|Kraken $param1 If `$param2` isset, the operator used in the condition. Otherwise, a Kraken instance\
+         * to get the subquery from or a raw SELECT subquery.
+         * @param mixed $param2 (Optional) Kraken subquery instance (or a raw SELECT query) if `$param1` is the operator.
+         * @param string $type (Optional) Chaining type (AND or OR).
+         * @return $this Current instance for nested calls.
+         */
+        public function orWhereSub(string $column, $param1, $param2 = null){
+            return $this->whereSub($column, $param1, $param2, 'OR');
+        }
+
+        /**
+         * Adds a WHERE IN condition to the query using the result of another subquery.
+         * @param string $column Column name.
+         * @param string|Kraken $query A Kraken instance to get the subquery from or a raw SELECT subquery.
+         * @return $this Current instance for nested calls.
+         */
+        public function whereInSub(string $column, $query){
+            return $this->whereSub($column, 'IN', $query);
+        }
+
+        /**
+         * Adds an OR WHERE IN condition to the query using the result of another subquery.
+         * @param string $column Column name.
+         * @param string|Kraken $query A Kraken instance to get the subquery from or a raw SELECT subquery.
+         * @return $this Current instance for nested calls.
+         */
+        public function orWhereInSub(string $column, $query){
+            return $this->whereSub($column, 'IN', $query, 'OR');
+        }
+
+        /**
+         * Adds a WHERE NOT IN condition to the query using the result of another subquery.
+         * @param string $column Column name.
+         * @param string|Kraken $query A Kraken instance to get the subquery from or a raw SELECT subquery.
+         * @return $this Current instance for nested calls.
+         */
+        public function whereNotInSub(string $column, $query){
+            return $this->whereSub($column, 'NOT IN', $query);
+        }
+
+        /**
+         * Adds an OR WHERE NOT IN condition to the query using the result of another subquery.
+         * @param string $column Column name.
+         * @param string|Kraken $query A Kraken instance to get the subquery from or a raw SELECT subquery.
+         * @return $this Current instance for nested calls.
+         */
+        public function orWhereNotInSub(string $column, $query){
+            return $this->whereSub($column, 'NOT IN', $query, 'OR');
+        }
+
+        /**
+         * Adds a WHERE EXISTS condition to the query using the result of another subquery.
+         * @param string $column Column name.
+         * @param string|Kraken $query A Kraken instance to get the subquery from or a raw SELECT subquery.
+         * @return $this Current instance for nested calls.
+         */
+        public function whereExistsSub(string $column, $query){
+            return $this->whereSub($column, 'EXISTS', $query);
+        }
+
+        /**
+         * Adds an OR WHERE EXISTS condition to the query using the result of another subquery.
+         * @param string $column Column name.
+         * @param string|Kraken $query A Kraken instance to get the subquery from or a raw SELECT subquery.
+         * @return $this Current instance for nested calls.
+         */
+        public function orWhereExistsSub(string $column, $query){
+            return $this->whereSub($column, 'EXISTS', $query, 'OR');
+        }
+
+        /**
+         * Adds a WHERE NOT EXISTS condition to the query using the result of another subquery.
+         * @param string $column Column name.
+         * @param string|Kraken $query A Kraken instance to get the subquery from or a raw SELECT subquery.
+         * @return $this Current instance for nested calls.
+         */
+        public function whereNotExistsSub(string $column, $query){
+            return $this->whereSub($column, 'NOT EXISTS', $query);
+        }
+
+        /**
+         * Adds an OR WHERE NOT EXISTS condition to the query using the result of another subquery.
+         * @param string $column Column name.
+         * @param string|Kraken $query A Kraken instance to get the subquery from or a raw SELECT subquery.
+         * @return $this Current instance for nested calls.
+         */
+        public function orWhereNotExistsSub(string $column, $query){
+            return $this->whereSub($column, 'NOT EXISTS', $query, 'OR');
         }
 
         /**
