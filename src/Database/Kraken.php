@@ -827,12 +827,17 @@
          * @return $this Current instance for nested calls.
          */
         public function whereSub(string $column, $param1, $param2 = null, string $type = 'AND'){
-            if(is_null($param2)){
-                $param2 = $param1;
-                $param1 = '=';
+            if($column === 'EXISTS' || $column === 'NOT EXISTS'){
+                if($param1 instanceof Kraken) $param1 = $param1->getQuery();
+                return $this->rawWhere($column . ' (' . $param1 . ')', $type);
+            }else{
+                if(is_null($param2)){
+                    $param2 = $param1;
+                    $param1 = '=';
+                }
+                if($param2 instanceof Kraken) $param2 = $param2->getQuery();
+                return $this->rawWhere($column . ' ' . $param1 . ' (' . $param2 . ')', $type);
             }
-            if($param2 instanceof Kraken) $param2 = $param2->getQuery();
-            return $this->rawWhere($column . ' ' . $param1 . ' (' . $param2 . ')', $type);
         }
 
         /**
@@ -890,42 +895,38 @@
 
         /**
          * Adds a WHERE EXISTS condition to the query using the result of another subquery.
-         * @param string $column Column name.
          * @param string|Kraken $query A Kraken instance to get the subquery from or a raw SELECT subquery.
          * @return $this Current instance for nested calls.
          */
-        public function whereExistsSub(string $column, $query){
-            return $this->whereSub($column, 'EXISTS', $query);
+        public function whereExistsSub($query){
+            return $this->whereSub('EXISTS', $query);
         }
 
         /**
          * Adds an OR WHERE EXISTS condition to the query using the result of another subquery.
-         * @param string $column Column name.
          * @param string|Kraken $query A Kraken instance to get the subquery from or a raw SELECT subquery.
          * @return $this Current instance for nested calls.
          */
-        public function orWhereExistsSub(string $column, $query){
-            return $this->whereSub($column, 'EXISTS', $query, 'OR');
+        public function orWhereExistsSub($query){
+            return $this->whereSub('EXISTS', $query, 'OR');
         }
 
         /**
          * Adds a WHERE NOT EXISTS condition to the query using the result of another subquery.
-         * @param string $column Column name.
          * @param string|Kraken $query A Kraken instance to get the subquery from or a raw SELECT subquery.
          * @return $this Current instance for nested calls.
          */
-        public function whereNotExistsSub(string $column, $query){
-            return $this->whereSub($column, 'NOT EXISTS', $query);
+        public function whereNotExistsSub($query){
+            return $this->whereSub('NOT EXISTS', $query);
         }
 
         /**
          * Adds an OR WHERE NOT EXISTS condition to the query using the result of another subquery.
-         * @param string $column Column name.
          * @param string|Kraken $query A Kraken instance to get the subquery from or a raw SELECT subquery.
          * @return $this Current instance for nested calls.
          */
-        public function orWhereNotExistsSub(string $column, $query){
-            return $this->whereSub($column, 'NOT EXISTS', $query, 'OR');
+        public function orWhereNotExistsSub($query){
+            return $this->whereSub('NOT EXISTS', $query, 'OR');
         }
 
         /**

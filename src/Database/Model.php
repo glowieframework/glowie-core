@@ -147,8 +147,9 @@
          * Creates a new instance of the model.
          * @param Element|array $data An Element or associative array with the initial data to fill the model entity.\
          * This data will be merged into the initial model attributes, if filled.
+         * @param bool $init (Optional) Initialize the model relationships.
          */
-        final public function __construct($data = []){
+        final public function __construct($data = [], $init = true){
             // Gets the table name
             if(Util::isEmpty($this->_table)) $this->_table = Util::snakeCase(Util::pluralize(Util::classname($this)));
 
@@ -161,7 +162,7 @@
             if(!empty($data)) $this->fill($data);
 
             // Initialize model
-            if(method_exists($this, 'init')) $this->init();
+            if($init && method_exists($this, 'init')) $this->init();
         }
 
         /**
@@ -758,7 +759,7 @@
          */
         public function belongsTo(string $model, string $column = '', string $name = '', ?Closure $callback = null){
             // Get primary key and names
-            $primary = (new $model)->getPrimaryName();
+            $primary = (new $model([], false))->getPrimaryName();
             if(Util::isEmpty($name)) $name = Util::snakeCase(Util::singularize(Util::classname($model)));
             if(Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primary;
 
@@ -786,20 +787,20 @@
          */
         public function belongsToMany(string $model, string $pivot = '', string $name = '', ?Closure $callback = null){
             // Get primary key and names
-            $primary = 'id';
+            $instance = new $model([], false);
             if(Util::isEmpty($name)) $name = Util::snakeCase(Util::pluralize(Util::classname($model)));
-            if(Util::isEmpty($pivot)) $pivot = Util::snakeCase(Util::pluralize(Util::classname($this))) . '_' . Util::snakeCase(Util::pluralize(Util::classname($model)));
+            if(Util::isEmpty($pivot)) $pivot = $this->getTable() . '_' . $instance->getTable();
 
             // Get foreign keys
             $foreign = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $this->getPrimaryName();
-            $foreignTarget = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primary;
+            $foreignTarget = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $instance->getPrimaryName();
 
             // Set to associations array
             $this->_associations[$name] = [
                 'type' => 'belongs-many',
                 'model'=> $model,
                 'primary-current' => $this->getPrimaryName(),
-                'primary-target' => $primary,
+                'primary-target' => $instance->getPrimaryName(),
                 'pivot' => $pivot,
                 'current-foreign' => $foreign,
                 'target-foreign' => $foreignTarget,
