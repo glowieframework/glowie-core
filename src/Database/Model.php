@@ -788,19 +788,20 @@
         public function belongsToMany(string $model, string $pivot = '', string $name = '', ?Closure $callback = null){
             // Get primary key and names
             $instance = new $model([], false);
+            $primary = $instance->getPrimaryName();
             if(Util::isEmpty($name)) $name = Util::snakeCase(Util::pluralize(Util::classname($model)));
             if(Util::isEmpty($pivot)) $pivot = $this->getTable() . '_' . $instance->getTable();
 
             // Get foreign keys
             $foreign = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $this->getPrimaryName();
-            $foreignTarget = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $instance->getPrimaryName();
+            $foreignTarget = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primary;
 
             // Set to associations array
             $this->_associations[$name] = [
                 'type' => 'belongs-many',
                 'model'=> $model,
                 'primary-current' => $this->getPrimaryName(),
-                'primary-target' => $instance->getPrimaryName(),
+                'primary-target' => $primary,
                 'pivot' => $pivot,
                 'current-foreign' => $foreign,
                 'target-foreign' => $foreignTarget,
@@ -1020,9 +1021,9 @@
                         $value = $data[$item['primary-current']] ?? null;
                         if(!is_null($value)){
                             $pivot = new Kraken($item['pivot'], $this->_database);
+                            if(is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data, &$pivot]);
                             $relations = $pivot->where($item['current-foreign'], $value)->fetchAll()->column($item['target-foreign']);
-                            if(is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data, &$relations]);
-                            $data[$name] = $table->whereIn($item['primary-target'], $relations)->all();
+                            $data[$name] = $relations->isNotEmpty() ? $table->allBy([$item['primary-target'] => $relations]) : [];
                         }
                         break;
                 }
@@ -1123,7 +1124,7 @@
             if($field instanceof Collection) $field = $field->toArray();
             if(Util::isAssociativeArray($field)){
                 foreach($field as $key => $value){
-                    $key = $this->_table . '.' . $key;
+                    if(!Util::stringContains($key, '.')) $key = $this->_table . '.' . $key;
                     if(is_array($value)){
                         $this->whereIn($key, $value);
                     }else if($value === 'NULL' || is_null($value)){
@@ -1133,7 +1134,7 @@
                     }
                 }
             }else{
-                $field = $this->_table . '.' . $field;
+                if(!Util::stringContains($field, '.')) $field = $this->_table . '.' . $field;
                 if(is_array($value)){
                     $this->whereIn($field, $value);
                 }else if($value === 'NULL' || is_null($value)){

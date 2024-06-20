@@ -159,7 +159,7 @@
             $passwordField = Config::get('auth.' . $this->guard . '.password_field', 'password');
 
             // Fetch user information
-            $user = $model->findAndFillBy([$userField => $user, ...$conditions]);
+            $user = $model->findAndFillBy(array_merge([$userField => $user], $conditions));
             if(!$user){
                 $this->error = self::ERR_NO_USER;
                 self::$user[$this->guard] = null;
