@@ -448,14 +448,9 @@
             // Checks if the primary key was passed and matches an existing row
             if(is_callable([$data, 'toArray'])) $data = $data->toArray();
             if(isset($data[$this->_primaryKey]) && $this->find($data[$this->_primaryKey])){
-                // Parse data and timestamps
-                $updatedData = $this->mutateData($this->filterData($data));
-                if($this->_timestamps) $updatedData[$this->_updatedField] = date($this->_dateFormat);
-
-                // Updates the element
-                return $this->where($this->_primaryKey, $data[$this->_primaryKey])->update($updatedData);
+                if($this->_timestamps) $data[$this->_updatedField] = date($this->_dateFormat);
+                return $this->where($this->_primaryKey, $data[$this->_primaryKey])->update($data);
             }else{
-                // Inserts the element
                 return $this->create($data);
             }
         }
