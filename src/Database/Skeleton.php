@@ -664,6 +664,34 @@
         }
 
         /**
+         * Sets the referential action on UPDATE to the last foreign key added to the table.
+         * @param string $rule Valid options are: `CASCADE`, `SET NULL`, `RESTRICT`, `NO ACTION` or `SET DEFAULT`.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function onUpdate(string $rule){
+            if(empty($this->_foreign)) throw new Exception('Skeleton: No foreign key was added to be modified');
+            $i = count($this->_foreign) - 1;
+            $this->_foreign[$i] = preg_replace_callback('/ON UPDATE (.+) ON DELETE (.+)$/', function($match) use($rule){
+                return 'ON UPDATE ' . $rule . ' ON DELETE ' . $match[2];
+            }, $this->_foreign[$i], 1);
+            return $this;
+        }
+
+        /**
+         * Sets the referential action on DELETE to the last foreign key added to the table.
+         * @param string $rule Valid options are: `CASCADE`, `SET NULL`, `RESTRICT`, `NO ACTION` or `SET DEFAULT`.
+         * @return Skeleton Current Skeleton instance for nested calls.
+         */
+        public function onDelete(string $rule){
+            if(empty($this->_foreign)) throw new Exception('Skeleton: No foreign key was added to be modified');
+            $i = count($this->_foreign) - 1;
+            $this->_foreign[$i] = preg_replace_callback('/ON UPDATE (.+) ON DELETE (.+)$/', function($match) use($rule){
+                return 'ON UPDATE ' . $match[1] . ' ON DELETE ' . $rule;
+            }, $this->_foreign[$i], 1);
+            return $this;
+        }
+
+        /**
          * Deletes an existing primary key from the table.
          * @return Skeleton Current Skeleton instance for nested calls.
          */
