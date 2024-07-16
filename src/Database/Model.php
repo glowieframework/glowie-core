@@ -1107,7 +1107,8 @@
          */
         private function filterData(array $data){
             if(empty($data) || empty($this->_updatable)) return $data;
-            return array_intersect_key($data, array_flip($this->_updatable));
+            $allowedFields = array_merge($this->_updatable, array_map(fn($k) => $this->_table . '.' . $k, $this->_updatable));
+            return array_intersect_key($data, array_flip($allowedFields));
         }
 
         /**
