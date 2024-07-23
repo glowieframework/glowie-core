@@ -393,7 +393,7 @@
         /**
          * Inserts a new row in the model table.
          * @param mixed $data An Element or associative array/Collection relating fields and values to insert.
-         * @return mixed Returns the last inserted `AUTO_INCREMENT` value (or true) on success or false on failure.\
+         * @return mixed Returns the last inserted `AUTO_INCREMENT` value (or true) on success, false on failure.\
          * If the model uses UUIDs, upon success the last generated UUID will be returned.
          */
         public function create($data){
@@ -423,15 +423,23 @@
 
         /**
          * Gets the first row that matches a set of fields and values. If no matching row is found, a new one is created and returned.
-         * @param array $find Associative array of fields and values to search.
-         * @param array $create (Optional) Associative array of data to merge into the `$find` fields to create a new row.
+         * @param Element|array $find An Element or associative array of fields and values to search.
+         * @param Element|array $create (Optional) An Element or associative array of data to merge into the `$find` fields to create a new row.
+         * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
          * @return mixed Returns the existing or new row, false on error.
          */
-        public function findOrCreate(array $find, array $create = []){
-            $row = $this->findBy($find);
+        public function findOrCreate($find, $create = [], bool $deleted = false){
+            // Convert data to arrays
+            if(is_callable([$find, 'toArray'])) $find = $find->toArray();
+            if(is_callable([$create, 'toArray'])) $create = $create->toArray();
+
+            // Tries to find the existing row
+            $row = $this->findBy($find, null, $deleted);
             if($row) return $row;
+
+            // Row does not exist, create it
             $id = $this->create(array_merge($find, $create));
-            if(!$id) return false;
+            if(is_bool($id)) return $id;
             return $this->find($id);
         }
 
@@ -448,10 +456,33 @@
             // Checks if the primary key was passed and matches an existing row
             if(is_callable([$data, 'toArray'])) $data = $data->toArray();
             if(isset($data[$this->_primaryKey]) && $this->find($data[$this->_primaryKey])){
-                if($this->_timestamps) $data[$this->_updatedField] = date($this->_dateFormat);
                 return $this->where($this->_primaryKey, $data[$this->_primaryKey])->update($data);
             }else{
                 return $this->create($data);
+            }
+        }
+
+        /**
+         * Checks if a row matches a set of fields and values. If so, updates the row. Otherwise,\
+         * inserts a new record in the model table.
+         * @param Element|array $find An Element or associative array of fields and values to search.
+         * @param Element|array $data (Optional) An Element or associative array of data to merge into the `$find` fields to update/create a new row.
+         * @return mixed Returns the last inserted `AUTO_INCREMENT` value (or true) if the row is created, otherwise returns true on success or false on failure.
+         */
+        public function updateOrCreateBy($find, $data = []){
+            // Convert data to arrays
+            if(is_callable([$find, 'toArray'])) $find = $find->toArray();
+            if(is_callable([$data, 'toArray'])) $data = $data->toArray();
+
+            // Checks if row exists
+            $row = $this->findBy($find);
+
+            // If row exists, update or create it
+            if($row){
+                $row = $row->toArray();
+                return $this->where($this->_primaryKey, $row[$this->_primaryKey])->update($data);
+            }else{
+                return $this->create(array_merge($find, $data));
             }
         }
 
@@ -465,6 +496,7 @@
         public function update($data){
             if(is_callable([$data, 'toArray'])) $data = $data->toArray();
             $data = $this->mutateData($this->filterData($data));
+            if($this->_timestamps) $data[$this->_updatedField] = date($this->_dateFormat);
             return Kraken::update($data);
         }
 
