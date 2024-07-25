@@ -93,7 +93,11 @@ class Queue
 
         // Get pending jobs from the queue
         $db = new Kraken(self::$table, Config::get('queue.connection', 'default'));
-        $jobs = $db->where('queue', $queue)->whereNull('ran_at')->where('attempts', '<', Config::get('queue.max_attempts', 3))->orderBy('id')->fetchAll();
+        $jobs = $db->where('queue', $queue)
+            ->whereNull('ran_at')
+            ->where('attempts', '<', Config::get('queue.max_attempts', 3))
+            ->orderBy('id')
+            ->fetchAll();
 
         if (count($jobs) == 0) {
             if ($verbose && !$watcher) Firefly::print('<color="yellow">There are no pending jobs in this queue.</color>');
@@ -164,6 +168,8 @@ class Queue
         // Creates the table instance if not yet
         self::$table = Config::get('queue.table', 'queue');
         self::createTable();
+
+        // Connects to the database
         $db = new Kraken(self::$table, Config::get('queue.connection', 'default'));
 
         // Clear the whole queue
@@ -187,7 +193,9 @@ class Queue
     private static function prune()
     {
         $db = new Kraken(self::$table, Config::get('queue.connection', 'default'));
-        $db->whereNotNull('ran_at')->where('ran_at', '<=', date('Y-m-d H:i:s', time() - Config::get('queue.keep_log', self::DELAY_DAY)))->delete();
+        $db->whereNotNull('ran_at')
+            ->where('ran_at', '<=', date('Y-m-d H:i:s', time() - Config::get('queue.keep_log', self::DELAY_DAY)))
+            ->delete();
     }
 
     /**
@@ -199,7 +207,7 @@ class Queue
             $db = new Skeleton(self::$table, Config::get('queue.connection', 'default'));
             if (!$db->tableExists()) {
                 $db->id()
-                    ->createColumn('job')->type(Skeleton::TYPE_STRING)->size(500)
+                    ->createColumn('job')->type(Skeleton::TYPE_TEXT)
                     ->createColumn('queue')->type(Skeleton::TYPE_STRING)->size(255)
                     ->createColumn('data')->type(Skeleton::TYPE_BLOB)->nullable()
                     ->createColumn('added_at')->type(Skeleton::TYPE_DATETIME)->default(Skeleton::raw('NOW()'))

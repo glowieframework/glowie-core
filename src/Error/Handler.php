@@ -128,35 +128,44 @@ class Handler
     protected static function parseTrace(array $trace)
     {
         // Prepare result
-        $result =    '<strong class="stack-title">Stack trace:</strong>
-                          <a href="" class="args-toggle vendor-toggle">Toggle vendor ⏷</a>
-                          <table cellspacing="0" cellpadding="0"><tbody>';
+        $result =   '<strong class="stack-title">Stack trace:</strong>';
+        $result .=  '<a href="" class="args-toggle vendor-toggle">Toggle vendor ⏷</a>';
+        $result .=  '<table cellspacing="0" cellpadding="0"><tbody>';
 
         // Iterate through stack trace
         foreach ($trace as $key => $item) {
-            // Get class
+            // Identify vendor classes
             $vendor = false;
             if (!empty($item['class']) && $item['class'] == self::class) continue;
             if (!empty($item['class']) && Util::startsWith($item['class'], 'Glowie\Core')) $vendor = true;
 
             // Add result to the HTML table
-            $result .=   '<tr class="' . ($vendor ? 'vendor hide' : '') . '">' .
-                // Index
-                '<th>#' . (count($trace) - $key) . '</th>' .
-                '<td>' .
-                // File/line
-                (!empty($item['file']) && !empty($item['line']) ? '<i>' . $item['file'] . ':' . $item['line'] . '</i>' : '') .
+            $result .=  '<tr class="' . ($vendor ? 'vendor hide' : '') . '">';
+            $result .=  '<th>#' . (count($trace) - $key) . '</th>';
+            $result .=  '<td>';
 
-                // Class
-                (!empty($item['class']) ? '<span class="class">' . $item['class'] . '</span>::<span class="method">' . $item['function'] . '()</span>' : '') .
+            // File/line
+            if (!empty($item['file']) && !empty($item['line'])) {
+                $result .= '<i>' . $item['file'] . ':' . $item['line'] . '</i>';
+            }
 
-                // Highlight
-                (!empty($item['file']) && !empty($item['line']) ? '<pre><code data-ln-start-from="' . $item['line'] . '" class="language-php">' . self::highlight($item['file'], $item['line']) . '</code></pre>' : '') .
+            // Class
+            if (!empty($item['class'])) {
+                $result .= '<span class="class">' . $item['class'] . '</span>::<span class="method">' . $item['function'] . '()</span>';
+            }
 
-                // Args
-                (!empty($item['args']) ? '<a href="" class="args-toggle">View args ⏷</a><pre class="args">' . self::getDump($item['args']) . '</pre>' : '') . '
-                                </td>
-                            </tr>';
+            // Highlight
+            if (!empty($item['file']) && !empty($item['line'])) {
+                $result .= '<pre><code data-ln-start-from="' . $item['line'] . '" class="language-php">' . self::highlight($item['file'], $item['line']) . '</code></pre>';
+            }
+
+            // Args
+            if (!empty($item['args'])) {
+                $result .= '<a href="" class="args-toggle">View args ⏷</a><pre class="args">' . self::getDump($item['args']) . '</pre>';
+            }
+
+            // Closing column
+            $result .= '</td></tr>';
         }
 
         // Close result table

@@ -366,6 +366,18 @@ class Response
     }
 
     /**
+     * Sets the value for a key in the session flash data before redirecting.
+     * @param string $key Key to set value.
+     * @param mixed $value Value to set.
+     * @return Response Current Response instance for nested calls.
+     */
+    public function withFlash(string $key, $value)
+    {
+        (new Session())->setFlash($key, $value);
+        return $this;
+    }
+
+    /**
      * Redirects to a relative or full URL.
      * @param string $destination Target URL to redirect to.
      * @param int $code (Optional) HTTP status code to pass with the redirect.

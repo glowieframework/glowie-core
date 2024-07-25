@@ -3,7 +3,7 @@ body {
 }
 .wrapper {
 	max-width: 1350px;
-	font-family: 'Segoe UI', Tahoma, sans-serif;
+	font-family: 'Segoe UI', 'Helvetica', 'Tahoma', sans-serif;
 	font-size: 18px;
 	background-color: #fff;
 	color: #000;
@@ -119,16 +119,17 @@ body {
 .wrapper .details .args-toggle:hover {
 	background-color: #ed576a;
 }
-.wrapper .details .args {
+.wrapper .details .tab pre.args {
 	white-space: pre-wrap;
 	word-break: break-all;
 	background-color: #f1f1f1;
 	border: 1px solid #dcdcdc;
 	padding: 15px;
+	color: #24292e;
 	margin: 10px 0 0;
 	display: none;
 }
-.wrapper .details .args.show {
+.wrapper .details .tab pre.args.show {
 	display: block;
 }
 .wrapper .details table {
@@ -152,6 +153,7 @@ body {
 .wrapper .details table td {
 	border: 1px solid #d3d3d3;
 	padding: 10px;
+	color: #24292e;
 	word-break: break-all;
 }
 .wrapper .details table td i {
@@ -202,9 +204,10 @@ body {
 	.wrapper .details .hljs-ln-numbers {
 		border-color: dimgray;
 	}
-	.wrapper .details .args {
+	.wrapper .details .tab pre.args {
 		background: #0d1117;
 		border: #000;
+		color: #c9d1d9;
 	}
 	.wrapper .details .args-toggle,
 	.wrapper .title {
