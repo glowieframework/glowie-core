@@ -10,6 +10,7 @@ use Util;
 use Exception;
 use JsonSerializable;
 use Closure;
+use DateTime;
 
 /**
  * Model core for Glowie application.
@@ -994,17 +995,23 @@ class Model extends Kraken implements JsonSerializable
                         $data[$field] = json_decode($data[$field], true) ?? null;
                         break;
 
+                    case 'collection':
+                        $json = json_decode($data[$field], true) ?? [];
+                        $data[$field] = new Collection($json);
+                        break;
+
                     case 'decimal':
                         $data[$field] = round($data[$field], $params[1] ?? 0);
                         break;
 
                     case 'json':
                         $json = json_decode($data[$field], true);
-                        if ($json) {
-                            $data[$field] = new Element($json);
-                        } else {
-                            $data[$field] = null;
-                        }
+                        $data[$field] = $json ? new Element($json) : null;
+                        break;
+
+                    case 'element':
+                        $json = json_decode($data[$field], true) ?? [];
+                        $data[$field] = new Element($json);
                         break;
 
                     case 'encrypted':
@@ -1028,7 +1035,7 @@ class Model extends Kraken implements JsonSerializable
                         if (!empty($params[1])) {
                             $data[$field] = date($params[1], strtotime($data[$field]));
                         } else {
-                            $data[$field] = strtotime($data[$field]);
+                            $data[$field] = new DateTime($data[$field]);
                         }
                         break;
 

@@ -248,6 +248,17 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     }
 
     /**
+     * Searches the value in the Collection and returns its key if found, false otherwise.
+     * @param mixed $value Value to search.
+     * @param bool $strict (Optional) Use type checking when searching.
+     * @return mixed Returns the key or false if not found.
+     */
+    public function searchKey($value, bool $strict = false)
+    {
+        return array_search($value, $this->__data, $strict);
+    }
+
+    /**
      * Pushes an item to the end of the Collection.
      * @param mixed $value Value to push.
      * @return Collection Current Collection instance for nested calls.
