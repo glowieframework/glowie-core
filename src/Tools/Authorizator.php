@@ -2,6 +2,7 @@
 
 namespace Glowie\Core\Tools;
 
+use Closure;
 use Glowie\Core\Http\Rails;
 use Glowie\Core\Element;
 use Exception;
@@ -143,11 +144,12 @@ class Authorizator
      * Authenticates an user from the database and returns an authentication token.
      * @param string $user Username to authenticate.
      * @param string $password Password to authenticate.
-     * @param array $conditions (Optional) Associative array of aditional fields to use while searching for the user.
+     * @param array|Closure $conditions (Optional) Associative array of aditional fields to use while searching for the user.\
+     * You can also pass a Closure to directly modify the query builder.
      * @param int $expires (Optional) Token expiration time in seconds, leave empty for no expiration.
      * @return string|bool Returns the token if authentication is successful, false otherwise.
      */
-    public function login(string $user, string $password, array $conditions = [], int $expires = self::EXPIRES_DAY)
+    public function login(string $user, string $password, $conditions = [], int $expires = self::EXPIRES_DAY)
     {
         // Check for empty login credentials
         if (Util::isEmpty($user) || Util::isEmpty($password)) {
@@ -166,7 +168,13 @@ class Authorizator
         $passwordField = Config::get('auth.' . $this->guard . '.password_field', 'password');
 
         // Fetch user information
-        $user = $model->findAndFillBy(array_merge([$userField => $user], $conditions));
+        if ($conditions instanceof Closure) {
+            call_user_func_array($conditions, [&$model, &$user, &$password]);
+            $user = $model->findAndFillBy([$userField => $user]);
+        } else {
+            $user = $model->findAndFillBy(array_merge([$userField => $user], $conditions));
+        }
+
         if (!$user) {
             $this->error = self::ERR_NO_USER;
             self::$user[$this->guard] = null;
@@ -177,7 +185,7 @@ class Authorizator
         if (password_verify($password, $user->get($passwordField))) {
             $this->error = self::ERR_AUTH_SUCCESS;
             self::$user[$this->guard] = $user;
-            return $this->generateJwt(['user' => $user->getPrimary()], $expires, 'HS256', ['glowie' => 'auth']);
+            return $this->generateJwt(['user' => Util::encryptString($user->getPrimary())], $expires, 'HS256', ['glowie' => 'auth']);
         } else {
             $this->error = self::ERR_WRONG_PASSWORD;
             self::$user[$this->guard] = null;
@@ -206,7 +214,7 @@ class Authorizator
         $model = new $model;
 
         // Find user from token
-        $user = $model->findAndFill($token->user);
+        $user = $model->findAndFill(Util::decryptString($token->user));
         if (!$user) {
             $this->error = self::ERR_NO_USER;
             self::$user[$this->guard] = null;

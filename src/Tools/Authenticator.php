@@ -112,9 +112,8 @@ class Authenticator
         $passwordField = Config::get('auth.' . $this->guard . '.password_field', 'password');
 
         // Fetch user information
-        $username = $user;
         if ($conditions instanceof Closure) {
-            call_user_func_array($conditions, [$model, $user, $password]);
+            call_user_func_array($conditions, [&$model, &$user, &$password]);
             $user = $model->findAndFillBy([$userField => $user]);
         } else {
             $user = $model->findAndFillBy(array_merge([$userField => $user], $conditions));
@@ -133,9 +132,8 @@ class Authenticator
 
             // Save credentials in session
             $session = new Session();
-            if (!$session->has('glowie.auth.' . $this->guard . '.user') || !$session->has('glowie.auth.' . $this->guard . '.password')) {
-                $session->setEncrypted('glowie.auth.' . $this->guard . '.user', $username);
-                $session->setEncrypted('glowie.auth.' . $this->guard . '.password', $password);
+            if (!$session->has('glowie.auth.' . $this->guard)) {
+                $session->setEncrypted('glowie.auth.' . $this->guard, $user->getPrimary());
             }
 
             return true;
@@ -166,11 +164,20 @@ class Authenticator
 
         // Get from session
         $session = new Session();
-        $user = $session->getEncrypted('glowie.auth.' . $this->guard . '.user', '');
-        $password = $session->getEncrypted('glowie.auth.' . $this->guard . '.password', '');
+        $user = $session->getEncrypted('glowie.auth.' . $this->guard);
 
-        // Try to login from session
-        $this->login($user, $password);
+        if (!is_null($user)) {
+            // Create model instance
+            $model = Config::get('auth.' . $this->guard . '.model');
+            if (!$model || !class_exists($model)) throw new Exception("Authenticator: \"{$model}\" was not found");
+            $model = new $model;
+
+            // Fetch user information
+            $user = $model->findAndFill($user);
+            if ($user !== false) self::$user[$this->guard] = $user;
+        }
+
+        // Return fetched user, if found
         return self::$user[$this->guard] ?? null;
     }
 
