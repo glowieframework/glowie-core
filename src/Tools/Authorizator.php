@@ -253,7 +253,7 @@ class Authorizator
     {
         $user = self::$user[$this->guard] ?? null;
         if (!$user) return null;
-        return $user->getPrimay();
+        return $user->getPrimay() ?? null;
     }
 
     /**

@@ -95,10 +95,10 @@ class Layout implements JsonSerializable
 
     /**
      * Calls a helper method dynamically.
-     * @param mixed $method Method to be called from `Glowie\Helpers\Helpers` class.
-     * @param mixed $args Arguments to pass to the method.
+     * @param string $method Method to be called from `Glowie\Helpers\Helpers` class.
+     * @param array $args Arguments to pass to the method.
      */
-    public function __call($method, $args)
+    public function __call(string $method, array $args)
     {
         if (is_callable([self::$_helpers, $method])) {
             return call_user_func_array([self::$_helpers, $method], $args);

@@ -93,7 +93,7 @@ class HandlerCLI
         if (empty($text[$line - 1])) return '';
 
         // Returns the result
-        return '    <color="magenta">' . $line . '</color><color="cyan">  ' . trim($text[$line - 1]) . '</color>';
+        return '<color="magenta">' . $line . ' | </color><color="cyan">' . trim($text[$line - 1]) . '</color>';
     }
 
     /**

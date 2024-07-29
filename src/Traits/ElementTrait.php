@@ -44,6 +44,17 @@ trait ElementTrait
     }
 
     /**
+     * Gets the value associated to a key in the Element data using a magic method.
+     * @param string $method Method name / key to get value.
+     * @param array $args Method args (unused).
+     * @return mixed Returns the value if exists or null if there is none.
+     */
+    public function __call(string $method, array $args)
+    {
+        return $this->get($method);
+    }
+
+    /**
      * Gets the value associated to a key in the Element data.
      * @param string $key Key to get value (accepts dot notation keys).
      * @param mixed $default (Optional) Default value to return if the key does not exist.

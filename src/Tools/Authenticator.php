@@ -131,11 +131,7 @@ class Authenticator
             $this->error = self::ERR_AUTH_SUCCESS;
 
             // Save credentials in session
-            $session = new Session();
-            if (!$session->has('glowie.auth.' . $this->guard)) {
-                $session->setEncrypted('glowie.auth.' . $this->guard, $user->getPrimary());
-            }
-
+            (new Session())->setEncrypted('glowie.auth.' . $this->guard, $user->getPrimary());
             return true;
         } else {
             $this->error = self::ERR_WRONG_PASSWORD;
@@ -163,8 +159,7 @@ class Authenticator
         if (isset(self::$user[$this->guard])) return self::$user[$this->guard];
 
         // Get from session
-        $session = new Session();
-        $user = $session->getEncrypted('glowie.auth.' . $this->guard);
+        $user = (new Session())->getEncrypted('glowie.auth.' . $this->guard);
 
         if (!is_null($user)) {
             // Create model instance
@@ -192,7 +187,7 @@ class Authenticator
             if (!$user) return null;
         }
 
-        return self::$user[$this->guard]->getPrimary();
+        return self::$user[$this->guard]->getPrimary() ?? null;
     }
 
     /**
@@ -206,7 +201,7 @@ class Authenticator
             if (!$user) return false;
         }
 
-        return self::$user[$this->guard]->refresh();
+        return self::$user[$this->guard]->refresh() ?? false;
     }
 
     /**

@@ -231,9 +231,10 @@ class Skeleton
      * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
      * @param int|null $size (Optional) Field maximum length.
      * @param mixed $default (Optional) Default field value.
+     * @param string|null $collation (Optional) Collation to set in the column.
      * @return Skeleton Current Skeleton instance for nested calls.
      */
-    public function createColumn(string $name, string $type = self::TYPE_STRING, ?int $size = null, $default = null)
+    public function createColumn(string $name, string $type = self::TYPE_STRING, ?int $size = null, $default = null, ?string $collation = null)
     {
         $this->_modifiers[] = [
             'operation' => 'create',
@@ -241,7 +242,8 @@ class Skeleton
             'type' => $type,
             'size' => $size,
             'default' => $default,
-            'nullable' => false
+            'nullable' => false,
+            'collation' => $collation
         ];
         return $this;
     }
@@ -252,9 +254,10 @@ class Skeleton
      * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
      * @param int|null $size (Optional) Field maximum length.
      * @param mixed $default (Optional) Default field value.
+     * @param string|null $collation (Optional) Collation to set in the column.
      * @return Skeleton Current Skeleton instance for nested calls.
      */
-    public function createNullableColumn(string $name, string $type = self::TYPE_STRING, ?int $size = null, $default = null)
+    public function createNullableColumn(string $name, string $type = self::TYPE_STRING, ?int $size = null, $default = null, ?string $collation = null)
     {
         $this->_modifiers[] = [
             'operation' => 'create',
@@ -262,7 +265,8 @@ class Skeleton
             'type' => $type,
             'size' => $size,
             'default' => $default,
-            'nullable' => true
+            'nullable' => true,
+            'collation' => $collation
         ];
         return $this;
     }
@@ -363,9 +367,10 @@ class Skeleton
      * @param int|null $size (Optional) Field maximum length.
      * @param mixed $default (Optional) Default field value.
      * @param string|null $after (Optional) Name of other column to place this column after it.
+     * @param string|null $collation (Optional) Collation to set in the column.
      * @return Skeleton Current Skeleton instance for nested calls.
      */
-    public function addColumn(string $name, string $type = self::TYPE_STRING, ?int $size = null, $default = null, ?string $after = null)
+    public function addColumn(string $name, string $type = self::TYPE_STRING, ?int $size = null, $default = null, ?string $after = null, ?string $collation = null)
     {
         $this->_modifiers[] = [
             'operation' => 'add',
@@ -374,7 +379,8 @@ class Skeleton
             'size' => $size,
             'default' => $default,
             'after' => $after,
-            'nullable' => false
+            'nullable' => false,
+            'collation' => $collation
         ];
         return $this;
     }
@@ -386,9 +392,10 @@ class Skeleton
      * @param int|null $size (Optional) Field maximum length.
      * @param mixed $default (Optional) Default field value.
      * @param string|null $after (Optional) Name of other column to place this column after it.
+     * @param string|null $collation (Optional) Collation to set in the column.
      * @return Skeleton Current Skeleton instance for nested calls.
      */
-    public function addNullableColumn(string $name, string $type = self::TYPE_STRING, ?int $size = null, $default = null, ?string $after = null)
+    public function addNullableColumn(string $name, string $type = self::TYPE_STRING, ?int $size = null, $default = null, ?string $after = null, ?string $collation = null)
     {
         $this->_modifiers[] = [
             'operation' => 'add',
@@ -397,7 +404,8 @@ class Skeleton
             'size' => $size,
             'default' => $default,
             'after' => $after,
-            'nullable' => true
+            'nullable' => true,
+            'collation' => $collation
         ];
         return $this;
     }
@@ -411,19 +419,37 @@ class Skeleton
      * @param bool $nullable (Optional) Set to **true** if the field should accept `NULL` values.
      * @param mixed $default (Optional) Default field value.
      * @param string|null $after (Optional) Name of other column to move this column below it.
+     * @param string|null $collation (Optional) Collation to set in the column.
      * @return Skeleton Current Skeleton instance for nested calls.
      */
-    public function changeColumn(string $name, ?string $new_name = null, string $type = self::TYPE_STRING, ?int $size = null, bool $nullable = true, $default = null, ?string $after = null)
+    public function changeColumn(string $name, ?string $new_name = null, string $type = self::TYPE_STRING, ?int $size = null, bool $nullable = true, $default = null, ?string $after = null, ?string $collation = null)
     {
         $this->_modifiers[] = [
-            'operation' => 'change',
+            'operation' => (is_null($new_name) || $name === $new_name) ? 'modify' : 'change',
             'name' => $name,
             'new_name' => $new_name ?? $name,
             'type' => $type,
             'size' => $size,
             'nullable' => $nullable,
             'default' => $default,
-            'after' => $after
+            'after' => $after,
+            'collation' => $collation
+        ];
+        return $this;
+    }
+
+    /**
+     * Renames an existing column in a table.
+     * @param string $name Column name to change.
+     * @param string $new_name New column name.
+     * @return Skeleton Current Skeleton instance for nested calls.
+     */
+    public function renameColumn(string $name, string $new_name)
+    {
+        $this->_modifiers[] = [
+            'operation' => 'rename',
+            'name' => $name,
+            'new_name' => $new_name,
         ];
         return $this;
     }
@@ -514,6 +540,15 @@ class Skeleton
     }
 
     /**
+     * Sets the default value of the last added/changed column to the current datetime.
+     * @return Skeleton Current Skeleton instance for nested calls.
+     */
+    public function defaultNow()
+    {
+        return $this->default(self::raw('NOW()'));
+    }
+
+    /**
      * Sets the last added/changed column to be placed after an existing column.
      * @param string|null $column Name of other column to place this column after it.
      * @return Skeleton Current Skeleton instance for nested calls.
@@ -521,6 +556,26 @@ class Skeleton
     public function after(?string $column)
     {
         return $this->changeModifier('after', $column);
+    }
+
+    /**
+     * Sets the collation of the last added/changed column.
+     * @param string|null $collation Collation name to set.
+     * @return Skeleton Current Skeleton instance for nested calls.
+     */
+    public function collation(?string $collation)
+    {
+        return $this->changeModifier('collation', $collation);
+    }
+
+    /**
+     * Sets the charset of the last added/changed column.
+     * @param string|null $charset Charset name to set.
+     * @return Skeleton Current Skeleton instance for nested calls.
+     */
+    public function charset(?string $charset)
+    {
+        return $this->changeModifier('charset', $charset);
     }
 
     /**
@@ -585,6 +640,14 @@ class Skeleton
                 $field = "CHANGE COLUMN `{$data['name']}` `{$data['new_name']}` ";
                 break;
 
+            case 'modify':
+                $field = "MODIFY COLUMN `{$data['name']}` ";
+                break;
+
+            case 'rename':
+                $field = "RENAME COLUMN `{$data['name']}` TO `{$data['new_name']}` ";
+                break;
+
             case 'add':
                 $field = "ADD COLUMN `{$data['name']}` ";
                 break;
@@ -595,35 +658,48 @@ class Skeleton
                 return;
         }
 
-        // Field type and size
-        $data['type'] = strtoupper($data['type']);
+        // Rename or change column
+        if ($data['operation'] != 'rename') {
+            // Field type and size
+            $data['type'] = strtoupper($data['type']);
 
-        if (!empty($data['size'])) {
-            if (Util::stringContains($data['type'], ' UNSIGNED')) {
-                $data['type'] = str_replace(' UNSIGNED', '', $data['type']);
-                $field .= $data['type'] . "({$data['size']}) UNSIGNED";
+            if (!empty($data['size'])) {
+                if (Util::stringContains($data['type'], ' UNSIGNED')) {
+                    $data['type'] = str_replace(' UNSIGNED', '', $data['type']);
+                    $field .= $data['type'] . "({$data['size']}) UNSIGNED";
+                } else {
+                    $field .= $data['type'] . "({$data['size']})";
+                }
             } else {
-                $field .= $data['type'] . "({$data['size']})";
+                $field .= $data['type'];
             }
-        } else {
-            $field .= $data['type'];
-        }
 
-        // Not nullable field
-        if (!$data['nullable']) $field .= " NOT NULL";
+            // Not nullable field
+            if (!$data['nullable']) $field .= " NOT NULL";
 
-        // Default value
-        if ($data['default'] !== null) {
-            if ($data['default'] instanceof stdClass) {
-                $field .= " DEFAULT {$data['default']->value}";
-            } else {
-                $field .= " DEFAULT \"{$this->escape($data['default'])}\"";
+            // Default value
+            if ($data['default'] !== null) {
+                if ($data['default'] instanceof stdClass) {
+                    $field .= " DEFAULT {$data['default']->value}";
+                } else {
+                    $field .= " DEFAULT \"{$this->escape($data['default'])}\"";
+                }
             }
-        }
 
-        // After
-        if ($data['operation'] != 'create') {
-            if (!empty($data['after'])) $field .= " AFTER `{$data['after']}`";
+            // Charset
+            if (!empty($data['charset'])) {
+                $field .= " CHARACTER SET '{$data['charset']}'";
+            }
+
+            // Collation
+            if (!empty($data['collation'])) {
+                $field .= " COLLATE '{$data['collation']}'";
+            }
+
+            // After
+            if ($data['operation'] != 'create') {
+                if (!empty($data['after'])) $field .= " AFTER `{$data['after']}`";
+            }
         }
 
         // Saves the result
