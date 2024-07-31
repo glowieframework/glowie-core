@@ -141,6 +141,53 @@ class Authenticator
     }
 
     /**
+     * Impersonates an user login. **Warning: this is unsafe, do not use in production.**
+     * @param string $user Username to authenticate.
+     * @param array|Closure $conditions (Optional) Associative array of aditional fields to use while querying for the user.\
+     * You can also pass a Closure to directly modify the query builder.
+     * @return bool Returns true if authentication is successful, false otherwise.
+     */
+    public function impersonate(string $user, $conditions = [])
+    {
+        // Check for empty login credentials
+        if (Util::isEmpty($user)) {
+            $this->error = self::ERR_EMPTY_DATA;
+            self::$user[$this->guard] = null;
+            return false;
+        }
+
+        // Create model instance
+        $model = Config::get('auth.' . $this->guard . '.model');
+        if (!$model || !class_exists($model)) throw new Exception("Authenticator: \"{$model}\" was not found");
+        $model = new $model;
+
+        // Get auth fields
+        $userField = Config::get('auth.' . $this->guard . '.user_field', 'email');
+
+        // Fetch user information
+        if ($conditions instanceof Closure) {
+            call_user_func_array($conditions, [&$model, &$user]);
+            $user = $model->findAndFillBy([$userField => $user]);
+        } else {
+            $user = $model->findAndFillBy(array_merge([$userField => $user], $conditions));
+        }
+
+        if (!$user) {
+            $this->error = self::ERR_NO_USER;
+            self::$user[$this->guard] = null;
+            return false;
+        }
+
+        // Parse user instance
+        self::$user[$this->guard] = $user;
+        $this->error = self::ERR_AUTH_SUCCESS;
+
+        // Save credentials in session
+        (new Session())->setEncrypted('glowie.auth.' . $this->guard, $user->getPrimary());
+        return true;
+    }
+
+    /**
      * Checks if an user is authenticated.
      * @return bool True or false.
      */
