@@ -493,7 +493,11 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     {
         $result = [];
         foreach ($this->__data as $val) {
-            $result[$val[$key]][] = $val;
+            if (is_array($val)) {
+                $result[$val[$key]][] = $val;
+            } else {
+                $result[$val->{$key}][] = $val;
+            }
         }
         return new Collection($result);
     }
