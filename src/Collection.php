@@ -485,6 +485,20 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     }
 
     /**
+     * Groups the Collection using a key value.
+     * @param mixed $key Key to use as grouping base.
+     * @return Collection Returns a new grouped Collection.
+     */
+    public function groupBy($key)
+    {
+        $result = [];
+        foreach ($this->__data as $val) {
+            $result[$val[$key]][] = $val;
+        }
+        return new Collection($result);
+    }
+
+    /**
      * Combines two Collections into a new associative Collection.
      * @param Collection $values A Collection of values to be combined with the current Collection keys.
      * @return Collection Returns a new Collection.
