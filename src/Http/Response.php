@@ -150,6 +150,7 @@ class Response
 
     /**
      * Applies Cross-Origin Resource Sharing (CORS) headers from your app configuration.
+     * @return Response Current Response instance for nested calls.
      */
     public function applyCors()
     {
@@ -160,6 +161,7 @@ class Response
         $this->setHeader('Access-Control-Max-Age', Config::get('cors.max_age', 0));
         if (!empty(Config::get('cors.exposed_headers', []))) $this->setHeader('Access-Control-Expose-Headers', Config::get('cors.exposed_headers', []));
         if (Config::get('cors.allow_credentials', false)) $this->setHeader('Access-Control-Allow-Credentials', 'true');
+        return $this;
     }
 
     /**
@@ -317,12 +319,14 @@ class Response
      * Sends a raw plain text body to the response.
      * @param string $content Content to set as the body.
      * @param string $type (Optional) Content type header to set, defaults to `text/plain`.
+     * @return Response Current Response instance for nested calls.
      */
     public function setBody(string $content, string $type = self::CONTENT_PLAIN)
     {
         if (Buffer::isActive()) Buffer::clean();
         $this->setContentType($type);
         echo $content;
+        return $this;
     }
 
     /**
@@ -330,6 +334,7 @@ class Response
      * @param array|Element $data Associative array with data to encode to JSON. You can also use an Element.
      * @param int $flags (Optional) JSON encoding flags (same as in `json_encode()` function).
      * @param int $depth (Optional) JSON encoding maximum depth (same as in `json_encode()` function).
+     * @return Response Current Response instance for nested calls.
      */
     public function setJson($data, int $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES, int $depth = 512)
     {
@@ -337,12 +342,14 @@ class Response
         $this->setContentType(self::CONTENT_JSON);
         if (is_callable([$data, 'toArray'])) $data = $data->toArray();
         echo json_encode($data, $flags, $depth);
+        return $this;
     }
 
     /**
      * Sends a XML output to the response.
      * @param array|Element $data Associative array with data to encode to XML. You can also use an Element.
      * @param string $root (Optional) Name of the XML root element.
+     * @return Response Current Response instance for nested calls.
      */
     public function setXML($data, string $root = 'root')
     {
@@ -352,17 +359,19 @@ class Response
         if (is_callable([$data, 'toArray'])) $data = $data->toArray();
         $this->arrayToXML($data, $xml);
         echo $xml->asXML();
+        return $this;
     }
 
     /**
      * Sets a file content as the response.
      * @param string $filename Filename to get the content from.
+     * @return Response Current Response instance for nested calls.
      */
     public function setFile(string $filename)
     {
         if (!is_file($filename)) throw new FileException('"' . $filename . '" does not exist!');
         $content = file_get_contents($filename);
-        $this->setBody($content, mime_content_type($filename));
+        return $this->setBody($content, mime_content_type($filename));
     }
 
     /**
@@ -381,20 +390,21 @@ class Response
      * Redirects to a relative or full URL.
      * @param string $destination Target URL to redirect to.
      * @param int $code (Optional) HTTP status code to pass with the redirect.
-     * @return void
+     * @return Response Current Response instance for nested calls.
      */
     public function redirect(string $destination, int $code = self::HTTP_TEMPORARY_REDIRECT)
     {
         if (Buffer::isActive()) Buffer::clean();
         $this->setStatusCode($code);
         header('Location: ' . $destination, true, $code);
-        die();
+        return $this;
     }
 
     /**
      * Redirects to an URL relative to the application path.
      * @param string $path (Optional) Path to append to the base URL.
      * @param int $code (Optional) HTTP status code to pass with the redirect.
+     * @return Response Current Response instance for nested calls.
      */
     public function redirectBase(string $path = '', int $code = self::HTTP_TEMPORARY_REDIRECT)
     {
@@ -406,6 +416,7 @@ class Response
      * @param string $route Route name.
      * @param array $params (Optional) Route parameters to bind into the URL.
      * @param int $code (Optional) HTTP status code to pass with the redirect.
+     * @return Response Current Response instance for nested calls.
      */
     public function redirectRoute(string $route, array $params = [], int $code = self::HTTP_TEMPORARY_REDIRECT)
     {

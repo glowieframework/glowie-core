@@ -34,6 +34,16 @@ abstract class Command
     }
 
     /**
+     * Dumps a variable in a human-readable way into the console and ends the script execution.
+     * @param mixed $var Variable to be dumped.
+     * @param bool $continue (Optional) Continue script execution after dump.
+     */
+    public function dump($var, bool $continue = false)
+    {
+        Util::dump($var, false, $continue);
+    }
+
+    /**
      * Prints a table of data in the console.
      * @param array|Collection $headers Table headers.
      * @param array|Collection $rows A multi-dimensional array or Collection of data to parse.

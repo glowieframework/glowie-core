@@ -85,13 +85,11 @@ class Sandbox
             // Checks for predefined commands
             switch ($__command) {
                 case 'history':
-                    Firefly::print('<color="blue">', false);
-
                     foreach (self::$history as $__key => $__value) {
-                        Firefly::print(($__key + 1) . ': ' . $__value);
+                        Firefly::print('<color="blue">', false);
+                        Firefly::print('    ' . ($__key + 1) . ': </color><color="white">' . $__value, false);
+                        Firefly::print('</color>');
                     }
-
-                    Firefly::print('</color>', false);
                     continue 2;
 
                 case 'exception':
@@ -109,7 +107,7 @@ class Sandbox
 
                 case 'ls':
                     foreach (get_defined_vars() as $__key => $__value) {
-                        if (in_array($__key, ['__key', '__value', '__e'])) continue;
+                        if (in_array($__key, ['__key', '__value'])) continue;
                         Firefly::print('<color="magenta">', false);
                         Firefly::print('>> $' . $__key . ' = ', false);
 

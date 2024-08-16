@@ -293,7 +293,7 @@ class Cache implements JsonSerializable
      * Returns the serializable JSON data for the cache.
      * @return array Cache data as an associative array.
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->toArray();
     }

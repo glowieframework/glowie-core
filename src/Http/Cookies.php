@@ -214,7 +214,7 @@ class Cookies implements JsonSerializable
      * Returns the serializable JSON data for the cookies.
      * @return array Cookies data as an associative array.
      */
-    public function jsonSerialize()
+    public function jsonSerialize() : array
     {
         return $this->toArray();
     }
