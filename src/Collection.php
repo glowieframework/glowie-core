@@ -703,7 +703,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      * @param string|int $offset Key to get value (accepts dot notation keys).
      * @return mixed Returns the value if exists or null if not.
      */
-    public function offsetGet($offset): mixed
+    public function offsetGet($offset)
     {
         return $this->get($offset);
     }
@@ -731,7 +731,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      * Returns the current item from the Collection.
      * @return mixed Current item.
      */
-    public function current(): mixed
+    public function current()
     {
         return current($this->__data);
     }
@@ -740,7 +740,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      * Returns the key of the current item from the Collection.
      * @return mixed Current key.
      */
-    public function key(): mixed
+    public function key()
     {
         return key($this->__data);
     }
