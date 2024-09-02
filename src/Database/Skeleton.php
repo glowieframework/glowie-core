@@ -229,12 +229,12 @@ class Skeleton
      * Creates a column in a new table.
      * @param string $name Column name to create.
      * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
-     * @param int|null $size (Optional) Field maximum length.
+     * @param mixed $size (Optional) Field maximum length.
      * @param mixed $default (Optional) Default field value.
      * @param string|null $collation (Optional) Collation to set in the column.
      * @return Skeleton Current Skeleton instance for nested calls.
      */
-    public function createColumn(string $name, string $type = self::TYPE_STRING, ?int $size = null, $default = null, ?string $collation = null)
+    public function createColumn(string $name, string $type = self::TYPE_STRING, $size = null, $default = null, ?string $collation = null)
     {
         $this->_modifiers[] = [
             'operation' => 'create',
@@ -252,12 +252,12 @@ class Skeleton
      * Creates a nullable column in a new table.
      * @param string $name Column name to create.
      * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
-     * @param int|null $size (Optional) Field maximum length.
+     * @param mixed $size (Optional) Field maximum length.
      * @param mixed $default (Optional) Default field value.
      * @param string|null $collation (Optional) Collation to set in the column.
      * @return Skeleton Current Skeleton instance for nested calls.
      */
-    public function createNullableColumn(string $name, string $type = self::TYPE_STRING, ?int $size = null, $default = null, ?string $collation = null)
+    public function createNullableColumn(string $name, string $type = self::TYPE_STRING, $size = null, $default = null, ?string $collation = null)
     {
         $this->_modifiers[] = [
             'operation' => 'create',
@@ -276,14 +276,14 @@ class Skeleton
      * **Important:** This column must also be set as a key. There can be only a single auto increment row in a table.
      * @param string $name Column name to create.
      * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
-     * @param int|null $size (Optional) Field maximum length.
+     * @param mixed $size (Optional) Field maximum length.
      * @return Skeleton Current Skeleton instance for nested calls.
      */
-    public function autoIncrement(string $name, string $type = self::TYPE_BIG_INTEGER_UNSIGNED, ?int $size = null)
+    public function autoIncrement(string $name, string $type = self::TYPE_BIG_INTEGER_UNSIGNED, $size = null)
     {
         $type = strtoupper($type);
         $field = "`{$name}` {$type}";
-        if (!Util::isEmpty($size)) $field .= "({$size})";
+        if (!is_null($size)) $field .= "({$size})";
         $this->_autoincrement = "{$field} NOT NULL";
         return $this;
     }
@@ -364,13 +364,13 @@ class Skeleton
      * Adds a column into an existing table.
      * @param string $name Column name to add.
      * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
-     * @param int|null $size (Optional) Field maximum length.
+     * @param mixed $size (Optional) Field maximum length.
      * @param mixed $default (Optional) Default field value.
      * @param string|null $after (Optional) Name of other column to place this column after it.
      * @param string|null $collation (Optional) Collation to set in the column.
      * @return Skeleton Current Skeleton instance for nested calls.
      */
-    public function addColumn(string $name, string $type = self::TYPE_STRING, ?int $size = null, $default = null, ?string $after = null, ?string $collation = null)
+    public function addColumn(string $name, string $type = self::TYPE_STRING, $size = null, $default = null, ?string $after = null, ?string $collation = null)
     {
         $this->_modifiers[] = [
             'operation' => 'add',
@@ -389,13 +389,13 @@ class Skeleton
      * Adds a nullable column to an existing table.
      * @param string $name Column name to add.
      * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
-     * @param int|null $size (Optional) Field maximum length.
+     * @param mixed $size (Optional) Field maximum length.
      * @param mixed $default (Optional) Default field value.
      * @param string|null $after (Optional) Name of other column to place this column after it.
      * @param string|null $collation (Optional) Collation to set in the column.
      * @return Skeleton Current Skeleton instance for nested calls.
      */
-    public function addNullableColumn(string $name, string $type = self::TYPE_STRING, ?int $size = null, $default = null, ?string $after = null, ?string $collation = null)
+    public function addNullableColumn(string $name, string $type = self::TYPE_STRING, $size = null, $default = null, ?string $after = null, ?string $collation = null)
     {
         $this->_modifiers[] = [
             'operation' => 'add',
@@ -415,14 +415,14 @@ class Skeleton
      * @param string $name Column name to change.
      * @param string|null $new_name (Optional) New column name. Leave empty for keeping the current name.
      * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
-     * @param int|null $size (Optional) Field maximum length.
+     * @param mixed $size (Optional) Field maximum length.
      * @param bool $nullable (Optional) Set to **true** if the field should accept `NULL` values.
      * @param mixed $default (Optional) Default field value.
      * @param string|null $after (Optional) Name of other column to move this column below it.
      * @param string|null $collation (Optional) Collation to set in the column.
      * @return Skeleton Current Skeleton instance for nested calls.
      */
-    public function changeColumn(string $name, ?string $new_name = null, string $type = self::TYPE_STRING, ?int $size = null, bool $nullable = true, $default = null, ?string $after = null, ?string $collation = null)
+    public function changeColumn(string $name, ?string $new_name = null, string $type = self::TYPE_STRING, $size = null, bool $nullable = true, $default = null, ?string $after = null, ?string $collation = null)
     {
         $this->_modifiers[] = [
             'operation' => (is_null($new_name) || $name === $new_name) ? 'modify' : 'change',
@@ -521,10 +521,10 @@ class Skeleton
 
     /**
      * Sets the size of the last added/changed column.
-     * @param int|null $size Field maximum length.
+     * @param mixed $size Field maximum length.
      * @return Skeleton Current Skeleton instance for nested calls.
      */
-    public function size(?int $size)
+    public function size($size)
     {
         return $this->changeModifier('size', $size);
     }
@@ -663,7 +663,7 @@ class Skeleton
             // Field type and size
             $data['type'] = strtoupper($data['type']);
 
-            if (!empty($data['size'])) {
+            if (!is_null($data['size'])) {
                 if (Util::stringContains($data['type'], ' UNSIGNED')) {
                     $data['type'] = str_replace(' UNSIGNED', '', $data['type']);
                     $field .= $data['type'] . "({$data['size']}) UNSIGNED";
