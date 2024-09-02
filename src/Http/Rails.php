@@ -427,12 +427,12 @@ class Rails
 
             // Saves the maintenance key in the cookies
             if ($route == $key) {
-                $cookies->set('glowie.maintenance_key', $key);
+                $cookies->set('glowie_maintenance_key', $key);
                 return self::$response->redirectBase();
             }
 
             // Validates the cookie
-            if ($cookies->get('glowie.maintenance_key') != $key) return self::callServiceUnavailable();
+            if ($cookies->get('glowie_maintenance_key') != $key) return self::callServiceUnavailable();
         }
 
         // Matches a valid route pattern

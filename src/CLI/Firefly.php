@@ -616,6 +616,49 @@ class Firefly
     }
 
     /**
+     * Puts the application under maintenance mode.
+     */
+    private static function __down()
+    {
+        // Checks permissions
+        $file = Util::location('../.env');
+        if (!is_writable($file)) throw new FileException('File ".env" is not writable, please check your chmod settings');
+
+        // Reads the config file content
+        $content = file_get_contents($file);
+
+        // Replaces the new keys
+        $content = preg_replace('/^APP_MAINTENANCE=(.*)$/m', 'APP_MAINTENANCE=true', $content, 1);
+
+        // Saves the new content
+        file_put_contents($file, $content);
+        self::print('<color="red">Application was put under maintenance.</color>');
+        self::print('<color="yellow">Bypass key: ' . Config::get('maintenance.bypass_key') . '</color>');
+        return true;
+    }
+
+    /**
+     * Removes the application from maintenance mode.
+     */
+    private static function __up()
+    {
+        // Checks permissions
+        $file = Util::location('../.env');
+        if (!is_writable($file)) throw new FileException('File ".env" is not writable, please check your chmod settings');
+
+        // Reads the config file content
+        $content = file_get_contents($file);
+
+        // Replaces the new keys
+        $content = preg_replace('/^APP_MAINTENANCE=(.*)$/m', 'APP_MAINTENANCE=false', $content, 1);
+
+        // Saves the new content
+        file_put_contents($file, $content);
+        self::print('<color="green">Application was put back online.</color>');
+        return true;
+    }
+
+    /**
      * Tests a database connection.
      */
     private static function __testDatabase()
@@ -1053,6 +1096,8 @@ class Firefly
         self::print('  <color="yellow">init</color> | Initializes the project');
         self::print('  <color="yellow">shine</color> <color="blue">--host --port</color> | Starts the local development server');
         self::print('  <color="yellow">sandbox</color> | Starts the REPL interactive mode');
+        self::print('  <color="yellow">down</color> | Puts the application under maintenance mode.');
+        self::print('  <color="yellow">up</color> | Removes the application from maintenance mode.');
         self::print('  <color="yellow">routes</color> | Prints a list of all application routes');
         self::print('  <color="yellow">clear-cache</color> | Clears the application cache folder');
         self::print('  <color="yellow">clear-session</color> | Clears the application session folder');
