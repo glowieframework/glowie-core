@@ -119,7 +119,7 @@ trait ElementTrait
         } else {
             if (!$ignoreDot) {
                 Util::arrayDelete($this->__data, $key);
-            } else if (array_key_exists($key, $this->__data)) {
+            } else {
                 unset($this->__data[$key]);
             }
         }

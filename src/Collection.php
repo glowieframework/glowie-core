@@ -73,7 +73,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     /**
      * Merges two Collections or arrays.
      * @param Collection|array A Collection or array to merge with the current Collection.
-     * @return Collection Returns a new Collection with the merget data.
+     * @return Collection Returns a new Collection with the merged data.
      */
     public function merge($data)
     {
@@ -94,13 +94,20 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
 
     /**
      * Removes the associated key value from the Collection data.
-     * @param mixed $key Key to delete value. You can also use an array of keys to remove.
+     * @param mixed $key Key to delete value (accepts dot notation keys). You can also use an array of keys to remove.
+     * @param bool $ignoreDot (Optional) Ignore dot notation keys.
      * @return Collection Current Collection instance for nested calls.
      */
-    public function remove($key)
+    public function remove($key, bool $ignoreDot = false)
     {
-        foreach ((array)$key as $item) {
-            if (isset($this->__data[$item])) unset($this->__data[$item]);
+        if (is_array($key)) {
+            foreach ($key as $item) $this->remove($item, $ignoreDot);
+        } else {
+            if (!$ignoreDot) {
+                Util::arrayDelete($this->__data, $key);
+            } else {
+                unset($this->__data[$key]);
+            }
         }
         return $this;
     }
@@ -119,16 +126,27 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     /**
      * Checks if any value has been associated to a key in the Collection data.
      * @param mixed $key Key to check (accepts dot notation keys). You can also use an array of keys.
+     * @param bool $all (Optional) Checks the presence of all items, instead of any.
      * @return bool Returns true or false.
      */
-    public function has($key)
+    public function has($key, bool $all = false)
     {
         $result = false;
         foreach ((array)$key as $item) {
-            if ($result) break;
+            if (!$all && $result) break;
             $result = Util::arrayGet($this->__data, $item) !== null;
         }
         return $result;
+    }
+
+    /**
+     * Checks if a value has been associated to all keys in the Collection data.
+     * @param mixed $key Key to check (accepts dot notation keys). You can also use an array of keys.
+     * @return bool Returns true or false.
+     */
+    public function hasAll($key)
+    {
+        return $this->has($key, true);
     }
 
     /**
@@ -639,7 +657,8 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
 
     /**
      * Iterates through each item of the Collection. This mutates the original Collection values.
-     * @param Closure $callback Function to be called.
+     * @param Closure $callback Function to be called. Returning `false` will stop the iteration.
+     * @return Collection Current Collection instance for nested calls.
      */
     public function each(Closure $callback)
     {
@@ -647,10 +666,11 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
             $result = $callback($value, $key);
             if ($result === false) break;
         }
+        return $this;
     }
 
     /**
-     * Applies a function to all items of the Collection.
+     * Applies a function to all items of the Collection. This does not mutate the original Collection.
      * @param Closure $callback Function to be called.
      * @return Collection Returns a new Collection with the new data.
      */
@@ -661,6 +681,21 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     }
 
     /**
+     * Checks if any item in the Collection passes a truth test.
+     * @param Closure $callback Function to be tested, should return a boolean.
+     * @return bool Returns the result of the test.
+     */
+    public function some(Closure $callback)
+    {
+        $result = false;
+        foreach ($this->__data as $key => $value) {
+            $result = $callback($value, $key);
+            if ($result === true) break;
+        }
+        return $result;
+    }
+
+    /**
      * Returns the Collection data as a string joined with a separator.
      * @param string $separator Separator to use to "glue" the data.
      * @return string Returns the imploded data.
@@ -668,6 +703,15 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     public function implode(string $separator)
     {
         return implode($separator, $this->__data);
+    }
+
+    /**
+     * Sums the values of the Collection.
+     * @return int|float Returns the sum.
+     */
+    public function sum()
+    {
+        return array_sum($this->__data);
     }
 
     /**

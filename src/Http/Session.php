@@ -161,7 +161,7 @@ class Session implements JsonSerializable
         } else {
             if (!$ignoreDot) {
                 Util::arrayDelete($_SESSION, $key);
-            } else if (array_key_exists($key, $_SESSION)) {
+            } else {
                 unset($_SESSION[$key]);
             }
         }
