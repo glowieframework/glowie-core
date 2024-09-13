@@ -137,6 +137,12 @@ class Skeleton
     public const TYPE_BLOB = 'BLOB';
 
     /**
+     * Long blob data type.
+     * @var string
+     */
+    public const TYPE_LONG_BLOB = 'LONGBLOB';
+
+    /**
      * EXISTS instruction.
      * @var string
      */

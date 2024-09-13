@@ -24,6 +24,12 @@ class Application
 {
 
     /**
+     * Shared application states.
+     * @var array
+     */
+    private $states = [];
+
+    /**
      * Bootstrap Glowie application.
      */
     public static function run()
@@ -72,5 +78,26 @@ class Application
 
         // Flush the output buffer if no errors were thrown
         Buffer::flush();
+    }
+
+    /**
+     * Sets a shared state in the application container.
+     * @param string $name State name to be set.
+     * @param mixed $data Data to set.
+     */
+    public static function setState(string $name, $data)
+    {
+        self::$states[$name] = $data;
+    }
+
+    /**
+     * Gets a shared state from the application container.
+     * @param string $name State name to get.
+     * @param mixed $default (Optional) Default value to return if not exists.
+     * @return mixed Returns the state or the default value if not exists.
+     */
+    public static function getState(string $name, $default = null)
+    {
+        return self::$states[$name] ?? $default;
     }
 }
