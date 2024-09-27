@@ -14,6 +14,12 @@ class Env
 {
 
     /**
+     * Current env settings.
+     * @var array
+     */
+    private static $env = [];
+
+    /**
      * Loads the environment configuration file.
      */
     public static function load()
@@ -38,9 +44,18 @@ class Env
      */
     public static function get(string $key, $default = null)
     {
+        // Gets the value from the default environment
         $value = getenv(trim($key), true);
-        if ($value === false) return $default;
-        return $value;
+        if ($value !== false) return $value;
+
+        // Gets the value from Apache environment
+        if (function_exists('apache_getenv')) {
+            $value = apache_getenv(trim($key), true);
+            if ($value !== false) return $value;
+        }
+
+        // Fallback to other environments
+        return $_ENV[$key] ?? self::$env[$key] ?? $default;
     }
 
     /**
@@ -51,6 +66,9 @@ class Env
     public static function set(string $key, string $value)
     {
         putenv(sprintf('%s=%s', trim($key), trim($value)));
+        if (function_exists('apache_setenv')) apache_setenv(trim($key), trim($value), true);
+        $_ENV[$key] = $value;
+        self::$env[$key] = $value;
     }
 
     /**
