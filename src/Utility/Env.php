@@ -44,18 +44,25 @@ class Env
      */
     public static function get(string $key, $default = null)
     {
-        // Gets the value from the default environment
+        // Gets the value from file context
+        if (isset(self::$env[$key])) return self::$env[$key];
+
+        // Gets the value from superglobals context
+        if (isset($_ENV[$key])) return $_ENV[$key];
+        if (isset($_SERVER[$key])) return $_SERVER[$key];
+
+        // Gets the value from the getenv() context
         $value = getenv(trim($key), true);
         if ($value !== false) return $value;
 
-        // Gets the value from Apache environment
+        // Gets the value from Apache context
         if (function_exists('apache_getenv')) {
             $value = apache_getenv(trim($key), true);
             if ($value !== false) return $value;
         }
 
-        // Fallback to other environments
-        return $_ENV[$key] ?? self::$env[$key] ?? $default;
+        // Return default value
+        return $default;
     }
 
     /**
@@ -65,9 +72,6 @@ class Env
      */
     public static function set(string $key, string $value)
     {
-        putenv(sprintf('%s=%s', trim($key), trim($value)));
-        if (function_exists('apache_setenv')) apache_setenv(trim($key), trim($value), true);
-        $_ENV[$key] = $value;
         self::$env[$key] = $value;
     }
 
