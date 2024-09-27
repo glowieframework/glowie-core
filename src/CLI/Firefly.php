@@ -1096,8 +1096,8 @@ class Firefly
         self::print('  <color="yellow">init</color> | Initializes the project');
         self::print('  <color="yellow">shine</color> <color="blue">--host --port</color> | Starts the local development server');
         self::print('  <color="yellow">sandbox</color> | Starts the REPL interactive mode');
-        self::print('  <color="yellow">down</color> | Puts the application under maintenance mode.');
-        self::print('  <color="yellow">up</color> | Removes the application from maintenance mode.');
+        self::print('  <color="yellow">down</color> | Puts the application under maintenance mode');
+        self::print('  <color="yellow">up</color> | Removes the application from maintenance mode');
         self::print('  <color="yellow">routes</color> | Prints a list of all application routes');
         self::print('  <color="yellow">clear-cache</color> | Clears the application cache folder');
         self::print('  <color="yellow">clear-session</color> | Clears the application session folder');

@@ -191,14 +191,14 @@ class Rails
     /**
      * Setup an anonymous (controller-independent) protected route for the application.
      * @param string $route The route URI to setup.
+     * @param Closure $callback A closure to run anonymously. A generic controller instance will be injected as a param of this function.
      * @param string|array $middleware (Optional) The namespaced middleware name that this route will use to protect itself.\
      * You can use `MiddlewareName::class` to get this property correctly. You can also use an array of multiple middlewares.
-     * @param Closure $callback A closure to run anonymously. A generic controller instance will be injected as a param of this function.
      * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods.\
      * Leave empty for all.
      * @param string $name (Optional) Route name.
      */
-    public static function addProtectedAnonymous(string $route, $middleware = 'Glowie\Middlewares\Authenticate', Closure $callback, $methods = [], string $name = '')
+    public static function addProtectedAnonymous(string $route, Closure $callback, $middleware = 'Glowie\Middlewares\Authenticate', $methods = [], string $name = '')
     {
         if (Util::isEmpty($name)) $name = Util::slug($route, '-', true);
         if (Util::isEmpty($middleware)) throw new RoutingException('Middleware cannot be empty for route "' . $name . '"');
@@ -304,7 +304,7 @@ class Rails
 
     /**
      * Sets a middleware to all application routes.
-     * @param string|array $middleware (Optional) The namespaced middleware name that all routes will use to protect themself.\
+     * @param string|array $middleware The namespaced middleware name that all routes will use to protect themself.\
      * You can use `MiddlewareName::class` to get this property correctly. You can also use an array of multiple middlewares.
      */
     public static function setGlobalMiddleware($middleware)
@@ -445,12 +445,6 @@ class Rails
             self::$currentParams = $config['params']->toArray();
             self::$currentRoute = $config['name'];
 
-            // Checks if there is a request method configuration
-            if (!empty($config['methods'])) {
-                $config['methods'] = array_map('strtoupper', $config['methods']);
-                if (!in_array(self::$request->getMethod(), $config['methods'])) return self::callMethodNotAllowed();
-            }
-
             // Checks if there is a redirect configuration
             if (!empty($config['redirect'])) return self::$response->redirect($config['redirect'], $config['code']);
 
@@ -561,6 +555,12 @@ class Rails
                 // Check route domain
                 if (!is_null($item['domain']) && self::$request->getHostname() !== $item['domain']) continue;
 
+                // Checks if there is a request method configuration
+                if (!empty($item['methods'])) {
+                    $item['methods'] = array_map('strtoupper', $item['methods']);
+                    if (!in_array(self::$request->getMethod(), $item['methods'])) continue;
+                }
+
                 // Parse route parameters
                 $result = [];
                 if (!empty($params)) {
@@ -621,27 +621,6 @@ class Rails
         self::$controller = new $controller;
         if (is_callable([self::$controller, 'init'])) self::$controller->init();
         self::$controller->forbidden();
-    }
-
-    /**
-     * Calls `methodNotAllowed()` action in Error controller.
-     */
-    private static function callMethodNotAllowed()
-    {
-        // Check if method is implemented
-        self::$response->setStatusCode(Response::HTTP_METHOD_NOT_ALLOWED);
-        $controller = 'Glowie\Controllers\Error';
-        if (!class_exists($controller) || !is_callable([$controller, 'methodNotAllowed'])) {
-            return self::loadDefaultErrorView([
-                'title' => 'Method Not Allowed',
-                'text' => '405 | Method Not Allowed'
-            ]);
-        }
-
-        // Create Error controller and dispatch method
-        self::$controller = new $controller;
-        if (is_callable([self::$controller, 'init'])) self::$controller->init();
-        self::$controller->methodNotAllowed();
     }
 
     /**
