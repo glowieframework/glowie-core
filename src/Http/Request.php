@@ -45,9 +45,8 @@ class Request implements JsonSerializable
         self::$json = new Element(json_decode($this->getBody(), true) ?? []);
 
         // Parse request variables
-        $params = [];
-        parse_str($this->getBody(), $params);
-        $this->__constructTrait(array_merge($_REQUEST, $params));
+        $vars = array_merge(Rails::getParams()->toArray(), $_GET, $_POST, $this->fromBody()->toArray());
+        $this->__constructTrait($vars);
     }
 
     /**
@@ -171,6 +170,26 @@ class Request implements JsonSerializable
     public function fromServer()
     {
         return new Element($_SERVER ?? []);
+    }
+
+    /**
+     * Gets the route parameters.
+     * @return Element Returns an Element with the route params.
+     */
+    public function fromRoute()
+    {
+        return Rails::getParams();
+    }
+
+    /**
+     * Gets the request vars from the request body only.
+     * @return Element Returns an Element with the request vars.
+     */
+    public function fromBody()
+    {
+        $params = [];
+        parse_str($this->getBody(), $params);
+        return new Element($params);
     }
 
     /**

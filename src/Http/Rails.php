@@ -546,6 +546,7 @@ class Rails
     {
         // Prepare result
         $config = null;
+        $invalidMethod = null;
 
         // Loops through each route to match a valid pattern
         foreach (self::$routes as $item) {
@@ -558,7 +559,10 @@ class Rails
                 // Checks if there is a request method configuration
                 if (!empty($item['methods'])) {
                     $item['methods'] = array_map('strtoupper', $item['methods']);
-                    if (!in_array(self::$request->getMethod(), $item['methods'])) continue;
+                    if (!in_array(self::$request->getMethod(), $item['methods'])) {
+                        $invalidMethod = $item;
+                        continue;
+                    }
                 }
 
                 // Parse route parameters
@@ -576,6 +580,9 @@ class Rails
                 break;
             }
         }
+
+        // Checks for invalid method matched
+        if (is_null($config) && $invalidMethod) return self::callMethodNotAllowed();
 
         // Return result
         return $config;
@@ -621,6 +628,26 @@ class Rails
         self::$controller = new $controller;
         if (is_callable([self::$controller, 'init'])) self::$controller->init();
         self::$controller->forbidden();
+    }
+
+    /**
+     * Calls `methodNotAllowed()` action in Error controller.
+     */
+    private static function callMethodNotAllowed()
+    {
+        // Check if method is implemented
+        self::$response->setStatusCode(Response::HTTP_METHOD_NOT_ALLOWED);
+        $controller = 'Glowie\Controllers\Error';
+        if (!class_exists($controller) || !is_callable([$controller, 'methodNotAllowed'])) {
+            return self::loadDefaultErrorView([
+                'title' => 'Method Not Allowed',
+                'text' => '405 | Method Not Allowed'
+            ]);
+        }
+        // Create Error controller and dispatch method
+        self::$controller = new $controller;
+        if (is_callable([self::$controller, 'init'])) self::$controller->init();
+        self::$controller->methodNotAllowed();
     }
 
     /**
