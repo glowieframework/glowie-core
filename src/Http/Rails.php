@@ -442,7 +442,7 @@ class Rails
         // Checks if route was found
         if (!is_null($config)) {
             // Parse parameters and route name
-            self::$currentParams = $config['params']->toArray();
+            self::$currentParams = $config['params'];
             self::$currentRoute = $config['name'];
 
             // Checks if there is a redirect configuration
@@ -477,7 +477,6 @@ class Rails
                     } else {
                         // Middleware blocked
                         if (is_callable([self::$middleware, 'fail'])) {
-                            self::$response->deny();
                             return self::$middleware->fail();
                         } else {
                             return self::callForbidden();
@@ -576,7 +575,7 @@ class Rails
 
                 // Saves the configuration
                 $config = $item;
-                $config['params'] = new Element($result);
+                $config['params'] = $result;
                 break;
             }
         }
@@ -681,10 +680,10 @@ class Rails
     {
         if (!class_exists($controller)) return self::callNotFound();
         if (!empty($params)) {
-            foreach ($params as $key => $value) {
-                $params['param' . ($key + 1)] = $value;
-                unset($params[$key]);
-            }
+            $keys = array_map(function ($key) {
+                return 'param' . ($key + 1);
+            }, array_keys($params));
+            $params = array_combine($keys, $params);
         }
         self::$currentParams = $params;
         self::$controller = new $controller;
