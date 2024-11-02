@@ -992,7 +992,7 @@ class Model extends Kraken implements JsonSerializable
                 // Gets the rule
                 switch ($type) {
                     case 'array':
-                        $data[$field] = json_decode($data[$field], true) ?? null;
+                        $data[$field] = json_decode($data[$field], true) ?? [];
                         break;
 
                     case 'collection':
@@ -1000,15 +1000,15 @@ class Model extends Kraken implements JsonSerializable
                         $data[$field] = new Collection($json);
                         break;
 
+                    case 'set':
+                        $data[$field] = explode(',', $data[$field], $params[1] ?? PHP_INT_MAX) ?? [];
+                        break;
+
                     case 'decimal':
                         $data[$field] = round($data[$field], $params[1] ?? 0);
                         break;
 
                     case 'json':
-                        $json = json_decode($data[$field], true);
-                        $data[$field] = $json ? new Element($json) : null;
-                        break;
-
                     case 'element':
                         $json = json_decode($data[$field], true) ?? [];
                         $data[$field] = new Element($json);
@@ -1204,7 +1204,7 @@ class Model extends Kraken implements JsonSerializable
     private function filterData(array $data)
     {
         if (empty($data) || empty($this->_updatable)) return $data;
-        $allowedFields = array_merge($this->_updatable, array_map(fn ($k) => $this->_table . '.' . $k, $this->_updatable));
+        $allowedFields = array_merge($this->_updatable, array_map(fn($k) => $this->_table . '.' . $k, $this->_updatable));
         return array_intersect_key($data, array_flip($allowedFields));
     }
 

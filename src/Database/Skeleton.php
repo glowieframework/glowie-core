@@ -143,6 +143,18 @@ class Skeleton
     public const TYPE_LONG_BLOB = 'LONGBLOB';
 
     /**
+     * Enum data type.
+     * @var string
+     */
+    public const TYPE_ENUM = 'ENUM';
+
+    /**
+     * Set data type.
+     * @var string
+     */
+    public const TYPE_SET = 'SET';
+
+    /**
      * EXISTS instruction.
      * @var string
      */
@@ -622,7 +634,7 @@ class Skeleton
     {
         if (empty($this->_modifiers)) throw new Exception('Skeleton: No column was added/changed to be modified');
         $i = count($this->_modifiers) - 1;
-        if ($property == 'unsigned') {
+        if ($property === 'unsigned') {
             $this->_modifiers[$i]['type'] = $this->_modifiers[$i]['type'] . ' UNSIGNED';
         } else {
             $this->_modifiers[$i][$property] = $value;
@@ -665,11 +677,16 @@ class Skeleton
         }
 
         // Rename or change column
-        if ($data['operation'] != 'rename') {
+        if ($data['operation'] !== 'rename') {
             // Field type and size
             $data['type'] = strtoupper($data['type']);
 
             if (!is_null($data['size'])) {
+                // Convert array to comma-separated values
+                if (is_array($data['size'])) {
+                    $data['size'] = "'" . implode("','", $data['size']) . "'";
+                }
+
                 if (Util::stringContains($data['type'], ' UNSIGNED')) {
                     $data['type'] = str_replace(' UNSIGNED', '', $data['type']);
                     $field .= $data['type'] . "({$data['size']}) UNSIGNED";
@@ -703,7 +720,7 @@ class Skeleton
             }
 
             // After
-            if ($data['operation'] != 'create') {
+            if ($data['operation'] !== 'create') {
                 if (!empty($data['after'])) $field .= " AFTER `{$data['after']}`";
             }
         }
@@ -1068,7 +1085,7 @@ class Skeleton
         }
 
         // Gets DATABASE statements
-        if ($this->_instruction == 'CREATE DATABASE' || $this->_instruction == 'DROP DATABASE') {
+        if ($this->_instruction === 'CREATE DATABASE' || $this->_instruction === 'DROP DATABASE') {
             $query .= " `{$this->_database}`";
             return $query;
         }
@@ -1077,7 +1094,7 @@ class Skeleton
         $query .= " `{$this->_table}`";
 
         // Gets CREATE TABLE parameters
-        if ($this->_instruction == 'CREATE TABLE' || $this->_instruction == 'CREATE TEMPORARY TABLE') {
+        if ($this->_instruction === 'CREATE TABLE' || $this->_instruction === 'CREATE TEMPORARY TABLE') {
             // Opening parenthesis
             $instructions = [];
             $query .= ' (';
@@ -1129,7 +1146,7 @@ class Skeleton
         }
 
         // Gets ALTER TABLE parameters
-        if ($this->_instruction == 'ALTER TABLE') {
+        if ($this->_instruction === 'ALTER TABLE') {
             $instructions = [];
             $query .= ' ';
 
@@ -1183,7 +1200,7 @@ class Skeleton
         }
 
         // Gets RENAME TABLE parameters
-        if ($this->_instruction == 'RENAME TABLE') {
+        if ($this->_instruction === 'RENAME TABLE') {
             $query .= " TO `{$this->_rename}`";
             $this->table($this->_rename);
         }
