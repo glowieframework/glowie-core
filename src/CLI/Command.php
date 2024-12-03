@@ -175,28 +175,35 @@ abstract class Command
 
     /**
      * Prompts the user to choose between a list of options.
+     * @param array $options Array of available options. **Options are indexed starting with 1.**\
+     * Use an associative array to set different values for the response (key) and display label (value).
      * @param string $message (Optional) Message to prompt to the user.
-     * @param array $options Array of available options. **Options are indexed starting with 1 instead of 0.**
-     * @param int $default (Optional) Default response to return if empty.
+     * @param int $default (Optional) Default option to return if empty.
      * @return mixed Returns the selected option value if valid, null otherwise.
      */
-    public function select(string $message = '', array $options, int $default = 1)
+    public function select(array $options, string $message = '', int $default = 1)
     {
         // Validate args
         if (empty($options)) throw new ConsoleException(Firefly::getCommand(), Firefly::getArgs(), get_class($this) . '::select(): $options array cannot be empty');
-        $options = array_values($options);
-        if (!array_key_exists($default - 1, $options)) throw new ConsoleException(Firefly::getCommand(), Firefly::getArgs(), get_class($this) . '::select(): Invalid default value "' . $default . '"');
+
+        // Determine if options are associative
+        $isAssociative = Util::isAssociativeArray($options);
+        $values = $isAssociative ? array_values($options) : $options;
+
+        // Validate default value
+        if (!array_key_exists($default - 1, $values)) throw new ConsoleException(Firefly::getCommand(), Firefly::getArgs(), get_class($this) . '::select(): Invalid default option "' . $default . '"');
 
         // Create prompt
         $this->print($message);
         $this->print('<color="magenta">', false);
-        foreach ($options as $key => $item) $this->print('  ' . ($key + 1) . ': ' . $item);
+        foreach ($values as $key => $item) $this->print('  ' . ($key + 1) . ': ' . $item);
         $this->print('</color>', false);
-        $response = (int)$this->input('<color="yellow">[1-' . count($options) . '] </color>', $default);
+        $response = (int)$this->input('<color="yellow">[1-' . count($values) . '] </color>', $default);
 
         // Return response
-        if (!array_key_exists($response - 1, $options)) return null;
-        return $options[$response - 1];
+        if (!array_key_exists($response - 1, $values)) return null;
+        if ($isAssociative) return array_search($values[$response - 1], $options);
+        return $values[$response - 1];
     }
 
     /**
