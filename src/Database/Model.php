@@ -750,6 +750,26 @@ class Model extends Kraken implements JsonSerializable
     }
 
     /**
+     * Disabled soft deletes setting in the model.
+     * @return $this Current Model instance for nested calls.
+     */
+    public function withDeleted()
+    {
+        $this->_softDeletes = false;
+        return $this;
+    }
+
+    /**
+     * Enables soft deletes settings in the model.
+     * @return $this Current Model instance for nested calls.
+     */
+    public function withoutDeleted()
+    {
+        $this->_softDeletes = true;
+        return $this;
+    }
+
+    /**
      * Sets a condition to the last association created in the Model.
      * @param Closure $callback A function that receives the associated model instance and joining value as references.
      * @return $this Current Model instance for nested calls.
