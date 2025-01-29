@@ -430,7 +430,7 @@ class Model extends Kraken implements JsonSerializable
         }
 
         // Generate UUID if in use
-        if ($this->_uuid) $data[$this->_primaryKey] = $data[$this->_primaryKey] ?? Util::uuid();
+        if ($this->_uuid) $data[$this->_primaryKey] = $data[$this->_primaryKey] ?? Util::orderedUuid();
 
         // Inserts the element
         $result = $this->insert($data);

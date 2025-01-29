@@ -832,6 +832,25 @@ class Util
     }
 
     /**
+     * Generates a sortable universally unique identifier (UUID).
+     * @return string Returns the resulting UUID.
+     */
+    public static function orderedUuid()
+    {
+        $timeHex = str_pad(dechex(floor(microtime(true) * 1000)), 12, "0", STR_PAD_LEFT);
+        return sprintf(
+            '%s-%s-%04x-%04x-%04x%04x%04x',
+            substr($timeHex, 0, 8),
+            substr($timeHex, 8, 4) . sprintf('%04x', mt_rand(0, 0xffff)),
+            mt_rand(0, 0xffff) . (mt_rand(0, 0x0fff) | 0x4000),
+            mt_rand(0, 0x3fff) | 0x8000,
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff)
+        );
+    }
+
+    /**
      * Generates a random string with a specified length.
      * @param int $length Length of the string to generate.
      * @param bool $letters (Optional) Include lower and uppercase letters in the string.
