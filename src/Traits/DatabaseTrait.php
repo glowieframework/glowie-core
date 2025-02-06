@@ -14,6 +14,7 @@ use Glowie\Core\Exception\QueryException;
 use Glowie\Core\Element;
 use Glowie\Core\Database\Factory;
 use Glowie\Core\Exception\DatabaseException;
+use Util;
 
 /**
  * Database handler trait for Glowie application.
@@ -169,6 +170,38 @@ trait DatabaseTrait
     public function escape($string)
     {
         return $this->getConnection()->escape_string((string)$string);
+    }
+
+    /**
+     * Escapes a single column name.
+     * @param mixed $column Column name to escape.
+     * @return string Escaped column name.
+     */
+    public function escapeColumn($column)
+    {
+        if ($column instanceof stdClass) return $column->value;
+        $parts = explode('.', $column);
+        foreach ($parts as &$part) {
+            $part = trim($part);
+            if (Util::startsWith($part, '`') && Util::endsWith($part, '`')) continue;
+            $part = '`' . trim($part, '`') . '`';
+        }
+        return implode('.', $parts);
+    }
+
+    /**
+     * Escapes multiple column names with commas.
+     * @param mixed $columns Column names to escape.
+     * @return string Escaped column names.
+     */
+    public function escapeColumns($columns)
+    {
+        if ($columns instanceof stdClass) return $columns->value;
+        $columns = explode(',', $columns);
+        $escapedColumns = array_map(function ($col) {
+            return $this->escapeMysqlColumn(trim($col));
+        }, $columns);
+        return implode(', ', $escapedColumns);
     }
 
     /**
