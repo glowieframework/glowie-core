@@ -173,38 +173,6 @@ trait DatabaseTrait
     }
 
     /**
-     * Escapes a single column name.
-     * @param mixed $column Column name to escape.
-     * @return string Escaped column name.
-     */
-    public function escapeColumn($column)
-    {
-        if ($column instanceof stdClass) return $column->value;
-        $parts = explode('.', $column);
-        foreach ($parts as &$part) {
-            $part = trim($part);
-            if (Util::startsWith($part, '`') && Util::endsWith($part, '`')) continue;
-            $part = '`' . trim($part, '`') . '`';
-        }
-        return implode('.', $parts);
-    }
-
-    /**
-     * Escapes multiple column names with commas.
-     * @param mixed $columns Column names to escape.
-     * @return string Escaped column names.
-     */
-    public function escapeColumns($columns)
-    {
-        if ($columns instanceof stdClass) return $columns->value;
-        $columns = explode(',', $columns);
-        $escapedColumns = array_map(function ($col) {
-            return $this->escapeColumn(trim($col));
-        }, $columns);
-        return implode(', ', $escapedColumns);
-    }
-
-    /**
      * Returns a value that will not be escaped or quoted into the query.
      * @param mixed $value Value to be returned.
      * @return stdClass Value representation as a generic object.
