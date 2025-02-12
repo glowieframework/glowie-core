@@ -5,6 +5,7 @@ namespace Glowie\Core\Http;
 use Glowie\Core\Exception\FileException;
 use Glowie\Core\Collection;
 use Config;
+use Glowie\Core\Tools\Validator;
 use Util;
 use JsonSerializable;
 
@@ -330,5 +331,29 @@ class Session implements JsonSerializable
         $cookies = new Cookies();
         $cookies->remove(session_name());
         $this->flush();
+    }
+
+    /**
+     * Validates the session data using unique validation rules for each one of the fields.
+     * @param array $rules Associative array with validation rules for each field.
+     * @param bool $bail (Optional) Stop validation of each field after first failure found.
+     * @param bool $bailAll (Optional) Stop validation of all fields after first failure found.
+     * @return bool Returns true if all rules passed for all fields, false otherwise.
+     */
+    public function validate(array $rules, bool $bail = false, bool $bailAll = false)
+    {
+        return (new Validator())->validateFields($this->toArray(), $rules, $bail, $bailAll);
+    }
+
+    /**
+     * Validates the session data using the same rules for all values.
+     * @param string|array $rules Validation rules for the data. Can be a single rule or an array of rules.
+     * @param bool $bail (Optional) Stop validation of each value after first failure found.
+     * @param bool $bailAll (Optional) Stop validation of all values after first failure found.
+     * @return bool Returns true if all rules passed for all values, false otherwise.
+     */
+    public function validateAll($rules, bool $bail = false, bool $bailAll = false)
+    {
+        return (new Validator())->validateMultiple($this->toArray(), $rules, $bail, $bailAll);
     }
 }

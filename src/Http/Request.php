@@ -6,6 +6,7 @@ use Util;
 use Glowie\Core\Collection;
 use Glowie\Core\Element;
 use Glowie\Core\Tools\Uploader;
+use Glowie\Core\Tools\Validator;
 use Glowie\Core\Traits\ElementTrait;
 use JsonSerializable;
 
@@ -404,5 +405,29 @@ class Request implements JsonSerializable
         $session = new Session();
         if (!$session->has('CSRF_TOKEN')) return false;
         return hash_equals($session->get('CSRF_TOKEN'), $input);
+    }
+
+    /**
+     * Validates the request data using unique validation rules for each one of the fields.
+     * @param array $rules Associative array with validation rules for each field.
+     * @param bool $bail (Optional) Stop validation of each field after first failure found.
+     * @param bool $bailAll (Optional) Stop validation of all fields after first failure found.
+     * @return bool Returns true if all rules passed for all fields, false otherwise.
+     */
+    public function validate(array $rules, bool $bail = false, bool $bailAll = false)
+    {
+        return (new Validator())->validateFields($this->toArray(), $rules, $bail, $bailAll);
+    }
+
+    /**
+     * Validates the request data using the same rules for all values.
+     * @param string|array $rules Validation rules for the data. Can be a single rule or an array of rules.
+     * @param bool $bail (Optional) Stop validation of each value after first failure found.
+     * @param bool $bailAll (Optional) Stop validation of all values after first failure found.
+     * @return bool Returns true if all rules passed for all values, false otherwise.
+     */
+    public function validateAll($rules, bool $bail = false, bool $bailAll = false)
+    {
+        return (new Validator())->validateMultiple($this->toArray(), $rules, $bail, $bailAll);
     }
 }
