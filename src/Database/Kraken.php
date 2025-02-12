@@ -251,6 +251,9 @@ class Kraken
      */
     public function join(string $table, $param1, ?string $param2 = null, ?string $param3 = null, string $type = 'INNER')
     {
+        // Escapes the table name
+        $table = $this->escapeColumn($table);
+
         // Adds the join
         $this->_join[] = "{$type} JOIN {$table}";
 
@@ -420,6 +423,9 @@ class Kraken
             }
             return $this;
         }
+
+        // Enquotes column names
+        $param1 = $this->escapeColumns($param1);
 
         // Checks if the operator was passed
         if (is_null($param3)) {
