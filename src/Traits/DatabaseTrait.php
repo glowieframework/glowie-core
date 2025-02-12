@@ -199,7 +199,7 @@ trait DatabaseTrait
         if ($columns instanceof stdClass) return $columns->value;
         $columns = explode(',', $columns);
         $escapedColumns = array_map(function ($col) {
-            return $this->escapeMysqlColumn(trim($col));
+            return $this->escapeColumn(trim($col));
         }, $columns);
         return implode(', ', $escapedColumns);
     }
