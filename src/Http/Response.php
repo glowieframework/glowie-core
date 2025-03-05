@@ -154,13 +154,23 @@ class Response
      */
     public function applyCors()
     {
+        // Check if CORS is enabled
         if (!Config::get('cors.enabled', true)) return;
+
+        // Apply CORS settings
         $this->setHeader('Access-Control-Allow-Methods', Config::get('cors.allowed_methods', ['*']));
         $this->setHeader('Access-Control-Allow-Origin', Config::get('cors.allowed_origins', ['*']));
         $this->setHeader('Access-Control-Allow-Headers', Config::get('cors.allowed_headers', ['*']));
         $this->setHeader('Access-Control-Max-Age', Config::get('cors.max_age', 0));
         if (!empty(Config::get('cors.exposed_headers', []))) $this->setHeader('Access-Control-Expose-Headers', Config::get('cors.exposed_headers', []));
         if (Config::get('cors.allow_credentials', false)) $this->setHeader('Access-Control-Allow-Credentials', 'true');
+
+        // Bypass OPTIONS requests
+        if(Rails::getRequest()->getMethod() === 'OPTIONS'){
+            $this->setStatusCode(self::HTTP_OK);
+            exit;
+        }
+
         return $this;
     }
 
