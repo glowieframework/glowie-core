@@ -41,6 +41,12 @@ class Response
     public const HTTP_ACCEPTED = 202;
 
     /**
+     * HTTP 204 No Content status code.
+     * @var int
+     */
+    public const HTTP_NO_CONTENT = 204;
+
+    /**
      * HTTP 300 Moved Permanently status code.
      * @var int
      */
@@ -155,22 +161,25 @@ class Response
     public function applyCors()
     {
         // Check if CORS is enabled
-        if (!Config::get('cors.enabled', true)) return;
+        if (!Config::get('cors.enabled', true)) return $this;
 
-        // Apply CORS settings
+        // Apply CORS headers
         $this->setHeader('Access-Control-Allow-Methods', Config::get('cors.allowed_methods', ['*']));
         $this->setHeader('Access-Control-Allow-Origin', Config::get('cors.allowed_origins', ['*']));
         $this->setHeader('Access-Control-Allow-Headers', Config::get('cors.allowed_headers', ['*']));
         $this->setHeader('Access-Control-Max-Age', Config::get('cors.max_age', 0));
-        if (!empty(Config::get('cors.exposed_headers', []))) $this->setHeader('Access-Control-Expose-Headers', Config::get('cors.exposed_headers', []));
-        if (Config::get('cors.allow_credentials', false)) $this->setHeader('Access-Control-Allow-Credentials', 'true');
 
-        // Bypass OPTIONS requests
-        if(Rails::getRequest()->getMethod() === 'OPTIONS'){
-            $this->setStatusCode(self::HTTP_OK);
-            exit;
+        $exposedHeaders = Config::get('cors.exposed_headers', []);
+        if (!empty($exposedHeaders)) {
+            $this->setHeader('Access-Control-Expose-Headers', $exposedHeaders);
         }
 
+        if (Config::get('cors.allow_credentials', false)) {
+            $this->setHeader('Access-Control-Allow-Credentials', 'true');
+        }
+
+        // Handle preflight requests
+        $this->handlePreflight();
         return $this;
     }
 
@@ -449,5 +458,31 @@ class Response
                 $xml_data->addChild("$key", htmlspecialchars("$value"));
             }
         }
+    }
+
+    /**
+     * Handles a preflight request with CORS.
+     */
+    private function handlePreflight()
+    {
+        // Checks if is a preflight request
+        $request = Rails::getRequest();
+        if (!$request->isOptions() || !$request->hasHeader('Access-Control-Request-Method')) return;
+
+        // Sets the 204 status code
+        $this->setStatusCode(self::HTTP_NO_CONTENT);
+
+        // Sets the origin header if all allowed
+        $response = $this->getHeaders();
+        $supportCredentials = $response->has('Access-Control-Allow-Credentials');
+        $allowedOrigins = $response->get('Access-Control-Allow-Origin');
+        $origin = $request->getHeader('Origin');
+
+        if ($supportCredentials && $allowedOrigins === '*' && $origin) {
+            $this->setHeader('Access-Control-Allow-Origin', $origin);
+        }
+
+        // Ends the request immediately
+        exit;
     }
 }
