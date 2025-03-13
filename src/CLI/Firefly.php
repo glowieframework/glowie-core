@@ -419,8 +419,8 @@ class Firefly
         $port = self::getArg('port', 8080);
 
         // Starts the server
-        self::print('<color="green">Local development server started!</color>');
-        self::print('<color="yellow">To shutdown the server press Ctrl/Command+C</color>');
+        self::print('<color="green">[' . date('Y-m-d H:i:s') . '] Local development server started!</color>');
+        self::print('<color="yellow">[' . date('Y-m-d H:i:s') . '] To shutdown the server press Ctrl/Command+C</color>');
         passthru(sprintf('php -S %s:%s -t app/public %s/Server.php', $host, $port, __DIR__));
     }
 
@@ -632,8 +632,8 @@ class Firefly
 
         // Saves the new content
         file_put_contents($file, $content);
-        self::print('<color="red">Application was put under maintenance.</color>');
-        self::print('<color="yellow">Bypass key: ' . Config::get('maintenance.bypass_key') . '</color>');
+        self::print('<color="red">[' . date('Y-m-d H:i:s') . '] Application was put under maintenance.</color>');
+        self::print('<color="yellow">[' . date('Y-m-d H:i:s') . '] Bypass key: ' . Config::get('maintenance.bypass_key') . '</color>');
         return true;
     }
 
@@ -654,7 +654,7 @@ class Firefly
 
         // Saves the new content
         file_put_contents($file, $content);
-        self::print('<color="green">Application was put back online.</color>');
+        self::print('<color="green">[' . date('Y-m-d H:i:s') . '] Application was put back online.</color>');
         return true;
     }
 
@@ -674,7 +674,7 @@ class Firefly
 
         // Prints the result
         $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
-        self::print('<color="green">Database "' . $name . '" connected successfully in ' . $time . '!</color>');
+        self::print('<color="green">[' . date('Y-m-d H:i:s') . '] Database "' . $name . '" connected successfully in ' . $time . '!</color>');
         return true;
     }
 
@@ -810,14 +810,23 @@ class Firefly
     private static function __createMigration()
     {
         $name = self::argOrInput('name', 'Migration name: ');
-        self::doMigrationCreate($name);
+        return self::doMigrationCreate($name);
+    }
+
+    /**
+     * Creates a migration for the queue table.
+     */
+    private static function __createQueueMigration()
+    {
+        return self::doMigrationCreate('CreateQueueTable', 'Migration_Queue.php');
     }
 
     /**
      * Runs the migration creator.
      * @param string $name Migration name.
+     * @param string $template (Optional) Template filename.
      */
-    private static function doMigrationCreate($name)
+    private static function doMigrationCreate(string $name, string $template = 'Migration.php')
     {
         // Checks permissions
         if (!is_dir(Util::location('migrations'))) mkdir(Util::location('migrations'), 0755, true);
@@ -833,7 +842,7 @@ class Firefly
         if (is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Migration {$cleanName} already exists!");
 
         // Creates the file
-        $template = file_get_contents(self::TEMPLATES_FOLDER . 'Migration.php');
+        $template = file_get_contents(self::TEMPLATES_FOLDER . $template);
         $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
         file_put_contents($targetFile, $template);
 
@@ -948,23 +957,24 @@ class Firefly
 
             // Checks if the migration was already applied
             if (!$migration->isApplied()) {
-                self::print("<color=\"blue\">Applying migration {$name}...</color>");
+                $date = date('Y-m-d H:i:s');
+                self::print("<color=\"blue\">[{$date}] Applying migration {$name}...</color>");
                 $migration->run();
                 $migration->saveMigration();
                 $migrateRun = true;
                 $stepsDone++;
                 $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
-                self::print("<color=\"green\">Migration {$name} applied successfully in {$time}!</color>");
+                self::print("<color=\"green\">[{$date}] Migration {$name} applied successfully in {$time}!</color>");
             }
         }
 
         // Checks if no migrations were run
         if (!$migrateRun) {
-            self::print('<color="yellow">There are no new migrations to apply.</color>');
+            self::print('<color="yellow">[' . date('Y-m-d H:i:s') . '] There are no new migrations to apply.</color>');
             return true;
         } else {
             self::print('');
-            self::print('<color="yellow">' . $stepsDone . ' migrations were applied successfully.</color>');
+            self::print('<color="yellow">[' . date('Y-m-d H:i:s') . '] ' . $stepsDone . ' migrations were applied successfully.</color>');
             return true;
         }
     }
@@ -1000,23 +1010,24 @@ class Firefly
 
             // Checks if the migration was already applied
             if ($migration->isApplied()) {
-                self::print("<color=\"blue\">Rolling back migration {$name}...</color>");
+                $date = date('Y-m-d H:i:s');
+                self::print("<color=\"blue\">[{$date}] Rolling back migration {$name}...</color>");
                 $migration->rollback();
                 $migration->deleteMigration();
                 $rollbackRun = true;
                 $stepsDone++;
                 $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
-                self::print("<color=\"green\">Migration {$name} rolled back successfully in {$time}!</color>");
+                self::print("<color=\"green\">[$date] Migration {$name} rolled back successfully in {$time}!</color>");
             }
         }
 
         // Checks if migrations were rolled back
         if (!$rollbackRun) {
-            self::print('<color="yellow">There are no migrations to rollback.</color>');
+            self::print('<color="yellow">[' . date('Y-m-d H:i:s') . '] There are no migrations to rollback.</color>');
             return true;
         } else {
             self::print('');
-            self::print('<color="yellow">' . $stepsDone . ' migrations were rolled back successfully.</color>');
+            self::print('<color="yellow">[' . date('Y-m-d H:i:s') . '] ' . $stepsDone . ' migrations were rolled back successfully.</color>');
             return true;
         }
     }
@@ -1067,7 +1078,7 @@ class Firefly
 
         // Print welcome message
         Firefly::print('<color="green">[' . date('Y-m-d H:i:s') . '] Queue Watcher has started!</color>');
-        Firefly::print('<color="yellow">[' . date('Y-m-d H:i:s') . '] Use Ctrl/Command+Z to stop the service</color>');
+        Firefly::print('<color="yellow">[' . date('Y-m-d H:i:s') . '] Use Ctrl/Command+C to stop the service</color>');
 
         // Run watcher
         while (true) {
@@ -1112,6 +1123,7 @@ class Firefly
         self::print('  <color="yellow">create-language</color> <color="blue">--name</color> | Creates a new language file for your application');
         self::print('  <color="yellow">create-middleware</color> <color="blue">--name</color> | Creates a new middleware for your application');
         self::print('  <color="yellow">create-migration</color> <color="blue">--name</color> | Creates a new migration for your application');
+        self::print('  <color="yellow">create-queue-migration</color> | Creates a migration for the queue table');
         self::print('  <color="yellow">create-model</color> <color="blue">--name --table --primary --migration</color> | Creates a new model for your application');
         self::print('  <color="yellow">create-job</color> <color="blue">--name</color> | Creates a new job for your application');
         self::print('  <color="yellow">migrate</color> <color="blue">--steps</color> | Applies pending migrations from your application');

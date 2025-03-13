@@ -146,15 +146,15 @@ class Authorizator
      * @param string $password Password to authenticate.
      * @param array|Closure $conditions (Optional) Associative array of aditional fields to use while searching for the user.\
      * You can also pass a Closure to directly modify the query builder.
-     * @param int $expires (Optional) Token expiration time in seconds, leave empty for no expiration.
+     * @param int|null $expires (Optional) Token expiration time in seconds, leave empty for no expiration.
      * @return string|bool Returns the token if authentication is successful, false otherwise.
      */
-    public function login(string $user, string $password, $conditions = [], int $expires = self::EXPIRES_DAY)
+    public function login(string $user, string $password, $conditions = [], ?int $expires = self::EXPIRES_DAY)
     {
         // Check for empty login credentials
         if (Util::isEmpty($user) || Util::isEmpty($password)) {
             $this->error = self::ERR_EMPTY_DATA;
-            self::$user[$this->guard] = null;
+            self::setUser($this->guard, null);
             return false;
         }
 
@@ -177,18 +177,18 @@ class Authorizator
 
         if (!$user) {
             $this->error = self::ERR_NO_USER;
-            self::$user[$this->guard] = null;
+            self::setUser($this->guard, null);
             return false;
         }
 
         // Check password
         if (password_verify($password, $user->get($passwordField))) {
             $this->error = self::ERR_AUTH_SUCCESS;
-            self::$user[$this->guard] = $user;
+            self::setUser($this->guard, $user);
             return $this->generateJwt(['user' => Util::encryptString($user->getPrimary())], $expires, 'HS256', ['glowie' => 'auth']);
         } else {
             $this->error = self::ERR_WRONG_PASSWORD;
-            self::$user[$this->guard] = null;
+            self::setUser($this->guard, null);
             return false;
         }
     }
@@ -204,7 +204,7 @@ class Authorizator
         $token = $this->decodeJwt($token, true, ['glowie' => 'auth']);
         if (!$token || Util::isEmpty($token->user ?? '')) {
             $this->error = self::ERR_INVALID_TOKEN;
-            self::$user[$this->guard] = null;
+            self::setUser($this->guard, null);
             return false;
         }
 
@@ -217,13 +217,13 @@ class Authorizator
         $user = $model->findAndFill(Util::decryptString($token->user));
         if (!$user) {
             $this->error = self::ERR_NO_USER;
-            self::$user[$this->guard] = null;
+            self::setUser($this->guard, null);
             return false;
         }
 
         // Save user and return success
         $this->error = self::ERR_AUTH_SUCCESS;
-        self::$user[$this->guard] = $user;
+        self::setUser($this->guard, $user);
         return true;
     }
 
@@ -233,7 +233,7 @@ class Authorizator
      */
     public function check()
     {
-        return isset(self::$user[$this->guard]);
+        return !is_null($this->getUser());
     }
 
     /**
@@ -251,7 +251,7 @@ class Authorizator
      */
     public function getUserId()
     {
-        $user = self::$user[$this->guard] ?? null;
+        $user = $this->getUser();
         if (!$user) return null;
         return $user->getPrimay() ?? null;
     }
@@ -262,9 +262,9 @@ class Authorizator
      */
     public function refresh()
     {
-        $user = self::$user[$this->guard] ?? null;
+        $user = $this->getUser();
         if (!$user || !$user->refresh()) return false;
-        self::$user[$this->guard] = $user;
+        self::setUser($this->guard, $user);
         return true;
     }
 
@@ -274,8 +274,8 @@ class Authorizator
      */
     public function logout()
     {
-        if (!isset(self::$user[$this->guard])) return false;
-        self::$user[$this->guard] = null;
+        if (!$this->check()) return false;
+        self::setUser($this->guard, null);
         return true;
     }
 
@@ -385,6 +385,24 @@ class Authorizator
         // Generate a valid signature to compare
         $signature = $this->base64UrlEncode(hash_hmac(self::METHODS[$alg], "{$parsed[0]}.{$parsed[1]}", $key, true));
         return $signature == $parsed[2];
+    }
+
+    /**
+     * Shares the current logged user with the Authenticator handler.
+     */
+    public function toAuthenticator()
+    {
+        Authenticator::setUser($this->guard, $this->getUser());
+    }
+
+    /**
+     * Sets a user instance to a guard.
+     * @param string $guard Guard name.
+     * @param Model|null $user User instance.
+     */
+    public static function setUser(string $guard, $user)
+    {
+        self::$user[$guard] = $user;
     }
 
     /**

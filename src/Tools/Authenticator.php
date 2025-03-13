@@ -98,7 +98,7 @@ class Authenticator
         // Check for empty login credentials
         if (Util::isEmpty($user) || Util::isEmpty($password)) {
             $this->error = self::ERR_EMPTY_DATA;
-            self::$user[$this->guard] = null;
+            self::setUser($this->guard, null);
             return false;
         }
 
@@ -121,13 +121,13 @@ class Authenticator
 
         if (!$user) {
             $this->error = self::ERR_NO_USER;
-            self::$user[$this->guard] = null;
+            self::setUser($this->guard, null);
             return false;
         }
 
         // Check password
         if (password_verify($password, $user->get($passwordField))) {
-            self::$user[$this->guard] = $user;
+            self::setUser($this->guard, $user);
             $this->error = self::ERR_AUTH_SUCCESS;
 
             // Save credentials in session
@@ -135,7 +135,7 @@ class Authenticator
             return true;
         } else {
             $this->error = self::ERR_WRONG_PASSWORD;
-            self::$user[$this->guard] = null;
+            self::setUser($this->guard, null);
             return false;
         }
     }
@@ -152,7 +152,7 @@ class Authenticator
         // Check for empty login credentials
         if (Util::isEmpty($user)) {
             $this->error = self::ERR_EMPTY_DATA;
-            self::$user[$this->guard] = null;
+            self::setUser($this->guard, null);
             return false;
         }
 
@@ -174,12 +174,12 @@ class Authenticator
 
         if (!$user) {
             $this->error = self::ERR_NO_USER;
-            self::$user[$this->guard] = null;
+            self::setUser($this->guard, null);
             return false;
         }
 
         // Parse user instance
-        self::$user[$this->guard] = $user;
+        self::setUser($this->guard, $user);
         $this->error = self::ERR_AUTH_SUCCESS;
 
         // Save credentials in session
@@ -216,7 +216,7 @@ class Authenticator
 
             // Fetch user information
             $user = $model->findAndFill($user);
-            if ($user !== false) self::$user[$this->guard] = $user;
+            if ($user !== false) self::setUser($this->guard, $user);
         }
 
         // Return fetched user, if found
@@ -229,12 +229,9 @@ class Authenticator
      */
     public function getUserId()
     {
-        if (!isset(self::$user[$this->guard])) {
-            $user = $this->getUser();
-            if (!$user) return null;
-        }
-
-        return self::$user[$this->guard]->getPrimary() ?? null;
+        $user = $this->getUser();
+        if (!$user) return null;
+        return $user->getPrimary();
     }
 
     /**
@@ -243,12 +240,9 @@ class Authenticator
      */
     public function refresh()
     {
-        if (!isset(self::$user[$this->guard])) {
-            $user = $this->getUser();
-            if (!$user) return false;
-        }
-
-        return self::$user[$this->guard]->refresh() ?? false;
+        $user = $this->getUser();
+        if (!$user) return false;
+        return self::$user[$this->guard]->refresh();
     }
 
     /**
@@ -273,7 +267,7 @@ class Authenticator
         $session = new Session();
         if (!$session->has('glowie.auth.' . $this->guard)) return false;
         $session->remove('glowie.auth.' . $this->guard);
-        self::$user[$this->guard] = null;
+        self::setUser($this->guard, null);
         return true;
     }
 
@@ -284,5 +278,23 @@ class Authenticator
     public function getError()
     {
         return $this->error;
+    }
+
+    /**
+     * Shares the current logged user with the Authorizator handler.
+     */
+    public function toAuthorizator()
+    {
+        Authorizator::setUser($this->guard, $this->getUser());
+    }
+
+    /**
+     * Sets a user instance to a guard.
+     * @param string $guard Guard name.
+     * @param Model|null $user User instance.
+     */
+    public static function setUser(string $guard, $user)
+    {
+        self::$user[$guard] = $user;
     }
 }

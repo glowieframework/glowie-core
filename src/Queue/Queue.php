@@ -46,12 +46,6 @@ class Queue
     private static $table;
 
     /**
-     * Stores if the queue table was created.
-     * @var bool
-     */
-    private static $tableCreated = false;
-
-    /**
      * Adds a job to the queue.
      * @param string $job A job classname with namespace. You can use `JobName::class` to get this property correctly.
      * @param mixed $data (Optional) Data to pass to the job.
@@ -60,9 +54,8 @@ class Queue
      */
     public static function add(string $job, $data = null, string $queue = 'default', int $delay = 0)
     {
-        // Stores the table name and checks its existence
+        // Stores the table name
         self::$table = Config::get('queue.table', 'queue');
-        self::createTable();
 
         // Add to queue
         $db = new Kraken(self::$table, Config::get('queue.connection', 'default'));
@@ -84,11 +77,8 @@ class Queue
      */
     public static function process(string $queue = 'default', bool $bail = false, bool $verbose = false, bool $watcher = false)
     {
-        // Stores the table name and checks its existence
+        // Stores the table name and delete expired jobs
         self::$table = Config::get('queue.table', 'queue');
-        self::createTable();
-
-        // Cleanup jobs table
         self::prune();
 
         // Get pending jobs from the queue
@@ -165,9 +155,8 @@ class Queue
      */
     public static function clear(bool $success = false, bool $failed = false, bool $pending = false)
     {
-        // Creates the table instance if not yet
+        // Stores the table name
         self::$table = Config::get('queue.table', 'queue');
-        self::createTable();
 
         // Connects to the database
         $db = new Kraken(self::$table, Config::get('queue.connection', 'default'));
@@ -196,27 +185,5 @@ class Queue
         $db->whereNotNull('ran_at')
             ->where('ran_at', '<=', date('Y-m-d H:i:s', time() - Config::get('queue.keep_log', self::DELAY_DAY)))
             ->delete();
-    }
-
-    /**
-     * Checks if the queue table already exists, and if not, creates it.
-     */
-    private static function createTable()
-    {
-        if (!self::$tableCreated) {
-            $db = new Skeleton(self::$table, Config::get('queue.connection', 'default'));
-            if (!$db->tableExists()) {
-                $db->id()
-                    ->createColumn('job')->type(Skeleton::TYPE_TEXT)
-                    ->createColumn('queue')->type(Skeleton::TYPE_STRING)->size(255)
-                    ->createColumn('data')->type(Skeleton::TYPE_LONG_BLOB)->nullable()
-                    ->createColumn('added_at')->type(Skeleton::TYPE_DATETIME)->default(Skeleton::raw('NOW()'))
-                    ->createColumn('delayed_to')->type(Skeleton::TYPE_DATETIME)->nullable()
-                    ->createColumn('ran_at')->type(Skeleton::TYPE_DATETIME)->nullable()
-                    ->createColumn('attempts')->type(Skeleton::TYPE_INTEGER)->unsigned()->default('0')
-                    ->create();
-            }
-            self::$tableCreated = true;
-        }
     }
 }
