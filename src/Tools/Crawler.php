@@ -13,8 +13,8 @@ use Exception;
  * @author Glowie
  * @copyright Copyright (c) Glowie
  * @license MIT
- * @link https://gabrielsilva.dev.br/glowie
- * @see https://gabrielsilva.dev.br/glowie/docs/latest/extra/http-requests
+ * @link https://glowie.gabrielsilva.dev.br
+ * @see https://glowie.gabrielsilva.dev.br/docs/latest/extra/http-requests
  */
 class Crawler
 {

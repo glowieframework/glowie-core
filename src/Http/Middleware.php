@@ -11,8 +11,8 @@ use Glowie\Core\Element;
  * @author Glowie
  * @copyright Copyright (c) Glowie
  * @license MIT
- * @link https://gabrielsilva.dev.br/glowie
- * @see https://gabrielsilva.dev.br/glowie/docs/latest/basic-application-modules/middlewares
+ * @link https://glowie.gabrielsilva.dev.br
+ * @see https://glowie.gabrielsilva.dev.br/docs/latest/basic-application-modules/middlewares
  *
  * @method void init() This method will be called before any other methods from this middleware.
  * @method void success() Called if the middleware handler returns true.

@@ -11,8 +11,8 @@ use Glowie\Core\Database\Model;
  * @author Glowie
  * @copyright Copyright (c) Glowie
  * @license MIT
- * @link https://gabrielsilva.dev.br/glowie
- * @see https://gabrielsilva.dev.br/glowie/docs/latest/forms-and-data/models
+ * @link https://glowie.gabrielsilva.dev.br
+ * @see https://glowie.gabrielsilva.dev.br/docs/latest/forms-and-data/models
  */
 class __FIREFLY_TEMPLATE_NAME__ extends Model
 {
@@ -108,7 +108,7 @@ class __FIREFLY_TEMPLATE_NAME__ extends Model
     protected $_deletedField = 'deleted_at';
 
     /**
-     * Initializes the model and its associations (if any).
+     * Initializes the model and its relations (if any).
      */
     public function init()
     {

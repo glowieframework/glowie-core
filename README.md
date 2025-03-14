@@ -1,5 +1,5 @@
 <p align="center">
-    <a href="https://gabrielsilva.dev.br/glowie" target="_blank"><img src="https://i.imgur.com/5tsmOE4.png" alt="Glowie" width="200"/></a>
+    <a href="https://glowie.gabrielsilva.dev.br" target="_blank"><img src="https://i.imgur.com/5tsmOE4.png" alt="Glowie" width="200"/></a>
 </p>
 
 <p align="center">
@@ -38,7 +38,7 @@ Glowie is a PHP framework designed to be as light, fast and powerful as possible
 composer create-project glowieframework/glowie
 ```
 
-[Explore the documentation](https://gabrielsilva.dev.br/glowie/docs) to know how to start using Glowie to create something awesome.
+[Explore the documentation](https://glowie.gabrielsilva.dev.br/docs) to know how to start using Glowie to create something awesome.
 
 ## Credits
 Glowie is currently being developed by [Gabriel Silva](https://gabrielsilva.dev.br).

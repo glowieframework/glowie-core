@@ -15,8 +15,8 @@ use JsonSerializable;
  * @author Glowie
  * @copyright Copyright (c) Glowie
  * @license MIT
- * @link https://gabrielsilva.dev.br/glowie
- * @see https://gabrielsilva.dev.br/glowie/docs/latest/forms-and-data/cookies
+ * @link https://glowie.gabrielsilva.dev.br
+ * @see https://glowie.gabrielsilva.dev.br/docs/latest/forms-and-data/cookies
  */
 class Cookies implements JsonSerializable
 {

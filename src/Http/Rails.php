@@ -18,8 +18,8 @@ use Glowie\Core\Element;
  * @author Glowie
  * @copyright Copyright (c) Glowie
  * @license MIT
- * @link https://gabrielsilva.dev.br/glowie
- * @see https://gabrielsilva.dev.br/glowie/docs/latest/basic-application-modules/routes
+ * @link https://glowie.gabrielsilva.dev.br
+ * @see https://glowie.gabrielsilva.dev.br/docs/latest/basic-application-modules/routes
  */
 class Rails
 {

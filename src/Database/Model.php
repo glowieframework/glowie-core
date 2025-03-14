@@ -19,8 +19,8 @@ use DateTime;
  * @author Glowie
  * @copyright Copyright (c) Glowie
  * @license MIT
- * @link https://gabrielsilva.dev.br/glowie
- * @see https://gabrielsilva.dev.br/glowie/docs/latest/forms-and-data/models
+ * @link https://glowie.gabrielsilva.dev.br
+ * @see https://glowie.gabrielsilva.dev.br/docs/latest/forms-and-data/models
  */
 class Model extends Kraken implements JsonSerializable
 {
@@ -135,16 +135,16 @@ class Model extends Kraken implements JsonSerializable
     private $_mutateEnabled = true;
 
     /**
-     * Model table associations.
+     * Model table relations.
      * @var array
      */
-    private $_associations = [];
+    private $_relations = [];
 
     /**
-     * Array of enabled associations for the next queries.
+     * Array of enabled relations for the next queries.
      * @var bool|array
      */
-    private $_associationsEnabled = false;
+    private $_relationsEnabled = false;
 
     /**
      * Creates a new instance of the model.
@@ -220,7 +220,7 @@ class Model extends Kraken implements JsonSerializable
      */
     public function fetchRow()
     {
-        return $this->associateData($this->castData(Kraken::fetchRow()));
+        return $this->attachRelations($this->castData(Kraken::fetchRow()));
     }
 
     /**
@@ -230,7 +230,7 @@ class Model extends Kraken implements JsonSerializable
      */
     public function fetchAll()
     {
-        return $this->associateData($this->castData(Kraken::fetchAll()));
+        return $this->attachRelations($this->castData(Kraken::fetchAll()));
     }
 
     /**
@@ -729,23 +729,23 @@ class Model extends Kraken implements JsonSerializable
     }
 
     /**
-     * Enables associating data with other models.
-     * @param string|array $names (Optional) Association name or an array of associations to enable. Leave empty to use all.
+     * Enables relating data with other models.
+     * @param string|array $names (Optional) Relation name or an array of relations to enable. Leave empty to use all.
      * @return $this Current Model instance for nested calls.
      */
-    public function withAssociations($names = [])
+    public function withRelations($names = [])
     {
-        $this->_associationsEnabled = (array)$names;
+        $this->_relationsEnabled = (array)$names;
         return $this;
     }
 
     /**
-     * Disables associating data with other models.
+     * Disables relating data with other models.
      * @return $this Current Model instance for nested calls.
      */
-    public function withoutAssociations()
+    public function withoutRelations()
     {
-        $this->_associationsEnabled = false;
+        $this->_relationsEnabled = false;
         return $this;
     }
 
@@ -770,24 +770,24 @@ class Model extends Kraken implements JsonSerializable
     }
 
     /**
-     * Sets a condition to the last association created in the Model.
-     * @param Closure $callback A function that receives the associated model instance and joining value as references.
+     * Sets a condition to the last relation created in the Model.
+     * @param Closure $callback A function that receives the related model instance and joining value as references.
      * @return $this Current Model instance for nested calls.
      */
-    public function associateWhen(Closure $callback)
+    public function relationsWhen(Closure $callback)
     {
-        if (empty($this->_associations)) throw new Exception('Model: No association created to be modified');
-        $i = array_key_last($this->_associations);
-        $this->_associations[$i]['callback'] = $callback;
+        if (empty($this->_relations)) throw new Exception('Model: No relation created to be modified');
+        $i = array_key_last($this->_relations);
+        $this->_relations[$i]['callback'] = $callback;
         return $this;
     }
 
     /**
      * Setup a one to one relationship with another model.
-     * @param string $model Associated model classname with namespace. You can use `ModelName::class` to get this property correctly.
-     * @param string $column (Optional) Foreign key column name from the associated model. Leave empty for auto.
-     * @param string $name (Optional) Name of this association to add to the query results. Leave empty for auto.
-     * @param Closure|null $callback (Optional) A function to interact with the associated model before querying the relationship.\
+     * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
+     * @param string $column (Optional) Foreign key column name from the related model. Leave empty for auto.
+     * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
+     * @param Closure|null $callback (Optional) A function to interact with the related model before querying the relationship.\
      * It receives the related Model instance as the first parameter, and the current row as an associative array.
      * @return $this Current Model instance for nested calls.
      */
@@ -798,8 +798,8 @@ class Model extends Kraken implements JsonSerializable
         if (Util::isEmpty($name)) $name = Util::snakeCase(Util::singularize(Util::classname($model)));
         if (Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $this->getPrimaryName();
 
-        // Set to associations array
-        $this->_associations[$name] = [
+        // Set to relations array
+        $this->_relations[$name] = [
             'type' => 'one',
             'model' => $model,
             'primary' => $primary,
@@ -813,10 +813,10 @@ class Model extends Kraken implements JsonSerializable
 
     /**
      * Setup a one to many relationship with another model.
-     * @param string $model Associated model classname with namespace. You can use `ModelName::class` to get this property correctly.
-     * @param string $column (Optional) Foreign key column name from the associated model. Leave empty for auto.
-     * @param string $name (Optional) Name of this association to add to the query results. Leave empty for auto.
-     * @param Closure|null $callback (Optional) A function to interact with the associated model before querying the relationship.\
+     * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
+     * @param string $column (Optional) Foreign key column name from the related model. Leave empty for auto.
+     * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
+     * @param Closure|null $callback (Optional) A function to interact with the related model before querying the relationship.\
      * It receives the related Model instance as the first parameter, and the current row as an associative array.
      * @return $this Current Model instance for nested calls.
      */
@@ -827,8 +827,8 @@ class Model extends Kraken implements JsonSerializable
         if (Util::isEmpty($name)) $name = Util::snakeCase(Util::pluralize(Util::classname($model)));
         if (Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $this->getPrimaryName();
 
-        // Set to associations array
-        $this->_associations[$name] = [
+        // Set to relations array
+        $this->_relations[$name] = [
             'type' => 'many',
             'model' => $model,
             'primary' => $primary,
@@ -842,10 +842,10 @@ class Model extends Kraken implements JsonSerializable
 
     /**
      * Setup a many to one relationship with another model.
-     * @param string $model Associated model classname with namespace. You can use `ModelName::class` to get this property correctly.
+     * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
      * @param string $column (Optional) Foreign key column name from the current model. Leave empty for auto.
-     * @param string $name (Optional) Name of this association to add to the query results. Leave empty for auto.
-     * @param Closure|null $callback (Optional) A function to interact with the associated model before querying the relationship.\
+     * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
+     * @param Closure|null $callback (Optional) A function to interact with the related model before querying the relationship.\
      * It receives the related Model instance as the first parameter, and the current row as an associative array.
      * @return $this Current Model instance for nested calls.
      */
@@ -856,8 +856,8 @@ class Model extends Kraken implements JsonSerializable
         if (Util::isEmpty($name)) $name = Util::snakeCase(Util::singularize(Util::classname($model)));
         if (Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primary;
 
-        // Set to associations array
-        $this->_associations[$name] = [
+        // Set to relations array
+        $this->_relations[$name] = [
             'type' => 'belongs',
             'model' => $model,
             'primary' => $primary,
@@ -871,10 +871,10 @@ class Model extends Kraken implements JsonSerializable
 
     /**
      * Setup a many to many relationship with another model. **This requires an intermediate (pivot) table.**
-     * @param string $model Associated model classname with namespace. You can use `ModelName::class` to get this property correctly.
+     * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
      * @param string $pivot (Optional) Intermediate table name. Leave empty for auto.
-     * @param string $name (Optional) Name of this association to add to the query results. Leave empty for auto.
-     * @param Closure|null $callback (Optional) A function to interact with the associated model before querying the relationship.\
+     * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
+     * @param Closure|null $callback (Optional) A function to interact with the related model before querying the relationship.\
      * It receives the related Model instance as the first parameter, the current row as an associative array and an array with the pivot results.
      * @return $this Current Model instance for nested calls.
      */
@@ -890,8 +890,8 @@ class Model extends Kraken implements JsonSerializable
         $foreign = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $this->getPrimaryName();
         $foreignTarget = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primary;
 
-        // Set to associations array
-        $this->_associations[$name] = [
+        // Set to relations array
+        $this->_relations[$name] = [
             'type' => 'belongs-many',
             'model' => $model,
             'primary-current' => $this->getPrimaryName(),
@@ -1071,14 +1071,14 @@ class Model extends Kraken implements JsonSerializable
     }
 
     /**
-     * Performs data associations with other models.
-     * @param array|Element $data An Element or associative array of data to associate.
-     * @return array|Element Returns the associated data.
+     * Performs data relations with other models.
+     * @param array|Element $data An Element or associative array of data to relate.
+     * @return array|Element Returns the data with all relations.
      */
-    private function associateData($data)
+    private function attachRelations($data)
     {
-        // Checks if associations are enabled, or data / associations property is empty
-        if ($this->_associationsEnabled === false || empty($data) || empty($this->_associations)) return $data;
+        // Checks if relations are enabled, or data / relations property is empty
+        if ($this->_relationsEnabled === false || empty($data) || empty($this->_relations)) return $data;
 
         // Checks for Collection
         $isCollection = $data instanceof Collection;
@@ -1087,7 +1087,7 @@ class Model extends Kraken implements JsonSerializable
         // Checks if is an array of rows
         if (is_array($data) && !Util::isAssociativeArray($data)) {
             $result = [];
-            foreach ($data as $item) $result[] = $this->associateData($item);
+            foreach ($data as $item) $result[] = $this->attachRelations($item);
             if ($isCollection) $result = new Collection($result);
             return $result;
         }
@@ -1096,11 +1096,11 @@ class Model extends Kraken implements JsonSerializable
         $isElement = is_callable([$data, 'toArray']);
         if ($isElement) $data = $data->toArray();
 
-        // Performs the associations
-        foreach ($this->_associations as $name => $item) {
-            if (!empty($this->_associationsEnabled) && !in_array($name, $this->_associationsEnabled)) continue;
+        // Performs the relations
+        foreach ($this->_relations as $name => $item) {
+            if (!empty($this->_relationsEnabled) && !in_array($name, $this->_relationsEnabled)) continue;
             switch ($item['type']) {
-                    // hasOne relationship
+                // hasOne relationship
                 case 'one':
                     $table = new $item['model'];
                     if (is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
@@ -1108,7 +1108,7 @@ class Model extends Kraken implements JsonSerializable
                     if (!is_null($value)) $data[$name] = $table->findBy($item['column'], $value);
                     break;
 
-                    // hasMany relationship
+                // hasMany relationship
                 case 'many':
                     $table = new $item['model'];
                     if (is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
@@ -1116,7 +1116,7 @@ class Model extends Kraken implements JsonSerializable
                     if (!is_null($value)) $data[$name] = $table->allBy($item['column'], $value);
                     break;
 
-                    // belongsTo relationship
+                // belongsTo relationship
                 case 'belongs':
                     $table = new $item['model'];
                     if (is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
@@ -1124,7 +1124,7 @@ class Model extends Kraken implements JsonSerializable
                     if (!is_null($value)) $data[$name] = $table->findBy($item['primary'], $value);
                     break;
 
-                    // belongsToMany relationship
+                // belongsToMany relationship
                 case 'belongs-many':
                     $table = new $item['model'];
                     $value = $data[$item['primary-current']] ?? null;

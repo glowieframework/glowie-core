@@ -16,7 +16,7 @@ use Glowie\Core\Error\Handler;
  * @author Glowie
  * @copyright Copyright (c) Glowie
  * @license MIT
- * @link https://gabrielsilva.dev.br/glowie
+ * @link https://glowie.gabrielsilva.dev.br
  */
 class Queue
 {
@@ -122,8 +122,19 @@ class Queue
                 if ($verbose) Firefly::print('<color="green">[' . $date . ']' . $jobRow->job . ' job ran successfully in ' . $time . '!</color>');
                 $success++;
             } catch (\Throwable $th) {
-                // Sets the attempts
-                $db->where('id', $jobRow->id)->update(['attempts' => $jobRow->attempts + 1]);
+                // Gets the previous errors, if any
+                $errors = [];
+                if (!empty($jobRow->errors)) $errors = explode("\n\n", $jobRow->errors);
+
+                // Get the error as string
+                $errorString = "[{$date}] {$th->getMessage()} at file {$th->getFile()}:{$th->getLine()}\n{$th->getTraceAsString()}";
+                $errors[] = $errorString;
+
+                // Sets the attempts and errors
+                $db->where('id', $jobRow->id)->update([
+                    'attempts' => $jobRow->attempts + 1,
+                    'errors' => !empty($errors) ? implode("\n\n", $errors) : null
+                ]);
 
                 // Calls the job fail method if exists
                 if (is_callable([$job, 'fail'])) $job->fail($th);
@@ -134,7 +145,7 @@ class Queue
                 // Log error
                 $date = date('Y-m-d H:i:s');
                 if ($verbose) Firefly::print('<color="red">[' . $date . ']' . $jobRow->job . ' failed! Skipping...</color>');
-                Handler::log("[{$date}] {$th->getMessage()} at file {$th->getFile()}:{$th->getLine()}\n{$th->getTraceAsString()}\n\n");
+                Handler::log($errorString . "\n\n");
                 $failed++;
             }
         }

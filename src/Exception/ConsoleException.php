@@ -13,7 +13,7 @@ use Glowie\Core\Collection;
  * @author Glowie
  * @copyright Copyright (c) Glowie
  * @license MIT
- * @link https://gabrielsilva.dev.br/glowie
+ * @link https://glowie.gabrielsilva.dev.br
  */
 class ConsoleException extends Exception
 {
