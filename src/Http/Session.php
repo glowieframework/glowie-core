@@ -29,15 +29,22 @@ class Session implements JsonSerializable
     private static $flash = [];
 
     /**
+     * Application name.
+     * @var string
+     */
+    private static $appName;
+
+    /**
      * Starts a new session or resumes the existing one.
      * @param array $data (Optional) An associative array with the initial data to store in the session.\
      * **This replaces the existing session data!**
      */
     public function __construct(array $data = [])
     {
+        if (!self::$appName) self::$appName = Util::snakeCase(Config::get('app_name', 'Glowie'));
         if (!isset($_SESSION)) session_start();
         if (!empty($data)) $_SESSION = $data;
-        self::$flash = $this->get('glowie.flash') ?? [];
+        self::$flash = $this->get(self::$appName . '.flash') ?? [];
     }
 
     /**
@@ -288,9 +295,9 @@ class Session implements JsonSerializable
      */
     public function setFlash(string $key, $value)
     {
-        self::$flash = $this->get('glowie.flash') ?? [];
+        self::$flash = $this->get(self::$appName . '.flash') ?? [];
         self::$flash[$key] = $value;
-        return $this->set('glowie.flash', self::$flash);
+        return $this->set(self::$appName . '.flash', self::$flash);
     }
 
     /**
@@ -301,11 +308,11 @@ class Session implements JsonSerializable
      */
     public function getFlash(string $key, $default = null)
     {
-        self::$flash = $this->get('glowie.flash') ?? [];
+        self::$flash = $this->get(self::$appName . '.flash') ?? [];
         if (array_key_exists($key, self::$flash)) {
             $value = self::$flash[$key];
             unset(self::$flash[$key]);
-            $this->set('glowie.flash', self::$flash);
+            $this->set(self::$appName . '.flash', self::$flash);
             return $value;
         } else {
             return $default;

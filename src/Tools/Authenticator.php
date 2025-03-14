@@ -65,12 +65,19 @@ class Authenticator
     private static $user = [];
 
     /**
+     * Application name.
+     * @var string
+     */
+    private static $appName;
+
+    /**
      * Creates an Authenticator instance.
      * @param string $guard (Optional) Authentication guard name (from your app configuration).
      */
     public function __construct(string $guard = 'default')
     {
         $this->setGuard($guard);
+        if (!self::$appName) self::$appName = Util::snakeCase(Config::get('app_name', 'Glowie'));
     }
 
     /**
@@ -131,7 +138,7 @@ class Authenticator
             $this->error = self::ERR_AUTH_SUCCESS;
 
             // Save credentials in session
-            (new Session())->setEncrypted('glowie.auth.' . $this->guard, $user->getPrimary());
+            (new Session())->setEncrypted(self::$appName . '.auth.' . $this->guard, $user->getPrimary());
             return true;
         } else {
             $this->error = self::ERR_WRONG_PASSWORD;
@@ -183,7 +190,7 @@ class Authenticator
         $this->error = self::ERR_AUTH_SUCCESS;
 
         // Save credentials in session
-        (new Session())->setEncrypted('glowie.auth.' . $this->guard, $user->getPrimary());
+        (new Session())->setEncrypted(self::$appName . '.auth.' . $this->guard, $user->getPrimary());
         return true;
     }
 
@@ -206,7 +213,7 @@ class Authenticator
         if (isset(self::$user[$this->guard])) return self::$user[$this->guard];
 
         // Get from session
-        $user = (new Session())->getEncrypted('glowie.auth.' . $this->guard);
+        $user = (new Session())->getEncrypted(self::$appName . '.auth.' . $this->guard);
 
         if (!is_null($user)) {
             // Create model instance
@@ -253,7 +260,7 @@ class Authenticator
     public function remember(int $expires = Cookies::EXPIRES_DAY)
     {
         $session = new Session();
-        if (!$session->has('glowie.auth.' . $this->guard)) return false;
+        if (!$session->has(self::$appName . '.auth.' . $this->guard)) return false;
         $session->persist($expires);
         return true;
     }
@@ -265,8 +272,8 @@ class Authenticator
     public function logout()
     {
         $session = new Session();
-        if (!$session->has('glowie.auth.' . $this->guard)) return false;
-        $session->remove('glowie.auth.' . $this->guard);
+        if (!$session->has(self::$appName . '.auth.' . $this->guard)) return false;
+        $session->remove(self::$appName . '.auth.' . $this->guard);
         self::setUser($this->guard, null);
         return true;
     }
@@ -282,10 +289,13 @@ class Authenticator
 
     /**
      * Shares the current logged user with the Authorizator handler.
+     * @return bool Returns the authentication status.
      */
     public function toAuthorizator()
     {
-        Authorizator::setUser($this->guard, $this->getUser());
+        $user = $this->getUser();
+        Authorizator::setUser($this->guard, $user);
+        return !empty($user);
     }
 
     /**

@@ -8,6 +8,7 @@ use Glowie\Core\Element;
 use Exception;
 use Util;
 use Config;
+use Glowie\Core\Http\Session;
 
 /**
  * Token auth handler for Glowie application.
@@ -98,12 +99,19 @@ class Authorizator
     ];
 
     /**
+     * Application name.
+     * @var string
+     */
+    private static $appName;
+
+    /**
      * Creates an Authorizator instance.
      * @param string $guard (Optional) Authentication guard name (from your app configuration).
      */
     public function __construct(string $guard = 'default')
     {
         $this->setGuard($guard);
+        if (!self::$appName) self::$appName = Util::snakeCase(Config::get('app_name', 'Glowie'));
     }
 
     /**
@@ -185,7 +193,7 @@ class Authorizator
         if (password_verify($password, $user->get($passwordField))) {
             $this->error = self::ERR_AUTH_SUCCESS;
             self::setUser($this->guard, $user);
-            return $this->generateJwt(['user' => Util::encryptString($user->getPrimary())], $expires, 'HS256', ['glowie' => 'auth']);
+            return $this->generateJwt(['user' => Util::encryptString($user->getPrimary())], $expires, 'HS256', [self::$appName => 'auth']);
         } else {
             $this->error = self::ERR_WRONG_PASSWORD;
             self::setUser($this->guard, null);
@@ -201,7 +209,7 @@ class Authorizator
     public function authorize(string $token)
     {
         // Decode JWT token
-        $token = $this->decodeJwt($token, true, ['glowie' => 'auth']);
+        $token = $this->decodeJwt($token, true, [self::$appName => 'auth']);
         if (!$token || Util::isEmpty($token->user ?? '')) {
             $this->error = self::ERR_INVALID_TOKEN;
             self::setUser($this->guard, null);
@@ -389,10 +397,20 @@ class Authorizator
 
     /**
      * Shares the current logged user with the Authenticator handler.
+     * @return bool Returns the authentication status.
      */
     public function toAuthenticator()
     {
-        Authenticator::setUser($this->guard, $this->getUser());
+        $user = $this->getUser();
+        Authenticator::setUser($this->guard, $user);
+
+        if (!$user) {
+            (new Session())->remove(self::$appName . '.auth.' . $this->guard);
+            return false;
+        }
+
+        (new Session())->setEncrypted(self::$appName . '.auth.' . $this->guard, $user->getPrimary());
+        return true;
     }
 
     /**
