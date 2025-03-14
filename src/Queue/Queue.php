@@ -127,12 +127,15 @@ class Queue
                 if (!empty($jobRow->errors)) $errors = explode("\n\n", $jobRow->errors);
 
                 // Get the error as string
-                $errorString = "[{$date}] {$th->getMessage()} at file {$th->getFile()}:{$th->getLine()}\n{$th->getTraceAsString()}";
+                $attempt = $jobRow->attempts + 1;
+                $date = date('Y-m-d H:i:s');
+
+                $errorString = "#{$attempt} [{$date}] {$th->getMessage()} at file {$th->getFile()}:{$th->getLine()}\n{$th->getTraceAsString()}";
                 $errors[] = $errorString;
 
                 // Sets the attempts and errors
                 $db->where('id', $jobRow->id)->update([
-                    'attempts' => $jobRow->attempts + 1,
+                    'attempts' => $attempt,
                     'errors' => !empty($errors) ? implode("\n\n", $errors) : null
                 ]);
 
@@ -143,7 +146,6 @@ class Queue
                 if ($bail) throw new QueueException($th->getMessage(), $th->getCode(), $th);
 
                 // Log error
-                $date = date('Y-m-d H:i:s');
                 if ($verbose) Firefly::print('<color="red">[' . $date . ']' . $jobRow->job . ' failed! Skipping...</color>');
                 Handler::log($errorString . "\n\n");
                 $failed++;
