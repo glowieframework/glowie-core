@@ -40,6 +40,12 @@ class Cache implements JsonSerializable
     public const EXPIRES_DAY = 86400;
 
     /**
+     * Expiration time of never.
+     * @var null
+     */
+    public const EXPIRES_NEVER = null;
+
+    /**
      * Current database instance.
      * @var SQLite3
      */
@@ -103,7 +109,7 @@ class Cache implements JsonSerializable
      * @param int|null $expires (Optional) Expiration time in seconds.
      * @return Cache Current instance for nested calls.
      */
-    public function set($key, $value = null, ?int $expires = null)
+    public function set($key, $value = null, ?int $expires = self::EXPIRES_NEVER)
     {
         if (is_array($key)) {
             foreach ($key as $field => $value) $this->set($field, $value, $expires);

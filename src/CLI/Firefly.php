@@ -170,7 +170,7 @@ class Firefly
     }
 
     /**
-     * Calls a Firefly command outside the terminal.
+     * Calls a Firefly command.
      * @param string $command Firefly command to call.
      * @param array $args (Optional) Associative array of arguments to pass with the command.
      * @param bool $silent (Optional) Disable any output from the command.
@@ -197,7 +197,16 @@ class Firefly
         $args = [];
         foreach (self::$args as $value) {
             $match = [];
-            if (preg_match('/--(.+)=(.+)/', $value, $match) && count($match) == 3) $args[strtolower($match[1])] = $match[2];
+
+            // Args with values
+            if (preg_match('/--(.+)=(.+)/', $value, $match) && count($match) == 3) {
+                $args[strtolower($match[1])] = $match[2];
+            }
+
+            // Args without values
+            if (preg_match('/--(.+)/', $value, $match) && count($match) == 2) {
+                $args[strtolower($match[1])] = '';
+            }
         }
 
         // Returns the result
@@ -248,16 +257,11 @@ class Firefly
      */
     public static function print(string $text, bool $break = true)
     {
-        if (Util::isCLI()) {
-            // If running in console, replace effects and closing tags
-            $text = preg_replace(array_keys(self::REGEX), array_values(self::REGEX), $text);
-        } else {
-            // If outside the console, remove closing tags
-            $text = preg_replace(array_slice(array_keys(self::REGEX), 24), '', $text);
-        }
+        // If running in console, replace effects and closing tags
+        if (Util::isCLI()) $text = preg_replace(array_keys(self::REGEX), array_values(self::REGEX), $text);
 
         // Remove remaining effects
-        $text = preg_replace(['/<color="(.+)">/i', '/<bg="(.+)">/i', '/<b>/i', '/<u>/i', '/<dim>/i', '/<blink>/i', '/<hidden>/i', '/<rev>/i'], '', $text);
+        $text = self::sanitize($text);
 
         // Prints the text
         if (!self::$silent) echo $text . ($break ? PHP_EOL : '');
@@ -268,7 +272,8 @@ class Firefly
      */
     public static function clearScreen()
     {
-        if (Util::isCLI()) stripos(PHP_OS, 'WIN') === 0 ? popen('cls', 'w') : exec('clear');
+        if (!Util::isCLI()) return;
+        stripos(PHP_OS, 'WIN') === 0 ? popen('cls', 'w') : exec('clear');
     }
 
     /**
@@ -291,12 +296,14 @@ class Firefly
         $grid = [];
 
         foreach ($headers as $key => $col) {
+            $col = self::sanitize($col);
             $maxSizes[$key] = mb_strlen($col);
 
             // Find cells
             foreach (array_column($rows, $key) as $row) {
-                $row = (string)$row;
-                if (mb_strlen($row) > $maxSizes[$key]) $maxSizes[$key] = mb_strlen($row);
+                $row = self::sanitize((string)$row);
+                $length = mb_strlen($row);
+                if ($length > $maxSizes[$key]) $maxSizes[$key] = $length;
             }
 
             // Parse grid
@@ -443,10 +450,14 @@ class Firefly
 
         // Parse route listing
         foreach ($routes as $name => $item) {
+            $methods = !empty($item['methods']) ? strtoupper(implode(', ', $item['methods'])) : 'ALL';
+            $name = !Util::isEmpty($name) ? $name : '/';
+            $uri = !empty($item['uri']) ? $item['uri'] : '/';
+
             $result[] = [
-                'methods' => !empty($item['methods']) ? strtoupper(implode(', ', $item['methods'])) : 'ALL',
-                'name' => !Util::isEmpty($name) ? $name : '/',
-                'uri' => !empty($item['uri']) ? $item['uri'] : '/',
+                'methods' => '<color="magenta">' . $methods . '</color>',
+                'name' => '<color="blue">' . $name . '</color>',
+                'uri' => '<color="yellow">' . $uri . '</color>',
                 'target' => !empty($item['controller']) ? ($item['controller'] . '::' . $item['action'] . '()') : ($item['code'] . ' ' . $item['redirect'])
             ];
         }
@@ -1133,6 +1144,18 @@ class Firefly
         self::print('  <color="yellow">publish</color> <color="blue">--force</color> | Publishes plugin files to the application folder');
         self::print('  <color="yellow">version</color> | Displays current Firefly version');
         self::print('  <color="yellow">help</color> | Displays this help message');
+    }
+
+    /**
+     * Sanitizes a text removing effects.
+     * @param string $text Text to be sanitized.
+     * @return string Returns the sanitized text.
+     */
+    private static function sanitize(string $text)
+    {
+        $text = preg_replace(array_slice(array_keys(self::REGEX), 24), '', $text);
+        $text = preg_replace(['/<color="(.+)">/i', '/<bg="(.+)">/i', '/<b>/i', '/<u>/i', '/<dim>/i', '/<blink>/i', '/<hidden>/i', '/<rev>/i'], '', $text);
+        return $text;
     }
 
     /**

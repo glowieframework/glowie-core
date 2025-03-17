@@ -40,6 +40,12 @@ class Cookies implements JsonSerializable
     public const EXPIRES_DAY = 86400;
 
     /**
+     * Expiration time of never.
+     * @var null
+     */
+    public const EXPIRES_NEVER = null;
+
+    /**
      * Creates a new instance of the cookie manager.
      * @param array $data (Optional) An associative array with the initial data to store in the cookies.
      */

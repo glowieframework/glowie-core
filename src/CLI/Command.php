@@ -273,6 +273,26 @@ abstract class Command
     }
 
     /**
+     * Checks if an argument values exists.
+     * @param string $key Argument key to get.
+     * @return bool Returns true if the arg exists, false otherwise.
+     */
+    public function hasArg(string $key)
+    {
+        return !is_null($this->getArg($key));
+    }
+
+    /**
+     * Checks if an option exists.
+     * @param string $key Option key to get.
+     * @return bool Returns true if the option exists, false otherwise.
+     */
+    public function hasOption(string $key)
+    {
+        return $this->getArg($key) === '';
+    }
+
+    /**
      * Gets an argument value casted to a boolean.
      * @param string $arg Argument key to get.
      * @param bool $default (Optional) Default value to return if the key does not exist.
@@ -299,5 +319,16 @@ abstract class Command
     public function wait(int $ms)
     {
         usleep($ms * 1000);
+    }
+
+    /**
+     * Calls another Firefly command.
+     * @param string $command Firefly Command to call.
+     * @param array $args (Optional) Associative array of arguments to pass with the command.
+     * @param bool $silent (Optional) Disable any output from the command.
+     */
+    public function call(string $command, array $args = [], bool $silent = false)
+    {
+        Firefly::call($command, $args, $silent);
     }
 }

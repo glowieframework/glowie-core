@@ -41,6 +41,12 @@ class Authorizator
     public const EXPIRES_DAY = 86400;
 
     /**
+     * Expiration time of never.
+     * @var null
+     */
+    public const EXPIRES_NEVER = null;
+
+    /**
      * Authentication success code.
      * @var int
      */
@@ -304,7 +310,7 @@ class Authorizator
      * @param array $headers (Optional) Associative array with additional headers to attach to the token.
      * @return string Returns the token as a string.
      */
-    public function generateJwt($payload, ?int $expires = self::EXPIRES_HOUR, string $alg = 'HS256', array $headers = [])
+    public function generateJwt($payload, ?int $expires = self::EXPIRES_DAY, string $alg = 'HS256', array $headers = [])
     {
         // Get app key
         $key = Config::get('secret.app_key');
