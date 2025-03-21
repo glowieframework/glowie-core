@@ -107,7 +107,7 @@ class Sandbox
 
                 case 'ls':
                     foreach (get_defined_vars() as $__key => $__value) {
-                        if (in_array($__key, ['__key', '__value'])) continue;
+                        if (in_array($__key, ['__key', '__value', '__command', '__', '__e'])) continue;
                         Firefly::print('<color="magenta">', false);
                         Firefly::print('>> $' . $__key . ' = ', false);
 

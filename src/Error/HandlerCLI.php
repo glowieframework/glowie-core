@@ -76,6 +76,9 @@ class HandlerCLI
         } else {
             Firefly::print('<bg="red"><color="black">An error has ocurred.</color></bg>');
         }
+
+        // Exit with error status code
+        exit(127);
     }
 
     /**

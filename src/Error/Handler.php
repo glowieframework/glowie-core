@@ -81,6 +81,9 @@ class Handler
             ]);
             include(__DIR__ . '/Views/default.phtml');
         }
+
+        // Exit with error status code
+        exit(500);
     }
 
     /**
