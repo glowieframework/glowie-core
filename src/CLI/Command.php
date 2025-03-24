@@ -106,7 +106,7 @@ abstract class Command
      */
     public function success(string $text, bool $break = true)
     {
-        $this->print('<color="green">' . $text . '</color>', $break);
+        $this->print(Firefly::color($text, 'green'), $break);
     }
 
     /**
@@ -116,7 +116,7 @@ abstract class Command
      */
     public function fail(string $text, bool $break = true)
     {
-        $this->print('<color="red">' . $text . '</color>', $break);
+        $this->print(Firefly::color($text, 'red'), $break);
     }
 
     /**
@@ -126,7 +126,7 @@ abstract class Command
      */
     public function warning(string $text, bool $break = true)
     {
-        $this->print('<color="yellow">' . $text . '</color>', $break);
+        $this->print(Firefly::color($text, 'yellow'), $break);
     }
 
     /**
@@ -136,7 +136,7 @@ abstract class Command
      */
     public function info(string $text, bool $break = true)
     {
-        $this->print('<color="cyan">' . $text . '</color>', $break);
+        $this->print(Firefly::color($text, 'cyan'), $break);
     }
 
     /**
@@ -146,7 +146,7 @@ abstract class Command
      */
     public function error(string $text, bool $break = true)
     {
-        $this->print('<bg="red"><color="black">' . $text . '</color></bg>', $break);
+        $this->print(Firefly::bg(Firefly::color($text, 'black'), 'red'), $break);
     }
 
     /**
@@ -178,10 +178,10 @@ abstract class Command
      * @param array $options Array of available options. **Options are indexed starting with 1.**\
      * Use an associative array to set different values for the response (key) and display label (value).
      * @param string $message (Optional) Message to prompt to the user.
-     * @param int $default (Optional) Default option to return if empty.
+     * @param int|null $default (Optional) Default option to return if empty.
      * @return mixed Returns the selected option value if valid, null otherwise.
      */
-    public function select(array $options, string $message = '', int $default = 1)
+    public function select(array $options, string $message = '', ?int $default = null)
     {
         // Validate args
         if (empty($options)) throw new ConsoleException(Firefly::getCommand(), Firefly::getArgs(), get_class($this) . '::select(): $options array cannot be empty');
@@ -190,15 +190,12 @@ abstract class Command
         $isAssociative = Util::isAssociativeArray($options);
         $values = $isAssociative ? array_values($options) : $options;
 
-        // Validate default value
-        if (!array_key_exists($default - 1, $values)) throw new ConsoleException(Firefly::getCommand(), Firefly::getArgs(), get_class($this) . '::select(): Invalid default option "' . $default . '"');
-
         // Create prompt
         $this->print($message);
         $this->print('<color="magenta">', false);
         foreach ($values as $key => $item) $this->print('  ' . ($key + 1) . ': ' . $item);
         $this->print('</color>', false);
-        $response = (int)$this->input('<color="yellow">[1-' . count($values) . '] </color>', $default);
+        $response = (int)$this->input(Firefly::color('[1-' . count($values) . '] ', 'yellow'), $default);
 
         // Return response
         if (!array_key_exists($response - 1, $values)) return null;
@@ -214,7 +211,7 @@ abstract class Command
      */
     public function confirm(string $message = '', bool $default = false)
     {
-        $message .= '<color="yellow"> [y/n] </color>';
+        $message .= Firefly::color(' [y/n] ', 'yellow');
         $response = $this->input($message, $default ? 'y' : 'n');
 
         switch (trim(strtolower($response))) {
