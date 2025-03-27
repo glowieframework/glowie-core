@@ -10,6 +10,7 @@
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
     <meta name="color-scheme" content="dark white">
     <style>
+        <?= self::getAsset('vendor.css'); ?>
         <?= self::getAsset('error.css'); ?>
     </style>
 </head>
@@ -64,6 +65,7 @@
         </div>
     </div>
     <script>
+        <?= self::getAsset('vendor.min.js'); ?>
         <?= self::getAsset('script.js'); ?>
     </script>
 </body>

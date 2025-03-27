@@ -132,7 +132,7 @@ class Handler
     {
         // Prepare result
         $result =   '<strong class="stack-title">Stack trace:</strong>';
-        $result .=  '<a href="" class="args-toggle vendor-toggle">Toggle vendor ⏷</a>';
+        $result .=  '<a href="" class="args-toggle vendor-toggle">Toggle vendor <span class="icon arrow-down"></span></a>';
         $result .=  '<table cellspacing="0" cellpadding="0"><tbody>';
 
         // Iterate through stack trace
@@ -164,7 +164,7 @@ class Handler
 
             // Args
             if (!empty($item['args'])) {
-                $result .= '<a href="" class="args-toggle">View args ⏷</a><pre class="args">' . self::getDump($item['args']) . '</pre>';
+                $result .= '<a href="" class="args-toggle">View args <span class="icon arrow-down"></span></a><pre class="args">' . self::getDump($item['args']) . '</pre>';
             }
 
             // Closing column

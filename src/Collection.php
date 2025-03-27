@@ -383,6 +383,16 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     }
 
     /**
+     * Filters the Collection with a truth test.
+     * @param Closure $callback Function to check in the data, receives the value and key of each item.
+     * @return Collection Returns a new Collection with the filtered data.
+     */
+    public function filter(Closure $callback)
+    {
+        return new Collection(array_filter($this->__data, $callback, ARRAY_FILTER_USE_BOTH));
+    }
+
+    /**
      * Filters the Collection leaving only items that match a key value.
      * @param mixed $key Key to use as the filtering base. You can also use an associative array with keys and values to match.
      * @param mixed $value (Optional) Value to filter if using a single key.
@@ -581,7 +591,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     }
 
     /**
-     * Extracts a portion from the Collection.
+     * Extracts a portion of items from the Collection.
      * @param int $offset Starting index.
      * @param int|null $length (Optional) Slice length.
      * @param bool $preserveKeys (Optional) Keep current keys in slice.
@@ -590,6 +600,18 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     public function slice(int $offset, ?int $length, bool $preserveKeys = false)
     {
         return new Collection(array_slice($this->__data, $offset, $length, $preserveKeys));
+    }
+
+    /**
+     * Extracts a portion of items from the start of the Collection.\
+     * If the number is negative, extracts from the end of the Collection.
+     * @param int $length Slice length.
+     * @param bool $preserveKeys (Optional) Keep current keys in slice.
+     * @return Collection Returns a new Collection.
+     */
+    public function take(int $length, bool $preserveKeys = false)
+    {
+        return $this->slice(0, $length, $preserveKeys);
     }
 
     /**
