@@ -242,6 +242,24 @@ class Rails
     }
 
     /**
+     * Adds a new resource route.
+     * @param string $name Name of the resource. It will be used to generate the URIs.
+     * @param string $controller The namespaced controller name that this resource will instantiate.\
+     * You can use `ControllerName::class` to get this property correctly.
+     * @param array $except (Optional) Array of ignored actions in the resource.
+     */
+    public static function addResource(string $name, string $controller, array $except = [])
+    {
+        if (!in_array('create', $except)) self::addRoute($name . '/create', $controller, 'create', 'GET', $name . '-create');
+        if (!in_array('index', $except)) self::addRoute($name, $controller, 'index', 'GET', $name . '-index');
+        if (!in_array('store', $except)) self::addRoute($name, $controller, 'store', 'POST', $name . '-store');
+        if (!in_array('edit', $except)) self::addRoute($name . '/:id/edit', $controller, 'edit', 'GET', $name . '-edit');
+        if (!in_array('show', $except)) self::addRoute($name . '/:id', $controller, 'show', 'GET', $name . '-show');
+        if (!in_array('update', $except)) self::addRoute($name . '/:id', $controller, 'update', ['PUT', 'PATCH'], $name . '-update');
+        if (!in_array('destroy', $except)) self::addRoute($name . '/:id', $controller, 'destroy', 'DELETE', $name . '-destroy');
+    }
+
+    /**
      * Maps multiple routes at once.
      * @param array $routes Associative array of routes to map. The key must be the route URI and the value must be an array\
      * with the **controller, action and name** (in this order). Parameters are optional.

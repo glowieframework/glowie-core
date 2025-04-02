@@ -108,14 +108,14 @@ class Util
             if ($cli) {
                 $html .= '(' . count($var) . '){</color>';
             } else {
-                $html .= '(' . count($var) . ')⏷}</a>';
+                $html .= '(' . count($var) . ')<span class="icon arrow-down"></span>}</a>';
             }
         } else if (is_array($var)) {
             if ($cli) {
                 $wasArray = true;
                 $html .= '<color="magenta">array(' . count($var) . ')[</color>';
             } else {
-                $html .= '<a href="" class="toggle array">[array(' . count($var) . ')⏷]</a>';
+                $html .= '<a href="" class="toggle array">[array(' . count($var) . ')<span class="icon arrow-down"></span>]</a>';
             }
         } else if (is_resource($var)) {
             $html .= $cli ? '<color="cyan">{' . get_resource_type($var) : '<a href="" class="toggle">{' . get_resource_type($var);
@@ -123,7 +123,7 @@ class Util
             if ($cli) {
                 $html .= '(' . count($var) . ')</color>';
             } else {
-                $html .= '(' . count($var) . ')⏷}</a>';
+                $html .= '(' . count($var) . ')<span class="icon arrow-down"></span>}</a>';
             }
         }
 
@@ -144,9 +144,9 @@ class Util
                 // Put variable value recursively
                 if ($cli) {
                     if (is_string($key)) {
-                        $html .= str_repeat(' ', $space) . '<color="green">"' . htmlspecialchars($key) . '" </color>=> ';
+                        $html .= str_repeat(' ', $space) . '<color="green">"' . $key . '" </color>=> ';
                     } else {
-                        $html .= str_repeat(' ', $space) . '<color="blue">' . htmlspecialchars($key) . ' </color>=> ';
+                        $html .= str_repeat(' ', $space) . '<color="blue">' . $key . ' </color>=> ';
                     }
                 } else {
                     if (is_string($key)) {
@@ -175,7 +175,7 @@ class Util
             } else {
                 $html .= '<span class="string" title="' . mb_strlen($var) . ' characters">';
             }
-            $html .= '"' . self::limitString(htmlspecialchars($var), 3000) . '"';
+            $html .= '"' . self::limitString($cli ? $var : htmlspecialchars($var), 3000) . '"';
             $html .= $cli ? '</color>' : '</span>';
         } else if (is_null($var)) {
             $html .= $cli ? '<color="blue">null</color>' : '<span class="other">null</span>';
@@ -185,7 +185,7 @@ class Util
             $html .= $cli ? '</color>' : '</span>';
         } else {
             $html .= $cli ? '<color="blue">' : '<span class="other">';
-            $html .= htmlspecialchars((string)$var);
+            $html .= $cli ? (string)$var : htmlspecialchars((string)$var);
             $html .= $cli ? '</color>' : '</span>';
         }
 
