@@ -1086,12 +1086,20 @@ class Model extends Kraken implements JsonSerializable
 
         // Checks if is an array of rows
         if (is_array($data) && !Util::isAssociativeArray($data)) {
-            $result = [];
-            foreach ($data as $item) $result[] = $this->attachRelations($item);
-            if ($isCollection) $result = new Collection($result);
-            return $result;
+            return $this->attachMultipleRelations($data, $isCollection);
         }
 
+        // Attach relations to a single record
+        return $this->attachSingleRelations($data);
+    }
+
+    /**
+     * Attaches the relations of a single row.
+     * @param Element|array $data The model data to be attached.
+     * @return Element|array Returns the data with the relations.
+     */
+    private function attachSingleRelations($data)
+    {
         // Converts the Element to an array
         $isElement = is_callable([$data, 'toArray']);
         if ($isElement) $data = $data->toArray();
@@ -1099,6 +1107,7 @@ class Model extends Kraken implements JsonSerializable
         // Performs the relations
         foreach ($this->_relations as $name => $item) {
             if (!empty($this->_relationsEnabled) && !in_array($name, $this->_relationsEnabled)) continue;
+
             switch ($item['type']) {
                 // hasOne relationship
                 case 'one':
@@ -1138,8 +1147,28 @@ class Model extends Kraken implements JsonSerializable
             }
         }
 
-        // Returns the result
+        // Converts back to Element
         return $isElement ? new Element($data) : $data;
+    }
+
+    /**
+     * Attaches the relations of a multiple rows.
+     * @param array $data The model data to be attached.
+     * @param bool $isCollection (Optional) If the initial set was a Collection or associative array.
+     * @return Collection|array Returns the data with the relations.
+     */
+    private function attachMultipleRelations(array $data, bool $isCollection = false)
+    {
+        $result = [];
+
+        // Performs the relations
+        foreach ($data as $item) {
+            $result[] = $this->attachSingleRelations($item);
+        }
+
+        // Converts back to collection
+        if ($isCollection) $result = new Collection($result);
+        return $result;
     }
 
     /**
