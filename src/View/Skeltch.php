@@ -107,13 +107,14 @@ class Skeltch
         $code = preg_replace('~(?<!@){\s*empty\s*\((.+?)\)\s*}~is', '<?php if(!isset($1) || Util::isEmpty($1)): ?>', $code);
         $code = preg_replace('~(?<!@){\s*notempty\s*\((.+?)\)\s*}~is', '<?php if(isset($1) && !Util::isEmpty($1)): ?>', $code);
         $code = preg_replace('~(?<!@){\s*notset\s*\((.+?)\)\s*}~is', '<?php if(!isset($1)): ?>', $code);
-        $code = preg_replace('~(?<!@){\s*env\s*\((.+?)\)\s*}~is', '<?php if(Config::get(\'env\') == $1): ?>', $code);
+        $code = preg_replace('~(?<!@){\s*env\s*\((.+?)\)\s*}~is', '<?php if(Config::get(\'env\') === $1): ?>', $code);
+        $code = preg_replace('~(?<!@){\s*lang\s*\((.+?)\)\s*}~is', '<?php if(Babel::getActiveLanguage === $1): ?>', $code);
         $code = preg_replace('~(?<!@){\s*else\s*if\s*\((.+?)\)\s*}~is', '<?php elseif($1): ?>', $code);
         $code = preg_replace('~(?<!@){\s*else\s*}~is', '<?php else: ?>', $code);
         $code = preg_replace('~(?<!@){\s*auth\s*}~is', '<?php if((new \Glowie\Core\Tools\Authenticator())->check()): ?>', $code);
         $code = preg_replace('~(?<!@){\s*guest\s*}~is', '<?php if(!(new \Glowie\Core\Tools\Authenticator())->check()): ?>', $code);
         $code = preg_replace('~(?<!@){\s*session\s*\((.+?)\)\s*}~is', '<?php if((new \Glowie\Core\Http\Session())->has($1)): $value = (new \Glowie\Core\Http\Session())->get($1); ?>', $code);
-        $code = preg_replace('~(?<!@){\s*(/if|/isset|/empty|/notempty|/notset|/env|/auth|/guest|/session)\s*}~is', '<?php endif; ?>', $code);
+        $code = preg_replace('~(?<!@){\s*(/if|/isset|/empty|/notempty|/notset|/env|/lang|/auth|/guest|/session)\s*}~is', '<?php endif; ?>', $code);
         return $code;
     }
 
@@ -147,7 +148,7 @@ class Skeltch
         $code = preg_replace('~(?<!@){\s*layout\s*\((.+?)\)\s*}~is', '<?php $this->renderLayout($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*partial\s*\((.+?)\)\s*}~is', '<?php $this->renderPartial($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*inline\s*\((.+?)\)\s*}~is', '<?php $this->renderInline($1); ?>', $code);
-        $code = preg_replace('~(?<!@){\s*babel\s*\((.+?)\)\s*}~is', '<?php echo Babel::get($1); ?>', $code);
+        $code = preg_replace('~(?<!@){\s*translate\s*\((.+?)\)\s*}~is', '<?php echo Babel::get($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*url\s*\((.+?)\)\s*}~is', '<?php echo Util::baseUrl($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*asset\s*\((.+?)\)\s*}~is', '<?php echo Util::asset($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*route\s*\((.+?)\)\s*}~is', '<?php echo Util::route($1); ?>', $code);
@@ -155,6 +156,7 @@ class Skeltch
         $code = preg_replace('~(?<!@){\s*csrf\s*}~is', '<?php echo Util::csrfToken(); ?>', $code);
         $code = preg_replace('~(?<!@){\s*json\s*\((.+?)\)\s*}~is', '<?php echo Util::jsonEncode($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*class\s*\((.+?)\)\s*}~is', '<?php echo Util::cssArray($1); ?>', $code);
+        $code = preg_replace('~(?<!@){\s*dump\s*\((.+?)\)\s*}~is', '<?php echo Util::dump($1); ?>', $code);
         return $code;
     }
 
