@@ -1547,7 +1547,7 @@ class Kraken
     public function update($data)
     {
         // Parse Collection/Element
-        if (is_callable([$data, 'toArray'])) $data = $data->toArray();
+        if ($data instanceof Element || $data instanceof Collection) $data = $data->toArray();
 
         // Check for safe mode
         if ($this->_safe && empty($this->_where)) throw new Exception('update(): Safe mode reports missing WHERE statements before UPDATE query');

@@ -161,7 +161,7 @@ class Model extends Kraken implements JsonSerializable
         Kraken::__construct($this->_table, $this->_database);
 
         // Sets the initial data
-        if (is_callable([$data, 'toArray'])) $data = $data->toArray();
+        if ($data instanceof Element || $data instanceof Collection) $data = $data->toArray();
         $data = array_merge($this->_attributes, $data);
         if (!empty($data)) $this->fill($data);
 
@@ -422,7 +422,7 @@ class Model extends Kraken implements JsonSerializable
         $this->clearQuery();
 
         // Parse data and timestamps
-        if (is_callable([$data, 'toArray'])) $data = $data->toArray();
+        if ($data instanceof Element || $data instanceof Collection) $data = $data->toArray();
         $data = $this->mutateData($this->filterData($data));
         if ($this->_timestamps) {
             $data[$this->_createdField] = date($this->_dateFormat);
@@ -452,8 +452,8 @@ class Model extends Kraken implements JsonSerializable
     public function findOrCreate($find, $create = [], bool $deleted = false)
     {
         // Convert data to arrays
-        if (is_callable([$find, 'toArray'])) $find = $find->toArray();
-        if (is_callable([$create, 'toArray'])) $create = $create->toArray();
+        if ($find instanceof Element || $find instanceof Collection) $find = $find->toArray();
+        if ($create instanceof Element || $create instanceof Collection) $create = $create->toArray();
 
         // Tries to find the existing row
         $row = $this->findBy($find, null, $deleted);
@@ -477,7 +477,7 @@ class Model extends Kraken implements JsonSerializable
         $this->clearQuery();
 
         // Checks if the primary key was passed and matches an existing row
-        if (is_callable([$data, 'toArray'])) $data = $data->toArray();
+        if ($data instanceof Element || $data instanceof Collection) $data = $data->toArray();
         if (isset($data[$this->_primaryKey]) && $this->find($data[$this->_primaryKey])) {
             return $this->where($this->_primaryKey, $data[$this->_primaryKey])->update($data);
         } else {
@@ -495,8 +495,8 @@ class Model extends Kraken implements JsonSerializable
     public function updateOrCreateBy($find, $data = [])
     {
         // Convert data to arrays
-        if (is_callable([$find, 'toArray'])) $find = $find->toArray();
-        if (is_callable([$data, 'toArray'])) $data = $data->toArray();
+        if ($find instanceof Element || $find instanceof Collection) $find = $find->toArray();
+        if ($data instanceof Element || $data instanceof Collection) $data = $data->toArray();
 
         // Checks if row exists
         $row = $this->findBy($find);
@@ -519,7 +519,7 @@ class Model extends Kraken implements JsonSerializable
      */
     public function update($data)
     {
-        if (is_callable([$data, 'toArray'])) $data = $data->toArray();
+        if ($data instanceof Element || $data instanceof Collection) $data = $data->toArray();
         $data = $this->mutateData($this->filterData($data));
         if ($this->_timestamps) $data[$this->_updatedField] = date($this->_dateFormat);
         return Kraken::update($data);
@@ -623,7 +623,7 @@ class Model extends Kraken implements JsonSerializable
      */
     public function fill($row, bool $overwrite = false)
     {
-        if (is_callable([$row, 'toArray'])) $row = $row->toArray();
+        if ($row instanceof Element || $row instanceof Collection) $row = $row->toArray();
         if (!$overwrite) $row = array_merge($this->toArray(), $row);
         $this->_initialData = new Element($row);
         $this->__constructTrait($row);
@@ -998,7 +998,7 @@ class Model extends Kraken implements JsonSerializable
         }
 
         // Converts the Element to an array
-        $isElement = is_callable([$data, 'toArray']);
+        $isElement = $data instanceof Element;
         if ($isElement) $data = $data->toArray();
 
         // Performs the castings
@@ -1082,48 +1082,34 @@ class Model extends Kraken implements JsonSerializable
         // Checks if relations are enabled, or data / relations property is empty
         if ($this->_relationsEnabled === false || empty($data) || empty($this->_relations)) return $data;
 
-        // Checks for the original data type
-        if ($data instanceof Collection) {
-            $type = 'collection';
-            $data = $data->toArray();
-        } elseif (is_callable([$data, 'toArray'])) {
-            $type = 'element';
-            $data = [$data->toArray()];
-        } elseif (Util::isAssociativeArray($data)) {
-            $type = 'associative';
-            $data = [$data];
-        } else {
-            $type = 'array';
+        // Checks for Collection
+        $isCollection = $data instanceof Collection;
+        if ($isCollection) $data = $data->toArray();
+
+        // Checks if is a single row or an array of rows
+        $isElement = $data instanceof Element;
+        $isSingle = $isElement || Util::isAssociativeArray($data);
+
+        // Returns a single row
+        if ($isSingle) {
+            $data = $this->attachMultipleRelations([$data]);
+            return $data[0] ?? null;
         }
 
-        // Normalize the data
-        $data = array_map(function ($row) {
-            return is_callable([$row, 'toArray']) ? $row->toArray() : $row;
-        }, $data);
-
-        // Attach relations
+        // Returns an array or Collection of rows
         $data = $this->attachMultipleRelations($data);
-
-        // Convert data back to the original type
-        if ($type === 'element' || $type === 'associative') {
-            return $data[0];
-        } elseif ($type === 'collection') {
-            return new Collection($data);
-        }
-
-        // Return result
-        return $data;
+        return $isCollection ? new Collection($data) : $data;
     }
 
     /**
-     * Attaches the relations of a multiple rows.
-     * @param array $data The model data to be attached.
+     * Attaches the relations of multiple rows.
+     * @param array $data An array of rows to attach relations.
      * @return array Returns the data with the relations.
      */
     private function attachMultipleRelations(array $data)
     {
-        // Converts data to a Collection if not yet
-        if (!$data instanceof Collection) $data = new Collection($data);
+        // Converts data to a Collection
+        $data = new Collection($data);
 
         // Performs the relations
         foreach ($this->_relations as $name => $item) {
@@ -1144,7 +1130,9 @@ class Model extends Kraken implements JsonSerializable
                     $relations = $table->allBy($item['column'], $keys);
 
                     foreach ($data as $idx => $row) {
-                        list($row, $isElement) = $this->normalizeRelationRow($row);
+                        $isElement = $row instanceof Element;
+                        if ($isElement) $row = $row->toArray();
+
                         $value = $row[$item['primary']] ?? null;
 
                         if (!is_null($value)) {
@@ -1157,6 +1145,7 @@ class Model extends Kraken implements JsonSerializable
                                 });
                             }
                         }
+
                         $data[$idx] = $isElement ? new Element($row) : $row;
                     }
 
@@ -1173,13 +1162,16 @@ class Model extends Kraken implements JsonSerializable
                     $relations = $table->allBy($item['primary'], $keys);
 
                     foreach ($data as $idx => $row) {
-                        list($row, $isElement) = $this->normalizeRelationRow($row);
+                        $isElement = $row instanceof Element;
+                        if ($isElement) $row = $row->toArray();
+
                         $value = $row[$item['column']] ?? null;
 
                         if (!is_null($value)) {
                             $rel = $relations->search($item['primary'], $value);
                             $row[$name] = !Util::isEmpty($rel) ? $rel : null;
                         }
+
                         $data[$idx] = $isElement ? new Element($row) : $row;
                     }
 
@@ -1204,7 +1196,9 @@ class Model extends Kraken implements JsonSerializable
                     $relations = $table->allBy($item['primary-target'], $targetKeys);
 
                     foreach ($data as $idx => $row) {
-                        list($row, $isElement) = $this->normalizeRelationRow($row);
+                        $isElement = $row instanceof Element;
+                        if ($isElement) $row = $row->toArray();
+
                         $value = $row[$item['primary-current']] ?? null;
 
                         if (!is_null($value)) {
@@ -1240,18 +1234,6 @@ class Model extends Kraken implements JsonSerializable
     }
 
     /**
-     * Normalizes a row to an array before attaching relations.
-     * @param Element|array $row Row data as an Element or associative array.
-     * @return array Returns a list with the row as the first parameter, and if it was an Element as the second.
-     */
-    private function normalizeRelationRow($row)
-    {
-        $isElement = is_callable([$row, 'toArray']);
-        if ($isElement) return [$row->toArray(), true];
-        return [$row, false];
-    }
-
-    /**
      * Disables data mutation.
      * @return $this Current Model instance for nested calls.
      */
@@ -1282,7 +1264,7 @@ class Model extends Kraken implements JsonSerializable
         if (!$this->_mutateEnabled || empty($data) || empty($this->_mutators)) return $data;
 
         // Converts the element to an array
-        $isElement = is_callable([$data, 'toArray']);
+        $isElement = $data instanceof Element;
         if ($isElement) $data = $data->toArray();
 
         // Performs mutations
