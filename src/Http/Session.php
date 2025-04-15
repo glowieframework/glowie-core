@@ -48,6 +48,17 @@ class Session implements JsonSerializable
     }
 
     /**
+     * Creates a new Session handler in a static-binding.
+     * @param array $data (Optional) An associative array with the initial data to store in the session.\
+     * **This replaces the existing session data!**
+     * @return Session New Session instance.
+     */
+    public static function make(array $data = [])
+    {
+        return new self($data);
+    }
+
+    /**
      * Registers the session save path and INI settings.
      */
     public static function register()

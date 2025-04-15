@@ -85,6 +85,15 @@ class Mailer
     }
 
     /**
+     * Creates a new email sender instance in a static-binding.
+     * @return Mailer New instance of the mailer.
+     */
+    public static function make()
+    {
+        return new self;
+    }
+
+    /**
      * Sets the email sender.
      * @param string $email Sender email address.
      * @param string|null $name (Optional) Sender name.

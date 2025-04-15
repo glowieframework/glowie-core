@@ -55,6 +55,16 @@ class Cookies implements JsonSerializable
     }
 
     /**
+     * Creates a new cookies instance in a static-binding.
+     * @param array $data (Optional) An associative array with the initial data to store in the cookies.
+     * @return Cookies New Cookies instance.
+     */
+    public static function make(array $data = [])
+    {
+        return new self($data);
+    }
+
+    /**
      * Gets the value associated to a key in the cookies data.
      * @param string $key Key to get value.
      * @return mixed Returns the value if exists or null if there is none.

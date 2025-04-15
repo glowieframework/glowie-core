@@ -121,6 +121,16 @@ class Authorizator
     }
 
     /**
+     * Creates an Authorizator instance in a static-binding.
+     * @param string $guard (Optional) Authentication guard name (from your app configuration).
+     * @return Authorizator New Authorization instance.
+     */
+    public static function make(string $guard = 'default')
+    {
+        return new self($guard);
+    }
+
+    /**
      * Sets the authentication guard (from your app configuration).
      * @param string $guard Guard name.
      * @return Authorizator Current Authorizator instance for nested calls.

@@ -30,6 +30,16 @@ abstract class Job
     }
 
     /**
+     * Creates a new instance of the job in a static-binding.
+     * @param mixed $data (Optional) Data to pass to the job.
+     * @return $this Returns a new instance of the job.
+     */
+    public static function make($data = null)
+    {
+        return new self($data);
+    }
+
+    /**
      * Adds this job to the queue.
      * @param string $queue (Optional) Queue name to add this job to.
      * @param int $delay (Optional) Delay in seconds to run this job.

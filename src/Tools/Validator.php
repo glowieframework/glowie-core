@@ -34,6 +34,15 @@ class Validator
     private static $custom = [];
 
     /**
+     * Creates a new instance of the Validator in a static-binding.
+     * @return Validator New instance of the Validator.
+     */
+    public static function make()
+    {
+        return new self;
+    }
+
+    /**
      * Sets a custom validation rule. This rule is persisted through all `Validator` instances.
      * @param string $rule Custom rule name.
      * @param Closure $callback A validation function that receives the data as the first parameter and returns a boolean if valid.
@@ -169,6 +178,11 @@ class Validator
 
             // Check type of rule
             switch ($type) {
+                // [SOMETIMES] - Checks if variable exists before checking the next rules
+                case 'sometimes':
+                    if (!isset($data) || Util::isEmpty($data)) break 2;
+                    break;
+
                 // [CUSTOM] - Checks for custom rule
                 case 'custom':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "custom" rule');

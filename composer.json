@@ -19,11 +19,6 @@
             "homepage": "https://glowie.gabrielsilva.dev.br"
         }
     ],
-    "require": {
-        "ext-mbstring": "*",
-        "ext-openssl": "*",
-        "ext-fileinfo": "*"
-    },
     "autoload": {
         "psr-4": {
             "Glowie\\Core\\": "src/"

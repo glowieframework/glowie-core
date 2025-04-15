@@ -140,6 +140,17 @@ class Uploader
     }
 
     /**
+     * Creates a new file uploader instance in a static-binding.
+     * @param string $directory (Optional) Target directory to store the uploaded files. Must be an existing directory with write permissions,\
+     * absolute path or relative to the **app/public** folder.
+     * @return Uploader New Uploader instance.
+     */
+    public static function make(string $directory = 'uploads')
+    {
+        return new self($directory);
+    }
+
+    /**
      * Sets the target directory to store the uploaded files. Must be an existing directory with write permissions.
      * @param string $directory Directory location to store files (absolute path or relative to the **app/public** folder).
      * @return Uploader Current Uploader instance for nested calls.

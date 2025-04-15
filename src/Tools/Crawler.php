@@ -97,6 +97,15 @@ class Crawler
     }
 
     /**
+     * Creates a new HTTP client instance in a static-binding.
+     * @return Crawler New instance of the client.
+     */
+    public static function make()
+    {
+        return new self;
+    }
+
+    /**
      * Adds a custom header to the request.
      * @param string $name Header name.
      * @param string|array $content Header content. Can be a value or an array of values.

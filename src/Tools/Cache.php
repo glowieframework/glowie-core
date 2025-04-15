@@ -53,6 +53,7 @@ class Cache implements JsonSerializable
 
     /**
      * Creates a new Cache handler instance.
+     * @param array $data (Optional) Initial data to fill the cache.
      */
     public function __construct(array $data = [])
     {
@@ -71,6 +72,16 @@ class Cache implements JsonSerializable
 
         // Parse initial data, if any
         if (!empty($data)) $this->set($data);
+    }
+
+    /**
+     * Creates a new Cache handler instance in a static-binding.
+     * @param array $data (Optional) Initial data to fill the cache.
+     * @return Cache New Cache instance.
+     */
+    public static function make(array $data = [])
+    {
+        return new self($data);
     }
 
     /**

@@ -30,11 +30,21 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
 
     /**
      * Creates a new collection.
-     * @param array $data Initial data to parse into the Collection.
+     * @param array $data (Optional) Initial data to parse into the Collection.
      */
     public function __construct(array $data = [])
     {
         if (!empty($data)) $this->__data = $data;
+    }
+
+    /**
+     * Creates a new Collection in a static-binding.
+     * @param array $data (Optional) Initial data to parse into the Collection.
+     * @return Collection New Collection instance.
+     */
+    public static function make(array $data = [])
+    {
+        return new self($data);
     }
 
     /**

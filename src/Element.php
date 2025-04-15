@@ -27,4 +27,14 @@ class Element implements JsonSerializable
     {
         $this->__constructTrait($data);
     }
+
+    /**
+     * Creates a new Element in a static-binding.
+     * @param array $data (Optional) An associative array with the initial data to parse.
+     * @return $this Returns a new Element.
+     */
+    public static function make(array $data = [])
+    {
+        return new self($data);
+    }
 }
