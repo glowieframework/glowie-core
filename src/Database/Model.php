@@ -1142,7 +1142,7 @@ class Model extends Kraken implements JsonSerializable
                             } else {
                                 $row[$name] = $relations->filter(function ($i) use ($value, $item) {
                                     return $i->get($item['column']) == $value;
-                                });
+                                })->values();
                             }
                         }
 
@@ -1204,7 +1204,7 @@ class Model extends Kraken implements JsonSerializable
                         if (!is_null($value)) {
                             $rel = $pivotRelations->filter(function ($i) use ($value, $item) {
                                 return $i->get($item['current-foreign']) == $value;
-                            });
+                            })->values();
 
                             if ($rel->isNotEmpty()) {
                                 $keys = $rel->column($item['target-foreign']);
@@ -1213,7 +1213,7 @@ class Model extends Kraken implements JsonSerializable
                                     $keys = $keys->toArray();
                                     $row[$name] = $relations->filter(function ($i) use ($keys, $item) {
                                         return in_array($i->get($item['primary-target']), $keys);
-                                    });
+                                    })->values();
                                 } else {
                                     $row[$name] = new Collection();
                                 }
