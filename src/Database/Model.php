@@ -1082,23 +1082,37 @@ class Model extends Kraken implements JsonSerializable
         // Checks if relations are enabled, or data / relations property is empty
         if ($this->_relationsEnabled === false || empty($data) || empty($this->_relations)) return $data;
 
-        // Checks for Collection
-        $isCollection = $data instanceof Collection;
-        if ($isCollection) $data = $data->toArray();
+        // Checks for the original data type
+        if ($data instanceof Collection) {
+            $type = 'collection';
+            $data = $data->toArray();
+        } elseif (is_callable([$data, 'toArray'])) {
+            $type = 'element';
+            $data = [$data->toArray()];
+        } elseif (Util::isAssociativeArray($data)) {
+            $type = 'associative';
+            $data = [$data];
+        } else {
+            $type = 'array';
+        }
 
-        // Checks if is a single row or an array of rows
-        $isElement = is_callable([$data, 'toArray']);
-        $isSingle = $isElement || Util::isAssociativeArray($data);
-        if ($isSingle) $data = [$data];
+        // Normalize the data
+        $data = array_map(function ($row) {
+            return is_callable([$row, 'toArray']) ? $row->toArray() : $row;
+        }, $data);
 
-        // Perform relations
+        // Attach relations
         $data = $this->attachMultipleRelations($data);
 
-        // Return back to a single row, if it was
-        if ($isSingle) return $isElement ? new Element($data[0]) : $data[0];
+        // Convert data back to the original type
+        if ($type === 'element' || $type === 'associative') {
+            return $data[0];
+        } elseif ($type === 'collection') {
+            return new Collection($data);
+        }
 
-        // Return back to a Collection, if it was
-        return $isCollection ? new Collection($data) : $data;
+        // Return result
+        return $data;
     }
 
     /**
@@ -1108,32 +1122,29 @@ class Model extends Kraken implements JsonSerializable
      */
     private function attachMultipleRelations(array $data)
     {
-        // Converts data to a Collection
-        $data = new Collection($data);
-        $result = [];
+        // Converts data to a Collection if not yet
+        if (!$data instanceof Collection) $data = new Collection($data);
 
         // Performs the relations
         foreach ($this->_relations as $name => $item) {
-            if (!empty($this->_relationsEnabled) && !in_array($name, $this->_relationsEnabled)) continue;
 
-            $keys = [];
+            // Bypass ignored relations
+            if (!empty($this->_relationsEnabled) && !in_array($name, $this->_relationsEnabled)) continue;
 
             switch ($item['type']) {
                 // hasOne or hasMany relationship
                 case 'one':
                 case 'many':
                     $keys = $data->column($item['primary'])->unique();
-                    if ($keys->isEmpty()) continue;
+                    if ($keys->isEmpty()) break;
 
                     $table = new $item['model'];
                     if (is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
 
                     $relations = $table->allBy($item['column'], $keys);
 
-                    foreach ($data as $row) {
-                        $isElement = is_callable([$row, 'toArray']);
-                        if ($isElement) $row = $row->toArray();
-
+                    foreach ($data as $idx => $row) {
+                        list($row, $isElement) = $this->normalizeRelationRow($row);
                         $value = $row[$item['primary']] ?? null;
 
                         if (!is_null($value)) {
@@ -1146,8 +1157,7 @@ class Model extends Kraken implements JsonSerializable
                                 });
                             }
                         }
-
-                        $result[] = $isElement ? new Element($row) : $row;
+                        $data[$idx] = $isElement ? new Element($row) : $row;
                     }
 
                     break;
@@ -1155,25 +1165,22 @@ class Model extends Kraken implements JsonSerializable
                 // belongsTo relationship
                 case 'belongs':
                     $keys = $data->column($item['column'])->unique();
-                    if ($keys->isEmpty()) continue;
+                    if ($keys->isEmpty()) break;
 
                     $table = new $item['model'];
                     if (is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
 
                     $relations = $table->allBy($item['primary'], $keys);
 
-                    foreach ($data as $row) {
-                        $isElement = is_callable([$row, 'toArray']);
-                        if ($isElement) $row = $row->toArray();
-
+                    foreach ($data as $idx => $row) {
+                        list($row, $isElement) = $this->normalizeRelationRow($row);
                         $value = $row[$item['column']] ?? null;
 
                         if (!is_null($value)) {
                             $rel = $relations->search($item['primary'], $value);
                             $row[$name] = !Util::isEmpty($rel) ? $rel : null;
                         }
-
-                        $result[] = $isElement ? new Element($row) : $row;
+                        $data[$idx] = $isElement ? new Element($row) : $row;
                     }
 
                     break;
@@ -1181,7 +1188,7 @@ class Model extends Kraken implements JsonSerializable
                 // belongsToMany relationship
                 case 'belongs-many':
                     $currentKeys = $data->column($item['primary-current']);
-                    if ($currentKeys->isEmpty()) continue;
+                    if ($currentKeys->isEmpty()) break;
 
                     $table = new $item['model'];
                     $pivot = new Kraken($item['pivot'], $this->_database);
@@ -1189,17 +1196,15 @@ class Model extends Kraken implements JsonSerializable
                     if (is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data, &$pivot]);
 
                     $pivotRelations = $pivot->whereIn($item['current-foreign'], $currentKeys)->fetchAll();
-                    if ($pivotRelations->isEmpty()) continue;
+                    if ($pivotRelations->isEmpty()) break;
 
                     $targetKeys = $pivotRelations->column($item['target-foreign'])->unique();
-                    if ($targetKeys->isEmpty()) continue;
+                    if ($targetKeys->isEmpty()) break;
 
                     $relations = $table->allBy($item['primary-target'], $targetKeys);
 
-                    foreach ($data as $row) {
-                        $isElement = is_callable([$row, 'toArray']);
-                        if ($isElement) $row = $row->toArray();
-
+                    foreach ($data as $idx => $row) {
+                        list($row, $isElement) = $this->normalizeRelationRow($row);
                         $value = $row[$item['primary-current']] ?? null;
 
                         if (!is_null($value)) {
@@ -1223,7 +1228,7 @@ class Model extends Kraken implements JsonSerializable
                             }
                         }
 
-                        $result[] = $isElement ? new Element($row) : $row;
+                        $data[$idx] = $isElement ? new Element($row) : $row;
                     }
 
                     break;
@@ -1231,7 +1236,19 @@ class Model extends Kraken implements JsonSerializable
         }
 
         // Returns the result as array
-        return $result;
+        return $data->toArray();
+    }
+
+    /**
+     * Normalizes a row to an array before attaching relations.
+     * @param Element|array $row Row data as an Element or associative array.
+     * @return array Returns a list with the row as the first parameter, and if it was an Element as the second.
+     */
+    private function normalizeRelationRow($row)
+    {
+        $isElement = is_callable([$row, 'toArray']);
+        if ($isElement) return [$row->toArray(), true];
+        return [$row, false];
     }
 
     /**
