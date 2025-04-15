@@ -873,12 +873,14 @@ class Model extends Kraken implements JsonSerializable
      * Setup a many to many relationship with another model. **This requires an intermediate (pivot) table.**
      * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
      * @param string $pivot (Optional) Intermediate table name. Leave empty for auto.
+     * @param string $column (Optional) Foreign key column name from the current model. Leave empty for auto.
+     * @param string $foreign (Optional) Foreign key column name from the target model. Leave empty for auto.
      * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
      * @param Closure|null $callback (Optional) A function to interact with the related model before querying the relationship.\
      * It receives the related Model instance as the first parameter, the current row as an associative array and an array with the pivot results.
      * @return $this Current Model instance for nested calls.
      */
-    public function belongsToMany(string $model, string $pivot = '', string $name = '', ?Closure $callback = null)
+    public function belongsToMany(string $model, string $pivot = '', string $column = '', string $foreign = '', string $name = '', ?Closure $callback = null)
     {
         // Get primary key and names
         $instance = new $model([], false);
@@ -887,8 +889,8 @@ class Model extends Kraken implements JsonSerializable
         if (Util::isEmpty($pivot)) $pivot = $this->getTable() . '_' . $instance->getTable();
 
         // Get foreign keys
-        $foreign = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $this->getPrimaryName();
-        $foreignTarget = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primary;
+        if (Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $this->getPrimaryName();
+        if (Util::isEmpty($foreign)) $foreign = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primary;
 
         // Set to relations array
         $this->_relations[$name] = [
@@ -897,8 +899,8 @@ class Model extends Kraken implements JsonSerializable
             'primary-current' => $this->getPrimaryName(),
             'primary-target' => $primary,
             'pivot' => $pivot,
-            'current-foreign' => $foreign,
-            'target-foreign' => $foreignTarget,
+            'current-foreign' => $column,
+            'target-foreign' => $foreign,
             'callback' => $callback
         ];
 
@@ -1072,8 +1074,8 @@ class Model extends Kraken implements JsonSerializable
 
     /**
      * Performs data relations with other models.
-     * @param array|Element $data An Element or associative array of data to relate.
-     * @return array|Element Returns the data with all relations.
+     * @param mixed $data An Element, Collection or array of data to relate.
+     * @return mixed Returns the data with all relations.
      */
     private function attachRelations($data)
     {
@@ -1084,90 +1086,151 @@ class Model extends Kraken implements JsonSerializable
         $isCollection = $data instanceof Collection;
         if ($isCollection) $data = $data->toArray();
 
-        // Checks if is an array of rows
-        if (is_array($data) && !Util::isAssociativeArray($data)) {
-            return $this->attachMultipleRelations($data, $isCollection);
-        }
-
-        // Attach relations to a single record
-        return $this->attachSingleRelations($data);
-    }
-
-    /**
-     * Attaches the relations of a single row.
-     * @param Element|array $data The model data to be attached.
-     * @return Element|array Returns the data with the relations.
-     */
-    private function attachSingleRelations($data)
-    {
-        // Converts the Element to an array
+        // Checks if is a single row or an array of rows
         $isElement = is_callable([$data, 'toArray']);
-        if ($isElement) $data = $data->toArray();
+        $isSingle = $isElement || Util::isAssociativeArray($data);
+        if ($isSingle) $data = [$data];
 
-        // Performs the relations
-        foreach ($this->_relations as $name => $item) {
-            if (!empty($this->_relationsEnabled) && !in_array($name, $this->_relationsEnabled)) continue;
+        // Perform relations
+        $data = $this->attachMultipleRelations($data);
 
-            switch ($item['type']) {
-                // hasOne relationship
-                case 'one':
-                    $table = new $item['model'];
-                    if (is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
-                    $value = $data[$item['primary']] ?? null;
-                    if (!is_null($value)) $data[$name] = $table->findBy($item['column'], $value);
-                    break;
+        // Return back to a single row, if it was
+        if ($isSingle) return $isElement ? new Element($data[0]) : $data[0];
 
-                // hasMany relationship
-                case 'many':
-                    $table = new $item['model'];
-                    if (is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
-                    $value = $data[$item['primary']] ?? null;
-                    if (!is_null($value)) $data[$name] = $table->allBy($item['column'], $value);
-                    break;
-
-                // belongsTo relationship
-                case 'belongs':
-                    $table = new $item['model'];
-                    if (is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
-                    $value = $data[$item['column']] ?? null;
-                    if (!is_null($value)) $data[$name] = $table->findBy($item['primary'], $value);
-                    break;
-
-                // belongsToMany relationship
-                case 'belongs-many':
-                    $table = new $item['model'];
-                    $value = $data[$item['primary-current']] ?? null;
-                    if (!is_null($value)) {
-                        $pivot = new Kraken($item['pivot'], $this->_database);
-                        if (is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data, &$pivot]);
-                        $relations = $pivot->where($item['current-foreign'], $value)->fetchAll()->column($item['target-foreign']);
-                        $data[$name] = $relations->isNotEmpty() ? $table->allBy([$item['primary-target'] => $relations]) : [];
-                    }
-                    break;
-            }
-        }
-
-        // Converts back to Element
-        return $isElement ? new Element($data) : $data;
+        // Return back to a Collection, if it was
+        return $isCollection ? new Collection($data) : $data;
     }
 
     /**
      * Attaches the relations of a multiple rows.
      * @param array $data The model data to be attached.
-     * @param bool $isCollection (Optional) If the initial set was a Collection or associative array.
-     * @return Collection|array Returns the data with the relations.
+     * @return array Returns the data with the relations.
      */
-    private function attachMultipleRelations(array $data, bool $isCollection = false)
+    private function attachMultipleRelations(array $data)
     {
+        // Converts data to a Collection
+        $data = new Collection($data);
         $result = [];
 
         // Performs the relations
-        foreach ($data as $item) {
-            $result[] = $this->attachSingleRelations($item);
+        foreach ($this->_relations as $name => $item) {
+            if (!empty($this->_relationsEnabled) && !in_array($name, $this->_relationsEnabled)) continue;
+
+            $keys = [];
+
+            switch ($item['type']) {
+                // hasOne or hasMany relationship
+                case 'one':
+                case 'many':
+                    $keys = $data->column($item['primary'])->unique();
+                    if ($keys->isEmpty()) continue;
+
+                    $table = new $item['model'];
+                    if (is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
+
+                    $relations = $table->allBy($item['column'], $keys);
+
+                    foreach ($data as $row) {
+                        $isElement = is_callable([$row, 'toArray']);
+                        if ($isElement) $row = $row->toArray();
+
+                        $value = $row[$item['primary']] ?? null;
+
+                        if (!is_null($value)) {
+                            if ($item['type'] === 'one') {
+                                $rel = $relations->search($item['column'], $value);
+                                $row[$name] = !Util::isEmpty($rel) ? $rel : null;
+                            } else {
+                                $row[$name] = $relations->filter(function ($i) use ($value, $item) {
+                                    return $i->get($item['column']) == $value;
+                                });
+                            }
+                        }
+
+                        $result[] = $isElement ? new Element($row) : $row;
+                    }
+
+                    break;
+
+                // belongsTo relationship
+                case 'belongs':
+                    $keys = $data->column($item['column'])->unique();
+                    if ($keys->isEmpty()) continue;
+
+                    $table = new $item['model'];
+                    if (is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
+
+                    $relations = $table->allBy($item['primary'], $keys);
+
+                    foreach ($data as $row) {
+                        $isElement = is_callable([$row, 'toArray']);
+                        if ($isElement) $row = $row->toArray();
+
+                        $value = $row[$item['column']] ?? null;
+
+                        if (!is_null($value)) {
+                            $rel = $relations->search($item['primary'], $value);
+                            $row[$name] = !Util::isEmpty($rel) ? $rel : null;
+                        }
+
+                        $result[] = $isElement ? new Element($row) : $row;
+                    }
+
+                    break;
+
+                // belongsToMany relationship
+                case 'belongs-many':
+                    $currentKeys = $data->column($item['primary-current']);
+                    if ($currentKeys->isEmpty()) continue;
+
+                    $table = new $item['model'];
+                    $pivot = new Kraken($item['pivot'], $this->_database);
+
+                    if (is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data, &$pivot]);
+
+                    $pivotRelations = $pivot->whereIn($item['current-foreign'], $currentKeys)->fetchAll();
+                    if ($pivotRelations->isEmpty()) continue;
+
+                    $targetKeys = $pivotRelations->column($item['target-foreign'])->unique();
+                    if ($targetKeys->isEmpty()) continue;
+
+                    $relations = $table->allBy($item['primary-target'], $targetKeys);
+
+                    foreach ($data as $row) {
+                        $isElement = is_callable([$row, 'toArray']);
+                        if ($isElement) $row = $row->toArray();
+
+                        $value = $row[$item['primary-current']] ?? null;
+
+                        if (!is_null($value)) {
+                            $rel = $pivotRelations->filter(function ($i) use ($value, $item) {
+                                return $i->get($item['current-foreign']) == $value;
+                            });
+
+                            if ($rel->isNotEmpty()) {
+                                $keys = $rel->column($item['target-foreign']);
+
+                                if ($keys->isNotEmpty()) {
+                                    $keys = $keys->toArray();
+                                    $row[$name] = $relations->filter(function ($i) use ($keys, $item) {
+                                        return in_array($i->get($item['primary-target']), $keys);
+                                    });
+                                } else {
+                                    $row[$name] = new Collection();
+                                }
+                            } else {
+                                $row[$name] = new Collection();
+                            }
+                        }
+
+                        $result[] = $isElement ? new Element($row) : $row;
+                    }
+
+                    break;
+            }
         }
 
-        // Converts back to collection
-        if ($isCollection) $result = new Collection($result);
+        // Returns the result as array
         return $result;
     }
 
