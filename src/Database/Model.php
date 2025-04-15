@@ -1121,58 +1121,90 @@ class Model extends Kraken implements JsonSerializable
                 // hasOne or hasMany relationship
                 case 'one':
                 case 'many':
+                    // Gets the primary keys to search
                     $keys = $data->column($item['primary'])->unique();
                     if ($keys->isEmpty()) break;
 
+                    // Creates the related model
                     $table = new $item['model'];
                     if (is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
 
+                    // Gets the relationships
                     $relations = $table->allBy($item['column'], $keys);
 
                     foreach ($data as $idx => $row) {
                         $isElement = $row instanceof Element;
-                        if ($isElement) $row = $row->toArray();
 
-                        $value = $row[$item['primary']] ?? null;
+                        // Parses the foreign value from the row
+                        if ($isElement) {
+                            $value = $row->get($item['primary'], null);
+                        } else {
+                            $value = $row[$item['primary']] ?? null;
+                        }
 
+                        // Gets the relationship value
                         if (!is_null($value)) {
                             if ($item['type'] === 'one') {
                                 $rel = $relations->search($item['column'], $value);
-                                $row[$name] = !Util::isEmpty($rel) ? $rel : null;
+                                $value = !Util::isEmpty($rel) ? $rel : null;
                             } else {
-                                $row[$name] = $relations->filter(function ($i) use ($value, $item) {
+                                $value = $relations->filter(function ($i) use ($value, $item) {
                                     return $i->get($item['column']) == $value;
                                 })->values();
                             }
                         }
 
-                        $data[$idx] = $isElement ? new Element($row) : $row;
+                        // Sets the value back to the row
+                        if ($isElement) {
+                            $row->set($name, $value);
+                        } else {
+                            $row[$name] = $value;
+                        }
+
+                        // Change the row
+                        $data[$idx] = $row;
                     }
 
                     break;
 
                 // belongsTo relationship
                 case 'belongs':
+                    // Gets the foreign keys to search
                     $keys = $data->column($item['column'])->unique();
                     if ($keys->isEmpty()) break;
 
+                    // Creates the related model
                     $table = new $item['model'];
                     if (is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
 
+                    // Gets the relationships
                     $relations = $table->allBy($item['primary'], $keys);
 
                     foreach ($data as $idx => $row) {
                         $isElement = $row instanceof Element;
-                        if ($isElement) $row = $row->toArray();
 
-                        $value = $row[$item['column']] ?? null;
-
-                        if (!is_null($value)) {
-                            $rel = $relations->search($item['primary'], $value);
-                            $row[$name] = !Util::isEmpty($rel) ? $rel : null;
+                        // Parses the foreign value from the row
+                        if ($isElement) {
+                            $value = $row->get($item['column'], null);
+                        } else {
+                            $value = $row[$item['column']] ?? null;
                         }
 
-                        $data[$idx] = $isElement ? new Element($row) : $row;
+                        // Gets the relationship value
+                        if (!is_null($value)) {
+                            $rel = $relations->search($item['primary'], $value);
+                            $value = !Util::isEmpty($rel) ? $rel : null;
+                        }
+
+                        // Sets the value back to the row
+                        if ($isElement) {
+                            $row->set($name, $value);
+                        } else {
+                            $row[$name] = $value;
+                        }
+
+                        // Change the row
+                        $data[$idx] = $row;
                     }
 
                     break;
@@ -1197,32 +1229,48 @@ class Model extends Kraken implements JsonSerializable
 
                     foreach ($data as $idx => $row) {
                         $isElement = $row instanceof Element;
-                        if ($isElement) $row = $row->toArray();
 
-                        $value = $row[$item['primary-current']] ?? null;
+                        // Parses the value from the row
+                        if ($isElement) {
+                            $value = $row->get($item['primary-current'], null);
+                        } else {
+                            $value = $row[$item['primary-current']] ?? null;
+                        }
 
+                        // Gets the relationships
                         if (!is_null($value)) {
-                            $rel = $pivotRelations->filter(function ($i) use ($value, $item) {
+                            // Get the keys from the pivot table
+                            $value = $pivotRelations->filter(function ($i) use ($value, $item) {
                                 return $i->get($item['current-foreign']) == $value;
                             })->values();
 
-                            if ($rel->isNotEmpty()) {
-                                $keys = $rel->column($item['target-foreign']);
+                            // Get the related instances
+                            if ($value->isNotEmpty()) {
+                                $keys = $value->column($item['target-foreign']);
 
+                                // Associate the related model with the parent model
                                 if ($keys->isNotEmpty()) {
                                     $keys = $keys->toArray();
-                                    $row[$name] = $relations->filter(function ($i) use ($keys, $item) {
+                                    $value = $relations->filter(function ($i) use ($keys, $item) {
                                         return in_array($i->get($item['primary-target']), $keys);
                                     })->values();
                                 } else {
-                                    $row[$name] = new Collection();
+                                    $value = new Collection();
                                 }
                             } else {
-                                $row[$name] = new Collection();
+                                $value = new Collection();
                             }
                         }
 
-                        $data[$idx] = $isElement ? new Element($row) : $row;
+                        // Sets the value back to the row
+                        if ($isElement) {
+                            $row->set($name, $value);
+                        } else {
+                            $row[$name] = $value;
+                        }
+
+                        // Change the row
+                        $data[$idx] = $row;
                     }
 
                     break;
