@@ -1133,17 +1133,19 @@ class Model extends Kraken implements JsonSerializable
                 // hasOne or hasMany relationship
                 case 'one':
                 case 'many':
-                    // Gets the primary keys to search
+                    // Gets the primary keys from the current model
                     $keys = $data->column($item['primary'])->unique();
                     if ($keys->isEmpty()) break;
 
-                    // Creates the related model
+                    // Creates the related model and run the callback
                     $table = new $item['model'];
-                    if (is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
+                    if (!is_null($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
 
-                    // Gets the relationships
+                    // Gets the relationships from the target model
                     $relations = $table->allBy($item['column'], $keys);
+                    if ($relations->isEmpty()) break;
 
+                    // Loops through the rows
                     foreach ($data as $idx => $row) {
                         $isElement = $row instanceof Element;
 
@@ -1158,7 +1160,7 @@ class Model extends Kraken implements JsonSerializable
                         if (!is_null($value)) {
                             if ($item['type'] === 'one') {
                                 $rel = $relations->search($item['column'], $value);
-                                $value = !Util::isEmpty($rel) ? $rel : null;
+                                $value = !empty($rel) ? $rel : null;
                             } else {
                                 $value = $relations->filter(function ($i) use ($value, $item) {
                                     return $i->get($item['column']) == $value;
@@ -1181,17 +1183,19 @@ class Model extends Kraken implements JsonSerializable
 
                 // belongsTo relationship
                 case 'belongs':
-                    // Gets the foreign keys to search
+                    // Gets the foreign keys from the target model
                     $keys = $data->column($item['column'])->unique();
                     if ($keys->isEmpty()) break;
 
-                    // Creates the related model
+                    // Creates the related model and run the callback
                     $table = new $item['model'];
-                    if (is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
+                    if (!is_null($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
 
-                    // Gets the relationships
+                    // Gets the relationships from the target model
                     $relations = $table->allBy($item['primary'], $keys);
+                    if ($relations->isEmpty()) break;
 
+                    // Loops through the rows
                     foreach ($data as $idx => $row) {
                         $isElement = $row instanceof Element;
 
@@ -1223,22 +1227,28 @@ class Model extends Kraken implements JsonSerializable
 
                 // belongsToMany relationship
                 case 'belongs-many':
+                    // Gets the foreign keys from the current model
                     $currentKeys = $data->column($item['primary-current']);
                     if ($currentKeys->isEmpty()) break;
 
+                    // Creates the related model and pivot and run the callback
                     $table = new $item['model'];
                     $pivot = new Kraken($item['pivot'], $this->_database);
+                    if (!is_null($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data, &$pivot]);
 
-                    if (is_callable($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data, &$pivot]);
-
+                    // Gets the foreign keys from the current model in the pivot
                     $pivotRelations = $pivot->whereIn($item['current-foreign'], $currentKeys)->fetchAll();
                     if ($pivotRelations->isEmpty()) break;
 
+                    // Gets the foreign keys from the target model in the pivot relations
                     $targetKeys = $pivotRelations->column($item['target-foreign'])->unique();
                     if ($targetKeys->isEmpty()) break;
 
+                    // Gets the relations between the tables
                     $relations = $table->allBy($item['primary-target'], $targetKeys);
+                    if ($relations->isEmpty()) break;
 
+                    // Loops through the rows
                     foreach ($data as $idx => $row) {
                         $isElement = $row instanceof Element;
 

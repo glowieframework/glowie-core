@@ -14,7 +14,6 @@ use Glowie\Core\Exception\QueryException;
 use Glowie\Core\Element;
 use Glowie\Core\Database\Factory;
 use Glowie\Core\Exception\DatabaseException;
-use Util;
 
 /**
  * Database handler trait for Glowie application.
@@ -134,7 +133,7 @@ trait DatabaseTrait
 
         // Gets connection configuration
         $database = Config::get("database.{$this->_connection}");
-        if (!$database) throw new DatabaseException([], 'Database connection setting "' . $this->_connection . '" not found in your app configuration');
+        if (empty($database)) throw new DatabaseException([], 'Database connection setting "' . $this->_connection . '" not found in your app configuration');
 
         // Validate settings
         if (empty($database['host'])) throw new DatabaseException($database, 'Database connection "' . $this->_connection . '" host not defined');

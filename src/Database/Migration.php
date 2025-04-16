@@ -66,16 +66,24 @@ abstract class Migration
         $this->forge = new Skeleton($this->table, $this->database);
 
         // Creates the migrations history table if not exists
-        if (!isset(self::$tableCreated[$this->database])) {
-            if (!$this->forge->tableExists($this->table)) {
-                $this->forge->table($this->table)
-                    ->createColumn('name')->type(Skeleton::TYPE_STRING)->size(500)
-                    ->createColumn('applied_at')->type(Skeleton::TYPE_DATETIME)->default(Skeleton::raw('NOW()'))
-                    ->unique('name')
-                    ->create();
-            };
-            self::$tableCreated[$this->database] = true;
-        }
+        if (!isset(self::$tableCreated[$this->database])) $this->createMigrationsTable();
+    }
+
+    /**
+     * Creates the migrations table in the database if not exists yet.
+     */
+    private function createMigrationsTable()
+    {
+        if (!$this->forge->tableExists($this->table)) {
+            $this->forge->table($this->table)
+                ->createColumn('name')->type(Skeleton::TYPE_STRING)->size(500)
+                ->createColumn('applied_at')->type(Skeleton::TYPE_DATETIME)->default(Skeleton::raw('NOW()'))
+                ->unique('name')
+                ->ifNotExists()
+                ->create();
+        };
+
+        self::$tableCreated[$this->database] = true;
     }
 
     /**
@@ -84,8 +92,11 @@ abstract class Migration
      */
     final public function isApplied()
     {
-        $this->db->clearQuery();
-        return $this->db->database($this->database)->table($this->table)->where('name', $this->name)->exists();
+        return $this->db->clearQuery()
+            ->database($this->database)
+            ->table($this->table)
+            ->where('name', $this->name)
+            ->exists();
     }
 
     /**
@@ -94,8 +105,10 @@ abstract class Migration
      */
     final public function saveMigration()
     {
-        $this->db->clearQuery();
-        return $this->db->database($this->database)->table($this->table)->insert(['name' => $this->name]);
+        return $this->db->clearQuery()
+            ->database($this->database)
+            ->table($this->table)
+            ->insert(['name' => $this->name]);
     }
 
     /**
@@ -104,8 +117,11 @@ abstract class Migration
      */
     final public function deleteMigration()
     {
-        $this->db->clearQuery();
-        return $this->db->database($this->database)->table($this->table)->where('name', $this->name)->delete();
+        return $this->db->clearQuery()
+            ->database($this->database)
+            ->table($this->table)
+            ->where('name', $this->name)
+            ->delete();
     }
 
     /**
