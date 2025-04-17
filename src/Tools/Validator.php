@@ -178,8 +178,8 @@ class Validator
 
             // Check type of rule
             switch ($type) {
-                // [SOMETIMES] - Checks if variable exists before checking the next rules
-                case 'sometimes':
+                // [OPTIONAL] - Checks if variable exists before checking the next rules
+                case 'optional':
                     if (!isset($data) || Util::isEmpty($data)) break 2;
                     break;
 

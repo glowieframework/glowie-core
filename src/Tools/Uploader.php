@@ -426,7 +426,7 @@ class Uploader
             $size = number_format($size / 1024, 2) . ' KB';
         } else if ($size > 1) {
             $size = $size . ' bytes';
-        } else if ($size == 1) {
+        } else if ($size === 1) {
             $size = $size . ' byte';
         } else {
             $size = '0 bytes';

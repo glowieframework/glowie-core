@@ -89,7 +89,7 @@ class Queue
             ->orderBy('id')
             ->fetchAll();
 
-        if (count($jobs) == 0) {
+        if (count($jobs) === 0) {
             if ($verbose && !$watcher) Firefly::print('<color="yellow">There are no pending jobs in this queue.</color>');
             return;
         }

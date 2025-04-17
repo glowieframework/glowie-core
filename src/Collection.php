@@ -337,13 +337,13 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
         $arr = $this->__data;
 
         if ($preserveKeys) {
-            if ($order == SORT_ASC) {
+            if ($order === SORT_ASC) {
                 asort($arr);
             } else {
                 arsort($arr);
             }
         } else {
-            if ($order == SORT_ASC) {
+            if ($order === SORT_ASC) {
                 sort($arr);
             } else {
                 rsort($arr);
@@ -362,7 +362,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     {
         $arr = $this->__data;
 
-        if ($order == SORT_ASC) {
+        if ($order === SORT_ASC) {
             ksort($arr);
         } else {
             krsort($arr);

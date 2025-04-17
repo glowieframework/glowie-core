@@ -232,7 +232,7 @@ class Request implements JsonSerializable
      */
     public function isGet()
     {
-        return $this->getMethod() == 'GET';
+        return $this->getMethod() === 'GET';
     }
 
     /**
@@ -241,7 +241,7 @@ class Request implements JsonSerializable
      */
     public function isPost()
     {
-        return $this->getMethod() == 'POST';
+        return $this->getMethod() === 'POST';
     }
 
     /**
@@ -250,7 +250,7 @@ class Request implements JsonSerializable
      */
     public function isPut()
     {
-        return $this->getMethod() == 'PUT';
+        return $this->getMethod() === 'PUT';
     }
 
     /**
@@ -259,7 +259,7 @@ class Request implements JsonSerializable
      */
     public function isDelete()
     {
-        return $this->getMethod() == 'DELETE';
+        return $this->getMethod() === 'DELETE';
     }
 
     /**
@@ -268,7 +268,7 @@ class Request implements JsonSerializable
      */
     public function isPatch()
     {
-        return $this->getMethod() == 'PATCH';
+        return $this->getMethod() === 'PATCH';
     }
 
     /**
@@ -277,7 +277,7 @@ class Request implements JsonSerializable
      */
     public function isHead()
     {
-        return $this->getMethod() == 'HEAD';
+        return $this->getMethod() === 'HEAD';
     }
 
     /**
@@ -286,7 +286,7 @@ class Request implements JsonSerializable
      */
     public function isOptions()
     {
-        return $this->getMethod() == 'OPTIONS';
+        return $this->getMethod() === 'OPTIONS';
     }
 
     /**
@@ -363,7 +363,7 @@ class Request implements JsonSerializable
      */
     public function isAjax()
     {
-        return $this->getHeader('X-Requested-With') == 'XMLHttpRequest';
+        return $this->getHeader('X-Requested-With') === 'XMLHttpRequest';
     }
 
     /**
@@ -373,7 +373,7 @@ class Request implements JsonSerializable
      */
     public function isJson()
     {
-        return ($this->getContentType() == 'application/json' || Util::isJson($this->getBody()));
+        return ($this->getContentType() === 'application/json' || Util::isJson($this->getBody()));
     }
 
     /**

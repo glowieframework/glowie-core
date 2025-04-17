@@ -34,7 +34,7 @@ class Config
         // Load other configuration files
         foreach (glob(Util::location('config/*.php')) as $file) {
             $basename = pathinfo($file, PATHINFO_BASENAME);
-            if ($basename == 'Config.php' || $basename == 'Routes.php') continue;
+            if ($basename === 'Config.php' || $basename === 'Routes.php') continue;
             $file = require_once($file);
             self::$config = array_merge(self::$config, $file);
         }

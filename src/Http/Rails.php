@@ -444,7 +444,7 @@ class Rails
             if (Util::isEmpty($key)) throw new Exception('Application maintenance bypass key was not defined');
 
             // Saves the maintenance key in the cookies
-            if ($route == $key) {
+            if ($route === $key) {
                 $cookies->set('glowie_maintenance_key', $key);
                 return self::$response->redirectBase();
             }
@@ -524,19 +524,19 @@ class Rails
             $autoroute = explode('/', trim($route, '/'));
 
             // If no route was specified
-            if ($route == '/') {
+            if ($route === '/') {
                 $controller = 'Glowie\Controllers\Main';
                 $action = 'index';
                 return self::callAutoRoute($controller, $action);
 
                 // If only the controller was specified
-            } else if (count($autoroute) == 1) {
+            } else if (count($autoroute) === 1) {
                 $controller = 'Glowie\Controllers\\' . Util::pascalCase($autoroute[0]);
                 $action = 'index';
                 return self::callAutoRoute($controller, $action);
 
                 // Controller and action were specified
-            } else if (count($autoroute) == 2) {
+            } else if (count($autoroute) === 2) {
                 $controller = 'Glowie\Controllers\\' . Util::pascalCase($autoroute[0]);
                 $action = Util::camelCase($autoroute[1]);
                 return self::callAutoRoute($controller, $action);

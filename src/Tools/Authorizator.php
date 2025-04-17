@@ -408,7 +408,7 @@ class Authorizator
 
         // Generate a valid signature to compare
         $signature = $this->base64UrlEncode(hash_hmac(self::METHODS[$alg], "{$parsed[0]}.{$parsed[1]}", $key, true));
-        return $signature == $parsed[2];
+        return $signature === $parsed[2];
     }
 
     /**

@@ -392,15 +392,15 @@ class Crawler
 
         // Sets the data
         if (!empty($data)) {
-            if ($method == 'GET') {
+            if ($method === 'GET') {
                 if (is_array($data)) {
                     $url = $url . '?' . http_build_query($data);
                 } else {
                     $url = $url . '?' . $data;
                 }
             } else {
-                if ($this->type == self::CONTENT_JSON && is_array($data)) $data = json_encode($data);
-                if ($this->type == self::CONTENT_FORM && is_array($data)) $data = http_build_query($data);
+                if ($this->type === self::CONTENT_JSON && is_array($data)) $data = json_encode($data);
+                if ($this->type === self::CONTENT_FORM && is_array($data)) $data = http_build_query($data);
                 curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
             }
         }

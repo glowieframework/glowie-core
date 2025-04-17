@@ -24,16 +24,54 @@ class Env
      */
     public static function load()
     {
+        // Load the file
         $file = Util::location('../.env');
         if (!is_file($file)) return;
         $file = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+
+        // Loop through each line
         foreach ($file as $config) {
+            // Ignore comments
             if (Util::startsWith($config, '#')) continue;
+
+            // Get key and value
             $config = explode('=', $config, 2);
-            if (count($config) != 2) continue;
-            if (self::get($config[0]) !== null) continue;
-            self::set($config[0], $config[1]);
+            if (count($config) !== 2) continue;
+
+            // Parse key and value
+            $key = trim($config[0]);
+            $value = self::sanitizeValue($config[1]);
+
+            // Ignore existing keys
+            if (self::get($key) !== null) continue;
+
+            // Sets the value
+            self::set($key, $value);
         }
+    }
+
+    /**
+     * Sanitizes a value and convert the type.
+     * @param string $value Value to be sanitized.
+     * @return mixed Returns the sanitized value.
+     */
+    private static function sanitizeValue(string $value)
+    {
+        // Trims trailing spaces
+        $value = trim($value);
+
+        // Checks for boolean or null values
+        if (strtolower($value) === 'false') return false;
+        if (strtolower($value) === 'true') return true;
+        if (strtolower($value) === 'null') return null;
+
+        // Strips enquoted values
+        if ((Util::startsWith($value, '"') && Util::endsWith($value, '"')) || (Util::startsWith($value, "'") && Util::endsWith($value, "'"))) {
+            $value = stripcslashes(substr($value, 1, -1));
+        }
+
+        // Returns the value as string
+        return $value;
     }
 
     /**
