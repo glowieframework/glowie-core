@@ -300,6 +300,21 @@ class Request implements JsonSerializable
     }
 
     /**
+     * Checks if the request URI matches a pattern.
+     * @param string|array Pattern to match or an array of patterns to search inside.
+     * @return bool Return true if the request URI matches one of the patterns, false otherwise.
+     */
+    public function match($pattern)
+    {
+        $path = $this->getURI();
+        foreach ((array)$pattern as $pattern) {
+            $regex = '#^' . str_replace('\*', '.*', preg_quote(trim($pattern, '/'), '#')) . '$#';
+            if (preg_match($regex, $path)) return true;
+        }
+        return false;
+    }
+
+    /**
      * Gets the value of a header.
      * @param string $name Header name to get.
      * @param mixed $default (Optional) Default value to return if the header does not exist.

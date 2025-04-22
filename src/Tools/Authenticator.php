@@ -148,7 +148,7 @@ class Authenticator
             $this->error = self::ERR_AUTH_SUCCESS;
 
             // Save credentials in session
-            (new Session())->setEncrypted(self::$appName . '.auth.' . $this->guard, $user->getPrimary());
+            Session::make()->setEncrypted(self::$appName . '.auth.' . $this->guard, $user->getPrimary());
             return true;
         } else {
             $this->error = self::ERR_WRONG_PASSWORD;
@@ -200,7 +200,7 @@ class Authenticator
         $this->error = self::ERR_AUTH_SUCCESS;
 
         // Save credentials in session
-        (new Session())->setEncrypted(self::$appName . '.auth.' . $this->guard, $user->getPrimary());
+        Session::make()->setEncrypted(self::$appName . '.auth.' . $this->guard, $user->getPrimary());
         return true;
     }
 
@@ -223,7 +223,7 @@ class Authenticator
         if (isset(self::$user[$this->guard])) return self::$user[$this->guard];
 
         // Get from session
-        $user = (new Session())->getEncrypted(self::$appName . '.auth.' . $this->guard);
+        $user = Session::make()->getEncrypted(self::$appName . '.auth.' . $this->guard);
 
         if (!is_null($user)) {
             // Create model instance

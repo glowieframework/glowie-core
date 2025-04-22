@@ -417,15 +417,16 @@ class Authorizator
      */
     public function toAuthenticator()
     {
+        $session = new Session();
         $user = $this->getUser();
         Authenticator::setUser($this->guard, $user);
 
         if (!$user) {
-            (new Session())->remove(self::$appName . '.auth.' . $this->guard);
+            $session->remove(self::$appName . '.auth.' . $this->guard);
             return false;
         }
 
-        (new Session())->setEncrypted(self::$appName . '.auth.' . $this->guard, $user->getPrimary());
+        $session->setEncrypted(self::$appName . '.auth.' . $this->guard, $user->getPrimary());
         return true;
     }
 

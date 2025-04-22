@@ -401,7 +401,7 @@ class Response
      */
     public function withFlash(string $key, $value)
     {
-        (new Session())->setFlash($key, $value);
+        Session::make()->setFlash($key, $value);
         return $this;
     }
 
