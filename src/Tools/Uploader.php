@@ -3,7 +3,6 @@
 namespace Glowie\Core\Tools;
 
 use Util;
-use Closure;
 use Glowie\Core\Element;
 use Glowie\Core\Exception\FileException;
 
@@ -125,7 +124,7 @@ class Uploader
 
     /**
      * Custom naming handler function.
-     * @var Closure|null
+     * @var callable|null
      */
     private $namingHandler = null;
 
@@ -220,11 +219,11 @@ class Uploader
 
     /**
      * Sets a custom naming handler function for generating filenames.
-     * @param Closure|null $callback A closure with the naming handler. It receives the original filename as a parameter.\
+     * @param callable|null $callback A function with the naming handler. It receives the original filename as a parameter.\
      * You can also pass `null` to use the default generator.
      * @return Uploader Current Uploader instance for nested calls.
      */
-    public function setNamingHandler(?Closure $callback)
+    public function setNamingHandler(?callable $callback)
     {
         $this->namingHandler = $callback;
         return $this;
@@ -455,7 +454,7 @@ class Uploader
      */
     private function generateFilename(string $filename, int $key = 0)
     {
-        if ($this->namingHandler) {
+        if (!is_null($this->namingHandler)) {
             $filename = call_user_func_array($this->namingHandler, [$filename, $key]);
         } else {
             $ext = $this->getExtension($filename);

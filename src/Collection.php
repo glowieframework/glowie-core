@@ -2,11 +2,10 @@
 
 namespace Glowie\Core;
 
+use Glowie\Core\Tools\Validator;
 use ArrayAccess;
 use Countable;
 use JsonSerializable;
-use Closure;
-use Glowie\Core\Tools\Validator;
 use Iterator;
 use Util;
 
@@ -394,10 +393,10 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
 
     /**
      * Filters the Collection with a truth test.
-     * @param Closure $callback Function to check in the data, receives the value and key of each item.
+     * @param callable $callback Function to check in the data, receives the value and key of each item.
      * @return Collection Returns a new Collection with the filtered data.
      */
-    public function filter(Closure $callback)
+    public function filter(callable $callback)
     {
         return new Collection(array_filter($this->__data, $callback, ARRAY_FILTER_USE_BOTH));
     }
@@ -555,13 +554,13 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     /**
      * Gets the difference between two Collections using only its values.
      * @param Collection $compare Collection to be compared with.
-     * @param Closure $callback (Optional) Custom comparison function callback.
+     * @param callable|null $callback (Optional) Custom comparison function callback.
      * @return Collection Returns a new Collection containing the difference.
      */
-    public function diff(Collection $compare, ?Closure $callback)
+    public function diff(Collection $compare, ?callable $callback)
     {
         $compare = $compare->toArray();
-        if ($callback) {
+        if (!is_null($callback)) {
             return new Collection(array_udiff($this->__data, $compare, $callback));
         } else {
             return new Collection(array_diff($this->__data, $compare));
@@ -571,13 +570,13 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     /**
      * Gets the difference between two Collections using its keys and values.
      * @param Collection $compare Collection to be compared with.
-     * @param Closure $callback (Optional) Custom comparison function callback.
+     * @param callable|null $callback (Optional) Custom comparison function callback.
      * @return Collection Returns a new Collection containing the difference.
      */
-    public function diffAssoc(Collection $compare, ?Closure $callback)
+    public function diffAssoc(Collection $compare, ?callable $callback)
     {
         $compare = $compare->toArray();
-        if ($callback) {
+        if (!is_null($callback)) {
             return new Collection(array_diff_uassoc($this->__data, $compare, $callback));
         } else {
             return new Collection(array_diff_assoc($this->__data, $compare));
@@ -587,13 +586,13 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     /**
      * Gets the difference between two Collections using only its keys.
      * @param Collection $compare Collection to be compared with.
-     * @param Closure $callback (Optional) Custom comparison function callback.
+     * @param callable|null $callback (Optional) Custom comparison function callback.
      * @return Collection Returns a new Collection containing the difference.
      */
-    public function diffKeys(Collection $compare, ?Closure $callback)
+    public function diffKeys(Collection $compare, ?callable $callback)
     {
         $compare = $compare->toArray();
-        if ($callback) {
+        if (!is_null($callback)) {
             return new Collection(array_diff_ukey($this->__data, $compare, $callback));
         } else {
             return new Collection(array_diff_key($this->__data, $compare));
@@ -690,13 +689,13 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
 
     /**
      * Iterates through each item of the Collection. This mutates the original Collection values.
-     * @param Closure $callback Function to be called. Returning `false` will stop the iteration.
+     * @param callable $callback Function to be called. Returning `false` will stop the iteration.
      * @return Collection Current Collection instance for nested calls.
      */
-    public function each(Closure $callback)
+    public function each(callable $callback)
     {
         foreach ($this->__data as $key => &$value) {
-            $result = $callback($value, $key);
+            $result = call_user_func_array($callback, [$value, $key]);
             if ($result === false) break;
         }
         return $this;
@@ -704,10 +703,10 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
 
     /**
      * Applies a function to all items of the Collection. This does not mutate the original Collection.
-     * @param Closure $callback Function to be called.
+     * @param callable $callback Function to be called.
      * @return Collection Returns a new Collection with the new data.
      */
-    public function map(Closure $callback)
+    public function map(callable $callback)
     {
         $data = array_map($callback, $this->__data);
         return new Collection($data);
@@ -715,14 +714,14 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
 
     /**
      * Checks if any item in the Collection passes a truth test.
-     * @param Closure $callback Function to be tested, should return a boolean.
+     * @param callable $callback Function to be tested, should return a boolean.
      * @return bool Returns the result of the test.
      */
-    public function some(Closure $callback)
+    public function some(callable $callback)
     {
         $result = false;
         foreach ($this->__data as $key => $value) {
-            $result = $callback($value, $key);
+            $result = call_user_func_array($callback, [$value, $key]);
             if ($result === true) break;
         }
         return $result;

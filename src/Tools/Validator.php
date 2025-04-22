@@ -5,7 +5,6 @@ namespace Glowie\Core\Tools;
 use Babel;
 use Util;
 use Exception;
-use Closure;
 use Glowie\Core\Collection;
 
 /**
@@ -45,9 +44,9 @@ class Validator
     /**
      * Sets a custom validation rule. This rule is persisted through all `Validator` instances.
      * @param string $rule Custom rule name.
-     * @param Closure $callback A validation function that receives the data as the first parameter and returns a boolean if valid.
+     * @param callable $callback A validation function that receives the data as the first parameter and returns a boolean if valid.
      */
-    public static function setCustomRule(string $rule, Closure $callback)
+    public static function setCustomRule(string $rule, callable $callback)
     {
         self::$custom[$rule] = $callback;
     }
@@ -178,16 +177,15 @@ class Validator
 
             // Check type of rule
             switch ($type) {
-                // [OPTIONAL] - Checks if variable exists before checking the next rules
-                case 'optional':
+                // [NULLABLE] - Checks if variable exists before checking the next rules
+                case 'nullable':
                     if (!isset($data) || Util::isEmpty($data)) break 2;
                     break;
 
                 // [CUSTOM] - Checks for custom rule
                 case 'custom':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "custom" rule');
-                    if (empty(self::$custom[$rule[1]])) throw new Exception('Validator: Custom rule "' . $rule[1] . '" does not exist');
-                    if (!self::$custom[$rule[1]]($data)) $result[] = $rule[1];
+                    if (!self::callCustomRule($rule[1], $data)) $result[] = $rule[1];
                     break;
 
                 // [REQUIRED] - Checks if variable is not empty or null
@@ -220,7 +218,7 @@ class Validator
                 case 'between':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "between" rule');
                     $rule[1] = explode(',', $rule[1], 2);
-                    if (count($rule[1]) != 2) throw new Exception('Validator: Between rule must have two values for min and max');
+                    if (count($rule[1]) !== 2) throw new Exception('Validator: Between rule must have two values for min and max');
                     $size = Util::getSize($data);
                     if ($size < (int)$rule[1][0] || $size > (int)$rule[1][1]) $result[] = 'between';
                     break;
@@ -423,5 +421,18 @@ class Validator
         // Stores and returns the result
         $this->errors = $result;
         return empty($result) ? true : false;
+    }
+
+    /**
+     * Calls a custom rule from the Validator instance or from a callable.
+     * @param string $rule Custom rule name or callable (e.g. `MyValidator::validate`).
+     * @param mixed $data Data to be validated.
+     * @return boolean Returns the validation result.
+     */
+    private static function callCustomRule(string $rule, $data)
+    {
+        $callback =  self::$custom[$rule] ?? $rule;
+        if (!is_callable($callback)) throw new Exception('Validator: Custom rule "' . $rule . '" does not exist');
+        return call_user_func_array($callback, [$data]);
     }
 }

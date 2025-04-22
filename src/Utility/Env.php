@@ -61,9 +61,9 @@ class Env
         $value = trim($value);
 
         // Checks for boolean or null values
-        if (strtolower($value) === 'false') return false;
-        if (strtolower($value) === 'true') return true;
-        if (strtolower($value) === 'null') return null;
+        if (mb_strtolower($value) === 'false') return false;
+        if (mb_strtolower($value) === 'true') return true;
+        if (mb_strtolower($value) === 'null') return null;
 
         // Strips enquoted values
         if ((Util::startsWith($value, '"') && Util::endsWith($value, '"')) || (Util::startsWith($value, "'") && Util::endsWith($value, "'"))) {

@@ -196,11 +196,11 @@ class Util
     /**
      * Tries to run a function until the number of attempts is reached.
      * @param int $attempts Maximum number of attempts.
-     * @param Closure $callback Function to be called.
+     * @param callable $callback Function to be called.
      * @param int $sleep (Optional) Delay between each try (in milliseconds).
      * @return mixed Returns the function result on success.
      */
-    public static function retry(int $attempts, Closure $callback, int $sleep = 100)
+    public static function retry(int $attempts, callable $callback, int $sleep = 100)
     {
         try {
             return call_user_func($callback);

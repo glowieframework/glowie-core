@@ -9,7 +9,6 @@ use Glowie\Core\Collection;
 use Util;
 use Exception;
 use JsonSerializable;
-use Closure;
 use DateTime;
 
 /**
@@ -783,10 +782,10 @@ class Model extends Kraken implements JsonSerializable
 
     /**
      * Sets a condition to the last relation created in the Model.
-     * @param Closure $callback A function that receives the related model instance and joining value as references.
+     * @param callable $callback A function that receives the related model instance and joining value as references.
      * @return $this Current Model instance for nested calls.
      */
-    public function relationsWhen(Closure $callback)
+    public function relationsWhen(callable $callback)
     {
         if (empty($this->_relations)) throw new Exception('Model: No relation created to be modified');
         $i = array_key_last($this->_relations);
@@ -799,11 +798,11 @@ class Model extends Kraken implements JsonSerializable
      * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
      * @param string $column (Optional) Foreign key column name from the related model. Leave empty for auto.
      * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
-     * @param Closure|null $callback (Optional) A function to interact with the related model before querying the relationship.\
+     * @param callable|null $callback (Optional) A function to interact with the related model before querying the relationship.\
      * It receives the related Model instance as the first parameter, and the current row as an associative array.
      * @return $this Current Model instance for nested calls.
      */
-    public function hasOne(string $model, string $column = '', string $name = '', ?Closure $callback = null)
+    public function hasOne(string $model, string $column = '', string $name = '', ?callable $callback = null)
     {
         // Get primary key and names
         $primary = $this->getPrimaryName();
@@ -828,11 +827,11 @@ class Model extends Kraken implements JsonSerializable
      * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
      * @param string $column (Optional) Foreign key column name from the related model. Leave empty for auto.
      * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
-     * @param Closure|null $callback (Optional) A function to interact with the related model before querying the relationship.\
+     * @param callable|null $callback (Optional) A function to interact with the related model before querying the relationship.\
      * It receives the related Model instance as the first parameter, and the current row as an associative array.
      * @return $this Current Model instance for nested calls.
      */
-    public function hasMany(string $model, string $column = '', string $name = '', ?Closure $callback = null)
+    public function hasMany(string $model, string $column = '', string $name = '', ?callable $callback = null)
     {
         // Get primary key and names
         $primary = $this->getPrimaryName();
@@ -857,11 +856,11 @@ class Model extends Kraken implements JsonSerializable
      * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
      * @param string $column (Optional) Foreign key column name from the current model. Leave empty for auto.
      * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
-     * @param Closure|null $callback (Optional) A function to interact with the related model before querying the relationship.\
+     * @param callable|null $callback (Optional) A function to interact with the related model before querying the relationship.\
      * It receives the related Model instance as the first parameter, and the current row as an associative array.
      * @return $this Current Model instance for nested calls.
      */
-    public function belongsTo(string $model, string $column = '', string $name = '', ?Closure $callback = null)
+    public function belongsTo(string $model, string $column = '', string $name = '', ?callable $callback = null)
     {
         // Get primary key and names
         $primary = (new $model([], false))->getPrimaryName();
@@ -888,11 +887,11 @@ class Model extends Kraken implements JsonSerializable
      * @param string $column (Optional) Foreign key column name from the current model. Leave empty for auto.
      * @param string $foreign (Optional) Foreign key column name from the target model. Leave empty for auto.
      * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
-     * @param Closure|null $callback (Optional) A function to interact with the related model before querying the relationship.\
+     * @param callable|null $callback (Optional) A function to interact with the related model before querying the relationship.\
      * It receives the related Model instance as the first parameter, the current row as an associative array and an array with the pivot results.
      * @return $this Current Model instance for nested calls.
      */
-    public function belongsToMany(string $model, string $pivot = '', string $column = '', string $foreign = '', string $name = '', ?Closure $callback = null)
+    public function belongsToMany(string $model, string $pivot = '', string $column = '', string $foreign = '', string $name = '', ?callable $callback = null)
     {
         // Get primary key and names
         $instance = new $model([], false);

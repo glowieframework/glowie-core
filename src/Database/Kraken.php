@@ -1816,10 +1816,10 @@ class Kraken
     /**
      * Fetches all results from a SELECT query in small chunks of items.
      * @param int $items Number of items to fetch per chunk.
-     * @param Closure $callback Closure to call in each chunk. Returning `false` from this closure will stop next queries.
+     * @param callable $callback Function to call in each chunk. Returning `false` from this function will stop next queries.
      * @throws QueryException Throws an exception if the query fails.
      */
-    public function chunk(int $items, Closure $callback)
+    public function chunk(int $items, callable $callback)
     {
         // Backup current query state
         $query = $this->backupQuery();
@@ -1839,10 +1839,10 @@ class Kraken
             $this->limit($i * $items, $items);
             $results = $this->fetchAll();
 
-            // Calls the closure and stores the return
+            // Calls the function and stores the return
             $return = call_user_func_array($callback, [$results]);
 
-            // If the closure returns false, break the loop
+            // If the function returns false, break the loop
             if ($return === false) break;
         }
     }

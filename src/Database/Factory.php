@@ -2,7 +2,6 @@
 
 namespace Glowie\Core\Database;
 
-use Closure;
 use mysqli;
 
 /**
@@ -52,9 +51,9 @@ class Factory
 
     /**
      * Setup a query listener.
-     * @param Closure $callback Listener callback function. It receives the query, bindings, duration (ms) and status as parameters.
+     * @param callable $callback Listener callback function. It receives the query, bindings, duration (ms) and status as parameters.
      */
-    public static function listen(Closure $callback)
+    public static function listen(callable $callback)
     {
         self::$listeners[] = $callback;
     }
@@ -69,6 +68,9 @@ class Factory
     public static function notifyListeners(string $query, array $bindings, float $time, bool $status)
     {
         if (empty(self::$listeners)) return;
-        foreach (self::$listeners as $item) call_user_func_array($item, [$query, $bindings, round($time * 1000, 2), $status]);
+
+        foreach (self::$listeners as $item) {
+            call_user_func_array($item, [$query, $bindings, round($time * 1000, 2), $status]);
+        }
     }
 }
