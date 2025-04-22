@@ -173,12 +173,14 @@ class Validator
 
             // Parse rule parameters, if available
             $rule = explode(':', $rule, 2);
-            $type = strtolower($rule[0]);
+            $type = mb_strtolower($rule[0]);
 
             // Check type of rule
             switch ($type) {
                 // [NULLABLE] - Checks if variable exists before checking the next rules
                 case 'nullable':
+                case 'optional':
+                case 'sometimes':
                     if (!isset($data) || Util::isEmpty($data)) break 2;
                     break;
 
@@ -243,13 +245,15 @@ class Validator
                     if (!is_numeric($data)) $result[] = 'numeric';
                     break;
 
-                // [ALPHANUMERIC] - Checks if variable is alphanumeric
+                // [ALPHA_NUMERIC] - Checks if variable is alphanumeric
                 case 'alphanumeric':
+                case 'alpha_numeric':
                     if (!is_string($data) || !preg_match('/^[a-z0-9]+$/i', $data)) $result[] = 'alphanumeric';
                     break;
 
-                // [ALPHADASH] - Checks if variable is alphanumeric or has dashes/underscores
+                // [ALPHA_DASH] - Checks if variable is alphanumeric or has dashes/underscores
                 case 'alphadash':
+                case 'alpha_dash':
                     if (!is_string($data) || !preg_match('/^[a-z0-9-_]+$/i', $data)) $result[] = 'alphadash';
                     break;
 
@@ -311,8 +315,9 @@ class Validator
                     if (!is_string($data) || !is_file($data)) $result[] = 'file';
                     break;
 
-                // [NOTFILE] - Check if path is not an existing file
+                // [NOT_FILE] - Check if path is not an existing file
                 case 'notfile':
+                case 'not_file':
                     if (is_string($data) && is_file($data)) $result[] = 'notfile';
                     break;
 
@@ -326,8 +331,9 @@ class Validator
                     if (!is_string($data) || !is_dir($data)) $result[] = 'directory';
                     break;
 
-                // [NOTDIRECTORY] - Checks if path is not an existing directory
+                // [NOT_DIRECTORY] - Checks if path is not an existing directory
                 case 'notdirectory':
+                case 'not_directory':
                     if (is_string($data) && !is_dir($data)) $result[] = 'notdirectory';
                     break;
 
@@ -337,8 +343,9 @@ class Validator
                     if (!is_string($data) || !is_file($data) || !in_array(mime_content_type($data), explode(',', $rule[1]))) $result[] = 'mime';
                     break;
 
-                // [NOTMIME] - Checks if file is not a list of mime types
+                // [NOT_MIME] - Checks if file is not a list of mime types
                 case 'notmime':
+                case 'not_mime':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "notmime" rule');
                     if (!is_string($data) || !is_file($data) || in_array(mime_content_type($data), explode(',', $rule[1]))) $result[] = 'notmime';
                     break;
@@ -349,8 +356,9 @@ class Validator
                     if (!is_string($data) || !in_array(trim($data), explode(',', $rule[1]))) $result[] = 'in';
                     break;
 
-                // [NOTIN] - Checks if string is not in a list of values
+                // [NOT_IN] - Checks if string is not in a list of values
                 case 'notin':
+                case 'not_in':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "notin" rule');
                     if (!is_string($data) || in_array(trim($data), explode(',', $rule[1]))) $result[] = 'notin';
                     break;
@@ -402,16 +410,23 @@ class Validator
                     if (isset($data) || !Util::isEmpty($data)) $result[] = 'empty';
                     break;
 
-                // [ENDSWITH] - Check if variable ends with string
+                // [ENDS_WITH] - Check if variable ends with string
                 case 'endswith':
+                case 'ends_with':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "endswith" rule');
                     if (!is_string($data) || Util::endsWith($data, $rule[1])) $result[] = 'endswith';
                     break;
 
-                // [STARTSWITH] - Check if variable starts with string
+                // [STARTS_WITH] - Check if variable starts with string
                 case 'startswith':
+                case 'starts_with':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "startswith" rule');
                     if (!is_string($data) || Util::startsWith($data, $rule[1])) $result[] = 'startswith';
+                    break;
+
+                // Fallback to custom rules
+                default:
+                    if (!self::callCustomRule($type, $data)) $result[] = $type;
                     break;
             }
 
@@ -432,7 +447,7 @@ class Validator
     private static function callCustomRule(string $rule, $data)
     {
         $callback =  self::$custom[$rule] ?? $rule;
-        if (!is_callable($callback)) throw new Exception('Validator: Custom rule "' . $rule . '" does not exist');
+        if (!is_callable($callback)) throw new Exception('Validator: Rule "' . $rule . '" does not exist');
         return call_user_func_array($callback, [$data]);
     }
 }
