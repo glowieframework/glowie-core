@@ -75,12 +75,18 @@ class Factory
      */
     public static function createConnection(string $connection, array $database)
     {
-        // Validate common settings
-        if (empty($database['host'])) throw new DatabaseException($database, 'Database connection "' . $connection . '" host not defined');
-        if (empty($database['username'])) throw new DatabaseException($database, 'Database connection "' . $connection . '" username not defined');
-        if (empty($database['db'])) throw new DatabaseException($database, 'Database connection "' . $connection . '" db name not defined');
+        // Set default settings
         if (empty($database['driver'])) $database['driver'] = 'mysql';
         if (empty($database['charset'])) $database['charset'] = 'utf8';
+
+        // Validate common settings
+        if ($database['driver'] === 'sqlite') {
+            if (empty($database['path'])) throw new DatabaseException($database, 'Database connection "' . $connection . '" path not defined');
+        } else {
+            if (empty($database['host'])) throw new DatabaseException($database, 'Database connection "' . $connection . '" host not defined');
+            if (empty($database['username'])) throw new DatabaseException($database, 'Database connection "' . $connection . '" username not defined');
+            if (empty($database['db'])) throw new DatabaseException($database, 'Database connection "' . $connection . '" db not defined');
+        }
 
         // Gets the connection driver
         try {
@@ -93,8 +99,16 @@ class Factory
                     $pdo = self::createPgSqlConnection($database);
                     break;
 
+                case 'sqlite':
+                    $pdo = self::createSqliteConnection($database);
+                    break;
+
+                case 'sqlsrv':
+                    $pdo = self::createSqlSrvConnection($database);
+                    break;
+
                 default:
-                    throw new Exception('Database driver "' . $database['driver'] . '" does not exist');
+                    throw new Exception('Database driver "' . $database['driver'] . '" is not available');
                     break;
             }
 
@@ -119,26 +133,22 @@ class Factory
         // Creates the connection URL
         $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=%s', $database['host'], $database['port'], $database['db'], $database['charset']);
 
+        // Sets the strict mode
+        if (!empty($database['strict'])) {
+            $initQuery = 'SET SESSION sql_mode="ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"';
+        } else {
+            $initQuery = 'SET SESSION sql_mode="ALLOW_INVALID_DATES,NO_ENGINE_SUBSTITUTION"';
+        }
+
         // Passes the DB options
         $options = array_replace([
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::MYSQL_ATTR_INIT_COMMAND => $initQuery
         ], $database['options'] ?? []);
 
-        // Sets the charset
-        $initQuery = ['SET NAMES "' . $database['charset'] . '"'];
-
-        // Sets the strict mode
-        if (!empty($database['strict'])) {
-            $initQuery[] = 'SET SESSION sql_mode="ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"';
-        } else {
-            $initQuery[] = 'SET SESSION sql_mode="ALLOW_INVALID_DATES,NO_ENGINE_SUBSTITUTION"';
-        }
-
-        // Runs the init query and returns the PDO
-        $pdo = new PDO($dsn, $database['username'], $database['password'], $options);
-        @$pdo->exec(implode('; ', $initQuery));
-        return $pdo;
+        // Returns the connection
+        return new PDO($dsn, $database['username'], $database['password'], $options);
     }
 
     /**
@@ -153,7 +163,7 @@ class Factory
         if (empty($database['port'])) $database['port'] = 5432;
 
         // Creates the connection URL
-        $dsn = sprintf('pgsql:host=%s;port=%d;dbname=%s', $database['host'], $database['port'], $database['db']);
+        $dsn = sprintf("pgsql:host=%s;port=%d;dbname=%s;options='--client_encoding=%s'", $database['host'], $database['port'], $database['db'], $database['charset']);
 
         // Passes the DB options
         $options = array_replace([
@@ -161,12 +171,58 @@ class Factory
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
         ], $database['options'] ?? []);
 
-        // Sets the charset
-        $initQuery = ['SET client_encoding TO "' . $database['charset'] . '"'];
+        // Returns the connection
+        return new PDO($dsn, $database['username'], $database['password'], $options);
+    }
 
-        // Runs the init query and returns the PDO
-        $pdo = new PDO($dsn, $database['username'], $database['password'], $options);
-        @$pdo->exec(implode('; ', $initQuery));
-        return $pdo;
+    /**
+     * Creates a Sqlite PDO connection.
+     * @param array $database Associative array with the database settings.
+     * @return PDO Returns the connection.
+     */
+    private static function createSqliteConnection(array $database)
+    {
+        // Validate sqlite settings
+        if (!extension_loaded('pdo_sqlite')) throw new Exception('Missing "pdo_sqlite" extension in your PHP installation');
+
+        // Creates the connection URL
+        $dsn = 'sqlite:' . $database['path'];
+
+        // Passes the DB options
+        $options = array_replace([
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+        ], $database['options'] ?? []);
+
+        // Returns the connection
+        return new PDO($dsn, null, null, $options);
+    }
+
+    /**
+     * Creates a SqlSrv PDO connection.
+     * @param array $database Associative array with the database settings.
+     * @return PDO Returns the connection.
+     */
+    private static function createSqlSrvConnection(array $database)
+    {
+        // Validate sqlsrv settings
+        if (!extension_loaded('pdo_sqlsrv') && !extension_loaded('pdo_dblib')) throw new Exception('Missing "pdo_sqlsrv" or "pdo_dblib" extensions in your PHP installation');
+        if (empty($database['port'])) $database['port'] = 1433;
+
+        // Creates the connection URL
+        if (extension_loaded('pdo_sqlsrv')) {
+            $dsn = sprintf('sqlsrv:Server=%s,%d;Database=%s', $database['host'], $database['port'], $database['db']);
+        } else {
+            $dsn = sprintf('dblib:host=%s:%d;dbname=%s;charset=%s', $database['host'], $database['port'], $database['db'], $database['charset']);
+        }
+
+        // Passes the DB options
+        $options = array_replace([
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+        ], $database['options'] ?? []);
+
+        // Returns the connection
+        return new PDO($dsn, $database['username'], $database['password'], $options);
     }
 }
