@@ -149,6 +149,15 @@ trait DatabaseTrait
     }
 
     /**
+     * Gets the current database driver name.
+     * @return string Returns the driver name.
+     */
+    public function getDriver()
+    {
+        return $this->getConnection()->getAttribute(PDO::ATTR_DRIVER_NAME);
+    }
+
+    /**
      * Escapes special characters in a string, preventing SQL injections.
      * @param mixed $string String to escape.
      * @return string Escaped string.

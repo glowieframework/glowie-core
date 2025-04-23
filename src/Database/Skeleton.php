@@ -233,6 +233,12 @@ class Skeleton
     private $_modifiers;
 
     /**
+     * Post creation scripts.
+     * @var array
+     */
+    private $_postCreate;
+
+    /**
      * Creates a new Skeleton database instance.
      * @param string $table (Optional) Table name to set as default.
      * @param string $database (Optional) Database connection name (from your app configuration).
@@ -299,10 +305,24 @@ class Skeleton
      */
     public function autoIncrement(string $name, string $type = self::TYPE_BIG_INTEGER_UNSIGNED, $size = null)
     {
-        $type = strtoupper($type);
-        $field = "`{$name}` {$type}";
-        if (!is_null($size)) $field .= "({$size})";
-        $this->_autoincrement = "{$field} NOT NULL";
+        switch ($this->getDriver()) {
+            case 'sqlite':
+                $query = "`{$name}` INTEGER AUTOINCREMENT";
+                break;
+
+            case 'pgsql':
+                $query = "\"{$name}\" SERIAL";
+                break;
+
+            default:
+                $type = strtoupper($type);
+                $field = "`{$name}` {$type}";
+                if (!is_null($size)) $field .= "({$size})";
+                $query = "{$field} NOT NULL AUTO_INCREMENT";
+                break;
+        }
+
+        $this->_autoincrement = $query;
         return $this;
     }
 
@@ -314,8 +334,8 @@ class Skeleton
      */
     public function createTimestamps(string $createdField = 'created_at', string $updatedField = 'updated_at')
     {
-        $this->createColumn($createdField, self::TYPE_DATETIME, null, self::raw('NOW()'));
-        $this->createColumn($updatedField, self::TYPE_DATETIME, null, self::raw('NOW()'));
+        $this->createColumn($createdField, self::TYPE_DATETIME, null, $this->getNowFunction());
+        $this->createColumn($updatedField, self::TYPE_DATETIME, null, $this->getNowFunction());
         return $this;
     }
 
@@ -327,8 +347,8 @@ class Skeleton
      */
     public function addTimestamps(string $createdField = 'created_at', string $updatedField = 'updated_at')
     {
-        $this->addColumn($createdField, self::TYPE_DATETIME, null, self::raw('NOW()'));
-        $this->addColumn($updatedField, self::TYPE_DATETIME, null, self::raw('NOW()'));
+        $this->addColumn($createdField, self::TYPE_DATETIME, null, $this->getNowFunction());
+        $this->addColumn($updatedField, self::TYPE_DATETIME, null, $this->getNowFunction());
         return $this;
     }
 
@@ -563,7 +583,7 @@ class Skeleton
      */
     public function defaultNow()
     {
-        return $this->default(self::raw('NOW()'));
+        return $this->default($this->getNowFunction());
     }
 
     /**
@@ -648,6 +668,9 @@ class Skeleton
      */
     private function modifyColumns(array $data)
     {
+        // Database driver
+        $driver = $this->getDriver();
+
         // Column name
         switch ($data['operation']) {
             case 'create':
@@ -709,19 +732,22 @@ class Skeleton
                 }
             }
 
-            // Charset
-            if (!empty($data['charset'])) {
-                $field .= " CHARACTER SET '{$data['charset']}'";
-            }
+            // Specific rules for MySQL driver only
+            if ($driver === 'mysql') {
+                // Charset
+                if (!empty($data['charset'])) {
+                    $field .= " CHARACTER SET '{$data['charset']}'";
+                }
 
-            // Collation
-            if (!empty($data['collation'])) {
-                $field .= " COLLATE '{$data['collation']}'";
-            }
+                // Collation
+                if (!empty($data['collation'])) {
+                    $field .= " COLLATE '{$data['collation']}'";
+                }
 
-            // After
-            if ($data['operation'] !== 'create') {
-                if (!empty($data['after'])) $field .= " AFTER `{$data['after']}`";
+                // After
+                if ($data['operation'] !== 'create') {
+                    if (!empty($data['after'])) $field .= " AFTER `{$data['after']}`";
+                }
             }
         }
 
@@ -1025,8 +1051,25 @@ class Skeleton
      */
     public function columnExists(string $column)
     {
-        $this->_raw = "SHOW COLUMNS FROM `{$this->_table}` LIKE \"{$column}\"";
+        // Builds the query to the database driver
+        $driver = $this->getDriver();
+        switch ($driver) {
+            case 'sqlite':
+                $this->_raw = "PRAGMA table_info({$this->_table})";
+                break;
+            case 'pgsql':
+                $this->_raw = "SELECT column_name FROM information_schema.columns WHERE table_name = '{$this->_table}' AND column_name = '{$column}'";
+                break;
+            case 'sqlsrv':
+                $this->_raw = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{$this->_table}' AND COLUMN_NAME = '{$column}'";
+                break;
+            default:
+                $this->_raw = "SHOW COLUMNS FROM `{$this->_table}` LIKE \"{$column}\"";
+        }
+
+        // Returns the query result
         $result = $this->execute(true, false);
+        if ($driver === 'sqlite') return array_filter($result, fn($col) => $col['name'] === $column);
         return !empty($result);
     }
 
@@ -1037,8 +1080,25 @@ class Skeleton
      */
     public function tableExists(?string $table = null)
     {
+        // Checks if the table name is empty
         if (Util::isEmpty($table)) $table = $this->_table;
-        $this->_raw = "SHOW TABLES LIKE \"{$table}\"";
+
+        // Builds the query to the database driver
+        switch ($this->getDriver()) {
+            case 'sqlite':
+                $this->_raw = "SELECT name FROM sqlite_master WHERE type='table' AND name='{$table}'";
+                break;
+            case 'pgsql':
+                $this->_raw = "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public' AND tablename='{$table}'";
+                break;
+            case 'sqlsrv':
+                $this->_raw = "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '{$table}'";
+                break;
+            default:
+                $this->_raw = "SHOW TABLES LIKE '{$table}'";
+        }
+
+        // Returns the query result
         $result = $this->execute(true, false);
         return !empty($result);
     }
@@ -1064,6 +1124,7 @@ class Skeleton
         $this->_database = '';
         $this->_raw = '';
         $this->_prepared = [];
+        $this->_postCreate = [];
         return $this;
     }
 
@@ -1076,7 +1137,8 @@ class Skeleton
         // Checks for raw query
         if (!Util::isEmpty($this->_raw)) return $this->_raw;
 
-        // Gets the instruction
+        // Gets the instruction and database driver
+        $driver = $this->getDriver();
         $query = $this->_instruction;
 
         // Gets EXISTS
@@ -1103,7 +1165,7 @@ class Skeleton
             if (!Util::isEmpty($this->_like)) $instructions[] = "LIKE `{$this->_like}`";
 
             // Auto increment
-            if (!Util::isEmpty($this->_autoincrement)) $instructions[] = "{$this->_autoincrement} AUTO_INCREMENT";
+            if (!Util::isEmpty($this->_autoincrement)) $instructions[] = $this->_autoincrement;
 
             // Fields
             if (!empty($this->_fields)) $instructions = array_merge($instructions, $this->_fields);
@@ -1116,17 +1178,31 @@ class Skeleton
 
             // Unique indexes
             if (!empty($this->_unique)) {
-                foreach ($this->_unique as $name => $unique) {
-                    $fields = implode(', ', $unique);
-                    $instructions[] = "UNIQUE INDEX `{$name}` ({$fields})";
+                if ($driver === 'sqlite') {
+                    foreach ($this->_unique as $name => $unique) {
+                        $fields = implode(', ', $unique);
+                        $this->_postCreate[] = "CREATE UNIQUE INDEX `{$name}` ON `{$this->_table}` ({$fields})";
+                    }
+                } else {
+                    foreach ($this->_unique as $name => $unique) {
+                        $fields = implode(', ', $unique);
+                        $instructions[] = "UNIQUE INDEX `{$name}` ({$fields})";
+                    }
                 }
             }
 
             // Indexes
             if (!empty($this->_index)) {
-                foreach ($this->_index as $name => $key) {
-                    $fields = implode(', ', $key);
-                    $instructions[] = "INDEX `{$name}` ({$fields})";
+                if ($driver === 'sqlite') {
+                    foreach ($this->_index as $name => $key) {
+                        $fields = implode(', ', $key);
+                        $this->_postCreate[] = "CREATE INDEX `{$name}` ON `{$this->_table}` ({$fields})";
+                    }
+                } else {
+                    foreach ($this->_index as $name => $key) {
+                        $fields = implode(', ', $key);
+                        $instructions[] = "INDEX `{$name}` ({$fields})";
+                    }
                 }
             }
 
@@ -1140,7 +1216,7 @@ class Skeleton
             $query .= ')';
 
             // Collate
-            if (!Util::isEmpty($this->_collate)) {
+            if ($driver === 'mysql' && !Util::isEmpty($this->_collate)) {
                 $query .= " COLLATE=\"{$this->_collate}\"";
             }
         }
@@ -1152,7 +1228,7 @@ class Skeleton
 
             // Auto increment
             if (!Util::isEmpty($this->_autoincrement)) {
-                $instructions[] = "ADD COLUMN {$this->_autoincrement} AUTO_INCREMENT";
+                $instructions[] = "ADD COLUMN {$this->_autoincrement}";
             }
 
             // Fields
@@ -1191,7 +1267,7 @@ class Skeleton
             }
 
             // Collate
-            if (!Util::isEmpty($this->_collate)) {
+            if ($driver === 'mysql' && !Util::isEmpty($this->_collate)) {
                 $instructions[] = "COLLATE=\"{$this->_collate}\"";
             }
 
@@ -1207,5 +1283,30 @@ class Skeleton
 
         // Returns the result
         return $query;
+    }
+
+    /**
+     * Gets the `NOW()` function by the database driver.
+     * @return stdClass Returns the raw representation of the function.
+     */
+    private function getNowFunction()
+    {
+        switch ($this->getDriver()) {
+            case 'sqlite':
+                return self::raw("datetime('now')");
+                break;
+
+            case 'pgsql':
+                return self::raw('CURRENT_TIMESTAMP');
+                break;
+
+            case 'sqlsrv':
+                return self::raw('GETDATE()');
+                break;
+
+            default:
+                return self::raw('NOW()');
+                break;
+        }
     }
 }

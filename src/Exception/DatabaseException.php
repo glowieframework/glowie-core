@@ -32,7 +32,7 @@ class DatabaseException extends Exception
      */
     public function __construct(array $database, string $message = "", $code = 0, ?Throwable $previous = null)
     {
-        parent::__construct('Database: ' . $message, $code, $previous);
+        parent::__construct('DB: ' . $message, (int)$code, $previous);
         $this->database = $database;
     }
 

@@ -32,7 +32,7 @@ class QueryException extends Exception
      */
     public function __construct(string $query, string $message = "", $code = 0, ?Throwable $previous = null)
     {
-        parent::__construct(sprintf('SQL: [SQL %s] %s (%s)', $code, $message, $query), $code, $previous);
+        parent::__construct($message . ' (' . $query . ')', (int)$code, $previous);
         $this->query = $query;
     }
 
