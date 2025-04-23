@@ -4,16 +4,16 @@ namespace Glowie\Core\Traits;
 
 use Exception;
 use Throwable;
-use mysqli;
 use stdClass;
 use Closure;
-use mysqli_sql_exception;
-use mysqli_result;
 use Config;
+use PDO;
+use PDOException;
 use Glowie\Core\Exception\QueryException;
 use Glowie\Core\Element;
 use Glowie\Core\Database\Factory;
 use Glowie\Core\Exception\DatabaseException;
+use Util;
 
 /**
  * Database handler trait for Glowie application.
@@ -71,6 +71,18 @@ trait DatabaseTrait
     private $_returnAssoc = false;
 
     /**
+     * Last insert ID.
+     * @var int|null
+     */
+    private $_lastInsertId = null;
+
+    /**
+     * Affected rows count.
+     * @var int
+     */
+    private $_affectedRows = 0;
+
+    /**
      * Returns next results as associative arrays.
      * @return $this Current instance for nested calls.
      */
@@ -116,7 +128,7 @@ trait DatabaseTrait
 
     /**
      * Returns the current database connection handler.
-     * @return mysqli|null The connection instance or null on errors.
+     * @return PDO|null The connection instance or null on errors.
      */
     public function getConnection()
     {
@@ -128,37 +140,12 @@ trait DatabaseTrait
      */
     public function reconnect()
     {
-        // Checks for mysqli extension
-        if (!extension_loaded('mysqli')) throw new Exception('DB: Missing "mysqli" extension in your PHP installation');
-
         // Gets connection configuration
         $database = Config::get("database.{$this->_connection}");
         if (empty($database)) throw new DatabaseException([], 'Database connection setting "' . $this->_connection . '" not found in your app configuration');
 
-        // Validate settings
-        if (empty($database['host'])) throw new DatabaseException($database, 'Database connection "' . $this->_connection . '" host not defined');
-        if (empty($database['username'])) throw new DatabaseException($database, 'Database connection "' . $this->_connection . '" username not defined');
-        if (empty($database['db'])) throw new DatabaseException($database, 'Database connection "' . $this->_connection . '" name not defined');
-        if (empty($database['port'])) $database['port'] = 3306;
-        if (empty($database['charset'])) $database['charset'] = 'utf8';
-
-        // Saves the database connection
-        try {
-            // Creates the connection
-            Factory::setHandler($this->_connection, new mysqli($database['host'], $database['username'], $database['password'], $database['db'], $database['port']));
-
-            // Sets the charset
-            $this->getConnection()->set_charset($database['charset']);
-
-            // Sets the strict mode
-            if (!empty($database['strict'])) {
-                $this->query('SET SESSION sql_mode="ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"', false);
-            } else {
-                $this->query('SET SESSION sql_mode="ALLOW_INVALID_DATES,NO_ENGINE_SUBSTITUTION"', false);
-            }
-        } catch (Throwable $e) {
-            throw new DatabaseException($database, $e->getMessage(), $e->getCode(), $e);
-        }
+        // Creates the database connection
+        Factory::createConnection($this->_connection, $database);
     }
 
     /**
@@ -168,7 +155,7 @@ trait DatabaseTrait
      */
     public function escape($string)
     {
-        return $this->getConnection()->escape_string((string)$string);
+        return $this->getConnection()->quote((string)$string);
     }
 
     /**
@@ -221,7 +208,7 @@ trait DatabaseTrait
     {
         if ($this->_transaction) throw new Exception('DB: There is a pending transaction already running');
         $this->_transaction = true;
-        return $this->getConnection()->begin_transaction();
+        return $this->getConnection()->beginTransaction();
     }
 
     /**
@@ -302,91 +289,57 @@ trait DatabaseTrait
     private function execute(bool $returns = false, bool $returnsFirst = false)
     {
         try {
+            // Store query start time
+            $queryStart = microtime(true);
+
             // Run query or prepared statement
             if (!empty($this->_prepared)) {
-                $preparedQuery = $this->_prepared;
-                $stmt = $this->getConnection()->prepare($this->_prepared[0]);
-                $types = '';
-
-                // Prepared types checking
-                foreach ($this->_prepared[1] as $value) {
-                    switch (gettype($value)) {
-                        case 'integer':
-                            $types .= 'i';
-                            break;
-
-                        case 'double':
-                            $types .= 'd';
-                            break;
-
-                        default:
-                            $types .= 's';
-                            break;
-                    }
-                }
-
-                $stmt->bind_param($types, ...$this->_prepared[1]);
-                $queryStart = microtime(true);
-                $stmt->execute();
-                $query = $stmt->get_result();
-                Factory::notifyListeners($this->_prepared[0], $this->_prepared[1], (microtime(true) - $queryStart), ($query !== false));
+                // Prepared query
+                [$sql, $params] = $this->_prepared;
+                $stmt = $this->getConnection()->prepare($sql);
+                $stmt->execute($params);
+                Factory::notifyListeners($sql, $params, microtime(true) - $queryStart, true);
             } else {
-                $preparedQuery = null;
-                $built = $this->getQuery();
-                $queryStart = microtime(true);
-                $query = $this->getConnection()->query($built);
-                Factory::notifyListeners($built, [], (microtime(true) - $queryStart), ($query !== false));
+                // Raw query
+                $sql = $this->getQuery();
+                $stmt = $this->getConnection()->query($sql);
+                Factory::notifyListeners($sql, [], microtime(true) - $queryStart, true);
             }
 
             // Clear query data
             $this->clearQuery();
+            $result = true;
 
-            // Checks for query result
-            if ($query !== false) {
-                $result = true;
-
-                // Checks for return type
-                if ($returns && $query instanceof mysqli_result) {
-                    if ($returnsFirst) {
-                        // Returns only first row
-                        $result = null;
-                        if ($query->num_rows > 0) {
-                            $row = $query->fetch_assoc();
-                            $query->close();
-                            $result = $this->_returnAssoc ? $row : new Element($row);
-                        }
-                    } else {
-                        // Returns all rows
-                        $result = [];
-                        if ($query->num_rows > 0) {
-                            $rows = $query->fetch_all(MYSQLI_ASSOC);
-                            $query->close();
-                            if ($this->_returnAssoc) {
-                                $result = $rows;
-                            } else {
-                                foreach ($rows as $row) $result[] = new Element($row);
-                            }
-                        }
-                    }
+            // Checks for return type
+            if ($returns) {
+                if ($returnsFirst) {
+                    // Returns only first row
+                    $result = null;
+                    $row = $stmt->fetch();
+                    if ($row !== false) $result = $this->_returnAssoc ? $row : new Element($row);
+                } else {
+                    // Returns all rows
+                    $rows = $stmt->fetchAll();
+                    $result = $this->_returnAssoc ? $rows : array_map(fn($r) => new Element($r), $rows);
                 }
+            }
 
-                // Stores the last insert ID and returns the result
-                $this->_lastInsertId = $this->getConnection()->insert_id;
-                return $result;
+            // Stores the last insert ID
+            if (Util::startsWith(trim(mb_strtoupper($sql)), 'INSERT')) {
+                $this->_lastInsertId = (int)$this->getConnection()->lastInsertId();
             } else {
-                // Query failed
-                return false;
+                $this->_lastInsertId = null;
             }
-        } catch (mysqli_sql_exception $e) {
-            // Notify listeners
-            if ($preparedQuery) {
-                Factory::notifyListeners($preparedQuery[0], $preparedQuery[1], (microtime(true) - $queryStart), false);
-            } else {
-                Factory::notifyListeners($built, [], (microtime(true) - $queryStart), false);
-            }
+
+            // Store affected rows and returns the result
+            $this->_affectedRows = $stmt->rowCount();
+            return $result;
+        } catch (PDOException $e) {
+            // Notify listeners of failure
+            Factory::notifyListeners($sql, $params ?? [], microtime(true) - $queryStart, false);
 
             // Query failed with error
-            throw new QueryException($built, $e->getMessage(), $e->getCode(), $e);
+            throw new QueryException($sql, $e->getMessage(), $e->getCode(), $e);
         }
     }
 }

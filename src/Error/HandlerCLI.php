@@ -26,7 +26,6 @@ class HandlerCLI
     {
         $level = Config::get('error_reporting.level', E_ALL);
         error_reporting($level);
-        mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
         set_exception_handler([self::class, 'exceptionHandler']);
         set_error_handler([self::class, 'errorHandler'], $level);
         ini_set('display_errors', '1');

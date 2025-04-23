@@ -116,12 +116,6 @@ class Kraken
     private $_union;
 
     /**
-     * Last insert ID.
-     * @var int|null
-     */
-    private $_lastInsertId = null;
-
-    /**
      * Creates a new Kraken database instance.
      * @param string $table (Optional) Table name to set as default.
      * @param string $database (Optional) Database connection name (from your app configuration).
@@ -439,7 +433,7 @@ class Kraken
                 } else if ($value === 'NULL' || is_null($value)) {
                     $values[] = 'NULL';
                 } else {
-                    $values[] = "\"{$this->escape($value)}\"";
+                    $values[] = $this->escape($value);
                 }
             }
 
@@ -454,7 +448,7 @@ class Kraken
                 } else if ($value === 'NULL' || is_null($value)) {
                     $values[] = 'NULL';
                 } else {
-                    $values[] = "\"{$this->escape($value)}\"";
+                    $values[] = $this->escape($value);
                 }
             }
 
@@ -469,7 +463,7 @@ class Kraken
             if ($param3 instanceof stdClass) {
                 $param3 = $param3->value;
             } else {
-                $param3 = "\"{$this->escape($param3)}\"";
+                $param3 = $this->escape($param3);
             }
 
             $query .= "{$param1} {$param2} {$param3}";
@@ -1065,7 +1059,7 @@ class Kraken
                 } else if ($value === 'NULL' || is_null($value)) {
                     $values[] = 'NULL';
                 } else {
-                    $values[] = "\"{$this->escape($value)}\"";
+                    $values[] = $this->escape($value);
                 }
             }
 
@@ -1080,7 +1074,7 @@ class Kraken
                 } else if ($value === 'NULL' || is_null($value)) {
                     $values[] = 'NULL';
                 } else {
-                    $values[] = "\"{$this->escape($value)}\"";
+                    $values[] = $this->escape($value);
                 }
             }
 
@@ -1095,7 +1089,7 @@ class Kraken
             if ($param3 instanceof stdClass) {
                 $param3 = $param3->value;
             } else {
-                $param3 = "\"{$this->escape($param3)}\"";
+                $param3 = $this->escape($param3);
             }
 
             $query .= "{$param1} {$param2} {$param3}";
@@ -1453,7 +1447,7 @@ class Kraken
                     } else if ($value === 'NULL' || is_null($value)) {
                         $result[] = 'NULL';
                     } else {
-                        $result[] = "\"{$this->escape($value)}\"";
+                        $result[] = $this->escape($value);
                     }
                 }
                 $result = implode(', ', $result);
@@ -1469,7 +1463,7 @@ class Kraken
                 } else if ($value === 'NULL' || is_null($value)) {
                     $values[] = 'NULL';
                 } else {
-                    $values[] = "\"{$this->escape($value)}\"";
+                    $values[] = $this->escape($value);
                 }
             }
             $values = implode(', ', $values);
@@ -1487,7 +1481,7 @@ class Kraken
                 } else if ($value === 'NULL' || is_null($value)) {
                     $set[] = "{$key} = NULL";
                 } else {
-                    $set[] = "{$key} = \"{$this->escape($value)}\"";
+                    $set[] = "{$key} = {$this->escape($value)}";
                 }
             }
 
@@ -1563,7 +1557,7 @@ class Kraken
             } else if ($value === 'NULL' || is_null($value)) {
                 $set[] = "{$key} = NULL";
             } else {
-                $set[] = "{$key} = \"{$this->escape($value)}\"";
+                $set[] = "{$key} = {$this->escape($value)}";
             }
         }
 
@@ -1862,7 +1856,7 @@ class Kraken
      */
     public function affectedRows()
     {
-        return $this->getConnection()->affected_rows;
+        return $this->_affectedRows;
     }
 
     /**

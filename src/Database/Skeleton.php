@@ -705,7 +705,7 @@ class Skeleton
                 if ($data['default'] instanceof stdClass) {
                     $field .= " DEFAULT {$data['default']->value}";
                 } else {
-                    $field .= " DEFAULT \"{$this->escape($data['default'])}\"";
+                    $field .= " DEFAULT {$this->escape($data['default'])}";
                 }
             }
 

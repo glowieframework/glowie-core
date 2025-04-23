@@ -27,10 +27,10 @@ class QueryException extends Exception
      * Creates a new instance of QueryException.
      * @param string $query SQL query that thrown the exception.
      * @param string $message (Optional) The exception message.
-     * @param int $code (Optional) The exception code.
+     * @param int|string $code (Optional) The exception code.
      * @param Throwable|null $previous (Optional) Previous throwable used for exception chaining.
      */
-    public function __construct(string $query, string $message = "", int $code = 0, ?Throwable $previous = null)
+    public function __construct(string $query, string $message = "", $code = 0, ?Throwable $previous = null)
     {
         parent::__construct(sprintf('SQL: [SQL %s] %s (%s)', $code, $message, $query), $code, $previous);
         $this->query = $query;
