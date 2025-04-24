@@ -374,7 +374,7 @@ class Model extends Kraken implements JsonSerializable
     {
         if (!is_null($primary)) $this->whereIn($this->_table . '.' . $this->_primaryKey, (array)$primary);
         if ($this->_softDeletes && !$force) {
-            return $this->update([$this->_table . '.' . $this->_deletedField => self::raw('NOW()')]);
+            return $this->update([$this->_table . '.' . $this->_deletedField => self::raw('CURRENT_TIMESTAMP')]);
         } else {
             return $this->delete($this->_table);
         }
@@ -391,7 +391,7 @@ class Model extends Kraken implements JsonSerializable
     {
         $this->filterFields($field, $value);
         if ($this->_softDeletes && !$force) {
-            return $this->update([$this->_table . '.' . $this->_deletedField => self::raw('NOW()')]);
+            return $this->update([$this->_table . '.' . $this->_deletedField => self::raw('CURRENT_TIMESTAMP')]);
         } else {
             return $this->delete($this->_table);
         }

@@ -168,6 +168,40 @@ trait DatabaseTrait
     }
 
     /**
+     * Escapes a table/column identifier.
+     * @param string $name Identifier to be escaped.
+     * @return string Returns the escaped identifier.
+     */
+    public function escapeIdentifier(string $name)
+    {
+        // Gets the characters
+        $driver = $this->getDriver();
+        $start = Factory::ESCAPING_CHARS_MAP[$driver][0];
+        $end = Factory::ESCAPING_CHARS_MAP[$driver][1];
+
+        // Checks for AS alias
+        if (preg_match('/ +AS +/i', $name)) {
+            list($ident, $alias) = preg_split('/ +AS +/i', $name, 2);
+            return $this->escapeIdentifier(trim($ident)) . ' AS ' . $this->escapeIdentifier(trim($alias));
+        }
+
+        // Checks for implicit alias
+        if (preg_match('/(.+?) +([^\s]+)/', $name, $m)) {
+            return $this->escapeIdentifier(trim($m[1])) . ' ' . $this->escapeIdentifier(trim($m[2]));
+        }
+
+        // Split schema parts and escapes each one of them
+        $parts = explode('.', $name);
+        $escaped = array_map(function ($part) use ($start, $end) {
+            if (Util::startsWith($part, $start) && Util::endsWith($part, $end)) return $part;
+            return $start . $part . $end;
+        }, $parts);
+
+        // Returns the result
+        return implode('.', $escaped);
+    }
+
+    /**
      * Returns a value that will not be escaped or quoted into the query.
      * @param mixed $value Value to be returned.
      * @return stdClass Value representation as a generic object.

@@ -33,6 +33,17 @@ class Factory
     private static $listeners = [];
 
     /**
+     * Identifier escaping characters.
+     * @var array
+     */
+    public const ESCAPING_CHARS_MAP = [
+        'mysql'  => ['`', '`'],
+        'sqlite' => ['`', '`'],
+        'pgsql'  => ['"', '"'],
+        'sqlsrv' => ['[', ']'],
+    ];
+
+    /**
      * Gets a connection handler.
      * @param string $name Connection name.
      * @return PDO|null The connection instance if exists or null if not.

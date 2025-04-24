@@ -77,38 +77,13 @@ abstract class Migration
         if (!$this->forge->tableExists($this->table)) {
             $this->forge->table($this->table)
                 ->createColumn('name')->type(Skeleton::TYPE_STRING)->size(500)
-                ->createColumn('applied_at')->type(Skeleton::TYPE_DATETIME)->default($this->getNowFunction())
+                ->createColumn('applied_at')->type(Skeleton::TYPE_DATETIME)->defaultNow()
                 ->unique('name')
                 ->ifNotExists()
                 ->create();
         };
 
         self::$tableCreated[$this->database] = true;
-    }
-
-    /**
-     * Gets the `NOW()` function by the database driver.
-     * @return stdClass Returns the raw representation of the function.
-     */
-    private function getNowFunction()
-    {
-        switch ($this->forge->getDriver()) {
-            case 'sqlite':
-                return Skeleton::raw("datetime('now')");
-                break;
-
-            case 'pgsql':
-                return Skeleton::raw('CURRENT_TIMESTAMP');
-                break;
-
-            case 'sqlsrv':
-                return Skeleton::raw('GETDATE()');
-                break;
-
-            default:
-                return Skeleton::raw('NOW()');
-                break;
-        }
     }
 
     /**

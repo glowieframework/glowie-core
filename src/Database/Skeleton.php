@@ -155,6 +155,18 @@ class Skeleton
     public const TYPE_SET = 'SET';
 
     /**
+     * Serial data type.
+     * @var string
+     */
+    public const TYPE_SERIAL = 'SERIAL';
+
+    /**
+     * Big serial data type.
+     * @var string
+     */
+    public const TYPE_BIGSERIAL = 'BIGSERIAL';
+
+    /**
      * EXISTS instruction.
      * @var string
      */
@@ -252,7 +264,7 @@ class Skeleton
     /**
      * Creates a column in a new table.
      * @param string $name Column name to create.
-     * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
+     * @param string $type (Optional) Column data type. Must be a valid type supported by your current database.
      * @param mixed $size (Optional) Field maximum length.
      * @param mixed $default (Optional) Default field value.
      * @param string|null $collation (Optional) Collation to set in the column.
@@ -275,7 +287,7 @@ class Skeleton
     /**
      * Creates a nullable column in a new table.
      * @param string $name Column name to create.
-     * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
+     * @param string $type (Optional) Column data type. Must be a valid type supported by your current database.
      * @param mixed $size (Optional) Field maximum length.
      * @param mixed $default (Optional) Default field value.
      * @param string|null $collation (Optional) Collation to set in the column.
@@ -299,24 +311,23 @@ class Skeleton
      * Creates/adds an `AUTO_INCREMENT` column in the table.\
      * **Important:** This column must also be set as a key. There can be only a single auto increment row in a table.
      * @param string $name Column name to create.
-     * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
+     * @param string $type (Optional) Column data type. Must be a valid type supported by your current database.
      * @param mixed $size (Optional) Field maximum length.
      * @return Skeleton Current Skeleton instance for nested calls.
      */
     public function autoIncrement(string $name, string $type = self::TYPE_BIG_INTEGER_UNSIGNED, $size = null)
     {
+        $name = $this->escapeIdentifier($name);
         switch ($this->getDriver()) {
             case 'sqlite':
-                $query = "`{$name}` INTEGER AUTOINCREMENT";
+                $query = "{$name} INTEGER PRIMARY KEY AUTOINCREMENT";
                 break;
-
             case 'pgsql':
-                $query = "\"{$name}\" SERIAL";
+                $query = "{$name} BIGSERIAL";
                 break;
-
             default:
                 $type = strtoupper($type);
-                $field = "`{$name}` {$type}";
+                $field = "{$name} {$type}";
                 if (!is_null($size)) $field .= "({$size})";
                 $query = "{$field} NOT NULL AUTO_INCREMENT";
                 break;
@@ -334,8 +345,8 @@ class Skeleton
      */
     public function createTimestamps(string $createdField = 'created_at', string $updatedField = 'updated_at')
     {
-        $this->createColumn($createdField, self::TYPE_DATETIME, null, $this->getNowFunction());
-        $this->createColumn($updatedField, self::TYPE_DATETIME, null, $this->getNowFunction());
+        $this->createColumn($createdField, self::TYPE_DATETIME, null, self::raw('CURRENT_TIMESTAMP'));
+        $this->createColumn($updatedField, self::TYPE_DATETIME, null, self::raw('CURRENT_TIMESTAMP'));
         return $this;
     }
 
@@ -347,8 +358,8 @@ class Skeleton
      */
     public function addTimestamps(string $createdField = 'created_at', string $updatedField = 'updated_at')
     {
-        $this->addColumn($createdField, self::TYPE_DATETIME, null, $this->getNowFunction());
-        $this->addColumn($updatedField, self::TYPE_DATETIME, null, $this->getNowFunction());
+        $this->addColumn($createdField, self::TYPE_DATETIME, null, self::raw('CURRENT_TIMESTAMP'));
+        $this->addColumn($updatedField, self::TYPE_DATETIME, null, self::raw('CURRENT_TIMESTAMP'));
         return $this;
     }
 
@@ -382,7 +393,7 @@ class Skeleton
     public function id(string $name = 'id')
     {
         $this->autoIncrement($name);
-        $this->primaryKey($name);
+        if ($this->getDriver() !== 'sqlite') $this->primaryKey($name);
         return $this;
     }
 
@@ -401,7 +412,7 @@ class Skeleton
     /**
      * Adds a column into an existing table.
      * @param string $name Column name to add.
-     * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
+     * @param string $type (Optional) Column data type. Must be a valid type supported by your current database.
      * @param mixed $size (Optional) Field maximum length.
      * @param mixed $default (Optional) Default field value.
      * @param string|null $after (Optional) Name of other column to place this column after it.
@@ -426,7 +437,7 @@ class Skeleton
     /**
      * Adds a nullable column to an existing table.
      * @param string $name Column name to add.
-     * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
+     * @param string $type (Optional) Column data type. Must be a valid type supported by your current database.
      * @param mixed $size (Optional) Field maximum length.
      * @param mixed $default (Optional) Default field value.
      * @param string|null $after (Optional) Name of other column to place this column after it.
@@ -452,7 +463,7 @@ class Skeleton
      * Changes an existing column in a table.
      * @param string $name Column name to change.
      * @param string|null $new_name (Optional) New column name. Leave empty for keeping the current name.
-     * @param string $type (Optional) Column data type. Must be a valid type supported by your current MySQL version.
+     * @param string $type (Optional) Column data type. Must be a valid type supported by your current database.
      * @param mixed $size (Optional) Field maximum length.
      * @param bool $nullable (Optional) Set to **true** if the field should accept `NULL` values.
      * @param mixed $default (Optional) Default field value.
@@ -531,16 +542,17 @@ class Skeleton
 
     /**
      * Parse column modifiers into the query.
+     * @param bool $isCreating (Optional) Indicates the creation of a table.
      */
-    private function parseModifiers()
+    private function parseModifiers(bool $isCreating = false)
     {
         if (empty($this->_modifiers)) return;
-        foreach ($this->_modifiers as $item) $this->modifyColumns($item);
+        foreach ($this->_modifiers as $item) $this->modifyColumns($item, $isCreating);
     }
 
     /**
      * Sets the type of the last added/changed column.
-     * @param string $type Column data type. Must be a valid type supported by your current MySQL version.
+     * @param string $type Column data type. Must be a valid type supported by your current database.
      * @return Skeleton Current Skeleton instance for nested calls.
      */
     public function type(string $type)
@@ -583,7 +595,7 @@ class Skeleton
      */
     public function defaultNow()
     {
-        return $this->default($this->getNowFunction());
+        return $this->default(self::raw('CURRENT_TIMESTAMP'));
     }
 
     /**
@@ -665,37 +677,38 @@ class Skeleton
     /**
      * Parse column operations.
      * @param array $data Associative array of data to parse.
+     * @param bool $isCreating (Optional) Indicates the creation of a table.
      */
-    private function modifyColumns(array $data)
+    private function modifyColumns(array $data, bool $isCreating = false)
     {
         // Database driver
         $driver = $this->getDriver();
 
-        // Column name
+        // Escape column name
+        $data['name'] = $this->escapeIdentifier($data['name']);
+        if (!empty($data['new_name'])) $data['new_name'] = $this->escapeIdentifier($data['new_name']);
+
+        // Parse column name into query
         switch ($data['operation']) {
             case 'create':
-                $field = "`{$data['name']}` ";
-                break;
-
-            case 'change':
-                $field = "CHANGE COLUMN `{$data['name']}` `{$data['new_name']}` ";
-                break;
-
-            case 'modify':
-                $field = "MODIFY COLUMN `{$data['name']}` ";
-                break;
-
-            case 'rename':
-                $field = "RENAME COLUMN `{$data['name']}` TO `{$data['new_name']}` ";
-                break;
-
             case 'add':
-                $field = "ADD COLUMN `{$data['name']}` ";
+                $field = $isCreating ? "{$data['name']} " : "ADD COLUMN {$data['name']} ";
                 break;
-
+            case 'change':
+                $field = "CHANGE COLUMN {$data['name']} {$data['new_name']} ";
+                break;
+            case 'modify':
+                $field = "MODIFY COLUMN {$data['name']} ";
+                break;
+            case 'rename':
+                $field = "RENAME COLUMN {$data['name']} TO {$data['new_name']} ";
+                break;
             case 'drop':
-                $field = "DROP COLUMN `{$data['name']}`";
+                $field = "DROP COLUMN {$data['name']}";
                 $this->_fields[] = $field;
+                return;
+
+            default:
                 return;
         }
 
@@ -745,14 +758,15 @@ class Skeleton
                 }
 
                 // After
-                if ($data['operation'] !== 'create') {
-                    if (!empty($data['after'])) $field .= " AFTER `{$data['after']}`";
+                if ($data['operation'] !== 'create' && !empty($data['after'])) {
+                    $data['after'] = $this->escapeIdentifier($data['after']);
+                    $field .= " AFTER {$data['after']}";
                 }
             }
         }
 
         // Saves the result
-        $this->_fields[] = $field;
+        $this->_fields[] = trim($field);
     }
 
     /**
@@ -763,7 +777,7 @@ class Skeleton
     public function primaryKey($column)
     {
         foreach ((array)$column as $item) {
-            $this->_primary[] = $item;
+            $this->_primary[] = $this->escapeIdentifier($item);
         }
         return $this;
     }
@@ -780,10 +794,12 @@ class Skeleton
         foreach ((array)$column as $item) {
             $key = $name;
             if (Util::isEmpty($name)) $key = $item;
+            $item = $this->escapeIdentifier($item);
+            $key = $this->escapeIdentifier($key);
             if ($unique) {
-                $this->_unique[$key][] = "`{$item}`";
+                $this->_unique[$key][] = $item;
             } else {
-                $this->_index[$key][] = "`{$item}`";
+                $this->_index[$key][] = $item;
             }
         }
         return $this;
@@ -814,10 +830,11 @@ class Skeleton
      */
     public function foreignKey($column, string $table, $reference, ?string $name = null, string $update = 'RESTRICT', string $delete = 'RESTRICT')
     {
-        $name = !Util::isEmpty($name) ? "CONSTRAINT `{$name}` " : '';
-        $column = implode('`, `', (array)$column);
-        $reference = implode('`, `', (array)$reference);
-        $this->_foreign[] = "{$name}FOREIGN KEY (`{$column}`) REFERENCES `{$table}` (`{$reference}`) ON UPDATE {$update} ON DELETE {$delete}";
+        $name = !Util::isEmpty($name) ? "CONSTRAINT {$this->escapeIdentifier($name)} " : '';
+        $column = implode(', ', array_map([$this, 'escapeIdentifier'], (array)$column));
+        $reference = implode(', ', array_map([$this, 'escapeIdentifier'], (array)$reference));
+        $table = $this->escapeIdentifier($table);
+        $this->_foreign[] = "{$name}FOREIGN KEY ({$column}) REFERENCES {$table} ({$reference}) ON UPDATE {$update} ON DELETE {$delete}";
         return $this;
     }
 
@@ -868,7 +885,8 @@ class Skeleton
      */
     public function dropIndex(string $name)
     {
-        $this->_drops[] = "DROP INDEX `{$name}`";
+        $name = $this->escapeIdentifier($name);
+        $this->_drops[] = "DROP INDEX {$name}";
         return $this;
     }
 
@@ -889,7 +907,8 @@ class Skeleton
      */
     public function dropForeignKey(string $name)
     {
-        $this->_drops[] = "DROP FOREIGN KEY `{$name}`";
+        $name = $this->escapeIdentifier($name);
+        $this->_drops[] = "DROP FOREIGN KEY {$name}";
         return $this;
     }
 
@@ -901,7 +920,9 @@ class Skeleton
      */
     public function renameIndex(string $name, string $new_name)
     {
-        $this->_drops[] = "RENAME INDEX `{$name}` TO `{$new_name}`";
+        $name = $this->escapeIdentifier($name);
+        $new_name = $this->escapeIdentifier($new_name);
+        $this->_drops[] = "RENAME INDEX {$name} TO {$new_name}";
         return $this;
     }
 
@@ -955,7 +976,7 @@ class Skeleton
     public function create()
     {
         $this->_instruction = 'CREATE TABLE';
-        $this->parseModifiers();
+        $this->parseModifiers(true);
         return $this->execute();
     }
 
@@ -967,7 +988,7 @@ class Skeleton
     public function createTemporary()
     {
         $this->_instruction = 'CREATE TEMPORARY TABLE';
-        $this->parseModifiers();
+        $this->parseModifiers(true);
         return $this->execute();
     }
 
@@ -1053,23 +1074,26 @@ class Skeleton
     {
         // Builds the query to the database driver
         $driver = $this->getDriver();
+        $column = $this->escape($column);
         switch ($driver) {
             case 'sqlite':
                 $this->_raw = "PRAGMA table_info({$this->_table})";
                 break;
             case 'pgsql':
-                $this->_raw = "SELECT column_name FROM information_schema.columns WHERE table_name = '{$this->_table}' AND column_name = '{$column}'";
+                $this->_raw = "SELECT column_name FROM information_schema.columns WHERE table_name = '{$this->_table}' AND column_name = {$column}";
                 break;
             case 'sqlsrv':
-                $this->_raw = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{$this->_table}' AND COLUMN_NAME = '{$column}'";
+                $this->_raw = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{$this->_table}' AND COLUMN_NAME = {$column}";
                 break;
             default:
-                $this->_raw = "SHOW COLUMNS FROM `{$this->_table}` LIKE \"{$column}\"";
+                $table = $this->escapeIdentifier($this->_table);
+                $this->_raw = "SHOW COLUMNS FROM {$table} LIKE {$column}";
+                break;
         }
 
         // Returns the query result
         $result = $this->execute(true, false);
-        if ($driver === 'sqlite') return array_filter($result, fn($col) => $col['name'] === $column);
+        if ($driver === 'sqlite') $result = array_filter($result, fn($col) => $col['name'] === $column);
         return !empty($result);
     }
 
@@ -1096,6 +1120,7 @@ class Skeleton
                 break;
             default:
                 $this->_raw = "SHOW TABLES LIKE '{$table}'";
+                break;
         }
 
         // Returns the query result
@@ -1148,12 +1173,14 @@ class Skeleton
 
         // Gets DATABASE statements
         if ($this->_instruction === 'CREATE DATABASE' || $this->_instruction === 'DROP DATABASE') {
-            $query .= " `{$this->_database}`";
+            $db = $this->escapeIdentifier($this->_database);
+            $query .= " {$db}";
             return $query;
         }
 
         // Gets the table
-        $query .= " `{$this->_table}`";
+        $table = $this->escapeIdentifier($this->_table);
+        $query .= " {$table}";
 
         // Gets CREATE TABLE parameters
         if ($this->_instruction === 'CREATE TABLE' || $this->_instruction === 'CREATE TEMPORARY TABLE') {
@@ -1162,7 +1189,10 @@ class Skeleton
             $query .= ' (';
 
             // Like
-            if (!Util::isEmpty($this->_like)) $instructions[] = "LIKE `{$this->_like}`";
+            if (!Util::isEmpty($this->_like)) {
+                $like = $this->escapeIdentifier($this->_like);
+                $instructions[] = "LIKE {$like}";
+            }
 
             // Auto increment
             if (!Util::isEmpty($this->_autoincrement)) $instructions[] = $this->_autoincrement;
@@ -1172,8 +1202,8 @@ class Skeleton
 
             // Primary keys
             if (!empty($this->_primary)) {
-                $primary = implode('`, `', $this->_primary);
-                $instructions[] = "PRIMARY KEY (`{$primary}`)";
+                $primary = implode(', ', $this->_primary);
+                $instructions[] = "PRIMARY KEY ({$primary})";
             }
 
             // Unique indexes
@@ -1181,12 +1211,12 @@ class Skeleton
                 if ($driver === 'sqlite') {
                     foreach ($this->_unique as $name => $unique) {
                         $fields = implode(', ', $unique);
-                        $this->_postCreate[] = "CREATE UNIQUE INDEX `{$name}` ON `{$this->_table}` ({$fields})";
+                        $this->_postCreate[] = "CREATE UNIQUE INDEX {$name} ON {$table} ({$fields})";
                     }
                 } else {
                     foreach ($this->_unique as $name => $unique) {
                         $fields = implode(', ', $unique);
-                        $instructions[] = "UNIQUE INDEX `{$name}` ({$fields})";
+                        $instructions[] = "UNIQUE INDEX {$name} ({$fields})";
                     }
                 }
             }
@@ -1196,12 +1226,12 @@ class Skeleton
                 if ($driver === 'sqlite') {
                     foreach ($this->_index as $name => $key) {
                         $fields = implode(', ', $key);
-                        $this->_postCreate[] = "CREATE INDEX `{$name}` ON `{$this->_table}` ({$fields})";
+                        $this->_postCreate[] = "CREATE INDEX {$name} ON {$table} ({$fields})";
                     }
                 } else {
                     foreach ($this->_index as $name => $key) {
                         $fields = implode(', ', $key);
-                        $instructions[] = "INDEX `{$name}` ({$fields})";
+                        $instructions[] = "INDEX {$name} ({$fields})";
                     }
                 }
             }
@@ -1227,9 +1257,7 @@ class Skeleton
             $query .= ' ';
 
             // Auto increment
-            if (!Util::isEmpty($this->_autoincrement)) {
-                $instructions[] = "ADD COLUMN {$this->_autoincrement}";
-            }
+            if (!Util::isEmpty($this->_autoincrement)) $instructions[] = "ADD COLUMN {$this->_autoincrement}";
 
             // Fields
             if (!empty($this->_fields)) $instructions = array_merge($instructions, $this->_fields);
@@ -1239,15 +1267,15 @@ class Skeleton
 
             // Primary keys
             if (!empty($this->_primary)) {
-                $primary = implode('`, `', $this->_primary);
-                $instructions[] = "ADD PRIMARY KEY (`{$primary}`)";
+                $primary = implode(', ', $this->_primary);
+                $instructions[] = "ADD PRIMARY KEY ({$primary})";
             }
 
             // Unique indexes
             if (!empty($this->_unique)) {
                 foreach ($this->_unique as $name => $unique) {
                     $fields = implode(', ', $unique);
-                    $instructions[] = "ADD UNIQUE INDEX `{$name}` ({$fields})";
+                    $instructions[] = "ADD UNIQUE INDEX {$name} ({$fields})";
                 }
             }
 
@@ -1255,7 +1283,7 @@ class Skeleton
             if (!empty($this->_index)) {
                 foreach ($this->_index as $name => $key) {
                     $fields = implode(', ', $key);
-                    $instructions[] = "ADD INDEX `{$name}` ({$fields})";
+                    $instructions[] = "ADD INDEX {$name} ({$fields})";
                 }
             }
 
@@ -1277,36 +1305,12 @@ class Skeleton
 
         // Gets RENAME TABLE parameters
         if ($this->_instruction === 'RENAME TABLE') {
-            $query .= " TO `{$this->_rename}`";
+            $rename = $this->escapeIdentifier($this->_rename);
+            $query .= " TO {$rename}";
             $this->table($this->_rename);
         }
 
         // Returns the result
         return $query;
-    }
-
-    /**
-     * Gets the `NOW()` function by the database driver.
-     * @return stdClass Returns the raw representation of the function.
-     */
-    private function getNowFunction()
-    {
-        switch ($this->getDriver()) {
-            case 'sqlite':
-                return self::raw("datetime('now')");
-                break;
-
-            case 'pgsql':
-                return self::raw('CURRENT_TIMESTAMP');
-                break;
-
-            case 'sqlsrv':
-                return self::raw('GETDATE()');
-                break;
-
-            default:
-                return self::raw('NOW()');
-                break;
-        }
     }
 }
