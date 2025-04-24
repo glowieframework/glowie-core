@@ -176,8 +176,9 @@ trait DatabaseTrait
     {
         // Gets the characters
         $driver = $this->getDriver();
-        $start = Factory::ESCAPING_CHARS_MAP[$driver][0];
-        $end = Factory::ESCAPING_CHARS_MAP[$driver][1];
+        $driverClass = 'Glowie\Core\Database\Drivers\\' . Util::pascalCase($driver);
+        $start = $driverClass::ESCAPING_CHARS[0];
+        $end = $driverClass::ESCAPING_CHARS[1];
 
         // Checks for AS alias
         if (preg_match('/ +AS +/i', $name)) {
