@@ -683,7 +683,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     public function chunk(int $length, bool $preserveKeys = false)
     {
         $result = array_chunk($this->__data, $length, $preserveKeys);
-        foreach ($result as &$arr) $arr = new Collection($arr);
+        $result = array_map(fn($arr) => new Collection($arr), $result);
         return new Collection($result);
     }
 
@@ -695,7 +695,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     public function each(callable $callback)
     {
         foreach ($this->__data as $key => &$value) {
-            $result = call_user_func_array($callback, [$value, $key]);
+            $result = call_user_func_array($callback, [&$value, $key]);
             if ($result === false) break;
         }
         return $this;
