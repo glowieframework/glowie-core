@@ -1,6 +1,8 @@
 document.querySelectorAll('.wrapper .details pre a.toggle').forEach(e => {
 	e.addEventListener('click', t => {
-		t.preventDefault(), e.nextElementSibling.classList.toggle('show')
+		t.preventDefault();
+        e.classList.toggle('active');
+        e.nextElementSibling.classList.toggle('show');
 	})
 });
 

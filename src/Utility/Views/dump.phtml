@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
     <meta name="color-scheme" content="dark white">
     <style>
-        <?= str_replace(["\n", "\r", "\t"], '', file_get_contents(__DIR__ . '/assets/dump.css')); ?>
+        <?= str_replace(["\n", "\r", "\t", '    '], '', file_get_contents(__DIR__ . '/assets/dump.css')); ?>
     </style>
 </head>
 
@@ -26,7 +26,7 @@
         </div>
     </div>
     <script>
-        <?= str_replace(["\n", "\r", "\t"], '', file_get_contents(__DIR__ . '/assets/script.js')); ?>
+        <?= str_replace(["\n", "\r", "\t", '    '], '', file_get_contents(__DIR__ . '/assets/script.js')); ?>
     </script>
 </body>
 

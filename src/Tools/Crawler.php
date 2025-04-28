@@ -365,7 +365,6 @@ class Crawler
             CURLOPT_SSL_VERIFYPEER => $this->verify,
             CURLOPT_SSL_VERIFYSTATUS => $this->verify,
             CURLOPT_CONNECTTIMEOUT => $this->timeout,
-            CURLOPT_FAILONERROR => $this->throw
         ]);
 
         // Sets headers
@@ -426,28 +425,32 @@ class Crawler
         // Fetches the request
         $response = curl_exec($curl);
 
-        // Error handling
-        if ($this->throw && curl_errno($curl)) throw new RequestException($url, curl_error($curl), curl_errno($curl));
-
-        // Return false if request fails without throwing enabled
-        if ($response === false) return false;
-
-        // Gets the request info
+        // Gets the response info
         $info = curl_getinfo($curl);
 
-        // Closes current connection
+        // Checks for the result
+        if ($response === false) {
+            $result = false;
+        } else {
+            $result = new Element([
+                'status' => $info['http_code'],
+                'success' => (bool)($info['http_code'] >= 200 && $info['http_code'] < 300),
+                'failed' => (bool)($info['http_code'] >= 400),
+                'type' => $info['content_type'] ?? null,
+                'body' => $response,
+                'json' => new Element(json_decode($response, true) ?? []),
+                'redirects' => $info['redirect_count'],
+                'headers' => new Element($headers)
+            ]);
+        }
+
+        // Error handling
+        if ($this->throw && curl_errno($curl)) throw new RequestException($url, curl_error($curl), curl_errno($curl), $result);
+
+        // Closes the connection
         curl_close($curl);
 
-        // Returns resulting Element
-        return new Element([
-            'status' => $info['http_code'],
-            'success' => (bool)($info['http_code'] >= 200 && $info['http_code'] < 300),
-            'failed' => (bool)($info['http_code'] >= 400),
-            'type' => $info['content_type'] ?? null,
-            'body' => $response,
-            'json' => new Element(json_decode($response, true) ?? []),
-            'redirects' => $info['redirect_count'],
-            'headers' => new Element($headers)
-        ]);
+        // Returns the result
+        return $result;
     }
 }

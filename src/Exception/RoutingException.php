@@ -3,6 +3,7 @@
 namespace Glowie\Core\Exception;
 
 use Exception;
+use Glowie\Core\Http\Rails;
 use Throwable;
 
 /**
@@ -26,5 +27,14 @@ class RoutingException extends Exception
     public function __construct(string $message = "", int $code = 0, ?Throwable $previous = null)
     {
         parent::__construct('Routing: ' . $message, $code, $previous);
+    }
+
+    /**
+     * Gets the HTTP request that thrown the exception.
+     * @return Request Returns the Request instance.
+     */
+    public function getRequest()
+    {
+        return Rails::getRequest();
     }
 }

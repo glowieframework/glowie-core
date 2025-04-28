@@ -24,15 +24,23 @@ class RequestException extends Exception
     private $url;
 
     /**
+     * The response object, or false if failed.
+     * @var Element|bool
+     */
+    private $response;
+
+    /**
      * Creates a new instance of RequestException.
      * @param string $message (Optional) The exception message.
      * @param int $code (Optional) The exception code.
+     * @param Element|bool $response (Optional) The response object, or false if failed.
      * @param Throwable|null $previous (Optional) Previous throwable used for exception chaining.
      */
-    public function __construct(string $url, string $message = "", int $code = 0, ?Throwable $previous = null)
+    public function __construct(string $url, string $message = "", int $code = 0, $response, ?Throwable $previous = null)
     {
-        parent::__construct('Request: ' . $message, $code, $previous);
+        parent::__construct('HttpRequest: ' . $message, $code, $previous);
         $this->url = $url;
+        $this->response = $response;
     }
 
     /**
@@ -42,5 +50,14 @@ class RequestException extends Exception
     public function getURL()
     {
         return $this->url;
+    }
+
+    /**
+     * Gets the response object.
+     * @return Element|bool Returns false if failed.
+     */
+    public function getResponse()
+    {
+        return $this->response;
     }
 }

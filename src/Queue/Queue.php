@@ -90,7 +90,7 @@ class Queue
             ->fetchAll();
 
         if (count($jobs) === 0) {
-            if ($verbose && !$watcher) Firefly::print('<color="yellow">There are no pending jobs in this queue.</color>');
+            if ($verbose && !$watcher) Firefly::print(Firefly::color('There are no pending jobs in this queue.', 'yellow'));
             return;
         }
 
@@ -105,7 +105,7 @@ class Queue
 
                 // Stores start time
                 $time = microtime(true);
-                if ($verbose) Firefly::print('<color="blue">[' . date('Y-m-d H:i:s') . '] Running ' . $jobRow->job . ' job...</color>');
+                if ($verbose) Firefly::print(Firefly::color('[' . date('Y-m-d H:i:s') . '] Running ' . $jobRow->job . ' job...', 'blue'));
 
                 // Create job instance and runs it
                 $job = $jobRow->job;
@@ -119,7 +119,7 @@ class Queue
 
                 // Prints result if in verbose mode
                 $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
-                if ($verbose) Firefly::print('<color="green">[' . $date . ']' . $jobRow->job . ' job ran successfully in ' . $time . '!</color>');
+                if ($verbose) Firefly::print(Firefly::color('[' . $date . ']' . $jobRow->job . ' job ran successfully in ' . $time . '!', 'green'));
                 $success++;
             } catch (\Throwable $th) {
                 // Gets the previous errors, if any
@@ -146,7 +146,7 @@ class Queue
                 if ($bail) throw new QueueException($th->getMessage(), $th->getCode(), $th);
 
                 // Log error
-                if ($verbose) Firefly::print('<color="red">[' . $date . ']' . $jobRow->job . ' failed! Skipping...</color>');
+                if ($verbose) Firefly::print(Firefly::color('[' . $date . ']' . $jobRow->job . ' failed! Skipping...', 'red'));
                 Handler::log($errorString . "\n\n");
                 $failed++;
             }
@@ -155,7 +155,7 @@ class Queue
         // Finish message
         if ($verbose && !$watcher) {
             Firefly::print('');
-            Firefly::print('<color="yellow">Queue finished! ' . $success . ' jobs success, ' . $failed . ' failed.</color>');
+            Firefly::print(Firefly::color('Queue finished! ' . $success . ' jobs success, ' . $failed . ' failed.', 'yellow'));
         }
     }
 

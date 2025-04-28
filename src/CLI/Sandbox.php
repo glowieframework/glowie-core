@@ -60,8 +60,8 @@ class Sandbox
         }
 
         // Starts the interactive mode
-        Firefly::print('<color="green">Welcome to Firefly Sandbox!</color>');
-        Firefly::print('<color="yellow">Type quit or exit to end the interactive mode</color>');
+        Firefly::print(Firefly::color('Welcome to Firefly Sandbox!', 'green'));
+        Firefly::print(Firefly::color('Type quit or exit to end the interactive mode', 'yellow'));
 
         // REPL
         while (true) {
@@ -70,17 +70,26 @@ class Sandbox
             $__ = self::$result;
 
             // Starting tag
-            Firefly::print('<color="cyan">sandbox >> </color>', false);
+            Firefly::print(Firefly::color(Util::isEmpty(self::$continuous) ? 'sandbox >> ' : '....... >> ', 'cyan'), false);
 
             // Gets the current command
             $__command = trim(fgets(STDIN));
             if (Util::isEmpty($__command)) continue;
 
-            // Add command to the history
-            self::$history[] = $__command;
+            // Fill continuous command and add command to the history
+            if (!Util::isEmpty(self::$continuous)) {
+                self::$continuous .= PHP_EOL . $__command;
+            } else {
+                self::$history[] = $__command;
+                self::$continuous = $__command;
+            }
 
-            // Fill continuous command
-            if (!Util::isEmpty(self::$continuous)) $__command = self::$continuous .= "\n" . $__command;
+            // Checks if continuous command should keep capturing
+            if (substr_count(self::$continuous, '{') > substr_count(self::$continuous, '}')) continue;
+
+            // Ends the continuous block
+            $__command = self::$continuous;
+            self::$continuous = '';
 
             // Checks for predefined commands
             switch ($__command) {
@@ -96,7 +105,7 @@ class Sandbox
                     if ($__e) {
                         HandlerCLI::exceptionHandler($__e);
                     } else {
-                        Firefly::print('<color="green">No exception was thrown.</color>');
+                        Firefly::print(Firefly::color('No exception was thrown!', 'green'));
                     }
                     continue 2;
 
@@ -115,7 +124,7 @@ class Sandbox
                         Util::dump($__value, false, true);
                         $__value = Buffer::get();
 
-                        Firefly::print(trim($__value));
+                        Firefly::print($__value);
                     }
 
                     Firefly::print('</color>', false);
@@ -123,7 +132,7 @@ class Sandbox
 
                 case 'quit':
                 case 'exit':
-                    Firefly::print('<color="green">Good bye!</color>');
+                    Firefly::print(Firefly::color('Good bye!', 'green'));
                     exit;
 
                 default:
@@ -134,20 +143,10 @@ class Sandbox
             if (isset($__key)) unset($__key);
             if (isset($__value)) unset($__value);
 
-            // Checks for continuous command
-            if (Util::endsWith($__command, ['{', '(', '[', '\\'])) {
-                if (Util::endsWith($__command, '\\')) $__command = rtrim($__command, '\\');
-                self::$continuous .= $__command;
-                continue;
-            } else {
-                self::$continuous = '';
-            }
-
             // Checks for console command
             if (Util::startsWith($__command, '`') && Util::endsWith($__command, '`')) {
                 $__command = Util::replaceFirst($__command, '`', '');
                 $__command = Util::replaceLast($__command, '`', '');
-
                 passthru($__command);
                 continue;
             }
@@ -157,7 +156,7 @@ class Sandbox
 
             try {
                 // Evaluates the command
-                if (!Util::startsWith($__command, ['return', 'echo', 'print'])) $__command = 'return ' . $__command;
+                if (!Util::startsWith($__command, ['return', 'echo', 'print', 'if', 'for', 'while', 'foreach', 'function', 'class', 'switch', 'do', 'try'])) $__command = 'return ' . $__command;
                 if (!Util::endsWith($__command, ';')) $__command .= ';';
                 $__ = eval($__command);
 
@@ -167,7 +166,7 @@ class Sandbox
 
                 // Prints the result
                 self::$result = trim($__);
-                Firefly::print('<color="yellow">>> ' . self::$result . '</color>');
+                Firefly::print(Firefly::color('>> ' . self::$result, 'yellow'));
             } catch (Throwable $__e) {
                 // Clears the output buffer
                 Buffer::clean();
@@ -176,7 +175,12 @@ class Sandbox
                 self::$exception = $__e;
 
                 // Prints the error
-                Firefly::print('<color="red">>></color> <bg="red"><color="black">' . get_class($__e) . ':</color></bg><color="red"> ' . $__e->getMessage() . '</color>');
+                Firefly::print(sprintf(
+                    '%s %s %s',
+                    Firefly::color('>>', 'red'),
+                    Firefly::bg(Firefly::color(get_class($__e) . ':', 'black'), 'red'),
+                    Firefly::color($__e->getMessage(), 'red')
+                ));
             }
         }
     }

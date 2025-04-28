@@ -70,10 +70,10 @@ class HandlerCLI
                 Firefly::print('');
             }
 
-            Firefly::print('<color="green">Stack trace:</color>');
+            Firefly::print(Firefly::color('Stack trace:', 'green'));
             Firefly::print($e->getTraceAsString());
         } else {
-            Firefly::print('<bg="red"><color="black">An error has ocurred.</color></bg>');
+            Firefly::print(Firefly::bg(Firefly::color('An error has ocurred!', 'black'), 'red'));
         }
 
         // Exit with error status code

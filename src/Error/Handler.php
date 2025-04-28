@@ -299,7 +299,7 @@ class Handler
     {
         $type = pathinfo($filename, PATHINFO_EXTENSION);
         $content = file_get_contents(__DIR__ . '/Views/assets/' . $filename);
-        if ($type == 'css') $content = str_replace([': ', ' {', ', '], [':', '{', ','], $content);
+        if ($type == 'css') $content = str_replace([': ', ' {', ', ', '    '], [':', '{', ',', ''], $content);
         if ($type == 'js') $content = preg_replace("/\/\*[\s\S]*?\*\//", '', $content);
         return str_replace(["\r", "\n", "\t"], '', $content);
     }

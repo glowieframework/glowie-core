@@ -273,7 +273,7 @@ class Firefly
     public static function clearScreen()
     {
         if (!Util::isCLI()) return;
-        stripos(PHP_OS, 'WIN') === 0 ? popen('cls', 'w') : exec('clear');
+        stripos(PHP_OS, 'WIN') === 0 ? passthru('cls') : passthru('clear');
     }
 
     /**
@@ -301,8 +301,7 @@ class Firefly
 
             // Find cells
             foreach (array_column($rows, $key) as $row) {
-                $row = self::sanitize((string)$row);
-                $length = mb_strlen($row);
+                $length = mb_strlen(self::sanitize((string)$row));
                 if ($length > $maxSizes[$key]) $maxSizes[$key] = $length;
             }
 
@@ -315,9 +314,13 @@ class Firefly
         foreach (array_merge([$headers], $rows) as $key => $row) {
             // Fill empty values
             $row = array_pad($row, count($headers), '');
+
+            // Fill cell paddings
             foreach ($row as $cellKey => $cell) {
                 if (!isset($maxSizes[$cellKey])) continue;
-                $table[$key][] = str_pad((string)$cell, $maxSizes[$cellKey], ' ');
+                $cell = (string)$cell;
+                $length = $maxSizes[$cellKey] + (mb_strlen($cell) - mb_strlen(self::sanitize($cell)));
+                $table[$key][] = str_pad($cell, $length, ' ');
             }
         }
 
@@ -430,7 +433,7 @@ class Firefly
      */
     public static function bg(string $text, string $bg = 'default')
     {
-        return '<bg="' . $bg . '">' . $text . '</color>';
+        return '<bg="' . $bg . '">' . $text . '</bg>';
     }
 
     /**
@@ -584,14 +587,19 @@ class Firefly
 
         // Prints welcome message
         self::$silent = false;
-        self::print('<color="magenta">
+        self::print(Firefly::color('
         __           _
   ___ _/ /__ _    __(_)__
  / _ `/ / _ \ |/|/ / / -_)
  \_, /_/\___/__,__/_/\__/
-/___/
-</color>');
-        self::print('<bg="magenta"><color="black">Welcome to Glowie!</color></bg> <color="magenta">v' . Util::getVersion() . '</color>');
+/___/', 'magenta'));
+
+        self::print(sprintf(
+            '%s %s',
+            Firefly::bg(Firefly::color('Welcome to Glowie!', 'black'), 'magenta'),
+            Firefly::color('v' . Util::getVersion(), 'magenta')
+        ));
+
         self::print(self::color('Your application is ready.', 'green'));
     }
 

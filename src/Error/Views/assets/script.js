@@ -1,12 +1,14 @@
 /* Glowie Scripts */
 document.querySelector('.vendor-toggle')?.addEventListener('click', e => {
 	e.preventDefault();
+    e.target.classList.toggle('active');
 	document.querySelectorAll('tr.vendor').forEach(t => t.classList.toggle('hide'));
 });
 
 document.querySelectorAll('td .args-toggle').forEach(e => {
 	e.addEventListener('click', t => {
 		t.preventDefault();
+        e.classList.toggle('active');
 		e.nextElementSibling.classList.toggle('show');
 	});
 });
