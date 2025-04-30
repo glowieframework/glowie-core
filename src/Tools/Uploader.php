@@ -146,7 +146,7 @@ class Uploader
      */
     public static function make(string $directory = 'uploads')
     {
-        return new self($directory);
+        return new static($directory);
     }
 
     /**

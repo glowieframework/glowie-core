@@ -127,7 +127,7 @@ class Authorizator
      */
     public static function make(string $guard = 'default')
     {
-        return new self($guard);
+        return new static($guard);
     }
 
     /**

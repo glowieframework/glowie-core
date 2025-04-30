@@ -102,7 +102,7 @@ class Crawler
      */
     public static function make()
     {
-        return new self;
+        return new static;
     }
 
     /**

@@ -36,7 +36,7 @@ abstract class Job
      */
     public static function make($data = null)
     {
-        return new self($data);
+        return new static($data);
     }
 
     /**

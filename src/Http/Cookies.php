@@ -61,7 +61,7 @@ class Cookies implements JsonSerializable
      */
     public static function make(array $data = [])
     {
-        return new self($data);
+        return new static($data);
     }
 
     /**

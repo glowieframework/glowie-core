@@ -177,7 +177,7 @@ class Model extends Kraken implements JsonSerializable
      */
     public static function make($data = [], bool $init = true)
     {
-        return new self($data, $init);
+        return new static($data, $init);
     }
 
     /**

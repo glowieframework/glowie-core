@@ -90,7 +90,7 @@ class Mailer
      */
     public static function make()
     {
-        return new self;
+        return new static;
     }
 
     /**

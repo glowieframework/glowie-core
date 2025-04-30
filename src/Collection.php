@@ -43,7 +43,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public static function make(array $data = [])
     {
-        return new self($data);
+        return new static($data);
     }
 
     /**

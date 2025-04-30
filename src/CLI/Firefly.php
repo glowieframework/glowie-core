@@ -239,7 +239,7 @@ class Firefly
             $class = new $classname;
             $class->run();
         } else if (!empty(self::$custom[$namespace . ':' . $name]) && class_exists(self::$custom[$namespace . ':' . $name])) {
-            $class = new self::$custom[$namespace . ':' . $name];
+            $class = new static::$custom[$namespace . ':' . $name];
             $class->run();
         } else if (is_callable([self::class, '__' . $name])) {
             $name = '__' . $name;
