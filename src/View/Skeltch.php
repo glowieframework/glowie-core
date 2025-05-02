@@ -74,6 +74,7 @@ class Skeltch
         $code = self::compileLoops($code);
         $code = self::compileIfs($code);
         $code = self::compileFunctions($code);
+        $code = self::compileAttributes($code);
         $code = self::compilePHP($code);
         $code = self::compileBlocks($code);
         $code = self::compileComments($code);
@@ -96,7 +97,7 @@ class Skeltch
 
     /**
      * Compiles conditional statements.\
-     * example: `{if($condition)}` | `{/if}`
+     * example: `{ if($condition) }` | `{ /if }`
      * @param string $code Code to compile.
      * @return string Returns the compiled code.
      */
@@ -120,7 +121,7 @@ class Skeltch
 
     /**
      * Compiles layout blocks and stacks.\
-     * example: `{block('name')}` | `{/block}`
+     * example: `{ block('name') }` | `{ /block }`
      * @param string $code Code to compile.
      * @return string Returns the compiled code.
      */
@@ -138,7 +139,7 @@ class Skeltch
 
     /**
      * Compiles Glowie functions.\
-     * example: `{url('/')}`
+     * example: `{ url('/') }`
      * @param string $code Code to compile.
      * @return string Returns the compiled code.
      */
@@ -157,6 +158,21 @@ class Skeltch
         $code = preg_replace('~(?<!@){\s*json\s*\((.+?)\)\s*}~is', '<?php echo Util::jsonEncode($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*class\s*\((.+?)\)\s*}~is', '<?php echo Util::cssArray($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*dump\s*\((.+?)\)\s*}~is', '<?php echo Util::dump($1); ?>', $code);
+        return $code;
+    }
+
+    /**
+     * Compiles HTML attributes.\
+     * example: `{ disabled(true) }`
+     * @param string $code Code to compile.
+     * @return string Returns the compiled code.
+     */
+    private static function compileAttributes(string $code)
+    {
+        $attrs = ['checked', 'selected', 'disabled', 'readonly', 'required'];
+        foreach ($attrs as $i) {
+            $code = preg_replace('~(?<!@){\s*' . $i . '\s*\((.+?)\)\s*}~is', '<?php echo ($1) ? \'' . $i . '\' : \'\'; ?>', $code);
+        }
         return $code;
     }
 
