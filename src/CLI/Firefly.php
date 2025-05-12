@@ -199,13 +199,11 @@ class Firefly
             $match = [];
 
             // Args with values
-            if (preg_match('/--(.+)=(.+)/', $value, $match) && count($match) === 3) {
-                $args[strtolower($match[1])] = $match[2];
-            }
-
-            // Args without values
-            if (preg_match('/--(.+)/', $value, $match) && count($match) === 2) {
-                $args[strtolower($match[1])] = '';
+            if (preg_match('/^--([^=]+)=(.+)$/', $value, $match)) {
+                $args[mb_strtolower($match[1])] = $match[2];
+            } else if (preg_match('/^--([^=]+)$/', $value, $match)) {
+                // Args without values
+                $args[mb_strtolower($match[1])] = '';
             }
         }
 
