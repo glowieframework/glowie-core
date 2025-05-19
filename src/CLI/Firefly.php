@@ -201,7 +201,7 @@ class Firefly
             // Args with values
             if (preg_match('/^--([^=]+)=(.+)$/', $value, $match)) {
                 $args[mb_strtolower($match[1])] = $match[2];
-            } else if (preg_match('/^--([^=]+)$/', $value, $match)) {
+            } else if (preg_match('/^-{1,2}([^=]+)$/', $value, $match)) {
                 // Args without values
                 $args[mb_strtolower($match[1])] = '';
             }
@@ -271,7 +271,7 @@ class Firefly
     public static function clearScreen()
     {
         if (!Util::isCLI()) return;
-        stripos(PHP_OS, 'WIN') === 0 ? passthru('cls') : passthru('clear');
+        PHP_OS_FAMILY === 'Windows' ? passthru('cls') : passthru('clear');
     }
 
     /**

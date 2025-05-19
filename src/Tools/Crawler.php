@@ -428,6 +428,10 @@ class Crawler
         // Gets the response info
         $info = curl_getinfo($curl);
 
+        // Gets the errors
+        $errNumber = curl_errno($curl);
+        $errMsg = curl_error($curl);
+
         // Checks for the result
         if ($response === false) {
             $result = false;
@@ -444,11 +448,11 @@ class Crawler
             ]);
         }
 
-        // Error handling
-        if ($this->throw && curl_errno($curl)) throw new RequestException($url, curl_error($curl), curl_errno($curl), $result);
-
         // Closes the connection
         curl_close($curl);
+
+        // Error handling
+        if ($this->throw && $errNumber) throw new RequestException($url, $errMsg, $errNumber, $result);
 
         // Returns the result
         return $result;

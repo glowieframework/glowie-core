@@ -61,7 +61,7 @@ class Validator
     }
 
     /**
-     * Undocumented function
+     * Gets the validation error messages.
      * @param string|null $lang (Optional) Language name to get string from. Leave empty to use the current active language.
      * @return Collection Returns a Collection with the error messages.
      */
@@ -90,7 +90,7 @@ class Validator
 
     /**
      * Validates multiple fields with unique validation rules for each one of them.
-     * @param array|Element $data An Element or associative array of fields to be validated.
+     * @param mixed $data An Element, Collection or associative array of fields to be validated.
      * @param array $rules Associative array with validation rules for each field.
      * @param bool $bail (Optional) Stop validation of each field after first failure found.
      * @param bool $bailAll (Optional) Stop validation of all fields after first failure found.
@@ -107,13 +107,39 @@ class Validator
         $errors = [];
 
         foreach ($rules as $field => $ruleset) {
-            // Validate item
-            $this->validate($data[$field] ?? null, $ruleset, $bail);
-            if (!empty($this->errors)) {
-                $errors[$field] = $this->errors;
-                $result = false;
+            // Checks for array validation
+            if (Util::stringContains($field, '*')) {
+                $arrayValues = $this->extractWildcardValues($data, $field);
+                if (empty($arrayValues)) continue;
+
+                // Validate the array
+                $isValid = $this->validateMultiple(array_values($arrayValues), $ruleset, $bail, $bailAll);
+                if (!$isValid) {
+                    // Parse the error indexes
+                    $paths = array_keys($arrayValues);
+                    for ($i = 0; $i < count($paths); $i++) {
+                        if (!empty($this->errors[$i])) {
+                            $errors[$paths[$i]] = $this->errors[$i];
+                            $result = false;
+                        }
+                    }
+
+                    // Stop on bail all
+                    if ($bailAll) break;
+                }
+            } else {
+                // Validate single item
+                $this->validate($data[$field] ?? null, $ruleset, $bail);
+
+                // Store validation errors
+                if (!empty($this->errors)) {
+                    $errors[$field] = $this->errors;
+                    $result = false;
+                }
+
+                // Stop on bail all
+                if ($bailAll && !$result) break;
             }
-            if ($bailAll && !$result) break;
         }
 
         // Stores errors and returns the result
@@ -123,8 +149,8 @@ class Validator
 
     /**
      * Validates multiple values with the same rules for all of them.
-     * @param array|Element $data Array of values to be validated. You can also use an Element.
-     * @param string|array $rules Validation rules for the data. Can be a single rule or an array of rules.
+     * @param mixed $data Array of values to be validated. You can also use an Element or Collection.
+     * @param mixed $rules Validation rules for the data. Can be a single rule, an array of rules or a callable function.
      * @param bool $bail (Optional) Stop validation of each value after first failure found.
      * @param bool $bailAll (Optional) Stop validation of all values after first failure found.
      * @return bool Returns true if all rules passed for all values, false otherwise.
@@ -148,6 +174,8 @@ class Validator
                 $errors[$key] = $this->errors;
                 $result = false;
             };
+
+            // Stop on bail all
             if ($bailAll && !$result) break;
         }
 
@@ -159,7 +187,7 @@ class Validator
     /**
      * Validates a single value.
      * @param mixed $data Value to be validated.
-     * @param string|array $rules Validation rules for the data. Can be a single rule or an array of rules.
+     * @param mixed $rules Validation rules for the data. Can be a single rule, an array of rules or a callable function.
      * @param bool $bail (Optional) Stop validation after first failure found.
      * @return bool Returns true if all rules passed, false otherwise.
      */
@@ -170,6 +198,16 @@ class Validator
 
         // Loops through rule array
         foreach ((array)$rules as $rule) {
+
+            // Check for callable rule
+            if (is_callable($rule)) {
+                $cb = call_user_func_array($rule, [$data]);
+                if ($cb === false) $result['callable'];
+
+                // Stop on bail
+                if ($bail && !empty($result)) break;
+                continue;
+            }
 
             // Parse rule parameters, if available
             $rule = explode(':', $rule, 2);
@@ -235,6 +273,17 @@ class Validator
                     if (!is_string($data) || !filter_var($data, FILTER_VALIDATE_URL)) $result[] = 'url';
                     break;
 
+                // [IP] - Checks if variable is a valid IP address
+                case 'ip':
+                    if (!is_string($data) || !filter_var($data, FILTER_VALIDATE_IP)) $result[] = 'ip';
+                    break;
+
+                // [MAC_ADDRESS] - Checks if variable is a valid MAC address
+                case 'macaddress':
+                case 'mac_address':
+                    if (!is_string($data) || !filter_var($data, FILTER_VALIDATE_MAC)) $result[] = 'mac_address';
+                    break;
+
                 // [ALPHA] - Checks if variable is alphabetic
                 case 'alpha':
                     if (!is_string($data) || !preg_match('/^[a-z]+$/i', $data)) $result[] = 'alpha';
@@ -248,13 +297,13 @@ class Validator
                 // [ALPHA_NUMERIC] - Checks if variable is alphanumeric
                 case 'alphanumeric':
                 case 'alpha_numeric':
-                    if (!is_string($data) || !preg_match('/^[a-z0-9]+$/i', $data)) $result[] = 'alphanumeric';
+                    if (!is_string($data) || !preg_match('/^[a-z0-9]+$/i', $data)) $result[] = 'alpha_numeric';
                     break;
 
                 // [ALPHA_DASH] - Checks if variable is alphanumeric or has dashes/underscores
                 case 'alphadash':
                 case 'alpha_dash':
-                    if (!is_string($data) || !preg_match('/^[a-z0-9-_]+$/i', $data)) $result[] = 'alphadash';
+                    if (!is_string($data) || !preg_match('/^[a-z0-9-_]+$/i', $data)) $result[] = 'alpha_dash';
                     break;
 
                 // [UUID] - Checks if variable is a valid universally unique identifier
@@ -271,6 +320,11 @@ class Validator
                 // [ARRAY] - Checks if variable is an array
                 case 'array':
                     if (!is_array($data)) $result[] = 'array';
+                    break;
+
+                // [INDEXED] - Checks if variable is an indexed/numeric array
+                case 'indexed':
+                    if (Util::isAssociativeArray($data)) $result[] = 'indexed';
                     break;
 
                 // [ASSOC] - Checks if variable is an associative array
@@ -318,7 +372,7 @@ class Validator
                 // [NOT_FILE] - Check if path is not an existing file
                 case 'notfile':
                 case 'not_file':
-                    if (is_string($data) && is_file($data)) $result[] = 'notfile';
+                    if (is_string($data) && is_file($data)) $result[] = 'not_file';
                     break;
 
                 // [UPLOAD] - Checks if variable is an uploaded file through HTTP POST
@@ -334,7 +388,7 @@ class Validator
                 // [NOT_DIRECTORY] - Checks if path is not an existing directory
                 case 'notdirectory':
                 case 'not_directory':
-                    if (is_string($data) && !is_dir($data)) $result[] = 'notdirectory';
+                    if (is_string($data) && !is_dir($data)) $result[] = 'not_directory';
                     break;
 
                 // [MIME] - Checks if file matches a list of mime types
@@ -347,20 +401,34 @@ class Validator
                 case 'notmime':
                 case 'not_mime':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "notmime" rule');
-                    if (!is_string($data) || !is_file($data) || in_array(mime_content_type($data), explode(',', $rule[1]))) $result[] = 'notmime';
+                    if (!is_string($data) || !is_file($data) || in_array(mime_content_type($data), explode(',', $rule[1]))) $result[] = 'not_mime';
                     break;
 
-                // [IN] - Checks if string matches a list of values
+                // [IN] - Checks if string matches a list of values (loose comparison)
                 case 'in':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "in" rule');
                     if (!is_string($data) || !in_array(trim($data), explode(',', $rule[1]))) $result[] = 'in';
                     break;
 
-                // [NOT_IN] - Checks if string is not in a list of values
+                // [IN_STRICT] - Checks if string matches a list of values (strict comparison)
+                case 'instrict':
+                case 'in_strict':
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "in_strict" rule');
+                    if (!is_string($data) || !in_array(trim($data), explode(',', $rule[1]), true)) $result[] = 'in_strict';
+                    break;
+
+                // [NOT_IN] - Checks if string is not in a list of values (loose comparison)
                 case 'notin':
                 case 'not_in':
-                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "notin" rule');
-                    if (!is_string($data) || in_array(trim($data), explode(',', $rule[1]))) $result[] = 'notin';
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "not_in" rule');
+                    if (!is_string($data) || in_array(trim($data), explode(',', $rule[1]))) $result[] = 'not_in';
+                    break;
+
+                // [NOT_IN_STRICT] - Checks if string is not in a list of values (strict comparison)
+                case 'notinstrict':
+                case 'not_in_strict':
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "not_in_strict" rule');
+                    if (!is_string($data) || in_array(trim($data), explode(',', $rule[1]), true)) $result[] = 'not_in_strict';
                     break;
 
                 // [WRITABLE] - Checks if path is a writable directory or file
@@ -393,16 +461,30 @@ class Validator
                     if (!Util::isJson($data)) $result[] = 'json';
                     break;
 
-                // [VALUE] - Checks if variable matches value
+                // [VALUE] - Checks if variable matches value (loose comparison)
                 case 'value':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "value" rule');
                     if ($data != $rule[1]) $result[] = 'value';
                     break;
 
-                // [NOT] - Checks if variable does not match value
+                // [VALUE] - Checks if variable matches value (strict comparison)
+                case 'valuestrict':
+                case 'value_strict':
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "value_strict" rule');
+                    if ($data !== $rule[1]) $result[] = 'value_strict';
+                    break;
+
+                // [NOT] - Checks if variable does not match value (loose comparison)
                 case 'not':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "not" rule');
                     if ($data == $rule[1]) $result[] = 'not';
+                    break;
+
+                // [NOT_STRICT] Checks if variable does not match value (strict comparison)
+                case 'notstrict':
+                case 'not_strict':
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "not_strict" rule');
+                    if ($data === $rule[1]) $result[] = 'not_strict';
                     break;
 
                 // [EMPTY] - Check if variable is empty
@@ -413,15 +495,15 @@ class Validator
                 // [ENDS_WITH] - Check if variable ends with string
                 case 'endswith':
                 case 'ends_with':
-                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "endswith" rule');
-                    if (!is_string($data) || Util::endsWith($data, $rule[1])) $result[] = 'endswith';
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "ends_with" rule');
+                    if (!is_string($data) || Util::endsWith($data, $rule[1])) $result[] = 'ends_with';
                     break;
 
                 // [STARTS_WITH] - Check if variable starts with string
                 case 'startswith':
                 case 'starts_with':
-                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "startswith" rule');
-                    if (!is_string($data) || Util::startsWith($data, $rule[1])) $result[] = 'startswith';
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "starts_with" rule');
+                    if (!is_string($data) || Util::startsWith($data, $rule[1])) $result[] = 'starts_with';
                     break;
 
                 // Fallback to custom rules
@@ -430,6 +512,7 @@ class Validator
                     break;
             }
 
+            // Stop on bail
             if ($bail && !empty($result)) break;
         }
 
@@ -449,5 +532,61 @@ class Validator
         $callback =  self::$custom[$rule] ?? $rule;
         if (!is_callable($callback)) throw new Exception('Validator: Rule "' . $rule . '" does not exist');
         return call_user_func_array($callback, [$data]);
+    }
+
+    /**
+     * Extracts values from a multi-dimensional array using dot notation with wildcards.
+     * @param array $data Source array to extract the values from.
+     * @param string $path Dot notation path with optional wildcards.
+     * @return array Returns an associative array with full dot paths as keys and the corresponding extracted values.
+     */
+    private function extractWildcardValues(array $data, string $path): array
+    {
+        $segments = explode('.', $path);
+        $results = [];
+        $this->collectWildcardValues($data, $segments, $results);
+        return $results;
+    }
+
+    /**
+     * Collects values from a multi-dimensional array by resolving wildcard segments.
+     * @param mixed $data Current level of the array to traverse.
+     * @param array $segments Remaining path segments to resolve.
+     * @param array $results Reference to the array that stores matched keys and values.
+     * @param array $currentPath (Optional) Current path segments resolved so far.
+     */
+    private function collectWildcardValues($data, array $segments, array &$results, array $currentPath = [])
+    {
+        if (is_callable([$data, 'toArray'])) $data = $data->toArray();
+        $segment = array_shift($segments);
+
+        if ($segment === '*') {
+            if (!is_array($data)) return;
+
+            foreach ($data as $index => $item) {
+                $newPath = array_merge($currentPath, [$index]);
+                if (empty($segments)) {
+                    $results[implode('.', $newPath)] = $item;
+                } else {
+                    $this->collectWildcardValues($item, $segments, $results, $newPath);
+                }
+            }
+        } else if (is_array($data)) {
+            $newPath = array_merge($currentPath, [$segment]);
+
+            if (array_key_exists($segment, $data)) {
+                if (empty($segments)) {
+                    $results[implode('.', $newPath)] = $data[$segment];
+                } else {
+                    $this->collectWildcardValues($data[$segment], $segments, $results, $newPath);
+                }
+            } else {
+                if (empty($segments)) {
+                    $results[implode('.', $newPath)] = null;
+                } else {
+                    $this->collectWildcardValues([], $segments, $results, $newPath);
+                }
+            }
+        }
     }
 }
