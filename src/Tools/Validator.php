@@ -62,14 +62,20 @@ class Validator
 
     /**
      * Gets the validation error messages.
-     * @param string|null $lang (Optional) Language name to get string from. Leave empty to use the current active language.
+     * @param string|null $lang (Optional) Language name to get the messages from. Leave empty to use the current active language.
      * @return Collection Returns a Collection with the error messages.
      */
     public function getMessages(?string $lang = null)
     {
         $messages = [];
         foreach ($this->errors as $field => $rule) {
-            $messages[$field] = Babel::get("validation.$rule", ['field' => $field], $lang);
+            if (is_array($rule)) {
+                foreach ($rule as $name) {
+                    $messages[$field] = Babel::get("validation.$name", ['field' => $field], $lang);
+                }
+            } else {
+                $messages[$field] = Babel::get("validation.$rule", ['field' => $field], $lang);
+            }
         }
         return new Collection($messages);
     }
@@ -557,36 +563,55 @@ class Validator
      */
     private function collectWildcardValues($data, array $segments, array &$results, array $currentPath = [])
     {
+        // Converts Element data to array
         if (is_callable([$data, 'toArray'])) $data = $data->toArray();
+        if (!is_array($data)) return;
+
+        // Gets the next segment
         $segment = array_shift($segments);
 
+        // Checks for wildcard segment
         if ($segment === '*') {
-            if (!is_array($data)) return;
-
+            // Loops through the data to get values
             foreach ($data as $index => $item) {
+                // Creates the path
                 $newPath = array_merge($currentPath, [$index]);
+
+                // If last segment, store the value directly
                 if (empty($segments)) {
                     $results[implode('.', $newPath)] = $item;
-                } else {
-                    $this->collectWildcardValues($item, $segments, $results, $newPath);
+                    continue;
                 }
-            }
-        } else if (is_array($data)) {
-            $newPath = array_merge($currentPath, [$segment]);
 
-            if (array_key_exists($segment, $data)) {
-                if (empty($segments)) {
-                    $results[implode('.', $newPath)] = $data[$segment];
-                } else {
-                    $this->collectWildcardValues($data[$segment], $segments, $results, $newPath);
-                }
-            } else {
-                if (empty($segments)) {
-                    $results[implode('.', $newPath)] = null;
-                } else {
-                    $this->collectWildcardValues([], $segments, $results, $newPath);
-                }
+                // Get the next segments
+                $this->collectWildcardValues($item, $segments, $results, $newPath);
             }
+
+            return;
+        }
+
+        // Gets the next value
+        $newPath = array_merge($currentPath, [$segment]);
+
+        // Checks if the value exists
+        if (isset($data[$segment])) {
+            // If last segment, store the value directly
+            if (empty($segments)) {
+                $results[implode('.', $newPath)] = $data[$segment];
+                return;
+            }
+
+            // Get the next segments
+            $this->collectWildcardValues($data[$segment], $segments, $results, $newPath);
+        } else {
+            // If last segment, store null
+            if (empty($segments)) {
+                $results[implode('.', $newPath)] = null;
+                return;
+            }
+
+            // Get the next segments
+            $this->collectWildcardValues([], $segments, $results, $newPath);
         }
     }
 }
