@@ -1,10 +1,10 @@
 <!--
-<?= var_dump($var); ?>
+<?= var_dump(...$vars); ?>
 -->
 <html>
 
 <head>
-    <title>Variable dump of type: <?= is_object($var) ? get_class($var) : gettype($var); ?></title>
+    <title>Variable dump</title>
     <link rel="shortcut icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABNUlEQVQ4jZ3Tv0pcQRQG8N8Ml2CV6tYiEmwMksInMD6AjY9grAbyp0wZxC4Wt9H4CGnyALL4DEEsLMQi5TSBIBbL3hQ7K3cvdxX3g4HhfN/5zuGcmaCHtm7WcIBdrJXwHUY4DznddvWhk1jhGz7jVd+4YIzv+BpyGj8alOSf2OuIHzCrto6VDvcL+yGncSyBo14y3IScNkNOm7jpcXs4htjWzZvS9kvxsa2bjYhDVEsYVDiIptNeFrvRdEDLYj0+r3kSsTJ9JFtDZFs3r2f3BQZ3FS4XGLzF32c6GEWcYTJA3uN9Of8G+AnOY8jpGqcDgquQ0yjkNML1AH8acrqa7f8LNsyvdLutm+NSabvfesmZ+0wrOMEHi4c2wQ98Cjk9zBl0jN6ZfucdrJbwH1zgLOT0u6v/D0mmTb6gKDocAAAAAElFTkSuQmCC" />
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
     <meta name="color-scheme" content="dark white">
@@ -15,12 +15,14 @@
 
 <body>
     <div class="wrapper">
-        <div class="title">
-            <strong>Variable dump of type:</strong> <?= is_object($var) ? get_class($var) : gettype($var); ?>
-        </div>
-        <div class="details">
-            <pre><?= self::parseDump($var) ?></pre>
-        </div>
+        <?php foreach ($vars as $var): ?>
+            <div class="title">
+                <strong>Variable dump of type:</strong> <?= is_object($var) ? get_class($var) : gettype($var); ?>
+            </div>
+            <div class="details">
+                <pre><?= self::parseDump($var) ?></pre>
+            </div>
+        <?php endforeach; ?>
         <div class="title">
             <span>Glowie <?= self::getVersion(); ?> | PHP <?= phpversion(); ?></span>
         </div>
@@ -32,5 +34,5 @@
 
 </html>
 <!--
-<?= var_dump($var); ?>
+<?= var_dump(...$vars); ?>
 -->

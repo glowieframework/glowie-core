@@ -248,12 +248,13 @@ class Response
      * Sets a new header value or replaces the existing one.
      * @param string $name Header name to set.
      * @param string|array $value Header value to set. Can also be an array of values.
+     * @param int $code (Optional) HTTP response code to force.
      * @return Response Current Response instance for nested calls.
      */
-    public function setHeader(string $name, $value)
+    public function setHeader(string $name, $value, int $code = 0)
     {
         $value = implode(', ', (array)$value);
-        header("{$name}: {$value}");
+        header("{$name}: {$value}", true, $code);
         return $this;
     }
 
@@ -261,12 +262,13 @@ class Response
      * Sets a new header value or appends the value to the existing one.
      * @param string $name Header name to set.
      * @param string|array $value Header value to set.
+     * @param int $code (Optional) HTTP response code to force.
      * @return Response Current Response instance for nested calls.
      */
-    public function appendHeader(string $name, $value)
+    public function appendHeader(string $name, $value, int $code = 0)
     {
         $value = implode(', ', (array)$value);
-        header("{$name}: {$value}", false);
+        header("{$name}: {$value}", false, $code);
         return $this;
     }
 
@@ -322,7 +324,7 @@ class Response
      */
     public function setDownload(string $filename)
     {
-        return $this->setHeader('Content-Disposition', "filename=\"{$filename}\"");
+        return $this->setHeader('Content-Disposition', "attachment; filename=\"{$filename}\"");
     }
 
     /**
@@ -382,15 +384,18 @@ class Response
     }
 
     /**
-     * Sets a file content as the response.
-     * @param string $filename Filename to get the content from.
+     * Streams a file content as the response.
+     * @param string $filename Filename to stream the content from.
      * @return Response Current Response instance for nested calls.
      */
     public function setFile(string $filename)
     {
         if (!is_file($filename)) throw new FileException('"' . $filename . '" does not exist!');
-        $content = file_get_contents($filename);
-        return $this->setBody($content, mime_content_type($filename));
+        if (Buffer::isActive()) Buffer::clean();
+        $this->setContentType(mime_content_type($filename) || self::CONTENT_PLAIN);
+        $this->setHeader('Content-Length', filesize($filename));
+        readfile($filename);
+        return $this;
     }
 
     /**
@@ -415,7 +420,7 @@ class Response
     {
         if (Buffer::isActive()) Buffer::clean();
         $this->setStatusCode($code);
-        header('Location: ' . $destination, true, $code);
+        $this->setHeader('Location', $destination, $code);
         return $this;
     }
 

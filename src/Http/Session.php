@@ -35,6 +35,12 @@ class Session implements JsonSerializable
     private static $appName;
 
     /**
+     * Validator instance.
+     * @var Validator
+     */
+    private $__validator;
+
+    /**
      * Starts a new session or resumes the existing one.
      * @param array $data (Optional) An associative array with the initial data to store in the session.\
      * **This replaces the existing session data!**
@@ -274,11 +280,10 @@ class Session implements JsonSerializable
 
     /**
      * Dumps the session data.
-     * @param bool $plain (Optional) Dump data as plain text instead of HTML.
      */
-    public function dump(bool $plain = false)
+    public function dump()
     {
-        Util::dump($this, $plain);
+        Util::dump($this);
     }
 
     /**
@@ -360,7 +365,7 @@ class Session implements JsonSerializable
      */
     public function validate(array $rules, bool $bail = false, bool $bailAll = false)
     {
-        return (new Validator())->validateFields($this->toArray(), $rules, $bail, $bailAll);
+        return $this->getValidator()->validateFields($this->toArray(), $rules, $bail, $bailAll);
     }
 
     /**
@@ -372,6 +377,16 @@ class Session implements JsonSerializable
      */
     public function validateAll($rules, bool $bail = false, bool $bailAll = false)
     {
-        return (new Validator())->validateMultiple($this->toArray(), $rules, $bail, $bailAll);
+        return $this->getValidator()->validateMultiple($this->toArray(), $rules, $bail, $bailAll);
+    }
+
+    /**
+     * Gets the Validator instance associated with the data.
+     * @return Validator The validator instance.
+     */
+    public function getValidator()
+    {
+        if (!$this->__validator) $this->__validator = new Validator();
+        return $this->__validator;
     }
 }

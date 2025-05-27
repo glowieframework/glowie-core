@@ -28,6 +28,12 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     private $__data = [];
 
     /**
+     * Validator instance.
+     * @var Validator
+     */
+    private $__validator;
+
+    /**
      * Creates a new collection.
      * @param array $data (Optional) Initial data to parse into the Collection.
      */
@@ -209,11 +215,10 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
 
     /**
      * Dumps the Collection data.
-     * @param bool $plain (Optional) Dump data as plain text instead of HTML.
      */
-    public function dump(bool $plain = false)
+    public function dump()
     {
-        Util::dump($this, $plain);
+        Util::dump($this);
     }
 
     /**
@@ -864,7 +869,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function validate(array $rules, bool $bail = false, bool $bailAll = false)
     {
-        return (new Validator())->validateFields($this->toArray(), $rules, $bail, $bailAll);
+        return $this->getValidator()->validateFields($this->toArray(), $rules, $bail, $bailAll);
     }
 
     /**
@@ -876,6 +881,16 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function validateAll($rules, bool $bail = false, bool $bailAll = false)
     {
-        return (new Validator())->validateMultiple($this->toArray(), $rules, $bail, $bailAll);
+        return $this->getValidator()->validateMultiple($this->toArray(), $rules, $bail, $bailAll);
+    }
+
+    /**
+     * Gets the Validator instance associated with this Collection.
+     * @return Validator The validator instance.
+     */
+    public function getValidator()
+    {
+        if (!$this->__validator) $this->__validator = new Validator();
+        return $this->__validator;
     }
 }

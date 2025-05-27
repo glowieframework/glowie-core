@@ -121,7 +121,7 @@ class Sandbox
                         Firefly::print('>> $' . $__key . ' = ', false);
 
                         Buffer::start();
-                        Util::dump($__value, false, true);
+                        self::dump($__value);
                         $__value = Buffer::get();
 
                         Firefly::print($__value);
@@ -161,7 +161,7 @@ class Sandbox
                 $__ = eval($__command);
 
                 // Flushes the buffer
-                if ($__) Util::dump($__, false, true);
+                if ($__) self::dump($__);
                 $__ = Buffer::get();
 
                 // Prints the result
@@ -183,5 +183,15 @@ class Sandbox
                 ));
             }
         }
+    }
+
+    /**
+     * Captures the result of a variable dump.
+     * @param mixed $var Variable to be dumped.
+     */
+    private static function dump($var)
+    {
+        Firefly::print(Util::parseDump($var, true), false);
+        Firefly::print('</color>', false);
     }
 }

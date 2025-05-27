@@ -34,13 +34,12 @@ abstract class Command
     }
 
     /**
-     * Dumps a variable in a human-readable way into the console and ends the script execution.
-     * @param mixed $var Variable to be dumped.
-     * @param bool $continue (Optional) Continue script execution after dump.
+     * Dumps a set of variables in a human-readable way into the console and ends the script execution.
+     * @param mixed $vars Variables to be dumped.
      */
-    public function dump($var, bool $continue = false)
+    public function dump(...$vars)
     {
-        Util::dump($var, false, $continue);
+        Util::dump(...$vars);
     }
 
     /**

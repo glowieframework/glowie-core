@@ -26,6 +26,12 @@ trait ElementTrait
     private $__data = [];
 
     /**
+     * Validator instance.
+     * @var Validator
+     */
+    private $__validator;
+
+    /**
      * Constructs the Element trait data.
      * @param array $data (Optional) An associative array with the initial data to parse.
      */
@@ -213,11 +219,10 @@ trait ElementTrait
 
     /**
      * Dumps the Element data.
-     * @param bool $plain (Optional) Dump data as plain text instead of HTML.
      */
-    public function dump(bool $plain = false)
+    public function dump()
     {
-        Util::dump($this, $plain);
+        Util::dump($this);
     }
 
     /**
@@ -229,7 +234,7 @@ trait ElementTrait
      */
     public function validate(array $rules, bool $bail = false, bool $bailAll = false)
     {
-        return (new Validator())->validateFields($this->toArray(), $rules, $bail, $bailAll);
+        return $this->getValidator()->validateFields($this->toArray(), $rules, $bail, $bailAll);
     }
 
     /**
@@ -241,7 +246,17 @@ trait ElementTrait
      */
     public function validateAll($rules, bool $bail = false, bool $bailAll = false)
     {
-        return (new Validator())->validateMultiple($this->toArray(), $rules, $bail, $bailAll);
+        return $this->getValidator()->validateMultiple($this->toArray(), $rules, $bail, $bailAll);
+    }
+
+    /**
+     * Gets the Validator instance associated with the Element.
+     * @return Validator The validator instance.
+     */
+    public function getValidator()
+    {
+        if (!$this->__validator) $this->__validator = new Validator();
+        return $this->__validator;
     }
 
     /**

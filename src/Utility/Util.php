@@ -32,17 +32,18 @@ class Util
     }
 
     /**
-     * Dumps a variable in a human-readable way and ends the script execution.
-     * @param mixed $var Variable to be dumped.
-     * @param bool $plain (Optional) Dump variable as plain text instead of HTML.
-     * @param bool $continue (Optional) Continue script execution after dump.
+     * Dumps a set of variables in a human-readable way and ends the script execution.
+     * @param mixed $vars Variables to be dumped.
+     * @return void
      */
-    public static function dump($var, bool $plain = false, bool $continue = false)
+    public static function dump(...$vars)
     {
         // Dumps the content
         if (self::isCLI()) {
-            Firefly::print(self::parseDump($var, true), false);
-            Firefly::print('</color>');
+            foreach ($vars as $var) {
+                Firefly::print(self::parseDump($var, true), false);
+                Firefly::print('</color>');
+            }
         } else {
             // Clean output buffer
             if (Buffer::isActive()) Buffer::clean();
@@ -52,13 +53,8 @@ class Util
 
             // Checks if app debug is enabled
             if (error_reporting()) {
-                if ($plain) {
-                    Rails::getResponse()->setContentType(Response::CONTENT_PLAIN);
-                    var_dump($var);
-                } else {
-                    Rails::getResponse()->setContentType(Response::CONTENT_HTML);
-                    include(__DIR__ . '/Views/dump.phtml');
-                }
+                Rails::getResponse()->setContentType(Response::CONTENT_HTML);
+                include(__DIR__ . '/Views/dump.phtml');
             } else {
                 extract([
                     'title' => 'Server Error',
@@ -69,7 +65,7 @@ class Util
         }
 
         // Stop script
-        if (!$continue) die();
+        die();
     }
 
     /**
@@ -79,7 +75,7 @@ class Util
      * @param int $space (Optional) CLI tab spacement for current iteration.
      * @return string Returns the HTML/CLI dump code.
      */
-    protected static function parseDump($var, bool $cli = false, int $space = 2)
+    public static function parseDump($var, bool $cli = false, int $space = 2)
     {
         // Prepares the result string
         $html = '';

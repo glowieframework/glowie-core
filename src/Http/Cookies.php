@@ -46,6 +46,12 @@ class Cookies implements JsonSerializable
     public const EXPIRES_NEVER = null;
 
     /**
+     * Validator instance.
+     * @var Validator
+     */
+    private $__validator;
+
+    /**
      * Creates a new instance of the cookie manager.
      * @param array $data (Optional) An associative array with the initial data to store in the cookies.
      */
@@ -249,11 +255,10 @@ class Cookies implements JsonSerializable
 
     /**
      * Dumps the cookies data.
-     * @param bool $plain (Optional) Dump data as plain text instead of HTML.
      */
-    public function dump(bool $plain = false)
+    public function dump()
     {
-        Util::dump($this, $plain);
+        Util::dump($this);
     }
 
     /**
@@ -265,7 +270,7 @@ class Cookies implements JsonSerializable
      */
     public function validate(array $rules, bool $bail = false, bool $bailAll = false)
     {
-        return (new Validator())->validateFields($this->toArray(), $rules, $bail, $bailAll);
+        return $this->getValidator()->validateFields($this->toArray(), $rules, $bail, $bailAll);
     }
 
     /**
@@ -277,7 +282,17 @@ class Cookies implements JsonSerializable
      */
     public function validateAll($rules, bool $bail = false, bool $bailAll = false)
     {
-        return (new Validator())->validateMultiple($this->toArray(), $rules, $bail, $bailAll);
+        return $this->getValidator()->validateMultiple($this->toArray(), $rules, $bail, $bailAll);
+    }
+
+    /**
+     * Gets the Validator instance associated with the data.
+     * @return Validator The validator instance.
+     */
+    public function getValidator()
+    {
+        if (!$this->__validator) $this->__validator = new Validator();
+        return $this->__validator;
     }
 
     /**
