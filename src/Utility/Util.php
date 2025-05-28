@@ -41,8 +41,8 @@ class Util
         // Dumps the content
         if (self::isCLI()) {
             foreach ($vars as $var) {
-                Firefly::print(self::parseDump($var, true), false);
-                Firefly::print('</color>');
+                $dump = self::parseDump($var, true);
+                Firefly::print($dump . '</color>', false);
             }
         } else {
             // Clean output buffer

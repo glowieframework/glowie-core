@@ -2,6 +2,7 @@
 
 namespace Glowie\Core\CLI;
 
+use Glowie\Core\Collection;
 use Glowie\Core\Exception\ConsoleException;
 use Util;
 

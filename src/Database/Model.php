@@ -1260,20 +1260,25 @@ class Model extends Kraken implements JsonSerializable
 
                         // Gets the relationships
                         if (!is_null($value)) {
-                            // Get the keys from the pivot table
-                            $value = $pivotRelations->filter(function ($i) use ($value, $item) {
+                            // Gets the matching keys from the pivot table
+                            $pivotValues = $pivotRelations->filter(function ($i) use ($value, $item) {
                                 return $i->get($item['current-foreign']) == $value;
                             })->values();
 
                             // Get the related instances
-                            if ($value->isNotEmpty()) {
-                                $keys = $value->column($item['target-foreign']);
+                            if ($pivotValues->isNotEmpty()) {
+                                $keys = $pivotValues->column($item['target-foreign']);
 
                                 // Associate the related model with the parent model
                                 if ($keys->isNotEmpty()) {
                                     $keys = $keys->toArray();
                                     $value = $relations->filter(function ($i) use ($keys, $item) {
                                         return in_array($i->get($item['primary-target']), $keys);
+                                    })->each(function ($i) use ($pivotValues, $item) {
+                                        // Fill the pivot data of this relationship
+                                        $i->pivot = $pivotValues->filter(function ($r) use ($i, $item) {
+                                            return $r->get($item['target-foreign']) == $i->get($item['primary-target']);
+                                        })->first();
                                     })->values();
                                 } else {
                                     $value = new Collection();

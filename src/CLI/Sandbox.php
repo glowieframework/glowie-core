@@ -191,7 +191,7 @@ class Sandbox
      */
     private static function dump($var)
     {
-        Firefly::print(Util::parseDump($var, true), false);
-        Firefly::print('</color>', false);
+        $dump = Util::parseDump($var, true);
+        Firefly::print($dump . '</color>', false);
     }
 }
