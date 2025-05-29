@@ -807,7 +807,7 @@ class Model extends Kraken implements JsonSerializable
         // Get primary key and names
         $primary = $this->getPrimaryName();
         if (Util::isEmpty($name)) $name = Util::snakeCase(Util::singularize(Util::classname($model)));
-        if (Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $this->getPrimaryName();
+        if (Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $primary;
 
         // Set to relations array
         $this->_relations[$name] = [
@@ -836,7 +836,7 @@ class Model extends Kraken implements JsonSerializable
         // Get primary key and names
         $primary = $this->getPrimaryName();
         if (Util::isEmpty($name)) $name = Util::snakeCase(Util::pluralize(Util::classname($model)));
-        if (Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $this->getPrimaryName();
+        if (Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $primary;
 
         // Set to relations array
         $this->_relations[$name] = [
@@ -884,35 +884,118 @@ class Model extends Kraken implements JsonSerializable
      * Setup a many to many relationship with another model. **This requires an intermediate (pivot) table.**
      * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
      * @param string $pivot (Optional) Intermediate table name. Leave empty for auto.
-     * @param string $column (Optional) Foreign key column name from the current model. Leave empty for auto.
-     * @param string $foreign (Optional) Foreign key column name from the target model. Leave empty for auto.
+     * @param string $column (Optional) Foreign key column name from the current model in the pivot table. Leave empty for auto.
+     * @param string $foreign (Optional) Foreign key column name from the target model in the pivot table. Leave empty for auto.
      * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
      * @param callable|null $callback (Optional) A function to interact with the related model before querying the relationship.\
-     * It receives the related Model instance as the first parameter, the current row as an associative array and an array with the pivot results.
+     * It receives the related Model instance as the first parameter, the current row as an associative array and the pivot table instance.
+     * @param string $pivotName (Optional) Name of the pivot attribute in the relationship rows.
      * @return $this Current Model instance for nested calls.
      */
-    public function belongsToMany(string $model, string $pivot = '', string $column = '', string $foreign = '', string $name = '', ?callable $callback = null)
+    public function belongsToMany(string $model, string $pivot = '', string $column = '', string $foreign = '', string $name = '', ?callable $callback = null, string $pivotName = 'pivot')
     {
         // Get primary key and names
         $instance = new $model([], false);
-        $primary = $instance->getPrimaryName();
+        $primary = $this->getPrimaryName();
+        $primaryTarget = $instance->getPrimaryName();
         if (Util::isEmpty($name)) $name = Util::snakeCase(Util::pluralize(Util::classname($model)));
         if (Util::isEmpty($pivot)) $pivot = $this->getTable() . '_' . $instance->getTable();
 
         // Get foreign keys
-        if (Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $this->getPrimaryName();
-        if (Util::isEmpty($foreign)) $foreign = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primary;
+        if (Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $primary;
+        if (Util::isEmpty($foreign)) $foreign = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primaryTarget;
 
         // Set to relations array
         $this->_relations[$name] = [
             'type' => 'belongs-many',
             'model' => $model,
-            'primary-current' => $this->getPrimaryName(),
-            'primary-target' => $primary,
+            'primary-current' => $primary,
+            'primary-target' => $primaryTarget,
             'pivot' => $pivot,
             'current-foreign' => $column,
             'target-foreign' => $foreign,
-            'callback' => $callback
+            'callback' => $callback,
+            'pivot-name' => $pivotName
+        ];
+
+        // Return instance
+        return $this;
+    }
+
+    /**
+     * Setup a one to one relationship with another model using an intermediate model.
+     * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
+     * @param string $intermediate Intermediate model classname with namespace. You can use `ModelName::class` to get this property correctly.
+     * @param string $foreignCurrent (Optional) Foreign key column name from the current model in the intermediate table. Leave empty for auto.
+     * @param string $foreignTarget (Optional) Foreign key column name from the intermediate model in the target table. Leave empty for auto.
+     * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
+     * @param callable|null $callback $callback (Optional) A function to interact with the related and intermediate models before querying the relationship.\
+     * It receives the related Model instance as the first parameter, the current row as an associative array and the intermediate model instance.
+     * @return $this Current Model instance for nested calls.
+     */
+    public function hasOneThrough(string $model, string $intermediate, string $foreignCurrent = '', string $foreignTarget = '', string $name = '', ?callable $callback = null)
+    {
+        // Get primary key and names
+        $primary = $this->getPrimaryName();
+        $primaryIntermediate = (new $intermediate([], false))->getPrimaryName();
+        $primaryTarget = (new $model([], false))->getPrimaryName();
+        if (Util::isEmpty($name)) $name = Util::snakeCase(Util::singularize(Util::classname($model)));
+
+        // Get foreign keys
+        if (Util::isEmpty($foreignCurrent)) $foreignCurrent = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $primary;
+        if (Util::isEmpty($foreignTarget)) $foreignTarget = Util::snakeCase(Util::singularize(Util::classname($intermediate))) . '_' . $primaryIntermediate;
+
+        // Set to relations array
+        $this->_relations[$name] = [
+            'type' => 'one-through',
+            'model' => $model,
+            'intermediate' => $intermediate,
+            'primary-current' => $primary,
+            'primary-intermediate' => $primaryIntermediate,
+            'primary-target' => $primaryTarget,
+            'current-foreign' => $foreignCurrent,
+            'target-foreign' => $foreignTarget,
+            'callback' => $callback,
+        ];
+
+        // Return instance
+        return $this;
+    }
+
+    /**
+     * Setup a one to many relationship with another model using an intermediate model.
+     * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
+     * @param string $intermediate Intermediate model classname with namespace. You can use `ModelName::class` to get this property correctly.
+     * @param string $foreignCurrent (Optional) Foreign key column name from the current model in the intermediate table. Leave empty for auto.
+     * @param string $foreignTarget (Optional) Foreign key column name from the intermediate model in the target table. Leave empty for auto.
+     * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
+     * @param callable|null $callback $callback (Optional) A function to interact with the related and intermediate models before querying the relationship.\
+     * It receives the related Model instance as the first parameter, the current row as an associative array and the intermediate model instance.
+     * @return $this Current Model instance for nested calls.
+     */
+    public function hasManyThrough(string $model, string $intermediate, string $foreignCurrent = '', string $foreignTarget = '', string $name = '', ?callable $callback = null)
+    {
+        // Get primary key and names
+        $primary = $this->getPrimaryName();
+        $primaryIntermediate = (new $intermediate([], false))->getPrimaryName();
+        $primaryTarget = (new $model([], false))->getPrimaryName();
+        if (Util::isEmpty($name)) $name = Util::snakeCase(Util::pluralize(Util::classname($model)));
+
+        // Get foreign keys
+        if (Util::isEmpty($foreignCurrent)) $foreignCurrent = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $primary;
+        if (Util::isEmpty($foreignTarget)) $foreignTarget = Util::snakeCase(Util::singularize(Util::classname($intermediate))) . '_' . $primaryIntermediate;
+
+        // Set to relations array
+        $this->_relations[$name] = [
+            'type' => 'many-through',
+            'model' => $model,
+            'intermediate' => $intermediate,
+            'primary-current' => $primary,
+            'primary-intermediate' => $primaryIntermediate,
+            'primary-target' => $primaryTarget,
+            'current-foreign' => $foreignCurrent,
+            'target-foreign' => $foreignTarget,
+            'callback' => $callback,
         ];
 
         // Return instance
@@ -1161,9 +1244,7 @@ class Model extends Kraken implements JsonSerializable
                                 $rel = $relations->search($item['column'], $value);
                                 $value = !empty($rel) ? $rel : null;
                             } else {
-                                $value = $relations->filter(function ($i) use ($value, $item) {
-                                    return $i->get($item['column']) == $value;
-                                })->values();
+                                $value = $relations->filter(fn($i) => $i->get($item['column']) == $value)->values();
                             }
                         }
 
@@ -1224,27 +1305,32 @@ class Model extends Kraken implements JsonSerializable
 
                     break;
 
-                // belongsToMany relationship
+                // belongsToMany, hasOneThrough or hasManyThrough relationship
                 case 'belongs-many':
-                    // Gets the foreign keys from the current model
-                    $currentKeys = $data->column($item['primary-current']);
+                case 'one-through':
+                case 'many-through':
+                    // Gets the primary keys from the current model
+                    $currentKeys = $data->column($item['primary-current'])->unique();
                     if ($currentKeys->isEmpty()) break;
 
                     // Creates the related model and pivot and run the callback
                     $table = new $item['model'];
-                    $pivot = new Kraken($item['pivot'], $this->_database);
+                    $pivot = $item['type'] === 'belongs-many' ? new Kraken($item['pivot'], $this->_database) : new $item['intermediate'];
                     if (!is_null($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data, &$pivot]);
 
                     // Gets the foreign keys from the current model in the pivot
-                    $pivotRelations = $pivot->whereIn($item['current-foreign'], $currentKeys)->fetchAll();
+                    $pivotRelations = $pivot->whereIn($item['current-foreign'], $currentKeys);
+                    $pivotRelations = $item['type'] === 'belongs-many' ? $pivotRelations->fetchAll() : $pivotRelations->all();
                     if ($pivotRelations->isEmpty()) break;
 
                     // Gets the foreign keys from the target model in the pivot relations
-                    $targetKeys = $pivotRelations->column($item['target-foreign'])->unique();
+                    $fk = $item['type'] === 'belongs-many' ? $item['target-foreign'] : $item['primary-intermediate'];
+                    $targetKeys = $pivotRelations->column($fk)->unique();
                     if ($targetKeys->isEmpty()) break;
 
                     // Gets the relations between the tables
-                    $relations = $table->allBy($item['primary-target'], $targetKeys);
+                    $fk2 = $item['type'] === 'belongs-many' ? $item['primary-target'] : $item['target-foreign'];
+                    $relations = $table->allBy($fk2, $targetKeys);
                     if ($relations->isEmpty()) break;
 
                     // Loops through the rows
@@ -1261,30 +1347,32 @@ class Model extends Kraken implements JsonSerializable
                         // Gets the relationships
                         if (!is_null($value)) {
                             // Gets the matching keys from the pivot table
-                            $pivotValues = $pivotRelations->filter(function ($i) use ($value, $item) {
-                                return $i->get($item['current-foreign']) == $value;
-                            })->values();
+                            $pivotValues = $pivotRelations->filter(fn($i) => $i->get($item['current-foreign']) == $value)->values();
 
                             // Get the related instances
                             if ($pivotValues->isNotEmpty()) {
-                                $keys = $pivotValues->column($item['target-foreign']);
+                                // belongsToMany()
+                                if ($item['type'] === 'belongs-many') {
+                                    // Gets the target model ids from the pivot table
+                                    $keys = $pivotValues->column($item['target-foreign'])->toArray();
 
-                                // Associate the related model with the parent model
-                                if ($keys->isNotEmpty()) {
-                                    $keys = $keys->toArray();
-                                    $value = $relations->filter(function ($i) use ($keys, $item) {
-                                        return in_array($i->get($item['primary-target']), $keys);
-                                    })->each(function ($i) use ($pivotValues, $item) {
-                                        // Fill the pivot data of this relationship
-                                        $i->pivot = $pivotValues->filter(function ($r) use ($i, $item) {
-                                            return $r->get($item['target-foreign']) == $i->get($item['primary-target']);
-                                        })->first();
-                                    })->values();
+                                    // Filters the relationships in the target model
+                                    $value = $relations->filter(fn($i) => in_array($i->get($item['primary-target']), $keys))
+                                        ->each(function ($m) use ($pivotValues, $item) {
+                                            // Attaches the pivot object
+                                            $pv = $pivotValues->filter(fn($r) => $r->get($item['target-foreign']) == $m->get($item['primary-target']))->first();
+                                            $m->set($item['pivot-name'], $pv);
+                                        })
+                                        ->values();
                                 } else {
-                                    $value = new Collection();
+                                    // hasOneThrough() or hasManyThrough()
+                                    $keys = $pivotValues->column($item['primary-intermediate'])->toArray();
+                                    $value = $relations->filter(fn($i) => in_array($i->get($item['target-foreign']), $keys))->values();
+                                    if ($item['type'] === 'one-through') $value = $value->first();
                                 }
                             } else {
-                                $value = new Collection();
+                                // Values were not found
+                                $value = $item['type'] === 'one-through' ? null : new Collection();
                             }
                         }
 
