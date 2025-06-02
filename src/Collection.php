@@ -407,6 +407,18 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     }
 
     /**
+     * Filters the Collection with items that don't pass a truth test.
+     * @param callable $callback Function to check in the data, receives the value and key of each item.
+     * @return Collection Returns a new Collection with the rejected data.
+     */
+    public function reject(callable $callback)
+    {
+        return $this->filter(function ($value, $key) use ($callback) {
+            return call_user_func_array($callback, [$value, $key]) === false;
+        });
+    }
+
+    /**
      * Filters the Collection leaving only items that match a key value.
      * @param mixed $key Key to use as the filtering base. You can also use an associative array with keys and values to match.
      * @param mixed $value (Optional) Value to filter if using a single key.
@@ -455,6 +467,17 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     public function values()
     {
         return new Collection(array_values($this->__data));
+    }
+
+    /**
+     * Reduces the Collection values to a single value.
+     * @param callable $callback Reduce callback. Receives the accumulator and current value as parameters.
+     * @param mixed $initial (Optional) Initial value of the accumulator.
+     * @return mixed Returns the reduced value.
+     */
+    public function reduce(callable $callback, $initial = null)
+    {
+        return array_reduce($this->__data, $callback, $initial);
     }
 
     /**
@@ -724,12 +747,39 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function some(callable $callback)
     {
-        $result = false;
         foreach ($this->__data as $key => $value) {
             $result = call_user_func_array($callback, [$value, $key]);
-            if ($result === true) break;
+            if ($result === true) return true;
         }
-        return $result;
+        return false;
+    }
+
+    /**
+     * Checks if every item in the Collection passes a truth test.
+     * @param callable $callback Function to be tested, should return a boolean.
+     * @return bool Returns the result of the test.
+     */
+    public function every(callable $callback)
+    {
+        foreach ($this->__data as $key => $value) {
+            $result = call_user_func_array($callback, [$value, $key]);
+            if ($result ===false) return false;
+        }
+        return true;
+    }
+
+    /**
+     * Gets the first item from the Collection that passes a truth test.
+     * @param callable $callback Function to check in the data, receives the value and key of each item.
+     * @return mixed Returns the first item found, null otherwise.
+     */
+    public function find(callable $callback)
+    {
+        foreach ($this->__data as $key => $value) {
+            $result = call_user_func_array($callback, [$value, $key]);
+            if ($result === true) return $value;
+        }
+        return null;
     }
 
     /**

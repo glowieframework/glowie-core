@@ -171,9 +171,10 @@ class Authorizator
      * @param array|Closure $conditions (Optional) Associative array of aditional fields to use while searching for the user.\
      * You can also pass a Closure to directly modify the query builder.
      * @param int|null $expires (Optional) Token expiration time in seconds, leave empty for no expiration.
+     * @param array $headers (Optional) Optional JWT headers to merge into the token.
      * @return string|bool Returns the token if authentication is successful, false otherwise.
      */
-    public function login(string $user, string $password, $conditions = [], ?int $expires = self::EXPIRES_DAY)
+    public function login(string $user, string $password, $conditions = [], ?int $expires = self::EXPIRES_DAY, array $headers = [])
     {
         // Check for empty login credentials
         if (Util::isEmpty($user) || Util::isEmpty($password)) {
@@ -209,7 +210,8 @@ class Authorizator
         if (password_verify($password, $user->get($passwordField))) {
             $this->error = self::ERR_AUTH_SUCCESS;
             self::setUser($this->guard, $user);
-            return $this->generateJwt(['user' => Util::encryptString($user->getPrimary())], $expires, 'HS256', [self::$appName => 'auth']);
+            $headers = array_merge([self::$appName => 'auth'], $headers);
+            return $this->generateJwt(['user' => Util::encryptString($user->getPrimary())], $expires, 'HS256', $headers);
         } else {
             $this->error = self::ERR_WRONG_PASSWORD;
             self::setUser($this->guard, null);
@@ -220,12 +222,14 @@ class Authorizator
     /**
      * Authorizes a previously generated token.
      * @param string $token Token to authorize.
+     * @param array $headers (Optional) Optional JWT headers to validate from the token.
      * @return bool Returns true on authentication success, false otherwise.
      */
-    public function authorize(string $token)
+    public function authorize(string $token, array $headers = [])
     {
         // Decode JWT token
-        $token = $this->decodeJwt($token, true, [self::$appName => 'auth']);
+        $headers = array_merge([self::$appName => 'auth'], $headers);
+        $token = $this->decodeJwt($token, true, $headers);
         if (!$token || Util::isEmpty($token->user ?? '')) {
             $this->error = self::ERR_INVALID_TOKEN;
             self::setUser($this->guard, null);

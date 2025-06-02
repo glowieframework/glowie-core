@@ -796,7 +796,7 @@ class Model extends Kraken implements JsonSerializable
     /**
      * Setup a one to one relationship with another model.
      * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
-     * @param string $column (Optional) Foreign key column name from the related model. Leave empty for auto.
+     * @param string $column (Optional) Foreign key column name of the current model in the related table. Leave empty for auto.
      * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
      * @param callable|null $callback (Optional) A function to interact with the related model before querying the relationship.\
      * It receives the related Model instance as the first parameter, and the current row as an associative array.
@@ -825,7 +825,7 @@ class Model extends Kraken implements JsonSerializable
     /**
      * Setup a one to many relationship with another model.
      * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
-     * @param string $column (Optional) Foreign key column name from the related model. Leave empty for auto.
+     * @param string $column (Optional) Foreign key column name of the current model in the related table. Leave empty for auto.
      * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
      * @param callable|null $callback (Optional) A function to interact with the related model before querying the relationship.\
      * It receives the related Model instance as the first parameter, and the current row as an associative array.
@@ -854,7 +854,7 @@ class Model extends Kraken implements JsonSerializable
     /**
      * Setup a many to one relationship with another model.
      * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
-     * @param string $column (Optional) Foreign key column name from the current model. Leave empty for auto.
+     * @param string $column (Optional) Foreign key column name of the related model in the current table. Leave empty for auto.
      * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
      * @param callable|null $callback (Optional) A function to interact with the related model before querying the relationship.\
      * It receives the related Model instance as the first parameter, and the current row as an associative array.
@@ -884,8 +884,8 @@ class Model extends Kraken implements JsonSerializable
      * Setup a many to many relationship with another model. **This requires an intermediate (pivot) table.**
      * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
      * @param string $pivot (Optional) Intermediate table name. Leave empty for auto.
-     * @param string $column (Optional) Foreign key column name from the current model in the pivot table. Leave empty for auto.
-     * @param string $foreign (Optional) Foreign key column name from the target model in the pivot table. Leave empty for auto.
+     * @param string $column (Optional) Foreign key column name of the current model in the pivot table. Leave empty for auto.
+     * @param string $foreign (Optional) Foreign key column name of the related model in the pivot table. Leave empty for auto.
      * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
      * @param callable|null $callback (Optional) A function to interact with the related model before querying the relationship.\
      * It receives the related Model instance as the first parameter, the current row as an associative array and the pivot table instance.
@@ -926,8 +926,8 @@ class Model extends Kraken implements JsonSerializable
      * Setup a one to one relationship with another model using an intermediate model.
      * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
      * @param string $intermediate Intermediate model classname with namespace. You can use `ModelName::class` to get this property correctly.
-     * @param string $foreignCurrent (Optional) Foreign key column name from the current model in the intermediate table. Leave empty for auto.
-     * @param string $foreignTarget (Optional) Foreign key column name from the intermediate model in the target table. Leave empty for auto.
+     * @param string $foreignCurrent (Optional) Foreign key column name of the current model in the intermediate table. Leave empty for auto.
+     * @param string $foreignTarget (Optional) Foreign key column name of the intermediate model in the related table. Leave empty for auto.
      * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
      * @param callable|null $callback $callback (Optional) A function to interact with the related and intermediate models before querying the relationship.\
      * It receives the related Model instance as the first parameter, the current row as an associative array and the intermediate model instance.

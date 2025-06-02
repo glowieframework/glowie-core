@@ -286,7 +286,7 @@ abstract class Command
      */
     public function hasOption(string $key)
     {
-        return $this->getArg($key) === '';
+        return Firefly::hasOption($key);
     }
 
     /**

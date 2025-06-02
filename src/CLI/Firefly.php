@@ -404,6 +404,16 @@ class Firefly
     }
 
     /**
+     * Checks if an option exists.
+     * @param string $key Option key to get.
+     * @return bool Returns true if the option exists, false otherwise.
+     */
+    public static function hasOption(string $key)
+    {
+        return self::getArg($key) === '';
+    }
+
+    /**
      * Gets the current command.
      * @return string Returns the current command.
      */
@@ -511,7 +521,7 @@ class Firefly
                 'methods' => self::color($methods, 'magenta'),
                 'name' => self::color($name, 'blue'),
                 'uri' => self::color($uri, 'yellow'),
-                'target' => !empty($item['controller']) ? ($item['controller'] . '::' . $item['action'] . '()') : ($item['code'] . ' ' . $item['redirect'])
+                'target' => !empty($item['controller']) ? ($item['controller'] . '::' . self::color($item['action'], 'cyan') . '()') : ($item['code'] . ' ' . $item['redirect'])
             ];
         }
 
@@ -562,9 +572,9 @@ class Firefly
      */
     private static function __clearQueue()
     {
-        $success = self::getBool('success');
-        $failed = self::getBool('failed');
-        $pending = self::getBool('pending');
+        $success = self::hasOption('success');
+        $failed = self::hasOption('failed');
+        $pending = self::hasOption('pending');
         if (!$success && !$failed && !$pending) $success = $failed = $pending = true;
         Queue::clear($success, $failed, $pending);
         self::print(self::color('Queue cleared successfully!', 'green'));
@@ -802,6 +812,9 @@ class Firefly
         $baseFile = 'Controller_Basic.php';
         if (is_file(Util::location('controllers/BaseController.php'))) $baseFile = 'Controller.php';
 
+        // Checks if it is a resource controller
+        if (self::hasOption('resource')) $baseFile = 'Controller_Resource.php';
+
         // Creates the file
         $template = file_get_contents(self::TEMPLATES_FOLDER . $baseFile);
         $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
@@ -960,7 +973,7 @@ class Firefly
         self::print(self::color('File: ' . $targetFile, 'cyan'));
 
         // Create migration if asked
-        if (self::getBool('migration')) self::doMigrationCreate('Create' . Util::pascalCase($table) . 'Table');
+        if (self::hasOption('migration')) self::doMigrationCreate('Create' . Util::pascalCase($table) . 'Table');
         return true;
     }
 
@@ -1107,7 +1120,7 @@ class Firefly
     private static function __publish()
     {
         // Get force flag
-        $force = self::getBool('force');
+        $force = self::hasOption('force');
 
         // Get plugins
         $plugins = Config::get('plugins', []);
@@ -1133,7 +1146,7 @@ class Firefly
      */
     private static function __queue()
     {
-        Queue::process(self::getArg('name', 'default'), self::getBool('bail'), true);
+        Queue::process(self::getArg('name', 'default'), self::hasOption('bail'), true);
         return true;
     }
 
@@ -1143,7 +1156,7 @@ class Firefly
     private static function __queueWatch()
     {
         // Get bail arg
-        $bail = self::getBool('bail');
+        $bail = self::hasOption('bail');
 
         // Print welcome message
         Firefly::print(self::color('[' . date('Y-m-d H:i:s') . '] Queue Watcher has started!', 'green'));
@@ -1183,24 +1196,24 @@ class Firefly
         self::print('  <color="yellow">clear-cache</color> | Clears the application cache folder');
         self::print('  <color="yellow">clear-session</color> | Clears the application session folder');
         self::print('  <color="yellow">clear-log</color> | Clears the application error log');
-        self::print('  <color="yellow">clear-queue</color> <color="blue">--success --failed --pending</color> | Clears the jobs queue');
+        self::print('  <color="yellow">clear-queue</color> <color="cyan">-success -failed -pending</color> | Clears the jobs queue');
         self::print('  <color="yellow">generate-keys</color> | Regenerates the application secret keys');
         self::print('  <color="yellow">encrypt-env</color> <color="blue">--key</color> | Encrypts the environment config file');
         self::print('  <color="yellow">decrypt-env</color> <color="blue">--key</color> | Decrypts the environment config file');
         self::print('  <color="yellow">test-database</color> <color="blue">--name</color> | Tests a database connection');
         self::print('  <color="yellow">create-command</color> <color="blue">--name</color> | Creates a new command for your application');
-        self::print('  <color="yellow">create-controller</color> <color="blue">--name</color> | Creates a new controller for your application');
+        self::print('  <color="yellow">create-controller</color> <color="blue">--name</color> <color="cyan">-resource</color> | Creates a new controller for your application');
         self::print('  <color="yellow">create-language</color> <color="blue">--name</color> | Creates a new language file for your application');
         self::print('  <color="yellow">create-middleware</color> <color="blue">--name</color> | Creates a new middleware for your application');
         self::print('  <color="yellow">create-migration</color> <color="blue">--name</color> | Creates a new migration for your application');
         self::print('  <color="yellow">create-queue-migration</color> | Creates a migration for the queue table');
-        self::print('  <color="yellow">create-model</color> <color="blue">--name --table --primary --migration</color> | Creates a new model for your application');
+        self::print('  <color="yellow">create-model</color> <color="blue">--name --table --primary</color> <color="cyan">-migration</color> | Creates a new model for your application');
         self::print('  <color="yellow">create-job</color> <color="blue">--name</color> | Creates a new job for your application');
         self::print('  <color="yellow">migrate</color> <color="blue">--steps</color> | Applies pending migrations from your application');
         self::print('  <color="yellow">rollback</color> <color="blue">--steps</color> | Rolls back the last applied migration');
-        self::print('  <color="yellow">queue</color> <color="blue">--name --bail</color> | Runs the queue');
-        self::print('  <color="yellow">queue-watch</color> <color="blue">--name --bail --interval</color> | Runs the queue watcher');
-        self::print('  <color="yellow">publish</color> <color="blue">--force</color> | Publishes plugin files to the application folder');
+        self::print('  <color="yellow">queue</color> <color="blue">--name</color> <color="cyan">-bail</color> | Runs the queue');
+        self::print('  <color="yellow">queue-watch</color> <color="blue">--name --interval</color> <color="cyan">-bail</color> | Runs the queue watcher');
+        self::print('  <color="yellow">publish</color> <color="cyan">-force</color> | Publishes plugin files to the application folder');
         self::print('  <color="yellow">version</color> | Displays current Firefly version');
         self::print('  <color="yellow">help</color> | Displays this help message');
     }
