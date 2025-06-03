@@ -1136,4 +1136,24 @@ class Util
     {
         return defined('STDIN') || (empty($_SERVER['REMOTE_ADDR']) && !isset($_SERVER['HTTP_USER_AGENT']) && count($_SERVER['argv']) > 0);
     }
+
+    /**
+     * **(Internal use only)** Gets the content and minifies an asset.
+     * @param string $filename Asset relative filename.
+     * @return string Returns the minified file content.
+     */
+    public static function getAsset(string $filename)
+    {
+        $type = pathinfo($filename, PATHINFO_EXTENSION);
+        $content = file_get_contents(__DIR__ . '/Views/assets/' . $filename);
+        if ($type === 'css') {
+            $content = preg_replace('!/\*.*?\*/!s', '', $content);
+            $content = preg_replace('/\s*([{}:;,])\s*/', '$1', $content);
+        } else if ($type === 'js') {
+            $content = preg_replace('/\/\*[\s\S]*?\*\//', '', $content);
+            $content = preg_replace('/\/\/[^\n]*/', '', $content);
+        }
+        $content = preg_replace('/\s+/', ' ', $content);
+        return trim($content);
+    }
 }

@@ -291,7 +291,7 @@ class Handler
     }
 
     /**
-     * Gets the content and minifies an asset.
+     * **(Internal use only)** Gets the content and minifies an asset.
      * @param string $filename Asset relative filename.
      * @return string Returns the minified file content.
      */
@@ -299,8 +299,14 @@ class Handler
     {
         $type = pathinfo($filename, PATHINFO_EXTENSION);
         $content = file_get_contents(__DIR__ . '/Views/assets/' . $filename);
-        if ($type == 'css') $content = str_replace([': ', ' {', ', ', '    '], [':', '{', ',', ''], $content);
-        if ($type == 'js') $content = preg_replace("/\/\*[\s\S]*?\*\//", '', $content);
-        return str_replace(["\r", "\n", "\t"], '', $content);
+        if ($type === 'css') {
+            $content = preg_replace('!/\*.*?\*/!s', '', $content);
+            $content = preg_replace('/\s*([{}:;,])\s*/', '$1', $content);
+        } else if ($type === 'js') {
+            $content = preg_replace('/\/\*[\s\S]*?\*\//', '', $content);
+            $content = preg_replace('/\/\/[^\n]*/', '', $content);
+        }
+        $content = preg_replace('/\s+/', ' ', $content);
+        return trim($content);
     }
 }

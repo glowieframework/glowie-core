@@ -492,7 +492,7 @@ class Rails
 
             // Validates the cookie
             if ($cookies->get('glowie_maintenance_key') != $key) {
-                return self::callServiceUnavailable();
+                return self::callErrorMethod(Response::HTTP_SERVICE_UNAVAILABLE, 'Service Unavailable');
             }
         }
 
@@ -542,7 +542,7 @@ class Rails
                         if (is_callable([self::$middleware, 'fail'])) {
                             return self::$middleware->fail();
                         } else {
-                            return self::callForbidden();
+                            return self::callErrorMethod(Response::HTTP_FORBIDDEN, 'Forbidden');
                         };
                     }
                 }
@@ -597,7 +597,7 @@ class Rails
             }
         } else {
             // Route was not found
-            return self::callNotFound();
+            return self::callErrorMethod(Response::HTTP_NOT_FOUND, 'Not Found');
         }
     }
 
@@ -646,93 +646,36 @@ class Rails
         }
 
         // Checks for invalid method matched
-        if (is_null($config) && $invalidMethod) return self::callMethodNotAllowed();
+        if (is_null($config) && $invalidMethod) return self::callErrorMethod(Response::HTTP_METHOD_NOT_ALLOWED, 'Method Not Allowed');
 
         // Return result
         return $config;
     }
 
     /**
-     * Calls `notFound()` action in Error controller.
+     * Calls an error action in Error controller or a fallback view.
+     * @param int $statusCode HTTP status code to send in the response.
+     * @param string $title Default error view title.
+     * @return void
      */
-    private static function callNotFound()
+    private static function callErrorMethod(int $statusCode, string $title)
     {
-        // Check if method is implemented
-        self::$response->notFound();
+        // Checks if error controller exists
         $controller = 'Glowie\Controllers\Error';
-        if (!class_exists($controller) || !is_callable([$controller, 'notFound'])) {
+        if (class_exists($controller)) self::$controller = new $controller;
+
+        // Checks if method is implemented
+        $method = Util::pascalCase($title);
+        self::$response->setStatusCode($statusCode);
+        if (!is_callable([self::$controller, $method])) {
             return self::loadDefaultErrorView([
-                'title' => 'Not Found',
-                'text' => '404 | Not Found'
+                'title' => "{$statusCode} | {$title}"
             ]);
         }
 
-        // Create Error controller and dispatch method
-        self::$controller = new $controller;
+        // Dispatches the init and error methods
         if (is_callable([self::$controller, 'init'])) self::$controller->init();
-        self::$controller->notFound();
-    }
-
-    /**
-     * Calls `forbidden()` action in Error controller.
-     */
-    private static function callForbidden()
-    {
-        // Check if method is implemented
-        self::$response->deny();
-        $controller = 'Glowie\Controllers\Error';
-        if (!class_exists($controller) || !is_callable([$controller, 'forbidden'])) {
-            return self::loadDefaultErrorView([
-                'title' => 'Forbidden',
-                'text' => '403 | Forbidden'
-            ]);
-        }
-
-        // Create Error controller and dispatch method
-        self::$controller = new $controller;
-        if (is_callable([self::$controller, 'init'])) self::$controller->init();
-        self::$controller->forbidden();
-    }
-
-    /**
-     * Calls `methodNotAllowed()` action in Error controller.
-     */
-    private static function callMethodNotAllowed()
-    {
-        // Check if method is implemented
-        self::$response->setStatusCode(Response::HTTP_METHOD_NOT_ALLOWED);
-        $controller = 'Glowie\Controllers\Error';
-        if (!class_exists($controller) || !is_callable([$controller, 'methodNotAllowed'])) {
-            return self::loadDefaultErrorView([
-                'title' => 'Method Not Allowed',
-                'text' => '405 | Method Not Allowed'
-            ]);
-        }
-        // Create Error controller and dispatch method
-        self::$controller = new $controller;
-        if (is_callable([self::$controller, 'init'])) self::$controller->init();
-        self::$controller->methodNotAllowed();
-    }
-
-    /**
-     * Calls `serviceUnavailable()` action in Error controller.
-     */
-    private static function callServiceUnavailable()
-    {
-        // Check if method is implemented
-        self::$response->setStatusCode(Response::HTTP_SERVICE_UNAVAILABLE);
-        $controller = 'Glowie\Controllers\Error';
-        if (!class_exists($controller) || !is_callable([$controller, 'serviceUnavailable'])) {
-            return self::loadDefaultErrorView([
-                'title' => 'Service Unavailable',
-                'text' => '405 | Service Unavailable'
-            ]);
-        }
-
-        // Create Error controller and dispatch method
-        self::$controller = new $controller;
-        if (is_callable([self::$controller, 'init'])) self::$controller->init();
-        self::$controller->serviceUnavailable();
+        self::$controller->{$method}();
     }
 
     /**
@@ -743,7 +686,7 @@ class Rails
      */
     private static function callAutoRoute(string $controller, string $action, array $params = [])
     {
-        if (!class_exists($controller)) return self::callNotFound();
+        if (!class_exists($controller)) return self::callErrorMethod(Response::HTTP_NOT_FOUND, 'Not Found');
         if (!empty($params)) {
             $keys = array_map(function ($key) {
                 return 'param' . ($key + 1);
@@ -756,7 +699,7 @@ class Rails
             if (is_callable([self::$controller, 'init'])) self::$controller->init();
             self::$controller->{$action}();
         } else {
-            self::callNotFound();
+            self::callErrorMethod(Response::HTTP_NOT_FOUND, 'Not Found');
         };
     }
 
