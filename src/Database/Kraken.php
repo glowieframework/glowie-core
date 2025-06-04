@@ -1381,6 +1381,23 @@ class Kraken
     }
 
     /**
+     * Executes a function when a condition is true.
+     * @param boolean $condition Condition to be evaluated.
+     * @param callable $callback Function to run if the condition evaluates to true. Receives the current instance as a parameter.
+     * @param callable|null $else (Optional) Function to run if the condition evaluates to false. Receives the current instance as a parameter.
+     * @return $this Current instance for nested calls.
+     */
+    public function when(bool $condition, callable $callback, ?callable $else = null)
+    {
+        if ($condition === true) {
+            call_user_func_array($callback, [$this, $condition]);
+        } else if (!is_null($else)) {
+            call_user_func_array($else, [$this, $condition]);
+        }
+        return $this;
+    }
+
+    /**
      * Fetches the first result from a SELECT query.
      * @return mixed Returns the first resulting row on success or null if not found.
      * @throws QueryException Throws an exception if the query fails.

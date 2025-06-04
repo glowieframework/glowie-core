@@ -763,7 +763,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     {
         foreach ($this->__data as $key => $value) {
             $result = call_user_func_array($callback, [$value, $key]);
-            if ($result ===false) return false;
+            if ($result === false) return false;
         }
         return true;
     }
@@ -790,6 +790,23 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     public function implode(string $separator)
     {
         return implode($separator, $this->__data);
+    }
+
+    /**
+     * Executes a function when a condition is true.
+     * @param boolean $condition Condition to be evaluated.
+     * @param callable $callback Function to run if the condition evaluates to true. Receives the current instance as a parameter.
+     * @param callable|null $else (Optional) Function to run if the condition evaluates to false. Receives the current instance as a parameter.
+     * @return Collection Current Collection instance for nested calls.
+     */
+    public function when(bool $condition, callable $callback, ?callable $else = null)
+    {
+        if ($condition === true) {
+            call_user_func_array($callback, [$this, $condition]);
+        } else if (!is_null($else)) {
+            call_user_func_array($else, [$this, $condition]);
+        }
+        return $this;
     }
 
     /**
