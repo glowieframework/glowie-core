@@ -411,6 +411,18 @@ class Response
     }
 
     /**
+     * Flashes the current request data in the session before redirecting.
+     * @param array $name (Optional) Array of input names to include. Leave empty for all.
+     * @return Response Current Response instance for nested calls.
+     */
+    public function withInputs(array $name = [])
+    {
+        $data = Rails::getRequest();
+        if (!empty($name)) $data->only($name);
+        return $this->withFlash('input', $data->toArray());
+    }
+
+    /**
      * Redirects to a relative or full URL.
      * @param string $destination Target URL to redirect to.
      * @param int $code (Optional) HTTP status code to pass with the redirect.

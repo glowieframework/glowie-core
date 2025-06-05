@@ -37,6 +37,12 @@ class Request implements JsonSerializable
     private static $json;
 
     /**
+     * Old request input data.
+     * @var Element
+     */
+    private static $old;
+
+    /**
      * Validator instance.
      * @var Validator
      */
@@ -50,6 +56,7 @@ class Request implements JsonSerializable
         // Parse headers and JSON data, if any
         self::$headers = array_change_key_case(getallheaders(), CASE_LOWER);
         self::$json = new Element(json_decode($this->getBody(), true) ?? []);
+        self::$old = new Element(Session::make()->getFlash('input', []));
 
         // Parse request variables
         $vars = array_merge(Rails::getParams()->toArray(), $_GET, $_POST, $this->fromBody()->toArray());
@@ -338,6 +345,17 @@ class Request implements JsonSerializable
     public function getHeaders()
     {
         return new Collection(getallheaders());
+    }
+
+    /**
+     * Gets an input value from the previous request, if available.
+     * @param string $key Name of the input to get.
+     * @param mixed $default (Optional) Default value to return if the input doest not exist.
+     * @return mixed Returns the value if exists or the default if not.
+     */
+    public function old(string $key, $default = null)
+    {
+        return self::$old->get($key, $default);
     }
 
     /**

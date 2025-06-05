@@ -112,9 +112,9 @@ class Skeltch
         $code = preg_replace('~(?<!@){\s*lang\s*\((.+?)\)\s*}~is', '<?php if(Babel::getActiveLanguage === $1): ?>', $code);
         $code = preg_replace('~(?<!@){\s*else\s*if\s*\((.+?)\)\s*}~is', '<?php else if($1): ?>', $code);
         $code = preg_replace('~(?<!@){\s*else\s*}~is', '<?php else: ?>', $code);
-        $code = preg_replace('~(?<!@){\s*auth\s*}~is', '<?php if((new \Glowie\Core\Tools\Authenticator())->check()): ?>', $code);
-        $code = preg_replace('~(?<!@){\s*guest\s*}~is', '<?php if(!(new \Glowie\Core\Tools\Authenticator())->check()): ?>', $code);
-        $code = preg_replace('~(?<!@){\s*session\s*\((.+?)\)\s*}~is', '<?php if((new \Glowie\Core\Http\Session())->has($1)): $value = (new \Glowie\Core\Http\Session())->get($1); ?>', $code);
+        $code = preg_replace('~(?<!@){\s*auth\s*(?:\((.+?)\))?\s*}~is', '<?php if(\Glowie\Core\Tools\Authenticator::make($1)->check()): ?>', $code);
+        $code = preg_replace('~(?<!@){\s*guest\s*(?:\((.+?)\))?\s*}~is', '<?php if(!\Glowie\Core\Tools\Authenticator::make($1)->check()): ?>', $code);
+        $code = preg_replace('~(?<!@){\s*session\s*\((.+?)\)\s*}~is', '<?php $__glSess = \Glowie\Core\Http\Session::make(); if($__glSess->has($1)): $value = $__glSess->get($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*(/if|/isset|/empty|/notempty|/notset|/env|/lang|/auth|/guest|/session)\s*}~is', '<?php endif; ?>', $code);
         return $code;
     }
@@ -158,6 +158,7 @@ class Skeltch
         $code = preg_replace('~(?<!@){\s*json\s*\((.+?)\)\s*}~is', '<?php echo Util::jsonEncode($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*class\s*\((.+?)\)\s*}~is', '<?php echo Util::cssArray($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*dump\s*\((.+?)\)\s*}~is', '<?php echo Util::dump($1); ?>', $code);
+        $code = preg_replace('~(?<!@){\s*old\s*\((.+?)\)\s*}~is', '<?php echo \Glowie\Core\Http\Rails::getRequest()->old($1); ?>', $code);
         return $code;
     }
 
