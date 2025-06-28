@@ -410,6 +410,54 @@ class Skeleton
     }
 
     /**
+     * Creates and adds a FOREIGN KEY column in the table referencing another model id.
+     * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
+     * @param string|null $column (Optional) Column name to create in the table. Leave empty for auto.
+     * @param string|null $name (Optional) Constraint name. If defined, **must be unique in the database**.
+     * @param string $update (Optional) Referential action on parent table UPDATE queries.\
+     * Valid options are: `CASCADE`, `SET NULL`, `RESTRICT`, `NO ACTION` or `SET DEFAULT`.
+     * @param string $delete (Optional) Referential action on parent table DELETE queries.\
+     * Valid options are: `CASCADE`, `SET NULL`, `RESTRICT`, `NO ACTION` or `SET DEFAULT`.
+     * @return Skeleton Current Skeleton instance for nested calls.
+     */
+    public function foreignIdFor(string $model, ?string $column = null, ?string $name = null, string $update = 'RESTRICT', string $delete = 'RESTRICT')
+    {
+        // Get primary key and table names
+        $reference = (new $model([], false));
+        $primary = $reference->getPrimaryName();
+        $table = $reference->getTable();
+        if (Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primary;
+
+        // Create column and foreign key
+        $this->createColumn($column, self::TYPE_BIG_INTEGER_UNSIGNED);
+        $this->foreignKey($column, $table, $primary, $name, $update, $delete);
+    }
+
+    /**
+     * Creates and adds a FOREIGN KEY column in the table referencing another model UUID.
+     * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
+     * @param string|null $column (Optional) Column name to create in the table. Leave empty for auto.
+     * @param string|null $name (Optional) Constraint name. If defined, **must be unique in the database**.
+     * @param string $update (Optional) Referential action on parent table UPDATE queries.\
+     * Valid options are: `CASCADE`, `SET NULL`, `RESTRICT`, `NO ACTION` or `SET DEFAULT`.
+     * @param string $delete (Optional) Referential action on parent table DELETE queries.\
+     * Valid options are: `CASCADE`, `SET NULL`, `RESTRICT`, `NO ACTION` or `SET DEFAULT`.
+     * @return Skeleton Current Skeleton instance for nested calls.
+     */
+    public function foreignUuidFor(string $model, ?string $column = null, ?string $name = null, string $update = 'RESTRICT', string $delete = 'RESTRICT')
+    {
+        // Get primary key and table names
+        $reference = (new $model([], false));
+        $primary = $reference->getPrimaryName();
+        $table = $reference->getTable();
+        if (Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primary;
+
+        // Create column and foreign key
+        $this->createColumn($column, self::TYPE_CHAR, 36);
+        $this->foreignKey($column, $table, $primary, $name, $update, $delete);
+    }
+
+    /**
      * Adds a column into an existing table.
      * @param string $name Column name to add.
      * @param string $type (Optional) Column data type. Must be a valid type supported by your current database.
