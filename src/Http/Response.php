@@ -209,6 +209,33 @@ class Response
     }
 
     /**
+     * Sets a **200 OK** HTTP response code.
+     * @return Response Current Response instance for nested calls.
+     */
+    public function success()
+    {
+        return $this->setStatusCode(self::HTTP_OK);
+    }
+
+    /**
+     * Sets a **401 Unauthorized** HTTP response code.
+     * @return Response Current Response instance for nested calls.
+     */
+    public function unauthorized()
+    {
+        return $this->setStatusCode(self::HTTP_UNAUTHORIZED);
+    }
+
+    /**
+     * Sets a **201 Created** HTTP response code.
+     * @return Response Current Response instance for nested calls.
+     */
+    public function created()
+    {
+        return $this->setStatusCode(self::HTTP_CREATED);
+    }
+
+    /**
      * Sets a **403 Forbidden** HTTP response code.
      * @return Response Current Response instance for nested calls.
      */
@@ -233,6 +260,15 @@ class Response
     public function fail()
     {
         return $this->setStatusCode(self::HTTP_INTERNAL_SERVER_ERROR);
+    }
+
+    /**
+     * Sets a **400 Bad Request** HTTP response code.
+     * @return Response Current Response instance for nested calls.
+     */
+    public function badRequest()
+    {
+        return $this->setStatusCode(self::HTTP_BAD_REQUEST);
     }
 
     /**
@@ -281,7 +317,17 @@ class Response
         $list = [];
         foreach (headers_list() as $header) {
             $header = explode(':', $header, 2);
-            $list[trim($header[0])] = trim($header[1] ?? '');
+            $key = trim($header[0]);
+            $value = trim($header[1] ?? '');
+            if (isset($list[$key])) {
+                if (is_array($list[$key])) {
+                    $list[$key][] = $value;
+                } else {
+                    $list[$key] = [$list[$key], $value];
+                }
+            } else {
+                $list[$key] = $value;
+            }
         }
         return new Collection($list);
     }
@@ -489,14 +535,28 @@ class Response
         // Sets the 204 status code
         $this->setStatusCode(self::HTTP_NO_CONTENT);
 
-        // Sets the origin header if all allowed
-        $response = $this->getHeaders();
-        $supportCredentials = $response->has('Access-Control-Allow-Credentials');
-        $allowedOrigins = $response->get('Access-Control-Allow-Origin');
+        // Gets current CORS headers
+        $allowCredentials = $this->getHeaders()->has('Access-Control-Allow-Credentials');
         $origin = $request->getHeader('Origin');
 
-        if ($supportCredentials && $allowedOrigins === '*' && $origin) {
-            $this->setHeader('Access-Control-Allow-Origin', $origin);
+        // Gets the allowed origins array
+        $allowedOrigins = (array)Config::get('cors.allowed_origins', ['*']);
+        $originToSet = null;
+
+        // Checks for wildcard or multiple origins
+        if (in_array('*', $allowedOrigins)) {
+            if ($allowCredentials && !empty($origin)) {
+                $originToSet = $origin;
+            } else {
+                $originToSet = '*';
+            }
+        } else if (!empty($origin) && in_array($origin, $allowedOrigins)) {
+            $originToSet = $origin;
+        }
+
+        // Sets the new Allow-Origin header
+        if (!empty($originToSet)) {
+            $this->setHeader('Access-Control-Allow-Origin', $originToSet);
         }
 
         // Ends the request immediately

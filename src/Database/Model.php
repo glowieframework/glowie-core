@@ -1205,12 +1205,11 @@ class Model extends Kraken implements JsonSerializable
         // Converts data to a Collection
         $data = new Collection($data);
 
+        // Gets the enabled relations
+        $relationsEnabled = $this->getNestedRelationships();
+
         // Performs the relations
-        foreach ($this->_relations as $name => $item) {
-
-            // Bypass ignored relations
-            if (!empty($this->_relationsEnabled) && !in_array($name, $this->_relationsEnabled)) continue;
-
+        foreach ($relationsEnabled as $name => $item) {
             switch ($item['type']) {
                 // hasOne or hasMany relationship
                 case 'one':
@@ -1222,6 +1221,12 @@ class Model extends Kraken implements JsonSerializable
                     // Creates the related model and run the callback
                     $table = new $item['model'];
                     if (!is_null($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
+
+                    // Gets nested relationships
+                    if (!empty($item['nested'])) $table->withRelations($item['nested']);
+
+                    // Gets select statement
+                    if (!empty($item['select'])) $table->select($item['select']);
 
                     // Gets the relationships from the target model
                     $relations = $table->allBy($item['column'], $keys);
@@ -1271,6 +1276,12 @@ class Model extends Kraken implements JsonSerializable
                     $table = new $item['model'];
                     if (!is_null($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
 
+                    // Gets nested relationships
+                    if (!empty($item['nested'])) $table->withRelations($item['nested']);
+
+                    // Gets select statement
+                    if (!empty($item['select'])) $table->select($item['select']);
+
                     // Gets the relationships from the target model
                     $relations = $table->allBy($item['primary'], $keys);
                     if ($relations->isEmpty()) break;
@@ -1317,6 +1328,12 @@ class Model extends Kraken implements JsonSerializable
                     $table = new $item['model'];
                     $pivot = $item['type'] === 'belongs-many' ? new Kraken($item['pivot'], $this->_database) : new $item['intermediate'];
                     if (!is_null($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data, &$pivot]);
+
+                    // Gets nested relationships
+                    if (!empty($item['nested'])) $table->withRelations($item['nested']);
+
+                    // Gets select statement
+                    if (!empty($item['select'])) $table->select($item['select']);
 
                     // Gets the foreign keys from the current model in the pivot
                     $pivotRelations = $pivot->whereIn($item['current-foreign'], $currentKeys);
@@ -1393,6 +1410,79 @@ class Model extends Kraken implements JsonSerializable
 
         // Returns the result as array
         return $data->toArray();
+    }
+
+    /**
+     * Parses a list of enabled relationships with nesting and select statements support.
+     * @return array Returns an associative array with the relationships.
+     */
+    private function getNestedRelationships()
+    {
+        // If all relations are enabled, return everything
+        if (empty($this->_relationsEnabled)) {
+            return $this->_relations;
+        }
+
+        $relationsEnabled = [];
+
+        foreach ($this->_relationsEnabled as $rel) {
+            // Parse nested relationships, if any
+            if (Util::stringContains($rel, '.')) {
+                $modelSegments = explode('.', $rel, 2);
+                $selectSegments = explode(':', $modelSegments[0], 2);
+                $key = $selectSegments[0];
+
+                // Checks if the relationship exists
+                if (empty($this->_relations[$key])) throw new Exception("Relationship \"$key\" is not defined in the model");
+
+                // Checks if the key already exists
+                if (empty($relationsEnabled[$key])) {
+                    $relationsEnabled[$key] = $this->_relations[$key];
+                    $relationsEnabled[$key]['select'] = [];
+                    $relationsEnabled[$key]['nested'] = [];
+                }
+
+                // Merges the select statements
+                if (!empty($selectSegments[1])) {
+                    $relationsEnabled[$key]['select'] = array_unique(array_merge($relationsEnabled[$key]['select'], explode(',', $selectSegments[1])));
+                }
+
+                // Merges the nesting
+                if (!empty($modelSegments[1])) {
+                    $relationsEnabled[$key]['nested'][] = $modelSegments[1];
+                }
+            } else if (Util::stringContains($rel, ':')) {
+                // Parse select statements, if any
+                $selectSegments = explode(':', $rel, 2);
+                $key = $selectSegments[0];
+
+                // Checks if the relationship exists
+                if (empty($this->_relations[$key])) throw new Exception("Relationship \"$key\" is not defined in the model");
+
+                // Checks if the key already exists
+                if (empty($relationsEnabled[$key])) {
+                    $relationsEnabled[$key] = $this->_relations[$key];
+                    $relationsEnabled[$key]['select'] = [];
+                }
+
+                // Merges the select statements
+                if (!empty($selectSegments[1])) {
+                    $relationsEnabled[$key]['select'] = array_unique(array_merge($relationsEnabled[$key]['select'], explode(',', $selectSegments[1])));
+                }
+            } else {
+                // Checks if the relationship exists
+                if (empty($this->_relations[$rel])) throw new Exception("Relationship \"$rel\" is not defined in the model");
+
+                // Checks if the key already exists
+                if (empty($relationsEnabled[$rel])) {
+                    $relationsEnabled[$rel] = $this->_relations[$rel];
+                    $relationsEnabled[$rel]['select'] = [];
+                }
+            }
+        }
+
+        // Returns the result
+        return $relationsEnabled;
     }
 
     /**
