@@ -110,7 +110,7 @@ class Skeltch
         $code = preg_replace('~(?<!@){\s*notset\s*\((.+?)\)\s*}~is', '<?php if(!isset($1)): ?>', $code);
         $code = preg_replace('~(?<!@){\s*env\s*\((.+?)\)\s*}~is', '<?php if(Config::get(\'env\') === $1): ?>', $code);
         $code = preg_replace('~(?<!@){\s*lang\s*\((.+?)\)\s*}~is', '<?php if(Babel::getActiveLanguage === $1): ?>', $code);
-        $code = preg_replace('~(?<!@){\s*else\s*if\s*\((.+?)\)\s*}~is', '<?php else if($1): ?>', $code);
+        $code = preg_replace('~(?<!@){\s*else\s*if\s*\((.+?)\)\s*}~is', '<?php elseif($1): ?>', $code);
         $code = preg_replace('~(?<!@){\s*else\s*}~is', '<?php else: ?>', $code);
         $code = preg_replace('~(?<!@){\s*auth\s*(?:\((.+?)\))?\s*}~is', '<?php if(\Glowie\Core\Tools\Authenticator::make($1)->check()): ?>', $code);
         $code = preg_replace('~(?<!@){\s*guest\s*(?:\((.+?)\))?\s*}~is', '<?php if(!\Glowie\Core\Tools\Authenticator::make($1)->check()): ?>', $code);
