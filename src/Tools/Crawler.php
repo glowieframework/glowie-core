@@ -86,6 +86,18 @@ class Crawler
     private $timeout = 30;
 
     /**
+     * Download progress callback.
+     * @var callable|null
+     */
+    private $downloadProgress = null;
+
+    /**
+     * Upload progress callback.
+     * @var callable|null
+     */
+    private $uploadProgress = null;
+
+    /**
      * Creates a new HTTP client instance.
      * @param array $headers (Optional) Custom headers to send in the request. Must be an associative array with the key being the name of the header\
      * and the value the header value (can be a string or an array of strings).
@@ -268,6 +280,30 @@ class Crawler
     }
 
     /**
+     * Sets a callback function to capture the download progress of the request.
+     * @param callable|null $callback Function to call on download progress. Receives the downloaded percentage as the first parameter,\
+     * the current downloaded size as the second parameter, and the total download size as the third.
+     * @return Crawler Current Crawler instance for nested calls.
+     */
+    public function onDownloadProgress(?callable $callback)
+    {
+        $this->downloadProgress = $callback;
+        return $this;
+    }
+
+    /**
+     * Sets a callback function to capture the upload progress of the request.
+     * @param callable|null $callback Function to call on upload progress. Receives the uploaded percentage as the first parameter,\
+     * the current uploaded size as the second parameter, and the total upload size as the third.
+     * @return Crawler Current Crawler instance for nested calls.
+     */
+    public function onUploadProgress(?callable $callback)
+    {
+        $this->uploadProgress = $callback;
+        return $this;
+    }
+
+    /**
      * Performs a GET request.
      * @param string $url URL to perform request.
      * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
@@ -421,6 +457,23 @@ class Crawler
             }
             return $len;
         });
+
+        // Capture download/upload progress if enabled
+        if (!is_null($this->downloadProgress) || !is_null($this->uploadProgress)) {
+            curl_setopt($curl, CURLOPT_NOPROGRESS, false);
+
+            curl_setopt($curl, CURLOPT_PROGRESSFUNCTION, function ($ch, $download_size, $downloaded, $upload_size, $uploaded) {
+                if (!is_null($this->downloadProgress) && $download_size > 0) {
+                    $percentage = round(($downloaded / $download_size) * 100);
+                    call_user_func_array($this->downloadProgress, [$percentage, $downloaded, $download_size]);
+                }
+
+                if (!is_null($this->uploadProgress) && $upload_size > 0) {
+                    $percentage = round(($uploaded / $upload_size) * 100);
+                    call_user_func_array($this->uploadProgress, [$percentage, $uploaded, $upload_size]);
+                }
+            });
+        }
 
         // Fetches the request
         $response = curl_exec($curl);
