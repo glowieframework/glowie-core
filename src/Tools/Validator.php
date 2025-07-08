@@ -114,7 +114,7 @@ class Validator
 
         foreach ($rules as $field => $ruleset) {
             // Checks for array validation
-            if (Util::stringContains($field, '*')) {
+            if (Util::stringContains($field, '.')) {
                 $arrayValues = $this->extractWildcardValues($data, $field);
                 if (empty($arrayValues)) continue;
 
