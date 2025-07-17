@@ -514,7 +514,7 @@ class Validator
 
                 // Fallback to custom rules
                 default:
-                    if (!self::callCustomRule($type, $data)) $result[] = $type;
+                    if (!self::callCustomRule($type, $data, $rule[1] ?? null)) $result[] = $type;
                     break;
             }
 
@@ -531,13 +531,14 @@ class Validator
      * Calls a custom rule from the Validator instance or from a callable.
      * @param string $rule Custom rule name or callable (e.g. `MyValidator::validate`).
      * @param mixed $data Data to be validated.
+     * @param string|null $params (Optional) Optional parameters to pass into the validation method.
      * @return boolean Returns the validation result.
      */
-    private static function callCustomRule(string $rule, $data)
+    private static function callCustomRule(string $rule, $data, ?string $params = null)
     {
         $callback =  self::$custom[$rule] ?? $rule;
         if (!is_callable($callback)) throw new Exception('Validator: Rule "' . $rule . '" does not exist');
-        return call_user_func_array($callback, [$data]);
+        return call_user_func_array($callback, [$data, $params]);
     }
 
     /**
