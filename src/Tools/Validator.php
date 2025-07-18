@@ -6,6 +6,7 @@ use Babel;
 use Util;
 use Exception;
 use Glowie\Core\Collection;
+use Glowie\Core\Database\Kraken;
 
 /**
  * Data validator for Glowie application.
@@ -25,6 +26,12 @@ class Validator
      * @var array
      */
     private $errors = [];
+
+    /**
+     * Validation context.
+     * @var array
+     */
+    private $context = [];
 
     /**
      * Custom validation rules.
@@ -107,6 +114,7 @@ class Validator
         // Converts Element data to array
         if (is_callable([$data, 'toArray'])) $data = $data->toArray();
         if (!Util::isAssociativeArray($rules)) throw new Exception('Validator: Rules must be an associative array for each field/ruleset pairs');
+        $this->context = $data;
 
         // Loops through rules
         $result = true;
@@ -512,6 +520,46 @@ class Validator
                     if (!is_string($data) || Util::startsWith($data, $rule[1])) $result[] = 'starts_with';
                     break;
 
+                // [EXISTS] - Check if data exists in the database
+                case 'exists':
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "exists" rule');
+                    $exists = $this->checkDatabaseExists($data, $rule[1]);
+                    if (!$exists) $result[] = 'exists';
+                    break;
+
+                // [UNIQUE] - Checks if data does not exists in the database
+                case 'unique':
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "unique" rule');
+                    $exists = $this->checkDatabaseExists($data, $rule[1]);
+                    if ($exists) $result[] = 'unique';
+                    break;
+
+                // [SAME] - Checks if a field matches another field value (loose comparison)
+                case 'same':
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "same" rule');
+                    if (!isset($this->context[$rule[1]]) || $this->context[$rule[1]] != $data) $result[] = 'same';
+                    break;
+
+                // [SAME_STRICT] - Checks if a field matches another field value (strict comparison)
+                case 'same_strict':
+                case 'samestrict':
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "same_strict" rule');
+                    if (!isset($this->context[$rule[1]]) || $this->context[$rule[1]] !== $data) $result[] = 'same_strict';
+                    break;
+
+                // [DIFFERENT] - Checks if a field is different from another field value (loose comparison)
+                case 'different':
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "different" rule');
+                    if (isset($this->context[$rule[1]]) && $this->context[$rule[1]] == $data) $result[] = 'different';
+                    break;
+
+                // [DIFFERENT_STRICT] - Checks if a field is different from another field value (strict comparison)
+                case 'different_strict':
+                case 'differentstrict':
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "different_strict" rule');
+                    if (isset($this->context[$rule[1]]) && $this->context[$rule[1]] === $data) $result[] = 'different_strict';
+                    break;
+
                 // Fallback to custom rules
                 default:
                     if (!self::callCustomRule($type, $data, $rule[1] ?? null)) $result[] = $type;
@@ -614,5 +662,43 @@ class Validator
             // Get the next segments
             $this->collectWildcardValues([], $segments, $results, $newPath);
         }
+    }
+
+    /**
+     * Validates if a record exists in the database.
+     * @param mixed $data Data to be validated.
+     * @param string $params Rule parameters.
+     * @return bool Returns true if data exists, false otherwise.
+     */
+    private function checkDatabaseExists($data, string $params)
+    {
+        // Gets the parameters
+        $params = explode(',', $params, 2);
+
+        // Checks if is a model
+        if (Util::startsWith($params[0], 'Glowie\Models\\')) {
+            $model = $params[0];
+            if (!class_exists($model)) throw new Exception("Validator: Model \"$model\" does not exist");
+
+            // Find the item by the field name or primary key
+            $model = new $model;
+            $primary = $model->getPrimaryName();
+            return $model->where($params[1] ?? $primary, $data)->exists();
+        }
+
+        // Checks for connection definition
+        $info = explode('.', $params[0], 2);
+
+        if (count($info) === 2) {
+            $connection = $info[0];
+            $table = $info[1];
+        } else {
+            $connection = 'default';
+            $table = $info[0];
+        }
+
+        // Create the table connection and find the item
+        $db = new Kraken($table, $connection);
+        return $db->where($params[1] ?? 'id', $data)->exists();
     }
 }
