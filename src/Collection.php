@@ -156,6 +156,22 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     }
 
     /**
+     * Checks if any key value is missing in the Collection data.
+     * @param string|array $key Key to check (accepts dot notation keys). You can also use an array of keys.
+     * @param bool $all (Optional) Checks the presence of all items, instead of any.
+     * @return bool Returns true or false.
+     */
+    public function missing($key, bool $all = false)
+    {
+        $result = false;
+        foreach ((array)$key as $item) {
+            if (!$all && $result) break;
+            $result = Util::arrayGet($this->__data, $item) === null;
+        }
+        return $result;
+    }
+
+    /**
      * Checks if a value has been associated to all keys in the Collection data.
      * @param mixed $key Key to check (accepts dot notation keys). You can also use an array of keys.
      * @return bool Returns true or false.

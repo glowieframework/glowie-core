@@ -207,6 +207,21 @@ class Cookies implements JsonSerializable
     }
 
     /**
+     * Checks if any key value is missing in the cookies data.
+     * @param string|array $key Key to check. You can also use an array of keys.
+     * @return bool Returns true or false.
+     */
+    public function missing($key)
+    {
+        $result = false;
+        foreach ((array)$key as $item) {
+            if ($result) break;
+            $result = !$this->__isset($item);
+        }
+        return $result;
+    }
+
+    /**
      * Deletes all data from the cookies.
      * @return Cookies Current Cookies instance for nested calls.
      */

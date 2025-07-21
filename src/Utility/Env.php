@@ -122,4 +122,14 @@ class Env
     {
         return !is_null(self::get($key));
     }
+
+    /**
+     * Checks if an environment configuration does not exist.
+     * @param string $key Key to check.
+     * @return bool Returns true or false.
+     */
+    public static function missing(string $key)
+    {
+        return is_null(self::get($key));
+    }
 }

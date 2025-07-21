@@ -230,6 +230,21 @@ class Session implements JsonSerializable
     }
 
     /**
+     * Checks if any key value is missing in the session data.
+     * @param string|array $key Key to check (accepts dot notation keys). You can also use an array of keys.
+     * @return bool Returns true or false.
+     */
+    public function missing($key)
+    {
+        $result = false;
+        foreach ((array)$key as $item) {
+            if ($result) break;
+            $result = Util::arrayGet($_SESSION, $item) === null;
+        }
+        return $result;
+    }
+
+    /**
      * Deletes all data from the session.
      * @return Session Current Session instance for nested calls.
      */

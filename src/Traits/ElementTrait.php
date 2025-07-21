@@ -170,6 +170,21 @@ trait ElementTrait
     }
 
     /**
+     * Checks if any key value is missing in the Element data.
+     * @param string|array $key Key to check (accepts dot notation keys). You can also use an array of keys.
+     * @return bool Returns true or false.
+     */
+    public function missing($key)
+    {
+        $result = false;
+        foreach ((array)$key as $item) {
+            if ($result) break;
+            $result = Util::arrayGet($this->__data, $item) === null;
+        }
+        return $result;
+    }
+
+    /**
      * Deletes all data from the current Element.
      * @return Element Current Element instance for nested calls.
      */

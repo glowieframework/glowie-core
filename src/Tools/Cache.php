@@ -206,6 +206,21 @@ class Cache implements JsonSerializable
     }
 
     /**
+     * Checks if any key value is missing in the cache.
+     * @param string|array $key Key to check. You can also use an array of keys.
+     * @return bool Returns true or false.
+     */
+    public function missing($key)
+    {
+        $result = false;
+        foreach ((array)$key as $item) {
+            if ($result) break;
+            $result = !$this->__isset($item);
+        }
+        return $result;
+    }
+
+    /**
      * Checks if any value has been associated to a key in the cache.
      * @param string $key Key to check.
      * @return bool Returns true or false.
