@@ -1151,7 +1151,6 @@ class Util
             $content = preg_replace('/\s*([{}:;,])\s*/', '$1', $content);
         } else if ($type === 'js') {
             $content = preg_replace('/\/\*[\s\S]*?\*\//', '', $content);
-            $content = preg_replace('/\/\/[^\n]*/', '', $content);
         }
         $content = preg_replace('/\s+/', ' ', $content);
         return trim($content);

@@ -151,7 +151,7 @@ class Model extends Kraken implements JsonSerializable
      * This data will be merged into the initial model attributes, if filled.
      * @param bool $init (Optional) Initialize the model relationships.
      */
-    final public function __construct($data = [], bool $init = true)
+    public function __construct($data = [], bool $init = true)
     {
         // Gets the table name
         if (Util::isEmpty($this->_table)) $this->_table = Util::snakeCase(Util::pluralize(Util::classname($this)));

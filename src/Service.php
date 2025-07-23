@@ -1,32 +1,21 @@
 <?php
 
-namespace Glowie\Core\Http;
+namespace Glowie\Core;
 
-use Glowie\Core\Element;
+use Glowie\Core\Http\Rails;
+use Glowie\Core\Http\Session;
 
 /**
- * Middleware core for Glowie application.
- * @category Middleware
+ * Service core for Glowie application.
+ * @category Service
  * @package glowieframework/glowie-core
  * @author Glowie
  * @copyright Copyright (c) Glowie
  * @license MIT
  * @link https://glowie.gabrielsilva.dev.br
- * @see https://glowie.gabrielsilva.dev.br/docs/latest/basic-application-modules/middlewares
- *
- * @method void init() This method will be called before any other methods from this middleware.
- * @method void success() Called if the middleware handler returns true.
- * @method void fail() Called if the middleware handler returns false.
  */
-abstract class Middleware
+class Service
 {
-
-    /**
-     * Controller that this middleware is handling.
-     * @var Controller
-     */
-    protected $controller;
-
     /**
      * Request GET parameters.
      * @var Element
@@ -52,12 +41,6 @@ abstract class Middleware
     protected $request;
 
     /**
-     * Response handler.
-     * @var Response
-     */
-    protected $response;
-
-    /**
      * Current requested route.
      * @var string
      */
@@ -70,23 +53,15 @@ abstract class Middleware
     protected $session;
 
     /**
-     * Creates a new instance of the middleware.
+     * Creates a new instance of the service.
      */
     public function __construct()
     {
-        $this->controller = Rails::getController();
         $this->get = Rails::getRequest()->fromGet();
         $this->params = Rails::getParams();
         $this->post = Rails::getRequest()->fromPost();
         $this->request = Rails::getRequest();
-        $this->response = Rails::getResponse();
         $this->route = Rails::getCurrentRoute();
         $this->session = new Session();
     }
-
-    /**
-     * The middleware handler.
-     * @return bool Should return true on success or false on fail.
-     */
-    public abstract function handle();
 }

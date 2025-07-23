@@ -78,7 +78,7 @@ class Controller
     /**
      * Creates a new instance of the controller.
      */
-    final public function __construct()
+    public function __construct()
     {
         $this->get = Rails::getRequest()->fromGet();
         $this->params = Rails::getParams();

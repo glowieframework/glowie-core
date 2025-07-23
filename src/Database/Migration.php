@@ -57,7 +57,7 @@ abstract class Migration
     /**
      * Instantiates a new migration.
      */
-    final public function __construct()
+    public function __construct()
     {
         // Creates the connection and stores the migration name
         $this->name = Util::classname($this);

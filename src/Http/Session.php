@@ -250,7 +250,7 @@ class Session implements JsonSerializable
      */
     public function flush()
     {
-        $_SESSION = [];
+        session_unset();
         self::$flash = [];
         return $this;
     }
@@ -403,5 +403,32 @@ class Session implements JsonSerializable
     {
         if (!$this->__validator) $this->__validator = new Validator();
         return $this->__validator;
+    }
+
+    /**
+     * Gets the current session ID.
+     * @return string The current session ID.
+     */
+    public function getId()
+    {
+        return session_id();
+    }
+
+    /**
+     * Regenerates the current session ID.
+     * @return string Returns the new session ID.
+     */
+    public function regenerateId()
+    {
+        session_regenerate_id(true);
+        return $this->getId();
+    }
+
+    /**
+     * Discards all changes made to the session in the current request.
+     */
+    public function abort()
+    {
+        session_abort();
     }
 }

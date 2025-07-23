@@ -24,7 +24,7 @@ abstract class Job
      * Instantiates a new job.
      * @param mixed $data (Optional) Data to pass to the job.
      */
-    final public function __construct($data = null)
+    public function __construct($data = null)
     {
         $this->data = $data;
     }

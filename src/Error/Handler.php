@@ -89,10 +89,10 @@ class Handler
      * Highlights a single line from a PHP file.
      * @param string $file File path.
      * @param int $line Line to highlight.
-     * @param bool $context (Optional) Include previous and next lines.
+     * @param int|null $context (Optional) Number of previous and next lines to include.
      * @return string Highlighted result in HTML.
      */
-    private static function highlight(string $file, int $line, bool $context = false)
+    private static function highlight(string $file, int $line, ?int $context = null)
     {
         try {
             // Checks for the file
@@ -107,8 +107,8 @@ class Handler
             }
 
             // Parses the context lines
-            $start = max(1, $line - 5);
-            $end = min(count($text), $line + 5);
+            $start = max(1, $line - $context);
+            $end = min(count($text), $line + $context);
             self::$startLine = $start;
 
             // Parses the code
@@ -158,7 +158,8 @@ class Handler
 
             // Highlight
             if (!empty($item['file']) && !empty($item['line'])) {
-                $result .= '<pre><code data-ln-start-from="' . $item['line'] . '" class="language-php">' . self::highlight($item['file'], $item['line']) . '</code></pre>';
+                $highlight = self::highlight($item['file'], $item['line'], 5);
+                $result .= '<pre><code data-ln-current-line="' . $item['line'] . '" data-ln-start-from="' . self::$startLine . '" class="language-php">' . $highlight . '</code></pre>';
             }
 
             // Args
@@ -304,7 +305,6 @@ class Handler
             $content = preg_replace('/\s*([{}:;,])\s*/', '$1', $content);
         } else if ($type === 'js') {
             $content = preg_replace('/\/\*[\s\S]*?\*\//', '', $content);
-            $content = preg_replace('/\/\/[^\n]*/', '', $content);
         }
         $content = preg_replace('/\s+/', ' ', $content);
         return trim($content);
