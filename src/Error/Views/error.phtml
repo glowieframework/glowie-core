@@ -40,6 +40,8 @@
                     Exception thrown in <strong><?= self::getExceptionTime(); ?></strong>.
                 </span>
 
+                <?= self::parseSuggestion($e); ?>
+
                 <?php $code = self::highlight($e->getFile(), $e->getLine(), 10); ?>
 
                 <pre><code data-ln-current-line="<?= $e->getLine(); ?>" data-ln-start-from="<?= self::$startLine; ?>" class="language-php"><?= $code; ?></code></pre>

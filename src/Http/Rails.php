@@ -113,7 +113,11 @@ class Rails
     public static function load()
     {
         $file = Util::location('config/Routes.php');
-        if (!is_file($file)) throw new FileException('Route configuration file "' . $file . '" was not found');
+        if (!is_file($file)) {
+            $e = new FileException('Route configuration file "' . $file . '" was not found');
+            $e->setSuggestion('Check if the file exists and it is readable in your filesystem.');
+            throw $e;
+        }
         require_once($file);
     }
 
@@ -515,7 +519,11 @@ class Rails
             $controller = isset($config['callback']) ? Generic::class : $config['controller'];
 
             // If the controller class does not exist, trigger an error
-            if (!class_exists($controller)) throw new RoutingException("\"{$controller}\" was not found");
+            if (!class_exists($controller)) {
+                $e = new RoutingException("Controller \"{$controller}\" was not found");
+                $e->setSuggestion('Check if the controller class exists and it is in the correct namespace under Glowie\Controllers.');
+                throw $e;
+            }
 
             // Instantiates the controller
             self::$controller = new $controller;
@@ -564,7 +572,9 @@ class Rails
                 // Calls action
                 return self::$controller->{$action}();
             } else {
-                throw new RoutingException("Action \"{$action}()\" not found in \"{$controller}\"");
+                $e = new RoutingException("Action \"{$action}()\" not found in \"{$controller}\"");
+                $e->setSuggestion("Check if the controller implements a public function named \"{$action}()\".");
+                throw $e;
             }
         } else if (self::$autoRouting) {
             // Get URI parameters

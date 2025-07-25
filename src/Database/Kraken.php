@@ -5,6 +5,7 @@ namespace Glowie\Core\Database;
 use Glowie\Core\Element;
 use Glowie\Core\Traits\DatabaseTrait;
 use Glowie\Core\Exception\QueryException;
+use Glowie\Core\Exception\SuggestionException;
 use Glowie\Core\Collection;
 use Closure;
 use stdClass;
@@ -1398,6 +1399,23 @@ class Kraken
     }
 
     /**
+     * Executes a function when a condition is false.
+     * @param boolean $condition Condition to be evaluated.
+     * @param callable $callback Function to run if the condition evaluates to false. Receives the current instance as a parameter.
+     * @param callable|null $else (Optional) Function to run if the condition evaluates to true. Receives the current instance as a parameter.
+     * @return $this Current instance for nested calls.
+     */
+    public function unless(bool $condition, callable $callback, ?callable $else = null)
+    {
+        if ($condition === false) {
+            call_user_func_array($callback, [$this, $condition]);
+        } else if (!is_null($else)) {
+            call_user_func_array($else, [$this, $condition]);
+        }
+        return $this;
+    }
+
+    /**
      * Fetches the first result from a SELECT query.
      * @return mixed Returns the first resulting row on success or null if not found.
      * @throws QueryException Throws an exception if the query fails.
@@ -1561,7 +1579,11 @@ class Kraken
         if ($data instanceof Element || $data instanceof Collection) $data = $data->toArray();
 
         // Check for safe mode
-        if ($this->_safe && empty($this->_where)) throw new Exception('update(): Safe mode reports missing WHERE statements before UPDATE query');
+        if ($this->_safe && empty($this->_where)) {
+            $e = new SuggestionException('update(): Safe mode reports missing WHERE statements before UPDATE query');
+            $e->setSuggestion('When safe mode is enabled in the Kraken instance, you must add at least one where() statement before calling an update() method.');
+            throw $e;
+        }
 
         // Set params
         $this->_instruction = 'UPDATE';
@@ -1591,7 +1613,11 @@ class Kraken
      */
     public function delete($table = '')
     {
-        if ($this->_safe && empty($this->_where)) throw new Exception('delete(): Safe mode reports missing WHERE statements before DELETE query');
+        if ($this->_safe && empty($this->_where)) {
+            $e = new SuggestionException('delete(): Safe mode reports missing WHERE statements before DELETE query');
+            $e->setSuggestion('When safe mode is enabled in the Kraken instance, you must add at least one where() statement before calling a delete() method.');
+            throw $e;
+        }
         $this->_instruction = 'DELETE';
         if (!Util::isEmpty($table)) $this->_delete = implode(', ', (array)$table);
         return $this->execute();

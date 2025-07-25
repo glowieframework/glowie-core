@@ -2,7 +2,6 @@
 
 namespace Glowie\Core\Exception;
 
-use Exception;
 use Glowie\Core\Http\Rails;
 use Throwable;
 
@@ -15,7 +14,7 @@ use Throwable;
  * @license MIT
  * @link https://glowie.gabrielsilva.dev.br
  */
-class RoutingException extends Exception
+class RoutingException extends SuggestionException
 {
 
     /**

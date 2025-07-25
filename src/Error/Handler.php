@@ -8,6 +8,7 @@ use Glowie\Core\Http\Rails;
 use Glowie\Core\View\Buffer;
 use Glowie\Core\Http\Response;
 use ErrorException;
+use Throwable;
 
 /**
  * Error handler for Glowie application.
@@ -58,9 +59,9 @@ class Handler
 
     /**
      * Exception handler.
-     * @param Exception $e Thrown exception.
+     * @param Throwable $e Thrown exception.
      */
-    public static function exceptionHandler($e)
+    public static function exceptionHandler(Throwable $e)
     {
         // Error logging
         $date = date('Y-m-d H:i:s');
@@ -236,6 +237,17 @@ class Handler
         } catch (\Throwable $th) {
             return '';
         }
+    }
+
+    /**
+     * Parses the exception suggestion message, if available.
+     * @param Throwable|mixed $e Exception to get.
+     * @return string Exception suggestion.
+     */
+    protected static function parseSuggestion(Throwable $e)
+    {
+        if (!is_callable([$e, 'getSuggestion']) || Util::isEmpty($e->getSuggestion())) return '';
+        return '<div class="suggestion">' . $e->getSuggestion() . '</div>';
     }
 
     /**

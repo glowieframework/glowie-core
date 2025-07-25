@@ -826,6 +826,23 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     }
 
     /**
+     * Executes a function when a condition is false.
+     * @param boolean $condition Condition to be evaluated.
+     * @param callable $callback Function to run if the condition evaluates to false. Receives the current instance as a parameter.
+     * @param callable|null $else (Optional) Function to run if the condition evaluates to true. Receives the current instance as a parameter.
+     * @return Collection Current Collection instance for nested calls.
+     */
+    public function unless(bool $condition, callable $callback, ?callable $else = null)
+    {
+        if ($condition === false) {
+            call_user_func_array($callback, [$this, $condition]);
+        } else if (!is_null($else)) {
+            call_user_func_array($else, [$this, $condition]);
+        }
+        return $this;
+    }
+
+    /**
      * Sums the values of the Collection.
      * @return int|float Returns the sum.
      */

@@ -119,6 +119,13 @@ body {
     border: 1px solid gainsboro;
     padding: 15px;
 }
+.wrapper .details .suggestion {
+    background-color: #f06292;
+    color: white;
+    margin-top: 10px;
+    padding: 15px;
+    font-size: 16px;
+}
 .wrapper .details .args-toggle {
     font-size: 0.875rem;
     font-weight: 500;
@@ -236,6 +243,9 @@ body {
         box-shadow: 2px 2px 25px 2px rgb(18 18 18);
         background-color: transparent;
         border-color: #455a64;
+    }
+    .wrapper .details .suggestion {
+        background-color: #546e7a;
     }
     .wrapper .details i,
     .wrapper .details table td {

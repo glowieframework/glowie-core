@@ -2,7 +2,6 @@
 
 namespace Glowie\Core\Exception;
 
-use Exception;
 use Throwable;
 
 /**
@@ -14,7 +13,7 @@ use Throwable;
  * @license MIT
  * @link https://glowie.gabrielsilva.dev.br
  */
-class QueueException extends Exception
+class QueueException extends SuggestionException
 {
 
     /**

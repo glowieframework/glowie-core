@@ -2,7 +2,6 @@
 
 namespace Glowie\Core\Exception;
 
-use Exception;
 use Throwable;
 use Glowie\Core\Collection;
 
@@ -15,7 +14,7 @@ use Glowie\Core\Collection;
  * @license MIT
  * @link https://glowie.gabrielsilva.dev.br
  */
-class ConsoleException extends Exception
+class ConsoleException extends SuggestionException
 {
 
     /**
