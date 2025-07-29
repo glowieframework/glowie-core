@@ -504,6 +504,9 @@ class Rails
         $config = self::matchRoute($route);
         self::$currentRoute = $route;
 
+        // Checks for method not allowed
+        if ($config === false) return self::callErrorMethod(Response::HTTP_METHOD_NOT_ALLOWED, 'Method Not Allowed');
+
         // Checks if route was found
         if (!is_null($config)) {
             // Parse parameters and route name
@@ -616,7 +619,7 @@ class Rails
      * @param string $uri URI to match.
      * @return array|null Returns the route configuration as an associative array if a route was matched, null otherwise.
      */
-    public static function matchRoute(string $uri)
+    private static function matchRoute(string $uri)
     {
         // Prepare result
         $config = null;
@@ -656,7 +659,7 @@ class Rails
         }
 
         // Checks for invalid method matched
-        if (is_null($config) && $invalidMethod) return self::callErrorMethod(Response::HTTP_METHOD_NOT_ALLOWED, 'Method Not Allowed');
+        if (is_null($config) && $invalidMethod) return false;
 
         // Return result
         return $config;
