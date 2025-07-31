@@ -109,7 +109,7 @@ trait DatabaseTrait
      */
     public function table(string $table)
     {
-        $this->_table = $table;
+        $this->_table = $this->escapeIdentifier($table);
         return $this;
     }
 
@@ -177,12 +177,18 @@ trait DatabaseTrait
     {
         // Checks for raw identifier
         if ($name instanceof stdClass) return $name->value;
+        $name = trim($name);
 
         // Gets the characters
         $driver = $this->getDriver();
         $driverClass = 'Glowie\Core\Database\Drivers\\' . Util::pascalCase($driver);
         $start = $driverClass::ESCAPING_CHARS[0];
         $end = $driverClass::ESCAPING_CHARS[1];
+
+        // Checks for SQL functions
+        if (preg_match('/^[a-z_][a-z0-9_]*\s*\([^()]*\)$/i', $name)) {
+            return $name;
+        }
 
         // Checks for AS alias
         if (preg_match('/ +AS +/i', $name)) {
@@ -198,6 +204,8 @@ trait DatabaseTrait
         // Split schema parts and escapes each one of them
         $parts = explode('.', $name);
         $escaped = array_map(function ($part) use ($start, $end) {
+            $part = trim($part);
+            if ($part === '*') return '*';
             if (Util::startsWith($part, $start) && Util::endsWith($part, $end)) return $part;
             return $start . $part . $end;
         }, $parts);

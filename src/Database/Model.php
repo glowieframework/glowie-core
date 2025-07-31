@@ -349,7 +349,7 @@ class Model extends Kraken implements JsonSerializable
     public function latest(bool $deleted = false)
     {
         if (!$this->_timestamps) throw new Exception('latest(): Model "' . get_class($this) . '" is not handling timestamp fields');
-        return $this->orderBy($this->_table . '.' . $this->_createdField, 'DESC')->all($deleted);
+        return $this->orderByDesc($this->_table . '.' . $this->_createdField)->all($deleted);
     }
 
     /**
@@ -361,7 +361,7 @@ class Model extends Kraken implements JsonSerializable
     public function oldest(bool $deleted = false)
     {
         if (!$this->_timestamps) throw new Exception('oldest(): Model "' . get_class($this) . '" is not handling timestamp fields');
-        return $this->orderBy($this->_table . '.' . $this->_createdField, 'ASC')->all($deleted);
+        return $this->orderBy($this->_table . '.' . $this->_createdField)->all($deleted);
     }
 
     /**

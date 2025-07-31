@@ -217,7 +217,7 @@ class Kraken
      */
     public function from(string $table)
     {
-        $this->_from = $table;
+        $this->_from = $this->escapeIdentifier($table);
         return $this;
     }
 
@@ -237,16 +237,17 @@ class Kraken
 
     /**
      * Adds a table JOIN in the query.
-     * @param string $table Table name to JOIN.
+     * @param mixed $table Table name to JOIN.
      * @param string|Closure $param1 First condition parameter or a grouped ON closure.
-     * @param string|null $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
-     * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
+     * @param mixed $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
+     * @param mixed $param3 (Optional) Second condition parameter if `$param2` is the operator.
      * @param string $type (Optional) JOIN type (INNER, LEFT, RIGHT or FULL).
      * @return $this Current instance for nested calls.
      */
-    public function join(string $table, $param1, ?string $param2 = null, ?string $param3 = null, string $type = 'INNER')
+    public function join($table, $param1, $param2 = null, $param3 = null, string $type = 'INNER')
     {
         // Adds the join
+        $table = $this->escapeIdentifier($table);
         $this->_join[] = "{$type} JOIN {$table}";
 
         // Checks for grouped ON closure
@@ -269,6 +270,10 @@ class Kraken
             $param2 = '=';
         }
 
+        // Escape table names
+        $param1 = $this->escapeIdentifier($param1);
+        $param3 = $this->escapeIdentifier($param3);
+
         $this->_join[] = "ON {$param1} {$param2} {$param3}";
         return $this;
     }
@@ -286,65 +291,65 @@ class Kraken
 
     /**
      * Adds a table INNER JOIN in the query.
-     * @param string $table Table name to JOIN.
+     * @param mixed $table Table name to JOIN.
      * @param string|Closure $param1 First condition parameter or a grouped ON closure.
-     * @param string|null $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
-     * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
+     * @param mixed $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
+     * @param mixed $param3 (Optional) Second condition parameter if `$param2` is the operator.
      * @return $this Current instance for nested calls.
      */
-    public function innerJoin(string $table, $param1, ?string $param2 = null, ?string $param3 = null)
+    public function innerJoin($table, $param1, $param2 = null, $param3 = null)
     {
         return $this->join($table, $param1, $param2, $param3);
     }
 
     /**
      * Adds a table LEFT JOIN in the query.
-     * @param string $table Table name to JOIN.
+     * @param mixed $table Table name to JOIN.
      * @param string|Closure $param1 First condition parameter or a grouped ON closure.
-     * @param string|null $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
-     * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
+     * @param mixed $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
+     * @param mixed $param3 (Optional) Second condition parameter if `$param2` is the operator.
      * @return $this Current instance for nested calls.
      */
-    public function leftJoin(string $table, $param1, ?string $param2 = null, ?string $param3 = null)
+    public function leftJoin($table, $param1, $param2 = null, $param3 = null)
     {
         return $this->join($table, $param1, $param2, $param3, 'LEFT');
     }
 
     /**
      * Adds a table RIGHT JOIN in the query.
-     * @param string $table Table name to JOIN.
+     * @param mixed $table Table name to JOIN.
      * @param string|Closure $param1 First condition parameter or a grouped ON closure.
-     * @param string|null $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
-     * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
+     * @param mixed $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
+     * @param mixed $param3 (Optional) Second condition parameter if `$param2` is the operator.
      * @return $this Current instance for nested calls.
      */
-    public function rightJoin(string $table, $param1, ?string $param2 = null, ?string $param3 = null)
+    public function rightJoin($table, $param1, $param2 = null, $param3 = null)
     {
         return $this->join($table, $param1, $param2, $param3, 'RIGHT');
     }
 
     /**
      * Adds a table FULL JOIN in the query.
-     * @param string $table Table name to JOIN.
+     * @param mixed $table Table name to JOIN.
      * @param string|Closure $param1 First condition parameter or a grouped ON closure.
-     * @param string|null $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
-     * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
+     * @param mixed $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
+     * @param mixed $param3 (Optional) Second condition parameter if `$param2` is the operator.
      * @return $this Current instance for nested calls.
      */
-    public function fullJoin(string $table, $param1, ?string $param2 = null, ?string $param3 = null)
+    public function fullJoin($table, $param1, $param2 = null, $param3 = null)
     {
         return $this->join($table, $param1, $param2, $param3, 'FULL');
     }
 
     /**
      * Adds an ON condition to the last JOIN statement in the query.
-     * @param string $param1 First condition parameter.
-     * @param string $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
-     * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
+     * @param mixed $param1 First condition parameter.
+     * @param mixed $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
+     * @param mixed $param3 (Optional) Second condition parameter if `$param2` is the operator.
      * @param string $type (Optional) Chaining type (AND or OR).
      * @return $this Current instance for nested calls.
      */
-    public function on(string $param1, string $param2, ?string $param3 = null, string $type = 'AND')
+    public function on($param1, $param2, $param3 = null, string $type = 'AND')
     {
         // Checks for empty joins
         if (empty($this->_join)) throw new Exception('on(): There are no JOIN statements in the query yet');
@@ -358,18 +363,22 @@ class Kraken
             $param2 = '=';
         }
 
+        // Escape table names
+        $param1 = $this->escapeIdentifier($param1);
+        $param3 = $this->escapeIdentifier($param3);
+
         $this->_join[] = "{$type} {$param1} {$param2} {$param3}";
         return $this;
     }
 
     /**
      * Adds an OR ON condition to the last JOIN statement in the query.
-     * @param string $param1 First condition parameter.
-     * @param string $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
-     * @param string|null $param3 (Optional) Second condition parameter if `$param2` is the operator.
+     * @param mixed $param1 First condition parameter.
+     * @param mixed $param2 If `$param3` isset, the operator used in the condition. Otherwise, the second condition parameter.
+     * @param mixed $param3 (Optional) Second condition parameter if `$param2` is the operator.
      * @return $this Current instance for nested calls.
      */
-    public function orOn(string $param1, string $param2, ?string $param3 = null)
+    public function orOn($param1, $param2, $param3 = null)
     {
         return $this->on($param1, $param2, $param3, 'OR');
     }
@@ -417,11 +426,7 @@ class Kraken
         }
 
         // Escapes identifiers
-        if ($param1 instanceof stdClass) {
-            $param1 = $param1->value;
-        } else {
-            $param1 = $this->escapeIdentifier($param1);
-        }
+        $param1 = $this->escapeIdentifier($param1);
 
         // Checks if the operator was passed
         if (is_null($param3)) {
@@ -468,12 +473,7 @@ class Kraken
             $query .= "{$param1} {$param2} NULL";
         } else {
             // Escaping values
-            if ($param3 instanceof stdClass) {
-                $param3 = $param3->value;
-            } else {
-                $param3 = $this->escape($param3);
-            }
-
+            $param3 = $this->escape($param3);
             $query .= "{$param1} {$param2} {$param3}";
         }
 
@@ -658,7 +658,7 @@ class Kraken
      */
     public function whereDate(string $column, $param1, $param2 = null)
     {
-        return $this->where("DATE({$column})", $param1, $param2);
+        return $this->where(self::raw("DATE({$column})"), $param1, $param2);
     }
 
     /**
@@ -670,7 +670,7 @@ class Kraken
      */
     public function orWhereDate(string $column, $param1, $param2 = null)
     {
-        return $this->where("DATE({$column})", $param1, $param2, 'OR');
+        return $this->where(self::raw("DATE({$column})"), $param1, $param2, 'OR');
     }
 
     /**
@@ -682,7 +682,7 @@ class Kraken
      */
     public function whereDay(string $column, $param1, $param2 = null)
     {
-        return $this->where("DAY({$column})", $param1, $param2);
+        return $this->where(self::raw("DAY({$column})"), $param1, $param2);
     }
 
     /**
@@ -694,7 +694,7 @@ class Kraken
      */
     public function orWhereDay(string $column, $param1, $param2 = null)
     {
-        return $this->where("DAY({$column})", $param1, $param2, 'OR');
+        return $this->where(self::raw("DAY({$column})"), $param1, $param2, 'OR');
     }
 
     /**
@@ -706,7 +706,7 @@ class Kraken
      */
     public function whereMonth(string $column, $param1, $param2 = null)
     {
-        return $this->where("MONTH({$column})", $param1, $param2);
+        return $this->where(self::raw("MONTH({$column})"), $param1, $param2);
     }
 
     /**
@@ -718,7 +718,7 @@ class Kraken
      */
     public function orWhereMonth(string $column, $param1, $param2 = null)
     {
-        return $this->where("MONTH({$column})", $param1, $param2, 'OR');
+        return $this->where(self::raw("MONTH({$column})"), $param1, $param2, 'OR');
     }
 
     /**
@@ -730,7 +730,7 @@ class Kraken
      */
     public function whereYear(string $column, $param1, $param2 = null)
     {
-        return $this->where("YEAR({$column})", $param1, $param2);
+        return $this->where(self::raw("YEAR({$column})"), $param1, $param2);
     }
 
     /**
@@ -742,7 +742,7 @@ class Kraken
      */
     public function orWhereYear(string $column, $param1, $param2 = null)
     {
-        return $this->where("YEAR({$column})", $param1, $param2, 'OR');
+        return $this->where(self::raw("YEAR({$column})"), $param1, $param2, 'OR');
     }
 
     /**
@@ -754,7 +754,7 @@ class Kraken
      */
     public function whereTime(string $column, $param1, $param2 = null)
     {
-        return $this->where("TIME({$column})", $param1, $param2);
+        return $this->where(self::raw("TIME({$column})"), $param1, $param2);
     }
 
     /**
@@ -766,7 +766,7 @@ class Kraken
      */
     public function orWhereTime(string $column, $param1, $param2 = null)
     {
-        return $this->where("TIME({$column})", $param1, $param2, 'OR');
+        return $this->where(self::raw("TIME({$column})"), $param1, $param2, 'OR');
     }
 
     /**
@@ -778,7 +778,7 @@ class Kraken
      */
     public function whereHour(string $column, $param1, $param2 = null)
     {
-        return $this->where("HOUR({$column})", $param1, $param2);
+        return $this->where(self::raw("HOUR({$column})"), $param1, $param2);
     }
 
     /**
@@ -790,7 +790,7 @@ class Kraken
      */
     public function orWhereHour(string $column, $param1, $param2 = null)
     {
-        return $this->where("HOUR({$column})", $param1, $param2, 'OR');
+        return $this->where(self::raw("HOUR({$column})"), $param1, $param2, 'OR');
     }
 
     /**
@@ -802,7 +802,7 @@ class Kraken
      */
     public function whereMinute(string $column, $param1, $param2 = null)
     {
-        return $this->where("MINUTE({$column})", $param1, $param2);
+        return $this->where(self::raw("MINUTE({$column})"), $param1, $param2);
     }
 
     /**
@@ -814,7 +814,7 @@ class Kraken
      */
     public function orWhereMinute(string $column, $param1, $param2 = null)
     {
-        return $this->where("MINUTE({$column})", $param1, $param2, 'OR');
+        return $this->where(self::raw("MINUTE({$column})"), $param1, $param2, 'OR');
     }
 
     /**
@@ -826,7 +826,7 @@ class Kraken
      */
     public function whereSecond(string $column, $param1, $param2 = null)
     {
-        return $this->where("SECOND({$column})", $param1, $param2);
+        return $this->where(self::raw("SECOND({$column})"), $param1, $param2);
     }
 
     /**
@@ -838,7 +838,7 @@ class Kraken
      */
     public function orWhereSecond(string $column, $param1, $param2 = null)
     {
-        return $this->where("SECOND({$column})", $param1, $param2, 'OR');
+        return $this->where(self::raw("SECOND({$column})"), $param1, $param2, 'OR');
     }
 
     /**
@@ -1003,7 +1003,8 @@ class Kraken
      */
     public function groupBy($column)
     {
-        $this->_group[] = implode(', ', (array)$column);
+        $column = array_map([$this, 'escapeIdentifier'], (array)$column);
+        $this->_group[] = implode(', ', $column);
         return $this;
     }
 
@@ -1048,6 +1049,9 @@ class Kraken
             }
             return $this;
         }
+
+        // Escapes identifier
+        $param1 = $this->escapeIdentifier($param1);
 
         // Checks if the operator was passed
         if (is_null($param3)) {
@@ -1094,12 +1098,7 @@ class Kraken
             $query .= "{$param1} {$param2} NULL";
         } else {
             // Escaping values
-            if ($param3 instanceof stdClass) {
-                $param3 = $param3->value;
-            } else {
-                $param3 = $this->escape($param3);
-            }
-
+            $param3 = $this->escape($param3);
             $query .= "{$param1} {$param2} {$param3}";
         }
 
@@ -1284,8 +1283,19 @@ class Kraken
     public function orderBy(string $column, string $direction = 'ASC')
     {
         $direction = strtoupper($direction);
+        $column = $this->escapeIdentifier($column);
         $this->_order[] = "{$column} {$direction}";
         return $this;
+    }
+
+    /**
+     * Adds an ORDER BY statement to the query, with descending order.
+     * @param string $column Column name.
+     * @return $this Current instance for nested calls.
+     */
+    public function orderByDesc(string $column)
+    {
+        return $this->orderBy($column, 'DESC');
     }
 
     /**
@@ -1646,6 +1656,7 @@ class Kraken
 
         // Count rows
         if ($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
+        $column = $this->escapeIdentifier($column);
         $this->_select = "COUNT({$column}) AS count";
         $result = $this->asElement()->fetchRow();
 
@@ -1673,6 +1684,7 @@ class Kraken
 
         // Sum rows
         if ($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
+        $column = $this->escapeIdentifier($column);
         $this->_select = "SUM({$column}) AS sum";
         $result = $this->asElement()->fetchRow();
 
@@ -1700,6 +1712,7 @@ class Kraken
 
         // Get max value
         if ($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
+        $column = $this->escapeIdentifier($column);
         $this->_select = "MAX({$column}) AS max";
         $result = $this->asElement()->fetchRow();
 
@@ -1727,6 +1740,7 @@ class Kraken
 
         // Get min value
         if ($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
+        $column = $this->escapeIdentifier($column);
         $this->_select = "MIN({$column}) AS min";
         $result = $this->asElement()->fetchRow();
 
@@ -1754,6 +1768,7 @@ class Kraken
 
         // Get avg value
         if ($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
+        $column = $this->escapeIdentifier($column);
         $this->_select = "AVG({$column}) AS avg";
         $result = $this->asElement()->fetchRow();
 
