@@ -281,7 +281,7 @@ class Authorizator
     {
         $user = $this->getUser();
         if (!$user) return null;
-        return $user->getPrimay() ?? null;
+        return $user->getPrimary() ?? null;
     }
 
     /**
@@ -294,6 +294,19 @@ class Authorizator
         if (!$user || !$user->refresh()) return false;
         self::setUser($this->guard, $user);
         return true;
+    }
+
+    /**
+     * Renews an existing token before its expiration.
+     * @param string $oldToken Token to be renewed. Must be an unexpired token.
+     * @param int|null $expires (Optional) New token expiration time in seconds, leave empty for no expiration.
+     * @return string|bool Returns the token if renew is successful, false otherwise.
+     */
+    public function renew(string $oldToken, ?int $expires = self::EXPIRES_DAY)
+    {
+        if (!$this->authorize($oldToken)) return false;
+        $user = $this->getUser();
+        return $this->generateJwt(['user' => Util::encryptString($user->getPrimary())], $expires);
     }
 
     /**

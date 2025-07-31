@@ -2,6 +2,7 @@
 
 namespace Glowie\Core\Http;
 
+use Config;
 use Util;
 use Glowie\Core\Collection;
 use Glowie\Core\Element;
@@ -303,13 +304,13 @@ class Request implements JsonSerializable
     }
 
     /**
-     * Returns the previous URL where the user was.\
-     * **Note:** This information relies in the `Referer` header.
-     * @return string|null Returns the URL if the header exists or null if not.
+     * Returns the previous URL where the user was.
+     * @return string|null Returns the URL if exists or null if not.
      */
     public function getPreviousUrl()
     {
-        return $this->getHeader('Referer');
+        $appName = Util::snakeCase(Config::get('app_name', 'Glowie'));
+        return Session::make()->get("$appName.previous_url", $this->getHeader('Referer'));
     }
 
     /**
@@ -478,5 +479,17 @@ class Request implements JsonSerializable
     {
         if (!$this->__validator) $this->__validator = new Validator();
         return $this->__validator;
+    }
+
+    /**
+     * Saves the current and previous request URLs.
+     */
+    public function trackRequestUrls()
+    {
+        if (!$this->isGet() || $this->isAjax()) return;
+        $appName = Util::snakeCase(Config::get('app_name', 'Glowie'));
+        $session = new Session();
+        $session->set("$appName.previous_url", $session->get("$appName.current_url"));
+        $session->set("$appName.current_url", $this->getURL());
     }
 }

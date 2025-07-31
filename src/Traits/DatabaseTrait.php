@@ -164,16 +164,20 @@ trait DatabaseTrait
      */
     public function escape($string)
     {
+        if ($string instanceof stdClass) return $string->value;
         return $this->getConnection()->quote((string)$string);
     }
 
     /**
      * Escapes a table/column identifier.
-     * @param string $name Identifier to be escaped.
+     * @param mixed $name Identifier to be escaped.
      * @return string Returns the escaped identifier.
      */
-    public function escapeIdentifier(string $name)
+    public function escapeIdentifier($name)
     {
+        // Checks for raw identifier
+        if ($name instanceof stdClass) return $name->value;
+
         // Gets the characters
         $driver = $this->getDriver();
         $driverClass = 'Glowie\Core\Database\Drivers\\' . Util::pascalCase($driver);

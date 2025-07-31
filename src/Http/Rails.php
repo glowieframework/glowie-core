@@ -478,6 +478,9 @@ class Rails
         // Sets the response CORS headers
         self::$response->applyCors();
 
+        // Sets the URL tracking
+        self::$request->trackRequestUrls();
+
         // Retrieves the request URI
         $route = self::$request->getURI();
 

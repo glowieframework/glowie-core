@@ -3,6 +3,7 @@
 namespace Glowie\Core\Tools;
 
 use Util;
+use Glowie\Core\Collection;
 use Glowie\Core\Element;
 use Glowie\Core\Exception\FileException;
 
@@ -241,7 +242,7 @@ class Uploader
     /**
      * Performs a single file upload.
      * @param string $input Valid file input field name.
-     * @return mixed Returns the uploaded file relative URL on success or false on errors.
+     * @return Element|bool Returns an object with the uploaded file data on success or false on error.
      */
     public function uploadSingle(string $input)
     {
@@ -253,12 +254,16 @@ class Uploader
      * @param string $input Valid file input field name.
      * @param bool $multiple (Optional) Allow multiple uploads.
      * @param bool $deleteOnFail (Optional) Delete all uploaded files if an upload fails (only multiple uploads).
-     * @return mixed Returns the uploaded file relative URL (or an array of URLs if multiple files) on success or false on errors.
+     * @return mixed Returns an object with the uploaded file data (or a Collection of files on multiple uploads) on success or false on errors.
      */
     public function upload(string $input, bool $multiple = true, bool $deleteOnFail = false)
     {
         // Validate target directory
-        if (!is_dir($this->directory) || !is_writable($this->directory)) throw new FileException('Directory "' . $this->directory . '" is invalid or not writable');
+        if (!is_dir($this->directory) || !is_writable($this->directory)) {
+            $e = new FileException('Directory "' . $this->directory . '" is invalid or not writable');
+            $e->setSuggestion('You must give writing permissions to the upload directory');
+            throw $e;
+        }
 
         // Checks for empty uploads
         if (!empty($_FILES[$input]['name'])) {
@@ -289,10 +294,12 @@ class Uploader
                 $this->errors = $errors;
                 if (empty($this->errors)) {
                     $this->errors = self::ERR_UPLOAD_SUCCESS;
-                    return $result;
+                    return new Collection($result);
                 } else {
                     if ($deleteOnFail) {
-                        foreach ($result as $file) if (is_file($file)) @unlink($file);
+                        foreach ($result as $file) {
+                            if (is_file($file->path)) @unlink($file->path);
+                        }
                     }
                     return false;
                 }
@@ -338,7 +345,7 @@ class Uploader
      * Fetches a file upload.
      * @param Element $file Uploaded file Element.
      * @param int $key (Optional) File key in multiple files.
-     * @return string|bool Returns the uploaded file relative URL on success or false on error.
+     * @return Element|false Returns an object with the uploaded file data on success or false on error.
      */
     private function processFile($file, int $key = 0)
     {
@@ -349,12 +356,21 @@ class Uploader
 
         // Perform upload
         if ($this->checkFileSize($file->size)) {
-            if ($this->checkExtension($file->extension) && $this->checkMime($file->type)) {
+            if ($this->checkExtension(mb_strtolower($file->extension)) && $this->checkMime($file->type)) {
                 $filename = $this->generateFilename($file->name, $key);
                 $target = $this->directory . '/' . $filename;
                 if (is_uploaded_file($file->tmp_name) && @move_uploaded_file($file->tmp_name, $target)) {
                     $this->errors = self::ERR_UPLOAD_SUCCESS;
-                    return $target;
+                    return new Element([
+                        'name' => $filename,
+                        'url' => $target,
+                        'path' => realpath($target),
+                        'original_name' => $file->name,
+                        'type' => $file->type,
+                        'size' => $file->size,
+                        'size_string' => $file->size_string,
+                        'extension' => $file->extension
+                    ]);
                 } else {
                     $this->errors = self::ERR_UPLOAD_ERROR;
                     return false;

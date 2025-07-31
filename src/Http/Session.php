@@ -339,15 +339,19 @@ class Session implements JsonSerializable
      */
     public function getFlash(string $key, $default = null)
     {
+        // Gets the current flash data
         self::$flash = $this->get(self::$appName . '.flash') ?? [];
+        $value = $default;
+
+        // Checks if the flash key exists
         if (array_key_exists($key, self::$flash)) {
             $value = self::$flash[$key];
             unset(self::$flash[$key]);
-            $this->set(self::$appName . '.flash', self::$flash);
-            return $value;
-        } else {
-            return $default;
         }
+
+        // Saves the new flash data and returns
+        $this->set(self::$appName . '.flash', self::$flash);
+        return $value;
     }
 
     /**

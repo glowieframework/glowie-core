@@ -416,6 +416,13 @@ class Kraken
             return $this;
         }
 
+        // Escapes identifiers
+        if ($param1 instanceof stdClass) {
+            $param1 = $param1->value;
+        } else {
+            $param1 = $this->escapeIdentifier($param1);
+        }
+
         // Checks if the operator was passed
         if (is_null($param3)) {
             $param3 = $param2;
@@ -1469,7 +1476,7 @@ class Kraken
             if (!is_array($data[0])) throw new Exception('insert(): Multiple INSERT calls must be a multi-dimensional array');
 
             // Get fields
-            $fields = array_keys($data[0]);
+            $fields = array_map([$this, 'escapeIdentifier'], array_keys($data[0]));
 
             // Get values
             foreach ($data as $row) {
@@ -1490,7 +1497,7 @@ class Kraken
             }
         } else {
             foreach ($data as $field => $value) {
-                $fields[] = $field;
+                $fields[] = $this->escapeIdentifier($field);
 
                 // Escape values
                 if ($value instanceof stdClass) {
@@ -1511,6 +1518,7 @@ class Kraken
 
             // Escape values
             foreach ($onDuplicate as $key => $value) {
+                $key = $this->escapeIdentifier($key);
                 if ($value instanceof stdClass) {
                     $set[] = "{$key} = {$value->value}";
                 } else if ($value === 'NULL' || is_null($value)) {
@@ -1591,6 +1599,7 @@ class Kraken
 
         // Escape values
         foreach ($data as $key => $value) {
+            $key = $this->escapeIdentifier($key);
             if ($value instanceof stdClass) {
                 $set[] = "{$key} = {$value->value}";
             } else if ($value === 'NULL' || is_null($value)) {

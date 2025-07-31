@@ -464,7 +464,7 @@ class Response
     public function withInputs(array $name = [])
     {
         $data = Rails::getRequest();
-        if (!empty($name)) $data->only($name);
+        if (!empty($name)) $data = $data->only($name);
         return $this->withFlash('input', $data->toArray());
     }
 
@@ -503,6 +503,19 @@ class Response
     public function redirectRoute(string $route, array $params = [], int $code = self::HTTP_TEMPORARY_REDIRECT)
     {
         return $this->redirect(Util::route($route, $params), $code);
+    }
+
+    /**
+     * Redirects the user to the previous URL.
+     * @param string $fallback (Optional) Target URL to use if the previous URL is not available. Defaults to the app root URL.
+     * @param int $code (Optional) HTTP status code to pass with the redirect.
+     * @return Response Current Response instance for nested calls.
+     */
+    public function redirectBack(string $fallback = '', int $code = self::HTTP_TEMPORARY_REDIRECT)
+    {
+        $previousUrl = Rails::getRequest()->getPreviousUrl();
+        if (Util::isEmpty($fallback)) $fallback = Util::baseUrl();
+        return $this->redirect($previousUrl ?? $fallback, $code);
     }
 
     /**
