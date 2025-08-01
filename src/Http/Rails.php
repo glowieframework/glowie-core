@@ -242,7 +242,7 @@ class Rails
      * Leave empty for all.
      * @param string $name (Optional) Route name.
      */
-    public static function addRedirect(string $route, string $target, int $code = Response::HTTP_TEMPORARY_REDIRECT, $methods = [], string $name = '')
+    public static function addRedirect(string $route, string $target, int $code = Response::HTTP_FOUND, $methods = [], string $name = '')
     {
         if (Util::isEmpty($name)) $name = Util::slug($route, '-', true);
         if (Util::isEmpty($target)) throw new RoutingException('Redirect target cannot be empty for route "' . $name . '"');

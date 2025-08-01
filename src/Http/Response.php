@@ -47,6 +47,12 @@ class Response
     public const HTTP_NO_CONTENT = 204;
 
     /**
+     * HTTP 206 Partial Content status code.
+     * @var int
+     */
+    public const HTTP_PARTIAL_CONTENT = 206;
+
+    /**
      * HTTP 300 Moved Permanently status code.
      * @var int
      */
@@ -57,6 +63,18 @@ class Response
      * @var int
      */
     public const HTTP_FOUND = 302;
+
+    /**
+     * HTTP 303 See Other status code.
+     * @var int
+     */
+    public const HTTP_SEE_OTHER = 303;
+
+    /**
+     * HTTP 304 Not Motified status code.
+     * @var int
+     */
+    public const HTTP_NOT_MODIFIED = 304;
 
     /**
      * HTTP 307 Temporary Redirect status code.
@@ -105,6 +123,12 @@ class Response
      * @var int
      */
     public const HTTP_REQUEST_TIMEOUT = 408;
+
+    /**
+     * HTTP 409 Conflict status code.
+     * @var int
+     */
+    public const HTTP_CONFLICT = 409;
 
     /**
      * HTTP 429 Too Many Requests status code.
@@ -474,7 +498,7 @@ class Response
      * @param int $code (Optional) HTTP status code to pass with the redirect.
      * @return Response Current Response instance for nested calls.
      */
-    public function redirect(string $destination, int $code = self::HTTP_TEMPORARY_REDIRECT)
+    public function redirect(string $destination, int $code = self::HTTP_FOUND)
     {
         if (Buffer::isActive()) Buffer::clean();
         $this->setStatusCode($code);
@@ -488,7 +512,7 @@ class Response
      * @param int $code (Optional) HTTP status code to pass with the redirect.
      * @return Response Current Response instance for nested calls.
      */
-    public function redirectBase(string $path = '', int $code = self::HTTP_TEMPORARY_REDIRECT)
+    public function redirectBase(string $path = '', int $code = self::HTTP_FOUND)
     {
         return $this->redirect(Util::baseUrl($path), $code);
     }
@@ -500,18 +524,18 @@ class Response
      * @param int $code (Optional) HTTP status code to pass with the redirect.
      * @return Response Current Response instance for nested calls.
      */
-    public function redirectRoute(string $route, array $params = [], int $code = self::HTTP_TEMPORARY_REDIRECT)
+    public function redirectRoute(string $route, array $params = [], int $code = self::HTTP_FOUND)
     {
         return $this->redirect(Util::route($route, $params), $code);
     }
 
     /**
      * Redirects the user to the previous URL.
-     * @param string $fallback (Optional) Target URL to use if the previous URL is not available. Defaults to the app root URL.
      * @param int $code (Optional) HTTP status code to pass with the redirect.
+     * @param string $fallback (Optional) Target URL to use if the previous URL is not available. Defaults to the app root URL.
      * @return Response Current Response instance for nested calls.
      */
-    public function redirectBack(string $fallback = '', int $code = self::HTTP_TEMPORARY_REDIRECT)
+    public function redirectBack(int $code = self::HTTP_FOUND, string $fallback = '')
     {
         $previousUrl = Rails::getRequest()->getPreviousUrl();
         if (Util::isEmpty($fallback)) $fallback = Util::baseUrl();

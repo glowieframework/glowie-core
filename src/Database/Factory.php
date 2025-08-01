@@ -54,17 +54,18 @@ class Factory
 
     /**
      * Notify query listeners that a query ran.
+     * @param string $connection Database connection name (from the app configuration).
      * @param string $query SQL query.
      * @param array $bindings Prepared bindings.
      * @param float $time Query duration in microsseconds.
      * @param bool $status Query status, true for success, false for fail.
      */
-    public static function notifyListeners(string $query, array $bindings, float $time, bool $status)
+    public static function notifyListeners(string $connection, string $query, array $bindings, float $time, bool $status)
     {
         if (empty(self::$listeners)) return;
 
         foreach (self::$listeners as $item) {
-            call_user_func_array($item, [$query, $bindings, round($time * 1000, 2), $status]);
+            call_user_func_array($item, [$connection, $query, $bindings, round($time * 1000, 2), $status]);
         }
     }
 

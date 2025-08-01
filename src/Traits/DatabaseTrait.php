@@ -356,12 +356,12 @@ trait DatabaseTrait
                 [$sql, $params] = $this->_prepared;
                 $stmt = $this->getConnection()->prepare($sql);
                 $stmt->execute($params);
-                Factory::notifyListeners($sql, $params, microtime(true) - $queryStart, true);
+                Factory::notifyListeners($this->_connection, $sql, $params, microtime(true) - $queryStart, true);
             } else {
                 // Raw query
                 $sql = $this->getQuery();
                 $stmt = $this->getConnection()->query($sql);
-                Factory::notifyListeners($sql, [], microtime(true) - $queryStart, true);
+                Factory::notifyListeners($this->_connection, $sql, [], microtime(true) - $queryStart, true);
             }
 
             // Clear query data
@@ -394,7 +394,7 @@ trait DatabaseTrait
             return $result;
         } catch (PDOException $e) {
             // Notify listeners of failure
-            Factory::notifyListeners($sql, $params ?? [], microtime(true) - $queryStart, false);
+            Factory::notifyListeners($this->_connection, $sql, $params ?? [], microtime(true) - $queryStart, false);
 
             // Query failed with error
             throw new QueryException($sql, $e->getMessage(), $e->getCode(), $e);
