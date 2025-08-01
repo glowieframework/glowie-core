@@ -178,7 +178,7 @@ class Kraken
     public function addSelect($columns = '*')
     {
         if ($this->_instruction !== 'SELECT DISTINCT') $this->_instruction = 'SELECT';
-        $columns = array_map([$this, 'escapeIdentifier'], (array)$columns);
+        $columns = array_map([$this, 'escapeIdentifier'], is_array($columns) ? $columns : [$columns]);
         $this->_select .= (!Util::isEmpty($this->_select) ? ', ' : '') . implode(', ', $columns);
         return $this;
     }
@@ -1050,7 +1050,7 @@ class Kraken
      */
     public function groupBy($column)
     {
-        $column = array_map([$this, 'escapeIdentifier'], (array)$column);
+        $column = array_map([$this, 'escapeIdentifier'], is_array($column) ? $column : [$column]);
         $this->_group[] = implode(', ', $column);
         return $this;
     }
@@ -1705,7 +1705,7 @@ class Kraken
 
         // Escape table names
         if (!Util::isEmpty($table)) {
-            $table = array_map([$this, 'escapeIdentifier'], (array)$table);
+            $table = array_map([$this, 'escapeIdentifier'], is_array($table) ? $table : [$table]);
             $this->_delete = implode(', ', $table);
         }
 

@@ -840,7 +840,8 @@ class Skeleton
      */
     public function primaryKey($column)
     {
-        foreach ((array)$column as $item) {
+        $column = is_array($column) ? $column : [$column];
+        foreach ($column as $item) {
             $this->_primary[] = $this->escapeIdentifier($item);
         }
         return $this;
@@ -855,7 +856,8 @@ class Skeleton
      */
     public function index($column, string $name = '', bool $unique = false)
     {
-        foreach ((array)$column as $item) {
+        $column = is_array($column) ? $column : [$column];
+        foreach ($column as $item) {
             $key = $name;
             if (Util::isEmpty($name)) $key = $item;
             $item = $this->escapeIdentifier($item);
@@ -895,8 +897,8 @@ class Skeleton
     public function foreignKey($column, string $table, $reference, ?string $name = null, string $update = 'RESTRICT', string $delete = 'RESTRICT')
     {
         $name = !Util::isEmpty($name) ? "CONSTRAINT {$this->escapeIdentifier($name)} " : '';
-        $column = implode(', ', array_map([$this, 'escapeIdentifier'], (array)$column));
-        $reference = implode(', ', array_map([$this, 'escapeIdentifier'], (array)$reference));
+        $column = implode(', ', array_map([$this, 'escapeIdentifier'], is_array($column) ? $column : [$column]));
+        $reference = implode(', ', array_map([$this, 'escapeIdentifier'], is_array($reference) ? $reference : [$reference]));
         $table = $this->escapeIdentifier($table);
         $this->_foreign[] = "{$name}FOREIGN KEY ({$column}) REFERENCES {$table} ({$reference}) ON UPDATE {$update} ON DELETE {$delete}";
         return $this;

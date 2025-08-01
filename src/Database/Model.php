@@ -372,7 +372,7 @@ class Model extends Kraken implements JsonSerializable
      */
     public function drop($primary = null, bool $force = false)
     {
-        if (!is_null($primary)) $this->whereIn($this->_table . '.' . $this->_primaryKey, (array)$primary);
+        if (!is_null($primary)) $this->whereIn($this->_table . '.' . $this->_primaryKey, is_array($primary) ? $primary : [$primary]);
         if ($this->_softDeletes && !$force) {
             return $this->update([$this->_table . '.' . $this->_deletedField => self::raw('CURRENT_TIMESTAMP')]);
         } else {
@@ -746,7 +746,7 @@ class Model extends Kraken implements JsonSerializable
      */
     public function withRelations($names = [])
     {
-        $this->_relationsEnabled = (array)$names;
+        $this->_relationsEnabled = is_array($names) ? $names : [$names];
         return $this;
     }
 
