@@ -267,10 +267,13 @@ class Model extends Kraken implements JsonSerializable
      */
     public function find($primary = null, bool $deleted = false)
     {
-        $fields = !Util::isEmpty($this->_select) ? $this->_select : (!Util::isEmpty($this->_fields) ? $this->_fields : '*');
+        if (Util::isEmpty($this->_select)) {
+            $fields = !Util::isEmpty($this->_fields) ? $this->_fields : '*';
+            $this->select($fields);
+        }
         if (!is_null($primary)) $this->where($this->_table . '.' . $this->_primaryKey, $primary);
         if ($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
-        return $this->select($fields)->fetchRow();
+        return $this->fetchRow();
     }
 
     /**
@@ -322,9 +325,12 @@ class Model extends Kraken implements JsonSerializable
      */
     public function all(bool $deleted = false)
     {
-        $fields = !Util::isEmpty($this->_select) ? $this->_select : (!Util::isEmpty($this->_fields) ? $this->_fields : '*');
+        if (Util::isEmpty($this->_select)) {
+            $fields = !Util::isEmpty($this->_fields) ? $this->_fields : '*';
+            $this->select($fields);
+        }
         if ($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
-        return $this->select($fields)->fetchAll();
+        return $this->fetchAll();
     }
 
     /**
