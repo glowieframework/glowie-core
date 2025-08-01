@@ -186,7 +186,7 @@ trait DatabaseTrait
         $end = $driverClass::getClosingEscapeChar();
 
         // Checks for SQL functions
-        if (preg_match('/^[a-z_][a-z0-9_]*\s*\([^()]*\)$/i', $name)) {
+        if (preg_match('/^[a-z_][a-z0-9_]*\s*\(.*\)$/i', $name)) {
             return $name;
         }
 
@@ -197,7 +197,7 @@ trait DatabaseTrait
         }
 
         // Checks for implicit alias
-        if (preg_match('/(.+?) +([^\s]+)/', $name, $m)) {
+        if (Util::stringContains($name, ' ') && !Util::stringContains($name, '.') && preg_match('/(.+?) +([^\s]+)/', $name, $m)) {
             return $this->escapeIdentifier(trim($m[1])) . ' ' . $this->escapeIdentifier(trim($m[2]));
         }
 
