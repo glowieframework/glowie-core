@@ -15,7 +15,7 @@ use PDO;
  * @link https://glowie.gabrielsilva.dev.br
  * @see https://glowie.gabrielsilva.dev.br/docs/latest/forms-and-data/databases
  */
-class Pgsql
+class Pgsql implements DbDriver
 {
     /**
      * Default PDO options.
@@ -30,13 +30,7 @@ class Pgsql
      * Default port.
      * @var int
      */
-    public const DEFAULT_PORT = 5432;
-
-    /**
-     * Identifier escaping characters.
-     * @var array
-     */
-    public const ESCAPING_CHARS = ['"', '"'];
+    private const DEFAULT_PORT = 5432;
 
     /**
      * Creates a PostgreSQL PDO connection.
@@ -57,5 +51,23 @@ class Pgsql
 
         // Returns the connection
         return new PDO($dsn, $database['username'], $database['password'], $options);
+    }
+
+    /**
+     * Gets the opening escape char for the driver identifiers.
+     * @return string Returns the opening escape char.
+     */
+    public static function getOpeningEscapeChar()
+    {
+        return '"';
+    }
+
+    /**
+     * Gets the closing escape char for the driver identifiers.
+     * @return string Returns the closing escape char.
+     */
+    public static function getClosingEscapeChar()
+    {
+        return '"';
     }
 }

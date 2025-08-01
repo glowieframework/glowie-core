@@ -387,7 +387,7 @@ class Kraken
         if (empty($this->_join)) throw new Exception('on(): There are no JOIN statements in the query yet');
 
         // Checks for the condition type
-        if (end($this->_join) == '(') $type = "";
+        if (end($this->_join) === '(') $type = "";
 
         // Checks if the operator was passed
         if (is_null($param3)) {
@@ -428,7 +428,7 @@ class Kraken
         // Checks for the condition type
         $type = strtoupper($type);
         if (!empty($this->_where)) {
-            if (end($this->_where) == '(') {
+            if (end($this->_where) === '(') {
                 $query = "";
             } else {
                 $query = "{$type} ";
@@ -468,7 +468,7 @@ class Kraken
 
         // Checks operation types
         $param2 = strtoupper($param2);
-        if (($param2 == 'BETWEEN' || $param2 == 'NOT BETWEEN') && (is_array($param3) || $param3 instanceof Collection)) {
+        if (($param2 === 'BETWEEN' || $param2 === 'NOT BETWEEN') && (is_array($param3) || $param3 instanceof Collection)) {
             $values = [];
 
             // Escaping values
@@ -497,11 +497,11 @@ class Kraken
                 }
             }
 
-            if ($param2 == '=') $param2 = 'IN';
+            if ($param2 === '=') $param2 = 'IN';
             $values = implode(', ', $values);
             $query .= "{$param1} {$param2} ($values)";
         } else if ($param3 === 'NULL' || is_null($param3)) {
-            if ($param2 == '=') $param2 = 'IS';
+            if ($param2 === '=') $param2 = 'IS';
             $query .= "{$param1} {$param2} NULL";
         } else {
             // Escaping values
@@ -1080,7 +1080,7 @@ class Kraken
         // Checks for the condition type
         $type = strtoupper($type);
         if (!empty($this->_having)) {
-            if (end($this->_having) == '(') {
+            if (end($this->_having) === '(') {
                 $query = "";
             } else {
                 $query = "{$type} ";
@@ -1120,7 +1120,7 @@ class Kraken
 
         // Checks operation types
         $param2 = strtoupper($param2);
-        if (($param2 == 'BETWEEN' || $param2 == 'NOT BETWEEN') && (is_array($param3) || $param3 instanceof Collection)) {
+        if (($param2 === 'BETWEEN' || $param2 === 'NOT BETWEEN') && (is_array($param3) || $param3 instanceof Collection)) {
             $values = [];
 
             // Escaping values
@@ -1149,11 +1149,11 @@ class Kraken
                 }
             }
 
-            if ($param2 == '=') $param2 = 'IN';
+            if ($param2 === '=') $param2 = 'IN';
             $values = implode(', ', $values);
             $query .= "{$param1} {$param2} ($values)";
         } else if ($param3 === 'NULL' || is_null($param3)) {
-            if ($param2 == '=') $param2 = 'IS';
+            if ($param2 === '=') $param2 = 'IS';
             $query .= "{$param1} {$param2} NULL";
         } else {
             // Escaping values
@@ -1688,7 +1688,7 @@ class Kraken
     /**
      * Deletes data from the table.\
      * **Do not forget to use WHERE statements before calling this function, otherwise all records will be deleted.**
-     * @param string|array $table (Optional) Table name to delete data in case of table joins. You can also use an array of table names.
+     * @param mixed $table (Optional) Table name to delete data in case of table joins. You can also use an array of table names.
      * @return bool Returns true on success or false on failure.
      * @throws QueryException Throws an exception if the query fails.
      */
@@ -1699,8 +1699,17 @@ class Kraken
             $e->setSuggestion('When safe mode is enabled in the Kraken instance, you must add at least one where() statement before calling a delete() method.');
             throw $e;
         }
+
+        // Sets the instruction
         $this->_instruction = 'DELETE';
-        if (!Util::isEmpty($table)) $this->_delete = implode(', ', (array)$table);
+
+        // Escape table names
+        if (!Util::isEmpty($table)) {
+            $table = array_map([$this, 'escapeIdentifier'], (array)$table);
+            $this->_delete = implode(', ', $table);
+        }
+
+        // Runs the query
         return $this->execute();
     }
 
@@ -1735,7 +1744,7 @@ class Kraken
 
     /**
      * Sums the value of all rows in a specific column.
-     * @param mixed $column Column to retrieve values. You can also use a raw SUM expression.
+     * @param mixed $column Column to retrieve values.
      * @return float Returns the sum result on success.
      * @throws QueryException Throws an exception if the query fails.
      */
@@ -1763,7 +1772,7 @@ class Kraken
 
     /**
      * Returns the highest value from a specific column.
-     * @param mixed $column Column to retrieve the value. You can also use a raw MAX expression.
+     * @param mixed $column Column to retrieve the value.
      * @return float Returns the highest value on success.
      * @throws QueryException Throws an exception if the query fails.
      */
@@ -1791,7 +1800,7 @@ class Kraken
 
     /**
      * Returns the lowest value from a specific column.
-     * @param mixed $column Column to retrieve the value. You can also use a raw MIN expression.
+     * @param mixed $column Column to retrieve the value.
      * @return float Returns the lowest value on success.
      * @throws QueryException Throws an exception if the query fails.
      */
@@ -1819,7 +1828,7 @@ class Kraken
 
     /**
      * Returns the average value from a specific column.
-     * @param mixed $column Column to retrieve the value. You can also use a raw AVG expression.
+     * @param mixed $column Column to retrieve the value.
      * @return float Returns the average value on success.
      * @throws QueryException Throws an exception if the query fails.
      */
@@ -2049,7 +2058,7 @@ class Kraken
         $query = $this->_instruction;
 
         // Gets SELECT statement
-        if ($this->_instruction == 'SELECT' || $this->_instruction == 'SELECT DISTINCT') {
+        if ($this->_instruction === 'SELECT' || $this->_instruction === 'SELECT DISTINCT') {
             $query .= " {$this->_select}";
         }
 
@@ -2059,7 +2068,7 @@ class Kraken
         }
 
         // Gets FROM statement
-        if ($this->_instruction == 'SELECT' || $this->_instruction == 'SELECT DISTINCT' || $this->_instruction == 'DELETE') {
+        if ($this->_instruction === 'SELECT' || $this->_instruction === 'SELECT DISTINCT' || $this->_instruction === 'DELETE') {
             if (!Util::isEmpty($this->_from)) {
                 $query .= " FROM {$this->_from}";
             } else {
@@ -2068,7 +2077,7 @@ class Kraken
         }
 
         // Gets UPDATE statements
-        if ($this->_instruction == 'UPDATE') {
+        if ($this->_instruction === 'UPDATE') {
             $query .= " {$this->_table}";
         }
 
@@ -2079,26 +2088,26 @@ class Kraken
         }
 
         // Gets SET statements
-        if ($this->_instruction == 'UPDATE') {
+        if ($this->_instruction === 'UPDATE') {
             $query .= " SET {$this->_set}";
         }
 
         // Gets INSERT statements
-        if ($this->_instruction == 'INSERT' || $this->_instruction == 'INSERT IGNORE' || $this->_instruction == 'REPLACE') {
+        if ($this->_instruction === 'INSERT' || $this->_instruction === 'INSERT IGNORE' || $this->_instruction === 'REPLACE') {
             if (!Util::isEmpty($this->_insert) && !Util::isEmpty($this->_values)) {
                 $query .= " INTO {$this->_table} ({$this->_insert}) VALUES $this->_values";
             }
         }
 
         // Gets ON DUPLICATE KEY statement
-        if ($this->_instruction == 'INSERT') {
+        if ($this->_instruction === 'INSERT') {
             if (!Util::isEmpty($this->_duplicate)) {
                 $query .= " {$this->_duplicate}";
             }
         }
 
         // Gets WHERE statements
-        if ($this->_instruction == 'SELECT' || $this->_instruction == 'SELECT DISTINCT' || $this->_instruction == 'UPDATE' || $this->_instruction == 'DELETE') {
+        if ($this->_instruction === 'SELECT' || $this->_instruction === 'SELECT DISTINCT' || $this->_instruction === 'UPDATE' || $this->_instruction === 'DELETE') {
             if (!empty($this->_where)) {
                 $where = implode(' ', $this->_where);
                 $query .= " WHERE {$where}";
@@ -2111,7 +2120,7 @@ class Kraken
         }
 
         // Gets GROUP BY, HAVING and ORDER BY statements
-        if ($this->_instruction == 'SELECT' || $this->_instruction == 'SELECT DISTINCT') {
+        if ($this->_instruction === 'SELECT' || $this->_instruction === 'SELECT DISTINCT') {
             if (!empty($this->_group)) {
                 $group = implode(', ', $this->_group);
                 $query .= " GROUP BY {$group}";
@@ -2129,7 +2138,7 @@ class Kraken
         }
 
         // Gets LIMIT statement
-        if ($this->_instruction == 'SELECT' || $this->_instruction == 'SELECT DISTINCT') {
+        if ($this->_instruction === 'SELECT' || $this->_instruction === 'SELECT DISTINCT') {
             if (!empty($this->_limit)) {
                 if (isset($this->_limit[1])) {
                     $limit = implode(', ', $this->_limit);
@@ -2138,7 +2147,7 @@ class Kraken
                     $query .= " OFFSET {$this->_limit[0]}";
                 }
             }
-        } else if ($this->_instruction == 'UPDATE' || $this->_instruction == 'DELETE') {
+        } else if ($this->_instruction === 'UPDATE' || $this->_instruction === 'DELETE') {
             if (isset($this->_limit[1])) {
                 $query .= " LIMIT {$this->_limit[1]}";
             }

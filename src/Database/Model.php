@@ -455,8 +455,8 @@ class Model extends Kraken implements JsonSerializable
 
     /**
      * Gets the first row that matches a set of fields and values. If no matching row is found, a new one is created and returned.
-     * @param Element|array $find An Element or associative array of fields and values to search.
-     * @param Element|array $create (Optional) An Element or associative array of data to merge into the `$find` fields to create a new row.
+     * @param mixed $find An Element or associative array of fields and values to search.
+     * @param mixed $create (Optional) An Element or associative array of data to merge into the `$find` fields to create a new row.
      * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
      * @return mixed Returns the existing or new row, false on error.
      */
@@ -479,7 +479,7 @@ class Model extends Kraken implements JsonSerializable
     /**
      * Checks if a row matches the primary key value in the data. If so, updates the row. Otherwise,\
      * inserts a new record in the model table.
-     * @param Element|array $data An Element or associative array relating fields and values to upsert. **Must include the primary key field to update.**
+     * @param mixed $data An Element or associative array relating fields and values to upsert. **Must include the primary key field to update.**
      * @return mixed Returns the last inserted `AUTO_INCREMENT` value (or true) if the row is created, otherwise returns true on success or false on failure.
      */
     public function updateOrCreate($data)
@@ -499,8 +499,8 @@ class Model extends Kraken implements JsonSerializable
     /**
      * Checks if a row matches a set of fields and values. If so, updates the row. Otherwise,\
      * inserts a new record in the model table.
-     * @param Element|array $find An Element or associative array of fields and values to search.
-     * @param Element|array $data (Optional) An Element or associative array of data to merge into the `$find` fields to update/create a new row.
+     * @param mixed $find An Element or associative array of fields and values to search.
+     * @param mixed $data (Optional) An Element or associative array of data to merge into the `$find` fields to update/create a new row.
      * @return mixed Returns the last inserted `AUTO_INCREMENT` value (or true) if the row is created, otherwise returns true on success or false on failure.
      */
     public function updateOrCreateBy($find, $data = [])
@@ -538,13 +538,13 @@ class Model extends Kraken implements JsonSerializable
 
     /**
      * Counts the number of resulting rows from a SELECT query.
-     * @param string $column (Optional) Column to use as the counting base. Using `*` will count all rows including NULL values.\
-     * Setting a column name will count all rows excluding NULL values from that column. You can also use a raw COUNT expression.
+     * @param mixed $column (Optional) Column to use as the counting base. Using `*` will count all rows including NULL values.\
+     * Setting a column name will count all rows excluding NULL values from that column.
      * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
      * @return int Returns the number of rows on success.
      * @throws QueryException Throws an exception if the query fails.
      */
-    public function count(string $column = '*', bool $deleted = false)
+    public function count($column = '*', bool $deleted = false)
     {
         if ($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
         return Kraken::count($column);
@@ -552,12 +552,12 @@ class Model extends Kraken implements JsonSerializable
 
     /**
      * Sums the value of all rows in a specific column.
-     * @param string $column Column to retrieve values. You can also use a raw SUM expression.
+     * @param mixed $column Column to retrieve values.
      * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
-     * @return string Returns the sum result on success.
+     * @return float Returns the sum result on success.
      * @throws QueryException Throws an exception if the query fails.
      */
-    public function sum(string $column, bool $deleted = false)
+    public function sum($column, bool $deleted = false)
     {
         if ($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
         return Kraken::sum($column);
@@ -565,12 +565,12 @@ class Model extends Kraken implements JsonSerializable
 
     /**
      * Returns the highest value from a specific column.
-     * @param string $column Column to retrieve the value. You can also use a raw MAX expression.
+     * @param mixed $column Column to retrieve the value.
      * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
-     * @return string Returns the highest value on success.
+     * @return float Returns the highest value on success.
      * @throws QueryException Throws an exception if the query fails.
      */
-    public function max(string $column, bool $deleted = false)
+    public function max($column, bool $deleted = false)
     {
         if ($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
         return Kraken::max($column);
@@ -578,12 +578,12 @@ class Model extends Kraken implements JsonSerializable
 
     /**
      * Returns the lowest value from a specific column.
-     * @param string $column Column to retrieve the value. You can also use a raw MIN expression.
+     * @param mixed $column Column to retrieve the value.
      * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
-     * @return string Returns the lowest value on success.
+     * @return float Returns the lowest value on success.
      * @throws QueryException Throws an exception if the query fails.
      */
-    public function min(string $column, bool $deleted = false)
+    public function min($column, bool $deleted = false)
     {
         if ($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
         return Kraken::min($column);
@@ -591,12 +591,12 @@ class Model extends Kraken implements JsonSerializable
 
     /**
      * Returns the average value from a specific column.
-     * @param string $column Column to retrieve the value. You can also use a raw AVG expression.
+     * @param mixed $column Column to retrieve the value.
      * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
-     * @return string Returns the average value on success.
+     * @return float Returns the average value on success.
      * @throws QueryException Throws an exception if the query fails.
      */
-    public function avg(string $column, bool $deleted = false)
+    public function avg($column, bool $deleted = false)
     {
         if ($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
         return Kraken::avg($column);
@@ -628,7 +628,7 @@ class Model extends Kraken implements JsonSerializable
 
     /**
      * Fills the model entity with a row data. This data will be merged into the existing model data, if any.
-     * @param Element|array $row An Element or associative array with the row data to fill.
+     * @param mixed $row An Element or associative array with the row data to fill.
      * @param bool $overwrite (Optional) Set to `true` to overwrite the existing model data instead of merging.
      * @return $this Current Model instance for nested calls.
      */
@@ -1150,6 +1150,14 @@ class Model extends Kraken implements JsonSerializable
                     case 'date':
                         if (!empty($params[1])) {
                             $data[$field] = date($params[1], strtotime($data[$field]));
+                        } else {
+                            $data[$field] = new DateTime($data[$field]);
+                        }
+                        break;
+
+                    case 'timestamp':
+                        if (!empty($params[1])) {
+                            $data[$field] = date($params[1], $data[$field]);
                         } else {
                             $data[$field] = new DateTime($data[$field]);
                         }

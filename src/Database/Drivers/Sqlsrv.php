@@ -15,7 +15,7 @@ use PDO;
  * @link https://glowie.gabrielsilva.dev.br
  * @see https://glowie.gabrielsilva.dev.br/docs/latest/forms-and-data/databases
  */
-class Sqlsrv
+class Sqlsrv implements DbDriver
 {
     /**
      * Default PDO options.
@@ -30,13 +30,7 @@ class Sqlsrv
      * Default port.
      * @var int
      */
-    public const DEFAULT_PORT = 1433;
-
-    /**
-     * Identifier escaping characters.
-     * @var array
-     */
-    public const ESCAPING_CHARS = ['[', ']'];
+    private const DEFAULT_PORT = 1433;
 
     /**
      * Creates a SQL Server PDO connection.
@@ -61,5 +55,23 @@ class Sqlsrv
 
         // Returns the connection
         return new PDO($dsn, $database['username'], $database['password'], $options);
+    }
+
+    /**
+     * Gets the opening escape char for the driver identifiers.
+     * @return string Returns the opening escape char.
+     */
+    public static function getOpeningEscapeChar()
+    {
+        return '[';
+    }
+
+    /**
+     * Gets the closing escape char for the driver identifiers.
+     * @return string Returns the closing escape char.
+     */
+    public static function getClosingEscapeChar()
+    {
+        return ']';
     }
 }

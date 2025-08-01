@@ -15,7 +15,7 @@ use PDO;
  * @link https://glowie.gabrielsilva.dev.br
  * @see https://glowie.gabrielsilva.dev.br/docs/latest/forms-and-data/databases
  */
-class Sqlite
+class Sqlite implements DbDriver
 {
     /**
      * Default PDO options.
@@ -25,12 +25,6 @@ class Sqlite
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
     ];
-
-    /**
-     * Identifier escaping characters.
-     * @var array
-     */
-    public const ESCAPING_CHARS = ['`', '`'];
 
     /**
      * Creates a Sqlite PDO connection.
@@ -50,5 +44,23 @@ class Sqlite
 
         // Returns the connection
         return new PDO($dsn, null, null, $options);
+    }
+
+    /**
+     * Gets the opening escape char for the driver identifiers.
+     * @return string Returns the opening escape char.
+     */
+    public static function getOpeningEscapeChar()
+    {
+        return '`';
+    }
+
+    /**
+     * Gets the closing escape char for the driver identifiers.
+     * @return string Returns the closing escape char.
+     */
+    public static function getClosingEscapeChar()
+    {
+        return '`';
     }
 }

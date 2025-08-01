@@ -182,8 +182,8 @@ trait DatabaseTrait
         // Gets the characters
         $driver = $this->getDriver();
         $driverClass = 'Glowie\Core\Database\Drivers\\' . Util::pascalCase($driver);
-        $start = $driverClass::ESCAPING_CHARS[0];
-        $end = $driverClass::ESCAPING_CHARS[1];
+        $start = $driverClass::getOpeningEscapeChar();
+        $end = $driverClass::getClosingEscapeChar();
 
         // Checks for SQL functions
         if (preg_match('/^[a-z_][a-z0-9_]*\s*\([^()]*\)$/i', $name)) {
@@ -321,6 +321,7 @@ trait DatabaseTrait
      */
     public function disableFkChecks()
     {
+        if ($this->getDriver() === 'sqlite') return $this->query('PRAGMA foreign_keys = OFF', false);
         return $this->query('SET FOREIGN_KEY_CHECKS = 0', false);
     }
 
@@ -331,6 +332,7 @@ trait DatabaseTrait
      */
     public function enableFkChecks()
     {
+        if ($this->getDriver() === 'sqlite') return $this->query('PRAGMA foreign_keys = ON', false);
         return $this->query('SET FOREIGN_KEY_CHECKS = 1', false);
     }
 
