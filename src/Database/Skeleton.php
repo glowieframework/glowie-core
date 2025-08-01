@@ -257,8 +257,8 @@ class Skeleton
      */
     public function __construct(string $table = 'glowie', string $database = 'default')
     {
-        $this->table($table);
         $this->database($database);
+        $this->table($table);
     }
 
     /**
