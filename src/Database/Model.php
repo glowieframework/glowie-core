@@ -1102,76 +1102,93 @@ class Model extends Kraken implements JsonSerializable
         if ($isElement) $data = $data->toArray();
 
         // Performs the castings
-        foreach ($this->_casts as $field => $type) {
+        foreach ($this->_casts as $field => $rule) {
             // Checks for the field
             if (array_key_exists($field, $data)) {
-                $params = explode(':', $type, 2);
-                $type = strtolower($params[0]);
 
-                // Checks if data is not null
-                if (is_null($data[$field])) continue;
+                // Parses each casting rule
+                foreach ((array)$rule as $type) {
+                    $params = explode(':', $type, 2);
+                    $type = strtolower($params[0]);
 
-                // Gets the rule
-                switch ($type) {
-                    case 'array':
-                        $data[$field] = json_decode($data[$field], true) ?? [];
-                        break;
+                    // Checks if data is not null
+                    if (is_null($data[$field])) continue;
 
-                    case 'collection':
-                        $json = json_decode($data[$field], true) ?? [];
-                        $data[$field] = new Collection($json);
-                        break;
+                    // Gets the rule
+                    switch ($type) {
+                        case 'array':
+                            $data[$field] = json_decode($data[$field], true) ?? [];
+                            break;
 
-                    case 'set':
-                        $data[$field] = explode(',', $data[$field], $params[1] ?? PHP_INT_MAX) ?? [];
-                        break;
+                        case 'collection':
+                            $json = json_decode($data[$field], true) ?? [];
+                            $data[$field] = new Collection($json);
+                            break;
 
-                    case 'decimal':
-                        $data[$field] = round($data[$field], $params[1] ?? 0);
-                        break;
+                        case 'set':
+                            $data[$field] = explode(',', $data[$field], $params[1] ?? PHP_INT_MAX) ?? [];
+                            break;
 
-                    case 'json':
-                    case 'element':
-                        $json = json_decode($data[$field], true) ?? [];
-                        $data[$field] = new Element($json);
-                        break;
+                        case 'decimal':
+                            $data[$field] = round($data[$field], $params[1] ?? 0);
+                            break;
 
-                    case 'encrypted':
-                        $data[$field] = Util::decryptString($data[$field], 'sha256', $params[1] ?? null);
-                        break;
+                        case 'json':
+                        case 'element':
+                            $json = json_decode($data[$field], true) ?? [];
+                            $data[$field] = new Element($json);
+                            break;
 
-                    case 'serialized':
-                        $data[$field] = is_null($data[$field]) ? null : unserialize($data[$field]);
-                        break;
+                        case 'encrypted':
+                            $data[$field] = Util::decryptString($data[$field], 'sha256', $params[1] ?? null);
+                            break;
 
-                    case 'callback':
-                        if (empty($params[1])) throw new Exception('Missing function name in callback casting for "' . $field . '" field in "' . get_class($this) . '"');
-                        if (is_callable([$this, $params[1]])) {
-                            $data[$field] = call_user_func_array([$this, $params[1]], [$data[$field]]);
-                        } else {
-                            throw new BadMethodCallException('Method "' . $params[1] . '()" is not defined in "' . get_class($this) . '"');
-                        }
-                        break;
+                        case 'serialized':
+                            $data[$field] = is_null($data[$field]) ? null : unserialize($data[$field]);
+                            break;
 
-                    case 'date':
-                        if (!empty($params[1])) {
-                            $data[$field] = date($params[1], strtotime($data[$field]));
-                        } else {
-                            $data[$field] = new DateTime($data[$field]);
-                        }
-                        break;
+                        case 'callback':
+                            if (empty($params[1])) throw new Exception('Missing function name in callback casting for "' . $field . '" field in "' . get_class($this) . '"');
+                            if (is_callable([$this, $params[1]])) {
+                                $data[$field] = call_user_func_array([$this, $params[1]], [$data[$field]]);
+                            } else {
+                                throw new BadMethodCallException('Method "' . $params[1] . '()" is not defined in "' . get_class($this) . '"');
+                            }
+                            break;
 
-                    case 'timestamp':
-                        if (!empty($params[1])) {
-                            $data[$field] = date($params[1], $data[$field]);
-                        } else {
-                            $data[$field] = new DateTime($data[$field]);
-                        }
-                        break;
+                        case 'date':
+                            if (!empty($params[1])) {
+                                $data[$field] = date($params[1], strtotime($data[$field]));
+                            } else {
+                                $data[$field] = new DateTime($data[$field]);
+                            }
+                            break;
 
-                    default:
-                        settype($data[$field], $type);
-                        break;
+                        case 'timestamp':
+                            if (!empty($params[1])) {
+                                $data[$field] = date($params[1], $data[$field]);
+                            } else {
+                                $data[$field] = new DateTime($data[$field]);
+                            }
+                            break;
+
+                        case 'bool':
+                        case 'boolean':
+                            $data[$field] = filter_var($data[$field], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                            break;
+
+                        case 'base64':
+                            $data[$field] = base64_decode($data[$field], true);
+                            break;
+
+                        case 'nullable':
+                            if (Util::isEmpty($data[$field])) $data[$field] = null;
+                            break;
+
+                        default:
+                            settype($data[$field], $type);
+                            break;
+                    }
                 }
             }
         }
@@ -1534,37 +1551,75 @@ class Model extends Kraken implements JsonSerializable
         if ($isElement) $data = $data->toArray();
 
         // Performs mutations
-        foreach ($this->_mutators as $field => $mutator) {
+        foreach ($this->_mutators as $field => $rule) {
             // Checks for the field
             if (array_key_exists($field, $data)) {
-                $params = explode(':', $mutator, 2);
-                $mutator = strtolower($params[0]);
 
-                // Checks if data is not null
-                if (is_null($data[$field])) continue;
+                // Parses each mutator rule
+                foreach ((array)$rule as $mutator) {
+                    $params = explode(':', $mutator, 2);
+                    $mutator = strtolower($params[0]);
 
-                // Gets the rule
-                switch ($mutator) {
-                    case 'json':
-                        $data[$field] = json_encode($data[$field], JSON_UNESCAPED_UNICODE);
-                        break;
+                    // Checks if data is not null
+                    if (is_null($data[$field])) continue;
 
-                    case 'encrypted':
-                        $data[$field] = Util::encryptString($data[$field], 'sha256', $params[1] ?? null);
-                        break;
+                    // Gets the rule
+                    switch ($mutator) {
+                        case 'json':
+                            $data[$field] = json_encode($data[$field], JSON_UNESCAPED_UNICODE);
+                            break;
 
-                    case 'serialized':
-                        $data[$field] = is_null($data[$field]) ? null : serialize($data[$field]);
-                        break;
+                        case 'encrypted':
+                            $data[$field] = Util::encryptString($data[$field], 'sha256', $params[1] ?? null);
+                            break;
 
-                    case 'callback':
-                        if (empty($params[1])) throw new Exception('Missing function name in callback mutator for "' . $field . '" field in "' . get_class($this) . '"');
-                        if (is_callable([$this, $params[1]])) {
-                            $data[$field] = call_user_func_array([$this, $params[1]], [$data[$field]]);
-                        } else {
-                            throw new BadMethodCallException('Method "' . $params[1] . '()" is not defined in "' . get_class($this) . '"');
-                        }
-                        break;
+                        case 'serialized':
+                            $data[$field] = serialize($data[$field]);
+                            break;
+
+                        case 'date':
+                            $format = explode(',', $params[1] ?? 'Y-m-d H:i:s', 2);
+                            if ($data[$field] instanceof DateTime) {
+                                $data[$field] = $data[$field]->format($format[1] ?? $format[0]);
+                            } else {
+                                $data[$field] = DateTime::createFromFormat($format[0], $data[$field])->format($format[1] ?? $format[0]);
+                            }
+                            break;
+
+                        case 'timestamp':
+                            if ($data[$field] instanceof DateTime) {
+                                $data[$field] = $data[$field]->getTimestamp();
+                            } else {
+                                $data[$field] = DateTime::createFromFormat($params[1] ?? 'Y-m-d H:i:s', $data[$field])->getTimestamp();
+                            }
+                            break;
+
+                        case 'callback':
+                            if (empty($params[1])) throw new Exception('Missing function name in callback mutator for "' . $field . '" field in "' . get_class($this) . '"');
+                            if (is_callable([$this, $params[1]])) {
+                                $data[$field] = call_user_func_array([$this, $params[1]], [$data[$field]]);
+                            } else {
+                                throw new BadMethodCallException('Method "' . $params[1] . '()" is not defined in "' . get_class($this) . '"');
+                            }
+                            break;
+
+                        case 'password':
+                        case 'hash':
+                            $data[$field] = password_hash($data[$field], $params[1] ?? PASSWORD_DEFAULT);
+                            break;
+
+                        case 'round':
+                            $data[$field] = round($data[$field], (int)($params[1] ?? 0));
+                            break;
+
+                        case 'nullable':
+                            if (Util::isEmpty($data[$field])) $data[$field] = null;
+                            break;
+
+                        case 'base64':
+                            $data[$field] = base64_encode($data[$field]);
+                            break;
+                    }
                 }
             }
         }
