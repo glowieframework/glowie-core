@@ -256,6 +256,22 @@ class Authorizator
     }
 
     /**
+     * Authorizes a Bearer token from the `Authorization` header.
+     * @param array $headers (Optional) Optional JWT headers to validate from the token.
+     * @return bool Returns true on authentication success, false otherwise.
+     */
+    public function authorizeBearer(array $headers = [])
+    {
+        $token = $this->getBearer();
+        if (!$token) {
+            $this->error = self::ERR_INVALID_TOKEN;
+            self::setUser($this->guard, null);
+            return false;
+        }
+        return $this->authorize($token, $headers);
+    }
+
+    /**
      * Checks if an user is authenticated.
      * @return bool True or false.
      */

@@ -36,7 +36,7 @@ class Kraken
      * SELECT statement.
      * @var string
      */
-    protected $_select;
+    private $_select;
 
     /**
      * FROM statement.
@@ -167,7 +167,7 @@ class Kraken
     public function rawSelect(string $query)
     {
         $this->_select = '';
-        return $this->addSelect(self::raw($query));
+        return $this->addRawSelect($query);
     }
 
     /**
@@ -284,7 +284,7 @@ class Kraken
 
         // Checks for grouped ON closure
         if ($param1 instanceof Closure) {
-            if (!empty($this->_join) && end($this->_join) != '(') {
+            if (!empty($this->_join) && end($this->_join) !== '(') {
                 $this->_join[] = "ON";
                 $this->_join[] = "(";
             } else {
@@ -439,7 +439,7 @@ class Kraken
 
         // Checks for grouped wheres
         if ($param1 instanceof Closure) {
-            if (!empty($this->_where) && end($this->_where) != '(') {
+            if (!empty($this->_where) && end($this->_where) !== '(') {
                 $this->_where[] = "{$type} ";
                 $this->_where[] = "(";
             } else {
@@ -1091,7 +1091,7 @@ class Kraken
 
         // Checks for grouped havings
         if ($param1 instanceof Closure) {
-            if (!empty($this->_having) && end($this->_having) != '(') {
+            if (!empty($this->_having) && end($this->_having) !== '(') {
                 $this->_having[] = "{$type} ";
                 $this->_having[] = "(";
             } else {
@@ -1726,9 +1726,9 @@ class Kraken
         $return = $this->_returnAssoc;
 
         // Count rows
-        if ($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
+        if ($this->_instruction !== 'SELECT DISTINCT') $this->_instruction = "SELECT";
         $column = $this->escapeIdentifier($column);
-        $this->_select = "COUNT({$column}) AS count";
+        $this->_select = "COUNT({$column}) AS " . $this->escapeIdentifier('count');
         $result = $this->asElement()->fetchRow();
 
         // Restore return type
@@ -1754,9 +1754,9 @@ class Kraken
         $return = $this->_returnAssoc;
 
         // Sum rows
-        if ($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
+        if ($this->_instruction !== 'SELECT DISTINCT') $this->_instruction = "SELECT";
         $column = $this->escapeIdentifier($column);
-        $this->_select = "SUM({$column}) AS sum";
+        $this->_select = "SUM({$column}) AS " . $this->escapeIdentifier('sum');
         $result = $this->asElement()->fetchRow();
 
         // Restore return type
@@ -1782,9 +1782,9 @@ class Kraken
         $return = $this->_returnAssoc;
 
         // Get max value
-        if ($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
+        if ($this->_instruction !== 'SELECT DISTINCT') $this->_instruction = "SELECT";
         $column = $this->escapeIdentifier($column);
-        $this->_select = "MAX({$column}) AS max";
+        $this->_select = "MAX({$column}) AS " . $this->escapeIdentifier('max');
         $result = $this->asElement()->fetchRow();
 
         // Restore return type
@@ -1810,9 +1810,9 @@ class Kraken
         $return = $this->_returnAssoc;
 
         // Get min value
-        if ($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
+        if ($this->_instruction !== 'SELECT DISTINCT') $this->_instruction = "SELECT";
         $column = $this->escapeIdentifier($column);
-        $this->_select = "MIN({$column}) AS min";
+        $this->_select = "MIN({$column}) AS " . $this->escapeIdentifier('min');
         $result = $this->asElement()->fetchRow();
 
         // Restore return type
@@ -1838,9 +1838,9 @@ class Kraken
         $return = $this->_returnAssoc;
 
         // Get avg value
-        if ($this->_instruction != 'SELECT DISTINCT') $this->_instruction = "SELECT";
+        if ($this->_instruction !== 'SELECT DISTINCT') $this->_instruction = "SELECT";
         $column = $this->escapeIdentifier($column);
-        $this->_select = "AVG({$column}) AS avg";
+        $this->_select = "AVG({$column}) AS " . $this->escapeIdentifier('avg');
         $result = $this->asElement()->fetchRow();
 
         // Restore return type
@@ -1892,7 +1892,7 @@ class Kraken
         $this->_limit = [];
         $totalResults = $this->count();
         $totalPages = floor($totalResults / $resultsPerPage);
-        if ($totalResults % $resultsPerPage != 0) $totalPages++;
+        if ($totalResults % $resultsPerPage !== 0) $totalPages++;
 
         // Restore query
         $this->restoreQuery($query);
@@ -1960,7 +1960,7 @@ class Kraken
         $this->_limit = [];
         $totalResults = $this->count();
         $totalChunks = floor($totalResults / $items);
-        if ($totalResults % $items != 0) $totalChunks++;
+        if ($totalResults % $items !== 0) $totalChunks++;
 
         // Performs chunked queries
         for ($i = 0; $i < $totalChunks; $i++) {
@@ -2155,5 +2155,14 @@ class Kraken
 
         // Returns the result
         return $query;
+    }
+
+    /**
+     * Gets the current SELECT statement. For internal usage.
+     * @return string|null Returns the current SELECT statement from the query.
+     */
+    protected function getSelect()
+    {
+        return $this->_select;
     }
 }

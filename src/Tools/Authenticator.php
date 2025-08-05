@@ -8,6 +8,8 @@ use Exception;
 use Closure;
 use Util;
 use Config;
+use Glowie\Core\Element;
+use Glowie\Core\Http\Rails;
 
 /**
  * Session auth handler for Glowie application.
@@ -108,9 +110,10 @@ class Authenticator
      * @param string $password Password to authenticate.
      * @param array|Closure $conditions (Optional) Associative array of aditional fields to use while querying for the user.\
      * You can also pass a Closure to directly modify the query builder.
+     * @param bool $once (Optional) Authenticates the user in the current request only, not saving it into the session.
      * @return bool Returns true if authentication is successful, false otherwise.
      */
-    public function login(string $user, string $password, $conditions = [])
+    public function login(string $user, string $password, $conditions = [], bool $once = false)
     {
         // Check for empty login credentials
         if (Util::isEmpty($user) || Util::isEmpty($password)) {
@@ -148,7 +151,7 @@ class Authenticator
             $this->error = self::ERR_AUTH_SUCCESS;
 
             // Save credentials in session
-            Session::make()->setEncrypted(self::$appName . '.auth.' . $this->guard, $user->getPrimary());
+            if (!$once) Session::make()->setEncrypted(self::$appName . '.auth.' . $this->guard, $user->getPrimary());
             return true;
         } else {
             $this->error = self::ERR_WRONG_PASSWORD;
@@ -158,13 +161,60 @@ class Authenticator
     }
 
     /**
-     * Impersonates an user login. **Warning: this is unsafe, do not use in production.**
+     * Authenticates an user in the current request only, not saving it into the session.
      * @param string $user Username to authenticate.
+     * @param string $password Password to authenticate.
      * @param array|Closure $conditions (Optional) Associative array of aditional fields to use while querying for the user.\
      * You can also pass a Closure to directly modify the query builder.
      * @return bool Returns true if authentication is successful, false otherwise.
      */
-    public function impersonate(string $user, $conditions = [])
+    public function loginOnce(string $user, string $password, $conditions = [])
+    {
+        return $this->login($user, $password, $conditions, true);
+    }
+
+    /**
+     * Authenticates an user using the request `Authorization` Basic header.
+     * @param array|Closure $conditions (Optional) Associative array of aditional fields to use while querying for the user.\
+     * You can also pass a Closure to directly modify the query builder.
+     * @param bool $once (Optional) Authenticates the user in the current request only, not saving it into the session.
+     * @return bool Returns true if authentication is successful, false otherwise.
+     */
+    public function loginBasic($conditions = [], bool $once = false)
+    {
+        $credentials = $this->getBasic();
+        if (!$credentials) {
+            $this->error = self::ERR_EMPTY_DATA;
+            self::setUser($this->guard, null);
+            return false;
+        }
+        return $this->login($credentials->user, $credentials->password, $conditions, $once);
+    }
+
+    /**
+     * Gets the data from the `Authorization` Basic header.
+     * @return Element|null Returns an Element with the user and password, or null if invalid data.
+     */
+    public function getBasic()
+    {
+        $value = Rails::getRequest()->getHeader('Authorization');
+        if (is_null($value) || !Util::startsWith($value, 'Basic ')) return null;
+        $value = base64_decode(substr($value, 6), true);
+        if ($value === false) return null;
+        $value = explode(':', $value, 2);
+        if (count($value) !== 2) return null;
+        return new Element(['user' => $value[0], 'password' => $value[1]]);
+    }
+
+    /**
+     * Impersonates an user login. **Warning: this is unsafe, do not use in production.**
+     * @param string $user Username to authenticate.
+     * @param array|Closure $conditions (Optional) Associative array of aditional fields to use while querying for the user.\
+     * You can also pass a Closure to directly modify the query builder.
+     * @param bool $once (Optional) Impersonate the user login in the current request only, not saving it into the session.
+     * @return bool Returns true if authentication is successful, false otherwise.
+     */
+    public function impersonate(string $user, $conditions = [], bool $once = false)
     {
         // Check for empty login credentials
         if (Util::isEmpty($user)) {
@@ -200,8 +250,20 @@ class Authenticator
         $this->error = self::ERR_AUTH_SUCCESS;
 
         // Save credentials in session
-        Session::make()->setEncrypted(self::$appName . '.auth.' . $this->guard, $user->getPrimary());
+        if (!$once) Session::make()->setEncrypted(self::$appName . '.auth.' . $this->guard, $user->getPrimary());
         return true;
+    }
+
+    /**
+     * Impersonates an user login in the current request only. **Warning: this is unsafe, do not use in production.**
+     * @param string $user Username to authenticate.
+     * @param array|Closure $conditions (Optional) Associative array of aditional fields to use while querying for the user.\
+     * You can also pass a Closure to directly modify the query builder.
+     * @return bool Returns true if authentication is successful, false otherwise.
+     */
+    public function impersonateOnce(string $user, $conditions = [])
+    {
+        return $this->impersonate($user, $conditions, true);
     }
 
     /**

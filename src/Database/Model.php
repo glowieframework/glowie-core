@@ -267,7 +267,7 @@ class Model extends Kraken implements JsonSerializable
      */
     public function find($primary = null, bool $deleted = false)
     {
-        if (Util::isEmpty($this->_select)) {
+        if (Util::isEmpty($this->getSelect())) {
             $fields = !Util::isEmpty($this->_fields) ? $this->_fields : '*';
             $this->select($fields);
         }
@@ -325,7 +325,7 @@ class Model extends Kraken implements JsonSerializable
      */
     public function all(bool $deleted = false)
     {
-        if (Util::isEmpty($this->_select)) {
+        if (Util::isEmpty($this->getSelect())) {
             $fields = !Util::isEmpty($this->_fields) ? $this->_fields : '*';
             $this->select($fields);
         }
@@ -1144,7 +1144,7 @@ class Model extends Kraken implements JsonSerializable
                             break;
 
                         case 'serialized':
-                            $data[$field] = is_null($data[$field]) ? null : unserialize($data[$field]);
+                            $data[$field] = unserialize($data[$field]);
                             break;
 
                         case 'callback':
