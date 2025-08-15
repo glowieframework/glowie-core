@@ -161,18 +161,22 @@ class Queue
 
     /**
      * Clears the queue.
+     * @param string $queue (Optional) Queue name.
      * @param bool $success (Optional) Clear successful jobs.
-     * @param bool $failed (Optional) Clear failed jobs.
      * @param bool $pending (Optional) Clear pending jobs.
+     * @param bool $failed (Optional) Clear failed jobs.
      * @return bool Returns true on success, false on fail.
      */
-    public static function clear(bool $success = false, bool $failed = false, bool $pending = false)
+    public static function clear(string $queue = 'default', bool $success = true, bool $pending = true, bool $failed = false)
     {
         // Stores the table name
         self::$table = Config::get('queue.table', 'queue');
 
         // Connects to the database
         $db = new Kraken(self::$table, Config::get('queue.connection', 'default'));
+
+        // Sets the queue name
+        $db->where('queue', $queue);
 
         // Clear the whole queue
         if ($success && $failed && $pending) return $db->whereNotNull('id')->delete();

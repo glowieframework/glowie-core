@@ -59,7 +59,7 @@ class Cache implements JsonSerializable
 
     /**
      * Creates a new Cache handler instance.
-     * @param array $data (Optional) Initial data to fill the cache.
+     * @param array $data (Optional) Initial data to fill into the cache.
      */
     public function __construct(array $data = [])
     {
@@ -72,8 +72,8 @@ class Cache implements JsonSerializable
             self::$db = new SQLite3(Config::get('cache.path', Util::location('storage/cache/cache.db')));
 
             // Creates the cache table if not exists yet
-            $tableExists = self::$db->querySingle("SELECT name FROM sqlite_master WHERE type='table' AND name='cache'");
-            if (!$tableExists) self::$db->exec("CREATE TABLE cache(key TEXT PRIMARY KEY, value TEXT, expires INTEGER)");
+            $tableExists = self::$db->querySingle("SELECT `name` FROM `sqlite_master` WHERE type='table' AND name='cache'");
+            if (!$tableExists) self::$db->exec("CREATE TABLE `cache`(`key` TEXT PRIMARY KEY, `value` BLOB, `expires` INTEGER)");
         }
 
         // Parse initial data, if any
@@ -94,7 +94,7 @@ class Cache implements JsonSerializable
      * Gets a cache variable.
      * @param string $key Key to get value.
      * @param mixed $default (Optional) Default value to return if the key does not exist.
-     * @return mixed Returns the value if exists or the default if not.
+     * @return mixed Returns the unserialized value if exists or the default if not.
      */
     public function get(string $key, $default = null)
     {
@@ -105,13 +105,15 @@ class Cache implements JsonSerializable
         $expires = time();
 
         // Return result
-        return self::$db->querySingle("SELECT value FROM cache WHERE key = '{$key}' AND (expires IS NULL OR expires >= {$expires})") ?? $default;
+        $result = self::$db->querySingle("SELECT `value` FROM `cache` WHERE `key` = '{$key}' AND (`expires` IS NULL OR `expires` >= {$expires})");
+        if (is_null($result)) return $default;
+        return unserialize($result);
     }
 
     /**
      * Gets a cache variable.
      * @param string $key Key to get value.
-     * @return mixed Returns the value if exists or null if there is none.
+     * @return mixed Returns the unserialized value if exists or null if there is none.
      */
     public function __get(string $key)
     {
@@ -120,70 +122,84 @@ class Cache implements JsonSerializable
 
     /**
      * Sets a cache variable.
-     * @param string|array $key Key to set value. You can also pass an associative array\
-     * of values to set at once and they will be merged into the cache.
-     * @param mixed $value (Optional) Value to set. It will be casted to a string.
-     * @param int|null $expires (Optional) Expiration time in seconds.
-     * @return Cache Current instance for nested calls.
+     * @param string|array $key Key to set value. You can also pass an associative array of values to set at once and they will be merged into the cache.
+     * @param mixed $value (Optional) Value to set. It will be serialized.
+     * @param int|null $expires (Optional) Expiration time in seconds. To never expire, use `null`.
+     * @return bool Returns true on success, false on failure.
      */
     public function set($key, $value = null, ?int $expires = self::EXPIRES_NEVER)
     {
+        // Sets an array of values
         if (is_array($key)) {
-            foreach ($key as $field => $value) $this->set($field, $value, $expires);
-        } else {
-            // Escape key and values
-            $key = self::$db->escapeString($key);
-            if (is_null($value)) {
-                $value = 'NULL';
-            } else {
-                $value = "'" . self::$db->escapeString((string)$value) . "'";
+            foreach ($key as $field => $value) {
+                $this->set($field, $value, $expires);
             }
-
-            // Calculate expire date
-            $expires = $expires ? time() + $expires : 'NULL';
-
-            // Inserts the row
-            self::$db->exec("REPLACE INTO cache(key, value, expires) VALUES('{$key}', {$value}, {$expires})");
+            return true;
         }
-        return $this;
+
+        // Escape key and serialized value
+        $key = self::$db->escapeString($key);
+        if (is_null($value)) {
+            $value = 'NULL';
+        } else {
+            $value = self::$db->escapeString(serialize($value));
+        }
+
+        // Calculate expire date
+        $expires = $expires ? (time() + $expires) : 'NULL';
+
+        // Inserts the row
+        return self::$db->exec("REPLACE INTO cache(`key`, `value`, `expires`) VALUES('{$key}', '{$value}', {$expires})");
     }
 
     /**
-     * Increments an existing cache variable.
+     * Increments an existing numeric cache variable.
      * @param string $key Key to increment value.
-     * @param int $amount (Optional) Amount to increment.
-     * @return Cache Current instance for nested calls.
+     * @param int|float $amount (Optional) Amount to increment.
+     * @return bool Returns true on success, false on failure.
      */
-    public function increment(string $key, int $amount = 1)
+    public function increment(string $key, $amount = 1)
     {
+        // Gets the current value, if any
+        $value = $this->get($key);
+        if (is_null($value) || !is_numeric($value)) return false;
+
         // Escape key
         $key = self::$db->escapeString($key);
 
+        // Escapes the new value
+        $value = self::$db->escapeString(serialize($value + $amount));
+
         // Updates the row
-        self::$db->exec("UPDATE cache SET value = value + {$amount} WHERE key = '{$key}'");
-        return $this;
+        return self::$db->exec("UPDATE `cache` SET `value` = '{$value}' WHERE `key` = '{$key}'");
     }
 
     /**
-     * Decrements an existing cache variable.
+     * Decrements an existing numeric cache variable.
      * @param string $key Key to increment value.
-     * @param int $amount (Optional) Amount to increment.
-     * @return Cache Current instance for nested calls.
+     * @param int|float $amount (Optional) Amount to increment.
+     * @return bool Returns true on success, false on failure.
      */
-    public function decrement(string $key, int $amount = 1)
+    public function decrement(string $key, $amount = 1)
     {
+        // Gets the current value, if any
+        $value = $this->get($key);
+        if (is_null($value) || !is_numeric($value)) return false;
+
         // Escape key
         $key = self::$db->escapeString($key);
 
+        // Escapes the new value
+        $value = self::$db->escapeString(serialize($value - $amount));
+
         // Updates the row
-        self::$db->exec("UPDATE cache SET value = value - {$amount} WHERE key = '{$key}'");
-        return $this;
+        return self::$db->exec("UPDATE `cache` SET `value` = '{$value}' WHERE `key` = '{$key}'");
     }
 
     /**
      * Sets a cache variable.
      * @param string $key Key to set value.
-     * @param mixed $value Value to set. It will be casted to a string.
+     * @param mixed $value Value to set. It will be serialized.
      */
     public function __set(string $key, $value)
     {
@@ -234,7 +250,7 @@ class Cache implements JsonSerializable
         $expires = time();
 
         // Returns result
-        return self::$db->querySingle("SELECT COUNT(key) FROM cache WHERE key = '{$key}' AND (expires IS NULL OR expires >= {$expires})") != 0;
+        return self::$db->querySingle("SELECT COUNT(`key`) FROM `cache` WHERE `key` = '{$key}' AND (`expires` IS NULL OR `expires` >= {$expires})") != 0;
     }
 
     /**
@@ -250,7 +266,7 @@ class Cache implements JsonSerializable
         $keys = implode(', ', $keys);
 
         // Remove rows
-        self::$db->exec("DELETE FROM cache WHERE key IN ({$keys})");
+        if (!Util::isEmpty($keys)) self::$db->exec("DELETE FROM `cache` WHERE `key` IN ({$keys})");
         return $this;
     }
 
@@ -261,7 +277,7 @@ class Cache implements JsonSerializable
      */
     public function only($key)
     {
-        foreach ($this->toArray() as $field => $value) {
+        foreach (array_keys($this->toArray()) as $field) {
             if (!in_array($field, (array)$key)) $this->remove($field);
         }
         return $this;
@@ -278,7 +294,7 @@ class Cache implements JsonSerializable
 
     /**
      * Purge expired variables from the cache.
-     * @return Cache Current instance for nested calls.
+     * @return bool Returns true on success, false on failure.
      */
     public function purge()
     {
@@ -286,18 +302,16 @@ class Cache implements JsonSerializable
         $expires = time();
 
         // Purge data
-        self::$db->exec("DELETE FROM cache WHERE expires < '{$expires}'");
-        return $this;
+        return self::$db->exec("DELETE FROM `cache` WHERE `expires` < {$expires}");
     }
 
     /**
      * Delete all data from the cache.
-     * @return Cache Current instance for nested calls.
+     * @return bool Returns true on success, false on failure.
      */
     public function flush()
     {
-        self::$db->exec("DELETE FROM cache");
-        return $this;
+        return self::$db->exec("DELETE FROM `cache`");
     }
 
     /**
@@ -310,7 +324,7 @@ class Cache implements JsonSerializable
         $expires = time();
 
         // Get data
-        $result = self::$db->query("SELECT key, value FROM cache WHERE (expires IS NULL OR expires >= {$expires})");
+        $result = self::$db->query("SELECT `key`, `value` FROM `cache` WHERE (`expires` IS NULL OR `expires` >= {$expires})");
 
         // Parse resulting rows
         $return = [];

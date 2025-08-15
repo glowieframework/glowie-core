@@ -529,7 +529,8 @@ class Firefly
         $result = Util::orderArray($result, 'methods');
         self::print(self::color('Application routes: ', 'yellow'));
         self::print('');
-        self::table(['methods', 'name', 'uri', 'target'], $result);
+        self::table(['Methods', 'Name', 'URI', 'Target'], $result);
+        return true;
     }
 
     /**
@@ -572,12 +573,13 @@ class Firefly
      */
     private static function __clearQueue()
     {
+        $queue = self::getArg('name', 'default');
         $success = self::hasOption('success');
-        $failed = self::hasOption('failed');
         $pending = self::hasOption('pending');
-        if (!$success && !$failed && !$pending) $success = $failed = $pending = true;
-        Queue::clear($success, $failed, $pending);
-        self::print(self::color('Queue cleared successfully!', 'green'));
+        $failed = self::hasOption('failed');
+        if (!$success && !$pending && !$failed) $success = $pending = $failed = true;
+        Queue::clear($queue, $success, $pending, $failed);
+        self::print(self::color("Queue \"{$queue}\" cleared successfully!", 'green'));
     }
 
     /**
@@ -1062,6 +1064,37 @@ class Firefly
     }
 
     /**
+     * Gets the status of the migrations.
+     */
+    private static function __migrations()
+    {
+        // Loops through all the migration files
+        $result = [];
+        foreach (glob(Util::location('migrations/*.php')) as $filename) {
+            // Gets the migration class name
+            $name = pathinfo($filename, PATHINFO_FILENAME);
+            $classname = 'Glowie\Migrations\\' . $name;
+            if (!class_exists($classname)) continue;
+
+            // Instantiates the migration class and check if it was applied
+            $migration = new $classname;
+            $result[] = [$name, $migration->isApplied() ? self::color('APPLIED', 'green') : self::color('PENDING', 'yellow')];
+        }
+
+        // Checks for empty migrations folder
+        if (empty($result)) {
+            self::print(self::color('[' . date('Y-m-d H:i:s') . '] There are no migrations.', 'yellow'));
+            return false;
+        }
+
+        // Prints the result as a table
+        self::print(self::color('Migrations status: ', 'yellow'));
+        self::print('');
+        self::table(['Name', 'Status'], $result);
+        return true;
+    }
+
+    /**
      * Rolls back applied migrations.
      */
     private static function __rollback()
@@ -1175,8 +1208,9 @@ class Firefly
      */
     private static function __version()
     {
-        self::print(self::color('Firefly | Glowie ' . Util::getVersion(), 'magenta'));
-        self::print(self::color('Running in PHP CLI ' . phpversion(), 'blue'));
+        self::print(self::color('Firefly | Glowie Framework v' . Util::getVersion(), 'magenta'));
+        self::print(self::color('Running in PHP CLI v' . phpversion(), 'blue'));
+        self::print(self::color('App environment: ' . Config::get('env'), 'yellow'));
         return 'Firefly | Glowie ' . Util::getVersion();
     }
 
@@ -1196,7 +1230,7 @@ class Firefly
         self::print('  <color="yellow">clear-cache</color> | Clears the application cache folder');
         self::print('  <color="yellow">clear-session</color> | Clears the application session folder');
         self::print('  <color="yellow">clear-log</color> | Clears the application error log');
-        self::print('  <color="yellow">clear-queue</color> <color="cyan">-success -failed -pending</color> | Clears the jobs queue');
+        self::print('  <color="yellow">clear-queue</color> <color="blue">--name</color> <color="cyan">-success -pending -failed</color> | Clears the jobs queue');
         self::print('  <color="yellow">generate-keys</color> | Regenerates the application secret keys');
         self::print('  <color="yellow">encrypt-env</color> <color="blue">--key</color> | Encrypts the environment config file');
         self::print('  <color="yellow">decrypt-env</color> <color="blue">--key</color> | Decrypts the environment config file');
@@ -1210,6 +1244,7 @@ class Firefly
         self::print('  <color="yellow">create-model</color> <color="blue">--name --table --primary</color> <color="cyan">-migration</color> | Creates a new model for your application');
         self::print('  <color="yellow">create-job</color> <color="blue">--name</color> | Creates a new job for your application');
         self::print('  <color="yellow">migrate</color> <color="blue">--steps</color> | Applies pending migrations from your application');
+        self::print('  <color="yellow">migrations</color> | Gets the status of the migrations');
         self::print('  <color="yellow">rollback</color> <color="blue">--steps</color> | Rolls back the last applied migration');
         self::print('  <color="yellow">queue</color> <color="blue">--name</color> <color="cyan">-bail</color> | Runs the queue');
         self::print('  <color="yellow">queue-watch</color> <color="blue">--name --interval</color> <color="cyan">-bail</color> | Runs the queue watcher');
