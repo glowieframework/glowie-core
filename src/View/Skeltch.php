@@ -206,7 +206,7 @@ class Skeltch
         $code = preg_replace('~(?<!@){\s*/for\s*}~is', '<?php endfor; ?>', $code);
         $code = preg_replace('~(?<!@){\s*/switch\s*}~is', '<?php endswitch; ?>', $code);
         $code = preg_replace('~(?<!@){\s*/while\s*}~is', '<?php endwhile; ?>', $code);
-        $code = preg_replace('~(?<!@){\s*break\s*}~is', '<?php break; ?>', $code);
+        $code = preg_replace('~(?<!@){\s*break ?(\d+)?\s*}~is', '<?php break${1:+ $1}; ?>', $code);
         $code = preg_replace('~(?<!@){\s*continue\s*}~is', '<?php continue; ?>', $code);
         return $code;
     }

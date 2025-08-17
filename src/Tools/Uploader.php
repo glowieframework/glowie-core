@@ -103,7 +103,7 @@ class Uploader
      * Unallowed extensions.
      * @var array
      */
-    private $blockedExtensions = ['php', 'html'];
+    private $blockedExtensions = ['php', '.phtml', 'html'];
 
     /**
      * Allowed mime types.
@@ -115,7 +115,7 @@ class Uploader
      * Unallowed mime types.
      * @var array
      */
-    private $blockedMimes = ['application/x-httpd-php', 'text/html'];
+    private $blockedMimes = ['application/x-httpd-php', 'application/php', 'application/x-php', 'text/php', 'text/x-php', 'text/html'];
 
     /**
      * Maximum allowed file size.

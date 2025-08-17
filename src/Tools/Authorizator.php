@@ -211,7 +211,7 @@ class Authorizator
             $this->error = self::ERR_AUTH_SUCCESS;
             self::setUser($this->guard, $user);
             $headers = array_merge([self::$appName => 'auth'], $headers);
-            return $this->generateJwt(['user' => Util::encryptString($user->getPrimary())], $expires, 'HS256', $headers);
+            return $this->generateJwt(['user' => Util::encryptString($user->getPrimary())], $expires, $headers, 'HS256');
         } else {
             $this->error = self::ERR_WRONG_PASSWORD;
             self::setUser($this->guard, null);
@@ -322,7 +322,8 @@ class Authorizator
     {
         if (!$this->authorize($oldToken)) return false;
         $user = $this->getUser();
-        return $this->generateJwt(['user' => Util::encryptString($user->getPrimary())], $expires);
+        $headers = $this->getJwtHeaders($oldToken);
+        return $this->generateJwt(['user' => Util::encryptString($user->getPrimary())], $expires, $headers);
     }
 
     /**
@@ -349,11 +350,11 @@ class Authorizator
      * Generates a JSON Web Token using your application secret keys.
      * @param Element|array $payload An Element or associative array with the data to store in the token.
      * @param int|null $expires (Optional) Token expiration time in seconds, leave empty for no expiration.
-     * @param string $alg (Optional) Hashing algorithm to use in the signature.
      * @param array $headers (Optional) Associative array with additional headers to attach to the token.
+     * @param string $alg (Optional) Hashing algorithm to use in the signature.
      * @return string Returns the token as a string.
      */
-    public function generateJwt($payload, ?int $expires = self::EXPIRES_DAY, string $alg = 'HS256', array $headers = [])
+    public function generateJwt($payload, ?int $expires = self::EXPIRES_DAY, array $headers = [], string $alg = 'HS256')
     {
         // Get app key
         $key = Config::get('secret.app_key');
@@ -376,7 +377,7 @@ class Authorizator
      * Decodes a JSON Web Token.
      * @param string $token Token to decode.
      * @param bool $validate (Optional) Validate the token signature and expiration time (if available) before decoding.
-     * @param array $headers (Optional) Array of additional headers to check.
+     * @param array $headers (Optional) Array of additional headers to check on the validation.
      * @return Element|null Returns the JWT payload as an Element or null if the token is invalid.
      */
     public function decodeJwt(string $token, bool $validate = true, array $headers = [])
@@ -442,6 +443,26 @@ class Authorizator
         // Generate a valid signature to compare
         $signature = $this->base64UrlEncode(hash_hmac(self::METHODS[$alg], "{$parsed[0]}.{$parsed[1]}", $key, true));
         return $signature === $parsed[2];
+    }
+
+    /**
+     * Gets the headers from a JSON Web Token.
+     * @param string $token Token to get headers from.
+     * @return array|null Returns an associative array with the headers on success or null on failure.
+     */
+    public function getJwtHeaders(string $token)
+    {
+        // Validate data
+        if (empty($token)) return null;
+
+        // Split token into parts
+        $parsed = explode('.', $token);
+        if (count($parsed) !== 3) return null;
+
+        // Gets the header
+        $header = json_decode($this->base64UrlDecode($parsed[0]), true);
+        if (empty($header['typ']) || $header['typ'] !== 'JWT') return null;
+        return $header;
     }
 
     /**

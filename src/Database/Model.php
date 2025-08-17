@@ -1249,9 +1249,10 @@ class Model extends Kraken implements JsonSerializable
                     $keys = $data->column($item['primary'])->unique();
                     if ($keys->isEmpty()) break;
 
-                    // Creates the related model and run the callback
+                    // Creates the related model and run the modifiers
                     $table = new $item['model'];
                     if (!is_null($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
+                    if (isset($item['modifier'])) call_user_func_array($item['modifier'], [&$table, &$data]);
 
                     // Gets nested relationships
                     if (!empty($item['nested'])) $table->withRelations($item['nested']);
@@ -1303,9 +1304,10 @@ class Model extends Kraken implements JsonSerializable
                     $keys = $data->column($item['column'])->unique();
                     if ($keys->isEmpty()) break;
 
-                    // Creates the related model and run the callback
+                    // Creates the related model and run the modifiers
                     $table = new $item['model'];
                     if (!is_null($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data]);
+                    if (isset($item['modifier'])) call_user_func_array($item['modifier'], [&$table, &$data]);
 
                     // Gets nested relationships
                     if (!empty($item['nested'])) $table->withRelations($item['nested']);
@@ -1355,10 +1357,11 @@ class Model extends Kraken implements JsonSerializable
                     $currentKeys = $data->column($item['primary-current'])->unique();
                     if ($currentKeys->isEmpty()) break;
 
-                    // Creates the related model and pivot and run the callback
+                    // Creates the related model and pivot and run the modifiers
                     $table = new $item['model'];
                     $pivot = $item['type'] === 'belongs-many' ? new Kraken($item['pivot'], $this->_database) : new $item['intermediate'];
                     if (!is_null($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data, &$pivot]);
+                    if (isset($item['modifier'])) call_user_func_array($item['modifier'], [&$table, &$data, &$pivot]);
 
                     // Gets nested relationships
                     if (!empty($item['nested'])) $table->withRelations($item['nested']);
@@ -1456,7 +1459,14 @@ class Model extends Kraken implements JsonSerializable
 
         $relationsEnabled = [];
 
-        foreach ($this->_relationsEnabled as $rel) {
+        foreach ($this->_relationsEnabled as $i => $rel) {
+            // Get the modifier of the relation if available
+            $modifier = null;
+            if (!is_numeric($i) && is_callable($rel)) {
+                $modifier = $rel;
+                $rel = $i;
+            }
+
             // Parse nested relationships, if any
             if (Util::stringContains($rel, '.')) {
                 $modelSegments = explode('.', $rel, 2);
@@ -1471,6 +1481,7 @@ class Model extends Kraken implements JsonSerializable
                     $relationsEnabled[$key] = $this->_relations[$key];
                     $relationsEnabled[$key]['select'] = [];
                     $relationsEnabled[$key]['nested'] = [];
+                    $relationsEnabled[$key]['modifier'] = $modifier;
                 }
 
                 // Merges the select statements
@@ -1494,6 +1505,7 @@ class Model extends Kraken implements JsonSerializable
                 if (empty($relationsEnabled[$key])) {
                     $relationsEnabled[$key] = $this->_relations[$key];
                     $relationsEnabled[$key]['select'] = [];
+                    $relationsEnabled[$key]['modifier'] = $modifier;
                 }
 
                 // Merges the select statements
@@ -1508,6 +1520,7 @@ class Model extends Kraken implements JsonSerializable
                 if (empty($relationsEnabled[$rel])) {
                     $relationsEnabled[$rel] = $this->_relations[$rel];
                     $relationsEnabled[$rel]['select'] = [];
+                    $relationsEnabled[$rel]['modifier'] = $modifier;
                 }
             }
         }
