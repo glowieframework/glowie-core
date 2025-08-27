@@ -311,34 +311,37 @@ class Uploader
     }
 
     /**
-     * Rearrange $_FILES input array.
-     * @param array $files $_FILES input array to rearrange.
+     * Rearrange the `$_FILES` input array.
+     * @param array $files `$_FILES` input array to rearrange.
      * @return array Returns the new array.
      */
     public function arrangeFiles(array $files)
     {
+        // Checks for empty uploads
         if (Util::isEmpty($files['name'])) return [];
+
+        // Multiple files upload
         if (is_array($files['name'])) {
-            $result = [];
-            for ($i = 0; $i < count($files['name']); $i++) {
+            return array_map(function ($i) use ($files) {
                 $item = [
                     'name' => Util::sanitizeFilename($files['name'][$i]),
-                    'type' => $files['type'][$i],
+                    'type' => mime_content_type($files['tmp_name'][$i]) || $files['type'][$i],
                     'tmp_name' => $files['tmp_name'][$i],
                     'error' => $files['error'][$i],
                     'size' => $files['size'][$i],
                     'size_string' => $this->parseSize($files['size'][$i]),
-                    'extension' => $this->getExtension($files['name'][$i])
+                    'extension' => $this->getExtension($files['name'][$i]),
                 ];
-                $result[] = new Element($item);
-            }
-            return $result;
-        } else {
-            $files['name'] = Util::sanitizeFilename($files['name']);
-            $files['extension'] = $this->getExtension($files['name']);
-            $files['size_string'] = $this->parseSize($files['size']);
-            return [new Element($files)];
+                return new Element($item);
+            }, array_keys($files['name']));
         }
+
+        // Single file upload
+        $files['name'] = Util::sanitizeFilename($files['name']);
+        $files['type'] = mime_content_type($files['tmp_name']) || $files['type'];
+        $files['extension'] = $this->getExtension($files['name']);
+        $files['size_string'] = $this->parseSize($files['size']);
+        return [new Element($files)];
     }
 
     /**
@@ -402,17 +405,18 @@ class Uploader
      */
     private function checkMime(string $mime)
     {
+        // Check for exact match
         $mime = trim(strtolower($mime));
         if ((empty($this->mimes) || in_array($mime, $this->mimes)) && !in_array($mime, $this->blockedMimes)) return true;
 
         // Check for wildcard mimes
         foreach ($this->mimes as $item) {
             $item = trim(strtolower($item));
-            $regex = str_replace('/', '\/', $item);
-            $regex = '/^' . str_replace('*', '.*', $regex) . '$/';
+            $regex = '/^' . str_replace('\*', '.*', preg_quote($item, '/')) . '$/i';
             if (preg_match($regex, $mime)) return true;
         }
 
+        // Return false on unmatched mime
         return false;
     }
 

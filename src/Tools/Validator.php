@@ -408,14 +408,14 @@ class Validator
                 // [MIME] - Checks if file matches a list of mime types
                 case 'mime':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "mime" rule');
-                    if (!is_string($data) || !is_file($data) || !in_array(mime_content_type($data), explode(',', $rule[1]))) $result[] = 'mime';
+                    if (!is_string($data) || !is_file($data) || !$this->checkMimes($data, explode(',', $rule[1]))) $result[] = 'mime';
                     break;
 
                 // [NOT_MIME] - Checks if file is not a list of mime types
                 case 'notmime':
                 case 'not_mime':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "notmime" rule');
-                    if (!is_string($data) || !is_file($data) || in_array(mime_content_type($data), explode(',', $rule[1]))) $result[] = 'not_mime';
+                    if (!is_string($data) || !is_file($data) || $this->checkMimes($data, explode(',', $rule[1]))) $result[] = 'not_mime';
                     break;
 
                 // [IN] - Checks if string matches a list of values (loose comparison)
@@ -700,5 +700,31 @@ class Validator
         // Create the table connection and find the item
         $db = new Kraken($table, $connection);
         return $db->where($params[1] ?? 'id', $data)->exists();
+    }
+
+    /**
+     * Checks a file against a list of mime types.
+     * @param string $filename Filename to get the mime type from.
+     * @param array $mimes Array of mime types to check. Accepts wildcards.
+     */
+    private function checkMimes(string $filename, array $mimes)
+    {
+        // Sanitize mime type
+        $mime = mime_content_type($filename);
+        if (!$mime) return false;
+        $mime = trim(strtolower($mime));
+
+        // Check for exact match
+        if (in_array($mime, $mimes)) return true;
+
+        // Check for wildcard mimes
+        foreach ($mimes as $item) {
+            $item = trim(strtolower($item));
+            $regex = '/^' . str_replace('\*', '.*', preg_quote($item, '/')) . '$/i';
+            if (preg_match($regex, $mime)) return true;
+        }
+
+        // Return false on unmatched mime
+        return false;
     }
 }
