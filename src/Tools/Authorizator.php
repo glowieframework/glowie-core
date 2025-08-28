@@ -151,7 +151,7 @@ class Authorizator
         $value = Rails::getRequest()->getHeader('Authorization');
         if (!$value) return null;
         if (!Util::startsWith($value, 'Bearer ')) return null;
-        return substr($value, 7);
+        return mb_substr($value, 7);
     }
 
     /**
@@ -365,7 +365,7 @@ class Authorizator
         if (!empty($expires)) $payload['exp'] = time() + $expires;
 
         // Generate token
-        $alg = strtoupper($alg);
+        $alg = mb_strtoupper($alg);
         if (!isset(self::METHODS[$alg])) throw new Exception('generateJwt(): Unsupported hashing algorithm');
         $header = $this->base64UrlEncode(json_encode(array_merge($headers, ['alg' => $alg, 'typ' => 'JWT'])));
         $payload = $this->base64UrlEncode(json_encode($payload));
@@ -423,8 +423,8 @@ class Authorizator
 
         // Validate the header
         $header = json_decode($this->base64UrlDecode($parsed[0]), true);
-        if (empty($header['typ']) || $header['typ'] !== 'JWT' || empty($header['alg']) || !isset(self::METHODS[strtoupper($header['alg'])])) return false;
-        $alg = strtoupper($header['alg']);
+        if (empty($header['typ']) || $header['typ'] !== 'JWT' || empty($header['alg']) || !isset(self::METHODS[mb_strtoupper($header['alg'])])) return false;
+        $alg = mb_strtoupper($header['alg']);
 
         // Validate custom headers
         if (!empty($headers)) {
@@ -511,6 +511,6 @@ class Authorizator
      */
     private function base64UrlDecode(string $string)
     {
-        return base64_decode(str_pad(strtr($string, '-_', '+/'), strlen($string) % 4, '=', STR_PAD_RIGHT));
+        return base64_decode(str_pad(strtr($string, '-_', '+/'), mb_strlen($string) % 4, '=', STR_PAD_RIGHT));
     }
 }

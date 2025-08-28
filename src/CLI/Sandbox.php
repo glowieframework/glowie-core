@@ -85,7 +85,7 @@ class Sandbox
             }
 
             // Checks if continuous command should keep capturing
-            if (substr_count(self::$continuous, '{') > substr_count(self::$continuous, '}')) continue;
+            if (mb_substr_count(self::$continuous, '{') > mb_substr_count(self::$continuous, '}')) continue;
 
             // Ends the continuous block
             $__command = self::$continuous;

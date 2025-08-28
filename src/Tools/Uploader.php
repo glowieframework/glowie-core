@@ -50,7 +50,6 @@ class Uploader
      */
     public const ERR_FILE_NOT_SELECTED = 4;
 
-
     /**
      * No temporary directory error code.
      * @var int
@@ -220,8 +219,8 @@ class Uploader
 
     /**
      * Sets a custom naming handler function for generating filenames.
-     * @param callable|null $callback A function with the naming handler. It receives the original filename as a parameter.\
-     * You can also pass `null` to use the default generator.
+     * @param callable|null $callback A function with the naming handler. It receives the original filename and the extension as the parameters.\
+     * You can also pass `null` to use the default generator. It will generate random filenames.
      * @return Uploader Current Uploader instance for nested calls.
      */
     public function setNamingHandler(?callable $callback)
@@ -261,7 +260,7 @@ class Uploader
         // Validate target directory
         if (!is_dir($this->directory) || !is_writable($this->directory)) {
             $e = new FileException('Directory "' . $this->directory . '" is invalid or not writable');
-            $e->setSuggestion('You must give writing permissions to the upload directory');
+            $e->setSuggestion('Check if the directory exists and has writing permissions for the web server user (chmod 0755)');
             throw $e;
         }
 
@@ -367,6 +366,7 @@ class Uploader
                     return new Element([
                         'name' => $filename,
                         'url' => $target,
+                        'full_url' => Util::baseUrl($target),
                         'path' => realpath($target),
                         'original_name' => $file->name,
                         'type' => $file->type,
@@ -406,12 +406,12 @@ class Uploader
     private function checkMime(string $mime)
     {
         // Check for exact match
-        $mime = trim(strtolower($mime));
+        $mime = trim(mb_strtolower($mime));
         if ((empty($this->mimes) || in_array($mime, $this->mimes)) && !in_array($mime, $this->blockedMimes)) return true;
 
         // Check for wildcard mimes
         foreach ($this->mimes as $item) {
-            $item = trim(strtolower($item));
+            $item = trim(mb_strtolower($item));
             $regex = '/^' . str_replace('\*', '.*', preg_quote($item, '/')) . '$/i';
             if (preg_match($regex, $mime)) return true;
         }
@@ -460,8 +460,8 @@ class Uploader
      */
     private function getExtension(string $filename)
     {
-        $qpos = strpos($filename, "?");
-        if ($qpos !== false) $filename = substr($filename, 0, $qpos);
+        $qpos = mb_strpos($filename, "?");
+        if ($qpos !== false) $filename = mb_substr($filename, 0, $qpos);
         $extension = pathinfo($filename, PATHINFO_EXTENSION);
         return $extension;
     }
@@ -474,11 +474,12 @@ class Uploader
      */
     private function generateFilename(string $filename, int $key = 0)
     {
+        $ext = $this->getExtension($filename);
         if (!is_null($this->namingHandler)) {
-            $filename = call_user_func_array($this->namingHandler, [$filename, $key]);
+            $filename = call_user_func_array($this->namingHandler, [$filename, $ext, $key]);
         } else {
-            $ext = $this->getExtension($filename);
-            $filename = Util::uniqueToken() . (!empty($ext) ? ('.' . $ext) : '');
+            $filename = Util::uniqueToken();
+            if (!Util::isEmpty($ext)) $filename .= ".$ext";
         }
         return $filename;
     }

@@ -65,7 +65,7 @@ class Layout implements JsonSerializable
         // Save original filename
         $this->_filename = $layout;
         $layout = $absolute ? $layout : Util::location('views/layouts/' . $layout);
-        if (!Util::endsWith(strtolower($layout), '.phtml')) $layout .= '.phtml';
+        if (!Util::endsWith(mb_strtolower($layout), '.phtml')) $layout .= '.phtml';
         if (!is_file($layout)) throw new FileException(sprintf('Layout file "%s" not found', $this->_filename));
 
         // Instantiate helpers

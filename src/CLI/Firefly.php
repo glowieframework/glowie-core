@@ -513,7 +513,7 @@ class Firefly
 
         // Parse route listing
         foreach ($routes as $name => $item) {
-            $methods = !empty($item['methods']) ? strtoupper(implode(', ', $item['methods'])) : 'ALL';
+            $methods = !empty($item['methods']) ? mb_strtoupper(implode(', ', $item['methods'])) : 'ALL';
             $name = !Util::isEmpty($name) ? $name : '/';
             $uri = !empty($item['uri']) ? $item['uri'] : '/';
 
@@ -656,7 +656,7 @@ class Firefly
         // Generate key and hash it
         $key = self::getArg('key', Util::randomToken());
         if (Util::isEmpty($key)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "key" for this command');
-        $iv = substr($key, 0, 16);
+        $iv = mb_substr($key, 0, 16);
 
         // Encrypts the data
         $content = openssl_encrypt($content, 'AES-256-CBC', $key, 0, $iv);
@@ -677,7 +677,7 @@ class Firefly
         // Get key
         $key = self::argOrInput('key', 'Decryption key: ');
         if (Util::isEmpty($key)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "key" for this command');
-        $iv = substr($key, 0, 16);
+        $iv = mb_substr($key, 0, 16);
 
         // Reads the encrypted config file content
         $file = Util::location('../.env.encrypted');
@@ -844,7 +844,7 @@ class Firefly
         if (Util::isEmpty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
 
         // Checks if the file exists
-        $name = trim(strtolower($name));
+        $name = trim(mb_strtolower($name));
         $targetFile = Util::location('languages/' . $name . '.php');
         if (is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Language file {$name} already exists!");
 

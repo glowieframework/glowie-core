@@ -38,7 +38,7 @@ class Application
         define('APP_START_TIME', microtime(true));
 
         // Store application folder and base URL
-        define('APP_FOLDER', trim(substr($_SERVER['PHP_SELF'], 0, strpos($_SERVER['PHP_SELF'], '/app/public/index.php')), '/'));
+        define('APP_FOLDER', trim(mb_substr($_SERVER['PHP_SELF'], 0, mb_strpos($_SERVER['PHP_SELF'], '/app/public/index.php')), '/'));
         define('APP_LOCATION', dirname(getcwd()) . '/');
         define('APP_BASE_URL', (isset($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/' . APP_FOLDER);
 

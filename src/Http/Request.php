@@ -101,7 +101,7 @@ class Request implements JsonSerializable
      */
     public function getURI()
     {
-        $result = trim(substr(trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/'), strlen(APP_FOLDER)), '/');
+        $result = trim(mb_substr(trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/'), mb_strlen(APP_FOLDER)), '/');
         return !Util::isEmpty($result) ? $result : '/';
     }
 
@@ -236,7 +236,7 @@ class Request implements JsonSerializable
      */
     public function getMethod()
     {
-        if (!empty($_POST['_method']) && in_array(strtoupper($_POST['_method']), ['HEAD', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'])) return strtoupper($_POST['_method']);
+        if (!empty($_POST['_method']) && in_array(mb_strtoupper($_POST['_method']), ['HEAD', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'])) return mb_strtoupper($_POST['_method']);
         return $_SERVER['REQUEST_METHOD'] ?? 'GET';
     }
 
@@ -336,7 +336,7 @@ class Request implements JsonSerializable
      */
     public function getHeader(string $name, $default = null)
     {
-        return self::$headers[strtolower($name)] ?? $default;
+        return self::$headers[mb_strtolower($name)] ?? $default;
     }
 
     /**

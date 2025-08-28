@@ -326,7 +326,7 @@ class Skeleton
                 $query = "{$name} BIGSERIAL";
                 break;
             default:
-                $type = strtoupper($type);
+                $type = mb_strtoupper($type);
                 $field = "{$name} {$type}";
                 if (!is_null($size)) $field .= "({$size})";
                 $query = "{$field} NOT NULL AUTO_INCREMENT";
@@ -779,7 +779,7 @@ class Skeleton
         // Rename or change column
         if ($data['operation'] !== 'rename') {
             // Field type and size
-            $data['type'] = strtoupper($data['type']);
+            $data['type'] = mb_strtoupper($data['type']);
 
             if (!is_null($data['size'])) {
                 // Convert array to comma-separated values

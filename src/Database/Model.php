@@ -1109,7 +1109,7 @@ class Model extends Kraken implements JsonSerializable
                 // Parses each casting rule
                 foreach ((array)$rule as $type) {
                     $params = explode(':', $type, 2);
-                    $type = strtolower($params[0]);
+                    $type = mb_strtolower($params[0]);
 
                     // Checks if data is not null
                     if (is_null($data[$field])) continue;
@@ -1571,7 +1571,7 @@ class Model extends Kraken implements JsonSerializable
                 // Parses each mutator rule
                 foreach ((array)$rule as $mutator) {
                     $params = explode(':', $mutator, 2);
-                    $mutator = strtolower($params[0]);
+                    $mutator = mb_strtolower($params[0]);
 
                     // Checks if data is not null
                     if (is_null($data[$field])) continue;

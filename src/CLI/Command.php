@@ -214,7 +214,7 @@ abstract class Command
         $message .= Firefly::color(' [y/n] ', 'yellow');
         $response = $this->input($message, $default ? 'y' : 'n');
 
-        switch (trim(strtolower($response))) {
+        switch (trim(mb_strtolower($response))) {
             case 'y':
             case 'yes':
             case 'true':

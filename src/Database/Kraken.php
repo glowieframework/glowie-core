@@ -426,7 +426,7 @@ class Kraken
     public function where($param1, $param2 = null, $param3 = null, string $type = 'AND')
     {
         // Checks for the condition type
-        $type = strtoupper($type);
+        $type = mb_strtoupper($type);
         if (!empty($this->_where)) {
             if (end($this->_where) === '(') {
                 $query = "";
@@ -467,7 +467,7 @@ class Kraken
         }
 
         // Checks operation types
-        $param2 = strtoupper($param2);
+        $param2 = mb_strtoupper($param2);
         if (($param2 === 'BETWEEN' || $param2 === 'NOT BETWEEN') && (is_array($param3) || $param3 instanceof Collection)) {
             $values = [];
 
@@ -1078,7 +1078,7 @@ class Kraken
     public function having($param1, $param2 = null, $param3 = null, string $type = 'AND')
     {
         // Checks for the condition type
-        $type = strtoupper($type);
+        $type = mb_strtoupper($type);
         if (!empty($this->_having)) {
             if (end($this->_having) === '(') {
                 $query = "";
@@ -1119,7 +1119,7 @@ class Kraken
         }
 
         // Checks operation types
-        $param2 = strtoupper($param2);
+        $param2 = mb_strtoupper($param2);
         if (($param2 === 'BETWEEN' || $param2 === 'NOT BETWEEN') && (is_array($param3) || $param3 instanceof Collection)) {
             $values = [];
 
@@ -1341,7 +1341,7 @@ class Kraken
      */
     public function orderBy($column, string $direction = 'ASC')
     {
-        $direction = strtoupper($direction);
+        $direction = mb_strtoupper($direction);
         $column = $this->escapeIdentifier($column);
         $this->_order[] = "{$column} {$direction}";
         return $this;

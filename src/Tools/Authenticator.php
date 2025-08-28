@@ -199,7 +199,7 @@ class Authenticator
     {
         $value = Rails::getRequest()->getHeader('Authorization');
         if (is_null($value) || !Util::startsWith($value, 'Basic ')) return null;
-        $value = base64_decode(substr($value, 6), true);
+        $value = base64_decode(mb_substr($value, 6), true);
         if ($value === false) return null;
         $value = explode(':', $value, 2);
         if (count($value) !== 2) return null;

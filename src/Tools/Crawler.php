@@ -410,7 +410,7 @@ class Crawler
         if (!empty($this->cookies)) curl_setopt($curl, CURLOPT_COOKIE, implode('; ', $this->cookies));
 
         // Sets method
-        $method = strtoupper(trim($method));
+        $method = mb_strtoupper(trim($method));
         switch ($method) {
             case 'GET':
                 break;
@@ -446,7 +446,7 @@ class Crawler
         // Ensure to retrieve the response headers
         $headers = [];
         curl_setopt($curl, CURLOPT_HEADERFUNCTION, function ($ch, $header) use (&$headers) {
-            $len = strlen($header);
+            $len = mb_strlen($header);
             $header = explode(':', $header, 2);
             if (count($header) < 2) return $len;
             $key = trim($header[0]);

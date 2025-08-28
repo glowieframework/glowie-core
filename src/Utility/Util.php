@@ -755,7 +755,7 @@ class Util
         $token = hash($method, $token);
 
         // Encrypts the string
-        $iv = substr($token, 0, 16);
+        $iv = mb_substr($token, 0, 16);
         return openssl_encrypt($string, "AES-256-CBC", $key, 0, $iv);
     }
 
@@ -782,7 +782,7 @@ class Util
         $token = hash($method, $token);
 
         // Decrypts the string
-        $iv = substr($token, 0, 16);
+        $iv = mb_substr($token, 0, 16);
         return openssl_decrypt($string, "AES-256-CBC", $key, 0, $iv);
     }
 
@@ -836,8 +836,8 @@ class Util
         $timeHex = str_pad(dechex(floor(microtime(true) * 1000)), 12, "0", STR_PAD_LEFT);
         return sprintf(
             '%s-%s-%04x-%04x-%04x%04x%04x',
-            substr($timeHex, 0, 8),
-            substr($timeHex, 8, 4) . sprintf('%04x', mt_rand(0, 0xffff)),
+            mb_substr($timeHex, 0, 8),
+            mb_substr($timeHex, 8, 4) . sprintf('%04x', mt_rand(0, 0xffff)),
             mt_rand(0, 0xffff) . (mt_rand(0, 0x0fff) | 0x4000),
             mt_rand(0, 0x3fff) | 0x8000,
             mt_rand(0, 0xffff),
@@ -860,7 +860,7 @@ class Util
         if ($letters) $data .= 'abcdefghijklmnopqABCDEFGHIJKLMNOPQ';
         if ($numbers) $data .= '0123456789';
         if ($specialchars) $data .= '!@#$%&*(){}[]-+=/.,;:?\\|_';
-        return substr(str_shuffle($data), 0, $length);
+        return mb_substr(str_shuffle($data), 0, $length);
     }
 
     /**
@@ -957,14 +957,14 @@ class Util
      */
     public static function pluralize(string $word)
     {
-        $last = strtolower($word[strlen($word) - 1]);
-        $last2 = strtolower(substr($word, -2));
-        if (substr($word, -3) === 'ies' || substr($word, -3) === 'ves' || substr($word, -2) === 'es' || substr($word, -1) === 's') return $word;
-        if ($last === 'y' && !in_array(strtolower($word[strlen($word) - 2]), ['a', 'e', 'i', 'o', 'u'])) return substr($word, 0, -1) . 'ies';
-        if ($last2 === 'us') return substr($word, 0, -2) . 'i';
-        if ($last2 === 'is') return substr($word, 0, -2) . 'es';
-        if ($last2 === 'on') return substr($word, 0, -2) . 'a';
-        if (in_array($last, ['s', 'x', 'z', 'o']) || ($last === 'h' && in_array(strtolower($word[strlen($word) - 2]), ['c', 's']))) return $word . 'es';
+        $last = mb_strtolower($word[mb_strlen($word) - 1]);
+        $last2 = mb_strtolower(mb_substr($word, -2));
+        if (mb_substr($word, -3) === 'ies' || mb_substr($word, -3) === 'ves' || mb_substr($word, -2) === 'es' || mb_substr($word, -1) === 's') return $word;
+        if ($last === 'y' && !in_array(mb_strtolower($word[mb_strlen($word) - 2]), ['a', 'e', 'i', 'o', 'u'])) return mb_substr($word, 0, -1) . 'ies';
+        if ($last2 === 'us') return mb_substr($word, 0, -2) . 'i';
+        if ($last2 === 'is') return mb_substr($word, 0, -2) . 'es';
+        if ($last2 === 'on') return mb_substr($word, 0, -2) . 'a';
+        if (in_array($last, ['s', 'x', 'z', 'o']) || ($last === 'h' && in_array(mb_strtolower($word[mb_strlen($word) - 2]), ['c', 's']))) return $word . 'es';
         return $word . 's';
     }
 
@@ -975,20 +975,20 @@ class Util
      */
     public static function singularize(string $word)
     {
-        $last = strtolower($word[strlen($word) - 1]);
-        $last2 = strtolower(substr($word, -2));
-        if (!in_array($last, ['s', 'x', 'z']) && substr($word, -3) !== 'ies' && substr($word, -3) !== 'ves' && $last2 !== 'es') return $word;
+        $last = mb_strtolower($word[mb_strlen($word) - 1]);
+        $last2 = mb_strtolower(mb_substr($word, -2));
+        if (!in_array($last, ['s', 'x', 'z']) && mb_substr($word, -3) !== 'ies' && mb_substr($word, -3) !== 'ves' && $last2 !== 'es') return $word;
         if ($last2 === 'es') {
-            if (substr($word, -4) === 'sses' || substr($word, -4) === 'shes' || substr($word, -4) === 'ches') return substr($word, 0, -2);
-            if (substr($word, -3) === 'ies') return substr($word, 0, -3) . 'y';
-            if (substr($word, -3) === 'xes' || substr($word, -3) === 'ses' || substr($word, -3) === 'zes') return substr($word, 0, -2);
-            if (substr($word, -3) !== 'oes') return substr($word, 0, -2);
+            if (mb_substr($word, -4) === 'sses' || mb_substr($word, -4) === 'shes' || mb_substr($word, -4) === 'ches') return mb_substr($word, 0, -2);
+            if (mb_substr($word, -3) === 'ies') return mb_substr($word, 0, -3) . 'y';
+            if (mb_substr($word, -3) === 'xes' || mb_substr($word, -3) === 'ses' || mb_substr($word, -3) === 'zes') return mb_substr($word, 0, -2);
+            if (mb_substr($word, -3) !== 'oes') return mb_substr($word, 0, -2);
         }
-        if (substr($word, -3) === 'ies') return substr($word, 0, -3) . 'y';
-        if (substr($word, -3) === 'ves') return substr($word, 0, -3) . 'f';
-        if ($last2 === 'us') return substr($word, 0, -2) . 'us';
-        if ($last2 === 'on') return substr($word, 0, -2) . 'on';
-        if ($last === 's') return substr($word, 0, -1);
+        if (mb_substr($word, -3) === 'ies') return mb_substr($word, 0, -3) . 'y';
+        if (mb_substr($word, -3) === 'ves') return mb_substr($word, 0, -3) . 'f';
+        if ($last2 === 'us') return mb_substr($word, 0, -2) . 'us';
+        if ($last2 === 'on') return mb_substr($word, 0, -2) . 'on';
+        if ($last === 's') return mb_substr($word, 0, -1);
         return $word;
     }
 

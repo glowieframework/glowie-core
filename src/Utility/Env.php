@@ -67,7 +67,7 @@ class Env
 
         // Strips enquoted values
         if ((Util::startsWith($value, '"') && Util::endsWith($value, '"')) || (Util::startsWith($value, "'") && Util::endsWith($value, "'"))) {
-            $value = stripcslashes(substr($value, 1, -1));
+            $value = stripcslashes(mb_substr($value, 1, -1));
         }
 
         // Returns the value as string

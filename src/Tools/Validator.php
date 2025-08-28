@@ -712,14 +712,14 @@ class Validator
         // Sanitize mime type
         $mime = mime_content_type($filename);
         if (!$mime) return false;
-        $mime = trim(strtolower($mime));
+        $mime = trim(mb_strtolower($mime));
 
         // Check for exact match
         if (in_array($mime, $mimes)) return true;
 
         // Check for wildcard mimes
         foreach ($mimes as $item) {
-            $item = trim(strtolower($item));
+            $item = trim(mb_strtolower($item));
             $regex = '/^' . str_replace('\*', '.*', preg_quote($item, '/')) . '$/i';
             if (preg_match($regex, $mime)) return true;
         }
