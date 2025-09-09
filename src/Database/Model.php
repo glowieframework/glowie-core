@@ -531,14 +531,16 @@ class Model extends Kraken implements JsonSerializable
      * Updates data in the model table.\
      * **Do not forget to use WHERE statements before calling this function, otherwise all records will be updated.**
      * @param mixed $data An associative array/Collection/Element relating fields and values to update.
+     * @param bool $deleted (Optional) Update deleted rows (if soft deletes enabled).
      * @return bool Returns true on success or false on failure.
      * @throws QueryException Throws an exception if the query fails.
      */
-    public function update($data)
+    public function update($data, bool $deleted = false)
     {
         if ($data instanceof Element || $data instanceof Collection) $data = $data->toArray();
         $data = $this->mutateData($this->filterData($data));
         if ($this->_timestamps) $data[$this->_updatedField] = date($this->_dateFormat);
+        if ($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
         return Kraken::update($data);
     }
 

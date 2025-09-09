@@ -64,4 +64,13 @@ class Service
         $this->route = Rails::getCurrentRoute();
         $this->session = new Session();
     }
+
+    /**
+     * Creates a new service instance in a static-binding.
+     * @return $this New service instance.
+     */
+    public static function make()
+    {
+        return new static;
+    }
 }
