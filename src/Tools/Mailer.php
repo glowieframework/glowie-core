@@ -184,13 +184,12 @@ class Mailer
     }
 
     /**
-     * Adds an attachment file to the message.
-     * @param string $filename File path to add, relative to the **app** folder.
+     * Adds a file attachment to the message.
+     * @param string $filename Full path to the file to be attached. File must exist and be readable.
      * @return Mailer Current Mailer instance for nested calls.
      */
     public function addAttachment(string $filename)
     {
-        $filename = Util::location($filename);
         if (!is_file($filename) || !is_readable($filename)) throw new FileException('Mail attachment "' . $filename . '" is not a valid or readable file');
         $this->attachments[] = $filename;
         return $this;

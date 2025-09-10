@@ -2,9 +2,12 @@
 
 namespace Glowie\Core\Tools;
 
+use CURLFile;
 use Glowie\Core\Element;
 use Glowie\Core\Exception\RequestException;
 use Exception;
+use Glowie\Core\Collection;
+use Glowie\Core\Exception\FileException;
 
 /**
  * HTTP client for Glowie application.
@@ -60,6 +63,12 @@ class Crawler
      * @var array
      */
     private $cookies = [];
+
+    /**
+     * Files to upload.
+     * @var array
+     */
+    private $files = [];
 
     /**
      * Throw exception on failure.
@@ -210,6 +219,59 @@ class Crawler
     public function asForm()
     {
         return $this->setContentType(self::CONTENT_FORM);
+    }
+
+    /**
+     * Sets the `Content-Type` header to multipart form data.
+     * @return Crawler Current Crawler instance for nested calls.
+     */
+    public function asMultipart()
+    {
+        return $this->setContentType(self::CONTENT_MULTIPART);
+    }
+
+    /**
+     * Adds a file to upload in the request.
+     * @param string $name Name of the file input field in the request body.
+     * @param string $path Full path to the file to be uploaded. File must exist and be readable.
+     * @param string|null $mime (Optional) File mime type, leave empty to auto-guess.
+     * @param string|null $filename (Optional) Custom filename to upload, leave empty to use the original filename.
+     * @return Crawler Current Crawler instance for nested calls.
+     */
+    public function addFile(string $name, string $path, ?string $mime = null, ?string $filename = null)
+    {
+        // Checks if the file exists
+        if (!is_file($path) || !is_readable($path)) throw new FileException('Request attachment "' . $path . '" is not a valid or readable file');
+
+        // Creates the array for the input field if not yet
+        if (!isset($this->files[$name])) {
+            $this->files[$name] = [];
+        }
+
+        // Adds the file
+        $this->files[$name][] = [
+            'path' => $path,
+            'mime' => $mime ?? (mime_content_type($path) || null),
+            'filename' => $filename ?? pathinfo($path, PATHINFO_BASENAME)
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Clears the uploaded files.
+     * @param string|null $name (Optional) Name of the file input field to clear, leave empty to clear all files.
+     * @return Crawler Current Crawler instance for nested calls.
+     */
+    public function clearFiles(?string $name = null)
+    {
+        if (!is_null($name)) {
+            unset($this->files[$name]);
+            return $this;
+        }
+
+        $this->files = [];
+        return $this;
     }
 
     /**
@@ -384,9 +446,9 @@ class Crawler
      * Performs an HTTP request.
      * @param string $url URL to perform request.
      * @param string $method (Optional) Method to use in the request. Default is `GET`.
-     * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
+     * @param mixed $data (Optional) Data to send in the request as plain text or an associative array.
      * @return Element|bool Returns the response as an Element on success or false on failure.
-     * @throws Exception Throws an exception if the status code is greater than 400 and `throwOnError()` is set to **true**.
+     * @throws RequestException Throws an exception if the status code is greater than 400 and `throwOnError()` is set to **true**.
      */
     public function request(string $url, string $method = 'GET', $data = '')
     {
@@ -417,16 +479,38 @@ class Crawler
             case 'POST':
                 curl_setopt($curl, CURLOPT_POST, true);
                 break;
-            case 'PUT':
-                curl_setopt($curl, CURLOPT_PUT, true);
-                break;
             default:
                 curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
                 break;
         }
 
+        // Converts the data objects to array
+        if ($data instanceof Element || $data instanceof Collection) $data = $data->toArray();
+
+        // Add file uploads
+        if (!empty($this->files)) {
+            // Creates the data array if not exists yet
+            if (!is_array($data) || empty($data)) $data = [];
+
+            // Loops through file inputs
+            foreach ($this->files as $field => $files) {
+                // Multiple file uploads
+                if (count($files) > 1) {
+                    foreach ($files as $i => $file) {
+                        $key = $field . "[$i]";
+                        $data[$key] = new CURLFile($file['path'], $file['mime'], $file['filename']);
+                    }
+                } else {
+                    // Single file upload
+                    $file = $files[0];
+                    $data[$field] = new CURLFile($file['path'], $file['mime'], $file['filename']);
+                }
+            }
+        }
+
         // Sets the data
         if (!empty($data)) {
+            // Checks for the method to URL encode
             if ($method === 'GET') {
                 if (is_array($data)) {
                     $url = $url . '?' . http_build_query($data);
@@ -434,8 +518,13 @@ class Crawler
                     $url = $url . '?' . $data;
                 }
             } else {
-                if ($this->type === self::CONTENT_JSON && is_array($data)) $data = json_encode($data);
-                if ($this->type === self::CONTENT_FORM && is_array($data)) $data = http_build_query($data);
+                // Encode data on form encoded type
+                if (empty($this->files) && is_array($data)) {
+                    if ($this->type === self::CONTENT_JSON) $data = json_encode($data);
+                    if ($this->type === self::CONTENT_FORM) $data = http_build_query($data);
+                }
+
+                // Sets the data
                 curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
             }
         }

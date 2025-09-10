@@ -82,6 +82,9 @@ class Env
      */
     public static function get(string $key, $default = null)
     {
+        // Trims trailing spaces
+        $key = trim($key);
+
         // Gets the value from file context
         if (isset(self::$env[$key])) return self::$env[$key];
 
@@ -90,12 +93,12 @@ class Env
         if (isset($_SERVER[$key])) return $_SERVER[$key];
 
         // Gets the value from the getenv() context
-        $value = getenv(trim($key), true);
+        $value = getenv($key, true);
         if ($value !== false) return $value;
 
         // Gets the value from Apache context
         if (function_exists('apache_getenv')) {
-            $value = apache_getenv(trim($key), true);
+            $value = apache_getenv($key, true);
             if ($value !== false) return $value;
         }
 
