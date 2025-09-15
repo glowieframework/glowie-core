@@ -729,7 +729,7 @@ class Skeleton
     private function changeModifier(string $property, $value)
     {
         if (empty($this->_modifiers)) throw new Exception('Skeleton: No column was added/changed to be modified');
-        $i = count($this->_modifiers) - 1;
+        $i = array_key_last($this->_modifiers);
         if ($property === 'unsigned') {
             $this->_modifiers[$i]['type'] = $this->_modifiers[$i]['type'] . ' UNSIGNED';
         } else {
@@ -912,7 +912,7 @@ class Skeleton
     public function onUpdate(string $rule)
     {
         if (empty($this->_foreign)) throw new Exception('Skeleton: No foreign key was added to be modified');
-        $i = count($this->_foreign) - 1;
+        $i = array_key_last($this->_foreign);
         $this->_foreign[$i] = preg_replace_callback('/ON UPDATE (.+) ON DELETE (.+)$/', function ($match) use ($rule) {
             return 'ON UPDATE ' . $rule . ' ON DELETE ' . $match[2];
         }, $this->_foreign[$i], 1);
@@ -927,7 +927,7 @@ class Skeleton
     public function onDelete(string $rule)
     {
         if (empty($this->_foreign)) throw new Exception('Skeleton: No foreign key was added to be modified');
-        $i = count($this->_foreign) - 1;
+        $i = array_key_last($this->_foreign);
         $this->_foreign[$i] = preg_replace_callback('/ON UPDATE (.+) ON DELETE (.+)$/', function ($match) use ($rule) {
             return 'ON UPDATE ' . $match[1] . ' ON DELETE ' . $rule;
         }, $this->_foreign[$i], 1);

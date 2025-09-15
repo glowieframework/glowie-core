@@ -764,12 +764,28 @@ class Firefly
      */
     private static function __createCommand()
     {
+        $name = self::argOrInput('name', 'Command name: ');
+        return self::doCommandCreate($name);
+    }
+
+    /**
+     * Creates a command for the task scheduler.
+     */
+    private static function __createScheduleCommand()
+    {
+        return self::doCommandCreate('Schedule', 'Command_Schedule.php');
+    }
+
+    /**
+     * Runs the command creator.
+     * @param string $name Command name.
+     * @param string $template (Optional) Template filename.
+     */
+    private static function doCommandCreate(string $name, string $template = 'Command.php')
+    {
         // Checks permissions
         if (!is_dir(Util::location('commands'))) mkdir(Util::location('commands'), 0755, true);
         if (!is_writable(Util::location('commands'))) throw new FileException('Directory "app/commands" is not writable, please check your chmod settings');
-
-        // Checks if name was filled
-        $name = self::argOrInput('name', 'Command name: ');
 
         // Validates the command name
         if (Util::isEmpty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
@@ -780,7 +796,7 @@ class Firefly
         if (is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Command {$name} already exists!");
 
         // Creates the file
-        $template = file_get_contents(self::TEMPLATES_FOLDER . 'Command.php');
+        $template = file_get_contents(self::TEMPLATES_FOLDER . $template);
         $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
         file_put_contents($targetFile, $template);
 

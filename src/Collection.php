@@ -261,7 +261,9 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function first($default = null)
     {
-        return reset($this->__data) ?? $default;
+        $key = $this->firstKey();
+        if (is_null($key)) return $default;
+        return array_key_exists($key, $this->__data) ? $this->__data[$key] : $default;
     }
 
     /**
@@ -271,8 +273,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function firstKey($default = null)
     {
-        $this->first($default);
-        return key($this->__data) ?? $default;
+        return array_key_first($this->__data) ?? $default;
     }
 
     /**
@@ -282,7 +283,9 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function last($default = null)
     {
-        return end($this->__data) ?? $default;
+        $key = $this->lastKey();
+        if (is_null($key)) return $default;
+        return array_key_exists($key, $this->__data) ? $this->__data[$key] : $default;
     }
 
     /**
@@ -292,8 +295,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function lastKey($default = null)
     {
-        $this->last($default);
-        return key($this->__data) ?? $default;
+        return array_key_last($this->__data) ?? $default;
     }
 
     /**

@@ -198,9 +198,10 @@ abstract class Command
         $response = (int)$this->input(Firefly::color('[1-' . count($values) . '] ', 'yellow'), $default);
 
         // Return response
-        if (!array_key_exists($response - 1, $values)) return null;
-        if ($isAssociative) return array_search($values[$response - 1], $options);
-        return $values[$response - 1];
+        $i = $response - 1;
+        if (!array_key_exists($i, $values)) return null;
+        if ($isAssociative) return array_search($values[$i], $options);
+        return $values[$i];
     }
 
     /**

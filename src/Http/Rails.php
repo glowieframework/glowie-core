@@ -130,6 +130,7 @@ class Rails
      * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods.\
      * Leave empty for all.
      * @param string $name (Optional) Route name.
+     * @return Rails Returns the current instance for nested calls.
      */
     public static function addRoute(string $route, string $controller = '', ?string $action = null, $methods = [], string $name = '')
     {
@@ -147,6 +148,7 @@ class Rails
             'middleware' => self::$middlewares,
             'domain' => self::$domain
         ];
+        return new static;
     }
 
     /**
@@ -156,6 +158,7 @@ class Rails
      * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods.\
      * Leave empty for all.
      * @param string $name (Optional) Route name.
+     * @return Rails Returns the current instance for nested calls.
      */
     public static function addAnonymous(string $route, callable $callback, $methods = [], string $name = '')
     {
@@ -172,6 +175,7 @@ class Rails
             'middleware' => self::$middlewares,
             'domain' => self::$domain
         ];
+        return new static;
     }
 
     /**
@@ -185,6 +189,7 @@ class Rails
      * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods.\
      * Leave empty for all.
      * @param string $name (Optional) Route name.
+     * @return Rails Returns the current instance for nested calls.
      */
     public static function addProtectedRoute(string $route, $middleware = 'Glowie\Middlewares\Authenticate', string $controller = '', ?string $action = null, $methods = [], string $name = '')
     {
@@ -203,6 +208,7 @@ class Rails
             'group' => self::$group,
             'domain' => self::$domain
         ];
+        return new static;
     }
 
     /**
@@ -214,6 +220,7 @@ class Rails
      * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods.\
      * Leave empty for all.
      * @param string $name (Optional) Route name.
+     * @return Rails Returns the current instance for nested calls.
      */
     public static function addProtectedAnonymous(string $route, callable $callback, $middleware = 'Glowie\Middlewares\Authenticate', $methods = [], string $name = '')
     {
@@ -231,6 +238,7 @@ class Rails
             'group' => self::$group,
             'domain' => self::$domain
         ];
+        return new static;
     }
 
     /**
@@ -241,6 +249,7 @@ class Rails
      * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods.\
      * Leave empty for all.
      * @param string $name (Optional) Route name.
+     * @return Rails Returns the current instance for nested calls.
      */
     public static function addRedirect(string $route, string $target, int $code = Response::HTTP_FOUND, $methods = [], string $name = '')
     {
@@ -257,6 +266,72 @@ class Rails
             'middleware' => self::$middlewares,
             'domain' => self::$domain
         ];
+        return new static;
+    }
+
+    /**
+     * Sets the name for the last added route.
+     * @param string $name Name to set for the route.
+     * @return Rails Returns the current instance for nested calls.
+     */
+    public function name(string $name)
+    {
+        if (empty(self::$routes)) throw new RoutingException('Rails: No route was added to be modified');
+        $i = array_key_last(self::$routes);
+        self::$routes[$i]['name'] = $name;
+        return $this;
+    }
+
+    /**
+     * Sets the accepted HTTP methods for the last added route.
+     * @param string|array $methods Single method or an array of methods. Leave empty for all.
+     * @return Rails Returns the current instance for nested calls.
+     */
+    public function methods($methods)
+    {
+        if (empty(self::$routes)) throw new RoutingException('Rails: No route was added to be modified');
+        $i = array_key_last(self::$routes);
+        self::$routes[$i]['methods'] = (array)$methods;
+        return $this;
+    }
+
+    /**
+     * Sets the middleware for the last added route.
+     * @param string|array $middleware The namespaced middleware name that this route will use to protect itself.\
+     * You can use `MiddlewareName::class` to get this property correctly. You can also use an array of multiple middlewares.
+     * @return Rails Returns the current instance for nested calls.
+     */
+    public function middleware($middleware)
+    {
+        if (empty(self::$routes)) throw new RoutingException('Rails: No route was added to be modified');
+        $i = array_key_last(self::$routes);
+        self::$routes[$i]['middleware'] = array_merge(self::$routes[$i]['middleware'], (array)$middleware);
+        return $this;
+    }
+
+    /**
+     * Sets the domain name for the last added route.
+     * @param string $domain Domain name. Do not include http:// or https://.
+     * @return Rails Returns the current instance for nested calls.
+     */
+    public function setDomain(string $domain)
+    {
+        if (empty(self::$routes)) throw new RoutingException('Rails: No route was added to be modified');
+        $i = array_key_last(self::$routes);
+        self::$routes[$i]['domain'] = $domain;
+        return $this;
+    }
+
+    /** Sets the group name for the last added route.
+     * @param string $name Group name.
+     * @return Rails Returns the current instance for nested calls.
+     */
+    public function setGroup(string $group)
+    {
+        if (empty(self::$routes)) throw new RoutingException('Rails: No route was added to be modified');
+        $i = array_key_last(self::$routes);
+        self::$routes[$i]['group'] = $group;
+        return $this;
     }
 
     /**
