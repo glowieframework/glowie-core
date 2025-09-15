@@ -32,7 +32,7 @@ class Firefly
      * Console regex replacements.
      * @var array
      */
-    private const REGEX = [
+    private const STYLES_REGEX = [
         '/<color="default">/i'  => "\033[39m",
         '/<color="red">/i'      => "\033[91m",
         '/<color="green">/i'    => "\033[92m",
@@ -147,7 +147,8 @@ class Firefly
         if (!isset(self::$args[0])) {
             self::printAscii();
             self::print(self::bg(self::color('Welcome to Firefly!', 'black'), 'magenta'));
-            self::print(self::color('To see the commands list, use php firefly help', 'yellow'));
+            self::print(self::color('To view the list of available commands, use: ', 'yellow') . self::color('php firefly help', 'cyan'));
+            self::print('');
             return;
         }
 
@@ -256,7 +257,7 @@ class Firefly
     public static function print(string $text, bool $break = true)
     {
         // If running in console, replace effects and closing tags
-        if (Util::isCLI()) $text = preg_replace(array_keys(self::REGEX), array_values(self::REGEX), $text);
+        if (Util::isCLI()) $text = preg_replace(array_keys(self::STYLES_REGEX), array_values(self::STYLES_REGEX), $text);
 
         // Remove remaining effects
         $text = self::sanitize($text);
@@ -525,9 +526,12 @@ class Firefly
             ];
         }
 
+        // Orders the results
+        $result = Util::orderArray($result, mb_strtolower(self::getArg('order', 'uri')));
+        $count = count($result);
+
         // Prints the table
-        $result = Util::orderArray($result, 'methods');
-        self::print(self::color('Application routes: ', 'yellow'));
+        self::print(self::color("Application routes ($count):", 'yellow'));
         self::print('');
         self::table(['Methods', 'Name', 'URI', 'Target'], $result);
         return true;
@@ -541,7 +545,7 @@ class Firefly
         $dir = Config::get('skeltch.path', Util::location('storage/cache'));
         if (!is_writable($dir)) throw new FileException('Directory "' . $dir . '" is not writable, please check your chmod settings');
         foreach (Util::getFiles($dir . '/*.*') as $filename) unlink($filename);
-        self::print(self::color('Cache cleared successfully!', 'green'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Cache cleared successfully!', 'green'));
         return true;
     }
 
@@ -553,7 +557,7 @@ class Firefly
         $dir = Config::get('session.path', Util::location('storage/session'));
         if (!is_writable($dir)) throw new FileException('Directory "' . $dir . '" is not writable, please check your chmod settings');
         foreach (Util::getFiles($dir . '/*') as $filename) unlink($filename);
-        self::print(self::color('Session data cleared successfully!', 'green'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Session data cleared successfully!', 'green'));
         return true;
     }
 
@@ -564,7 +568,7 @@ class Firefly
     {
         $file = Config::get('error_reporting.file', Util::location('storage/error.log'));
         file_put_contents($file, '');
-        self::print(self::color('Error log cleared successfully!', 'green'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Error log cleared successfully!', 'green'));
         return true;
     }
 
@@ -579,7 +583,7 @@ class Firefly
         $failed = self::hasOption('failed');
         if (!$success && !$pending && !$failed) $success = $pending = $failed = true;
         Queue::clear($queue, $success, $pending, $failed);
-        self::print(self::color("Queue \"{$queue}\" cleared successfully!", 'green'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . ']' . " Queue \"{$queue}\" cleared successfully!", 'green'));
     }
 
     /**
@@ -611,6 +615,7 @@ class Firefly
         ));
 
         self::print(self::color('Your application is ready.', 'green'));
+        self::print('');
     }
 
     /**
@@ -626,9 +631,9 @@ class Firefly
         $content = file_get_contents($file);
 
         // Generates the new keys
-        $appKey = 'APP_KEY=' . Util::randomToken();
-        $appToken = 'APP_TOKEN=' . Util::randomToken();
-        $maintenanceKey = 'MAINTENANCE_KEY=' . Util::randomToken();
+        $appKey = 'APP_KEY="' . Util::uniqueToken() . '"';
+        $appToken = 'APP_TOKEN="' . Util::uniqueToken() . '"';
+        $maintenanceKey = 'MAINTENANCE_KEY="' . Util::uniqueToken() . '"';
 
         // Replaces the new keys
         $content = preg_replace([
@@ -639,7 +644,7 @@ class Firefly
 
         // Saves the new content
         file_put_contents($file, $content);
-        self::print(self::color('Application secret keys generated successfully!', 'green'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Application secret keys generated successfully!', 'green'));
         return true;
     }
 
@@ -663,7 +668,7 @@ class Firefly
 
         // Saves the new content
         file_put_contents(Util::location('../.env.encrypted'), $content);
-        self::print(self::color('Environment config file encrypted successfully!', 'green'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Environment config file encrypted successfully!', 'green'));
         self::print(self::color('Decryption key: ' . $key, 'yellow'));
         self::print(self::color('Store it with caution!', 'red'));
         return true;
@@ -691,7 +696,7 @@ class Firefly
         // Saves the new content
         $targetFile = Util::location('../.env');
         file_put_contents($targetFile, $content);
-        self::print(self::color('Environment config file decrypted successfully!', 'green'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Environment config file decrypted successfully!', 'green'));
         self::print(self::color('File: ' . $targetFile, 'cyan'));
         return true;
     }
@@ -749,7 +754,7 @@ class Firefly
         $name = trim($name);
 
         // Attempts to create the connection
-        self::print(self::color('Connecting to "' . $name . '" database...', 'blue'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Connecting to "' . $name . '" database...', 'blue'));
         $time = microtime(true);
         new Kraken('glowie', $name);
 
@@ -801,7 +806,7 @@ class Firefly
         file_put_contents($targetFile, $template);
 
         // Success message
-        self::print(self::color("Command {$name} created successfully!", 'green'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . ']' . " Command {$name} created successfully!", 'green'));
         self::print(self::color('File: ' . $targetFile, 'cyan'));
         return true;
     }
@@ -839,7 +844,7 @@ class Firefly
         file_put_contents($targetFile, $template);
 
         // Success message
-        self::print(self::color("Controller {$name} created successfully!", 'green'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . ']' . " Controller {$name} created successfully!", 'green'));
         self::print(self::color('File: ' . $targetFile, 'cyan'));
         return true;
     }
@@ -868,7 +873,7 @@ class Firefly
         copy(self::TEMPLATES_FOLDER . 'Language.php', $targetFile);
 
         // Success message
-        self::print(self::color("Language file {$name} created successfully!", 'green'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . ']' . " Language file {$name} created successfully!", 'green'));
         self::print(self::color('File: ' . $targetFile, 'cyan'));
         return true;
     }
@@ -899,7 +904,7 @@ class Firefly
         file_put_contents($targetFile, $template);
 
         // Success message
-        self::print(self::color("Middleware {$name} created successfully!", 'green'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . ']' . " Middleware {$name} created successfully!", 'green'));
         self::print(self::color('File: ' . $targetFile, 'cyan'));
         return true;
     }
@@ -947,7 +952,7 @@ class Firefly
         file_put_contents($targetFile, $template);
 
         // Success message
-        self::print(self::color("Migration {$cleanName} created successfully!", 'green'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . ']' . " Migration {$cleanName} created successfully!", 'green'));
         self::print(self::color('File: ' . $targetFile, 'cyan'));
         return true;
     }
@@ -987,7 +992,7 @@ class Firefly
         file_put_contents($targetFile, $template);
 
         // Success message
-        self::print(self::color("Model {$name} created successfully!", 'green'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . ']' . " Model {$name} created successfully!", 'green'));
         self::print(self::color('File: ' . $targetFile, 'cyan'));
 
         // Create migration if asked
@@ -1021,7 +1026,7 @@ class Firefly
         file_put_contents($targetFile, $template);
 
         // Success message
-        self::print(self::color("Job {$name} created successfully!", 'green'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . ']' . " Job {$name} created successfully!", 'green'));
         self::print(self::color('File: ' . $targetFile, 'cyan'));
         return true;
     }
@@ -1104,7 +1109,8 @@ class Firefly
         }
 
         // Prints the result as a table
-        self::print(self::color('Migrations status: ', 'yellow'));
+        $count = count($result);
+        self::print(self::color("Migrations status ($count): ", 'yellow'));
         self::print('');
         self::table(['Name', 'Status'], $result);
         return true;
@@ -1174,7 +1180,7 @@ class Firefly
         // Get plugins
         $plugins = Config::get('plugins', []);
         if (empty($plugins)) {
-            self::print(self::color('There are no plugin files to publish.', 'yellow'));
+            self::print(self::color('[' . date('Y-m-d H:i:s') . ']' . ' There are no plugin files to publish.', 'yellow'));
             return false;
         }
 
@@ -1186,7 +1192,7 @@ class Firefly
         }
 
         // Print success message
-        self::print(self::color('Plugin files were published successfully.', 'green'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . ']' . ' Plugin files were published successfully.', 'green'));
         return true;
     }
 
@@ -1242,7 +1248,7 @@ class Firefly
         self::print('  <color="yellow">sandbox</color> | Starts the REPL interactive mode');
         self::print('  <color="yellow">down</color> | Puts the application under maintenance mode');
         self::print('  <color="yellow">up</color> | Removes the application from maintenance mode');
-        self::print('  <color="yellow">routes</color> | Prints a list of all application routes');
+        self::print('  <color="yellow">routes</color> <color="blue">--order</color> | Prints a list of all application routes');
         self::print('  <color="yellow">clear-cache</color> | Clears the application cache folder');
         self::print('  <color="yellow">clear-session</color> | Clears the application session folder');
         self::print('  <color="yellow">clear-log</color> | Clears the application error log');
@@ -1252,6 +1258,7 @@ class Firefly
         self::print('  <color="yellow">decrypt-env</color> <color="blue">--key</color> | Decrypts the environment config file');
         self::print('  <color="yellow">test-database</color> <color="blue">--name</color> | Tests a database connection');
         self::print('  <color="yellow">create-command</color> <color="blue">--name</color> | Creates a new command for your application');
+        self::print('  <color="yellow">create-schedule-command</color> | Creates the command to run scheduled tasks');
         self::print('  <color="yellow">create-controller</color> <color="blue">--name</color> <color="cyan">-resource</color> | Creates a new controller for your application');
         self::print('  <color="yellow">create-language</color> <color="blue">--name</color> | Creates a new language file for your application');
         self::print('  <color="yellow">create-middleware</color> <color="blue">--name</color> | Creates a new middleware for your application');
@@ -1276,7 +1283,7 @@ class Firefly
      */
     private static function sanitize(string $text)
     {
-        $text = preg_replace(array_slice(array_keys(self::REGEX), 24), '', $text);
+        $text = preg_replace(array_slice(array_keys(self::STYLES_REGEX), 24), '', $text);
         $text = preg_replace(['/<color="(.+)">/i', '/<bg="(.+)">/i', '/<b>/i', '/<u>/i', '/<dim>/i', '/<blink>/i', '/<hidden>/i', '/<rev>/i'], '', $text);
         return $text;
     }

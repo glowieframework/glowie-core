@@ -3,6 +3,7 @@
 namespace Glowie\Core\CLI;
 
 use Glowie\Core\Exception\FileException;
+use Glowie\Core\Queue\Job;
 use Config;
 use DateTime;
 use DateTimeZone;
@@ -56,6 +57,21 @@ class Scheduler
     {
         return self::schedule(function () use ($command, $args) {
             Firefly::call($command, $args);
+        }, $expression, $conditions);
+    }
+
+    /**
+     * Schedules a dispatch of a job to the queue.
+     * @param Job $job Job instance to be dispatched.
+     * @param string $queue (Optional) Queue name to add this job to.
+     * @param string $expression (Optional) Cron expression to schedule the task.
+     * @param array $conditions (Optional) Associative array of execution conditions.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
+    public static function job(Job $job, string $queue = 'default', string $expression = '* * * * *', array $conditions = [])
+    {
+        return self::schedule(function () use ($job, $queue) {
+            $job->dispatch($queue);
         }, $expression, $conditions);
     }
 
@@ -156,201 +172,381 @@ class Scheduler
         return $this;
     }
 
+    /**
+     * Sets the last added task to be executed every second.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function everySecond()
     {
         return $this->cron('* * * * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every 2 seconds.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function everyTwoSeconds()
     {
         return $this->cron('*/2 * * * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every 5 seconds.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function everyFiveSeconds()
     {
         return $this->cron('*/5 * * * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every 10 seconds.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function everyTenSeconds()
     {
         return $this->cron('*/10 * * * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every 15 seconds.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function everyFifteenSeconds()
     {
         return $this->cron('*/15 * * * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every 20 seconds.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function everyTwentySeconds()
     {
         return $this->cron('*/20 * * * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every 30 seconds.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function everyThirtySeconds()
     {
         return $this->cron('*/30 * * * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every minute.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function everyMinute()
     {
         return $this->cron('* * * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every 2 minutes.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function everyTwoMinutes()
     {
         return $this->cron('*/2 * * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every 3 minutes.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function everyThreeMinutes()
     {
         return $this->cron('*/3 * * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every 4 minutes.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function everyFourMinutes()
     {
         return $this->cron('*/4 * * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every 5 minutes.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function everyFiveMinutes()
     {
         return $this->cron('*/5 * * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every 10 minutes.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function everyTenMinutes()
     {
         return $this->cron('*/10 * * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every 15 minutes.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function everyFifteenMinutes()
     {
         return $this->cron('*/15 * * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every 30 minutes.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function everyThirtyMinutes()
     {
         return $this->cron('*/30 * * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every hour.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function hourly()
     {
         return $this->cron('0 * * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every hour at a specified minute.
+     * @param int $minute Minute in the hour to run the task.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function hourlyAt(int $minute)
     {
         return $this->cron($minute . ' * * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every odd hour.
+     * @param int $minute (Optional) Minute in the hour to run the task.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function everyOddHour(int $minute = 0)
     {
         return $this->cron($minute . ' 1-23/2 * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every 2 hours.
+     * @param int $minute (Optional) Minute in the hour to run the task.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function everyTwoHours(int $minute = 0)
     {
         return $this->cron($minute . ' */2 * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every 3 hours.
+     * @param int $minute (Optional) Minute in the hour to run the task.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function everyThreeHours(int $minute = 0)
     {
         return $this->cron($minute . ' */3 * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every 4 hours.
+     * @param int $minute (Optional) Minute in the hour to run the task.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function everyFourHours(int $minute = 0)
     {
         return $this->cron($minute . ' */4 * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every 6 hours.
+     * @param int $minute (Optional) Minute in the hour to run the task.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function everySixHours(int $minute = 0)
     {
         return $this->cron($minute . ' */6 * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every day.
+     * @param int $minute (Optional) Minute in the hour to run the task.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function daily()
     {
         return $this->cron('0 0 * * *');
     }
 
+    /**
+     * Sets the last added task to be executed every day at a specified time.
+     * @param string $time Time of the day when to execute the task in the format `H:i`.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function dailyAt(string $time)
     {
         [$hour, $minute] = explode(':', $time) + [null, null];
         return $this->cron((int)$minute . ' ' . (int)$hour . ' * * *');
     }
 
-    public function twiceDaily(int $firstHour, int $secondHour)
+    /**
+     * Sets the last added task to be executed twice a day.
+     * @param int $firstHour (Optional) First hour of the day when to run the task.
+     * @param int $secondHour (Optional) Second hour of the day when to run the task.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
+    public function twiceDaily(int $firstHour = 0, int $secondHour = 12)
     {
         return $this->cron("0 " . $firstHour . ',' . $secondHour . " * * *");
     }
 
+    /**
+     * Sets the last added task to be executed twice a day at a specified minute.
+     * @param int $firstHour First hour of the day when to run the task.
+     * @param int $secondHour Second hour of the day when to run the task.
+     * @param int $minute Minute of each hour when to run the task.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function twiceDailyAt(int $firstHour, int $secondHour, int $minute)
     {
         return $this->cron($minute . ' ' . $firstHour . ',' . $secondHour . ' * * *');
     }
 
+    /**
+     * Sets the last added task to be executed once per week.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function weekly()
     {
         return $this->cron('0 0 * * 0');
     }
 
-    public function weeklyOn(int $dayOfWeek, string $time)
+    /**
+     * Sets the last added task to be executed once per week at a specified day and time.
+     * @param int $dayOfWeek Day of week when to run the task. **From 0 (sunday) to 6 (saturday)**.
+     * @param string $time (Optional) Time of the day when to execute the task in the format `H:i`.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
+    public function weeklyOn(int $dayOfWeek, string $time = '00:00')
     {
         [$hour, $minute] = explode(':', $time) + [null, null];
         return $this->cron((int)$minute . ' ' . (int)$hour . ' * * ' . $dayOfWeek);
     }
 
+    /**
+     * Sets the last added task to be executed once per month.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function monthly()
     {
         return $this->cron('0 0 1 * *');
     }
 
-    public function monthlyOn(int $day, string $time)
+    /**
+     * Sets the last added task to be executed once per month at a specified day and time.
+     * @param int $day Day of the month when to run the task.
+     * @param string $time (Optional) Time of the day when to execute the task in the format `H:i`.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
+    public function monthlyOn(int $day, string $time = '00:00')
     {
         [$hour, $minute] = explode(':', $time) + [null, null];
         return $this->cron((int)$minute . ' ' . (int)$hour . ' ' . $day . ' * *');
     }
 
-    public function twiceMonthly(int $firstDay, int $secondDay, string $time)
+    /**
+     * Sets the last added task to be executed twice per month at a specified day and time.
+     * @param int $firstDay (Optional) First day of the month when to run the task.
+     * @param int $secondDay (Optional) Second day of the month when to run the task.
+     * @param string $time (Optional) Time of the day when to execute the task in the format `H:i`.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
+    public function twiceMonthly(int $firstDay = 1, int $secondDay = 15, string $time = '00:00')
     {
         [$hour, $minute] = explode(':', $time) + [null, null];
         return $this->cron((int)$minute . ' ' . (int)$hour . ' ' . $firstDay . ',' . $secondDay . ' * *');
     }
 
-    public function lastDayOfMonth(string $time)
+    /**
+     * Sets the last added task to be executed in the last day of every month, at a specified time.
+     * @param string $time (Optional) Time of the day when to execute the task in the format `H:i`.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
+    public function lastDayOfMonth(string $time = '00:00')
     {
         [$hour, $minute] = explode(':', $time) + [null, null];
         return $this->cron((int)$minute . ' ' . (int)$hour . ' L * *');
     }
 
+    /**
+     * Sets the last added task to be executed on the first day of every quarter.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function quarterly()
     {
         return $this->cron('0 0 1 */3 *');
     }
 
-    public function quarterlyOn(int $day, string $time)
+    /**
+     * Sets the last added task to be executed in a specified day and time of every quarter.
+     * @param int $day Day of the month in the quarter to run the task.
+     * @param string $time (Optional) Time of the day when to execute the task in the format `H:i`.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
+    public function quarterlyOn(int $day, string $time = '00:00')
     {
         [$hour, $minute] = explode(':', $time) + [null, null];
         return $this->cron((int)$minute . ' ' . (int)$hour . ' ' . $day . ' */3 *');
     }
 
+    /**
+     * Sets the last added task to be executed on the first day of every year.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function yearly()
     {
         return $this->cron('0 0 1 1 *');
     }
 
-    public function yearlyOn(int $month, int $day, string $time)
+    /**
+     * Sets the last added task to be executed every year at a specified day and time.
+     * @param int $month Month of the year when to run the task.
+     * @param int $day Day of the month when to run the task.
+     * @param string $time (Optional) Time of the day when to execute the task in the format `H:i`.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
+    public function yearlyOn(int $month, int $day, string $time = '00:00')
     {
         [$hour, $minute] = explode(':', $time) + [null, null];
         return $this->cron((int)$minute . ' ' . (int)$hour . ' ' . $day . ' ' . $month . ' *');
     }
 
-    public function timezone(string $tz)
+    /**
+     * Sets the timezone of the last added task.
+     * @param string $timezone Timezone to set. Must be a valid PHP timezone.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
+    public function timezone(string $timezone)
     {
         if (empty(self::$tasks)) throw new Exception('Scheduler: No task was added to be modified');
         $i = array_key_last(self::$tasks);
-        self::$tasks[$i]['conditions']['timezone'] = $tz;
+        self::$tasks[$i]['conditions']['timezone'] = $timezone;
         return $this;
     }
 
+    /**
+     * Executes the last added task when a truth test passes.
+     * @param callable $callback Truth test to be evaluated.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function when(callable $callback)
     {
         if (empty(self::$tasks)) throw new Exception('Scheduler: No task was added to be modified');
@@ -359,6 +555,10 @@ class Scheduler
         return $this;
     }
 
+    /**
+     * Sets the last added task to run only when the last execution of the same task is finished.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function withoutOverlapping()
     {
         if (empty(self::$tasks)) throw new Exception('Scheduler: No task was added to be modified');
@@ -367,6 +567,10 @@ class Scheduler
         return $this;
     }
 
+    /**
+     * Sets the last added task to run only on weekdays.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function weekdays()
     {
         if (empty(self::$tasks)) throw new Exception('Scheduler: No task was added to be modified');
@@ -375,6 +579,10 @@ class Scheduler
         return $this->cron($new);
     }
 
+    /**
+     * Sets the last added task to run only on weekends.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function weekends()
     {
         if (empty(self::$tasks)) throw new Exception('Scheduler: No task was added to be modified');
@@ -383,6 +591,10 @@ class Scheduler
         return $this->cron($new);
     }
 
+    /**
+     * Sets the last added task to run only on sundays.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function sundays()
     {
         if (empty(self::$tasks)) throw new Exception('Scheduler: No task was added to be modified');
@@ -391,6 +603,10 @@ class Scheduler
         return $this->cron($new);
     }
 
+    /**
+     * Sets the last added task to run only on mondays.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function mondays()
     {
         if (empty(self::$tasks)) throw new Exception('Scheduler: No task was added to be modified');
@@ -399,6 +615,10 @@ class Scheduler
         return $this->cron($new);
     }
 
+    /**
+     * Sets the last added task to run only on tuesdays.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function tuesdays()
     {
         if (empty(self::$tasks)) throw new Exception('Scheduler: No task was added to be modified');
@@ -407,6 +627,10 @@ class Scheduler
         return $this->cron($new);
     }
 
+    /**
+     * Sets the last added task to run only on wednesdays.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function wednesdays()
     {
         if (empty(self::$tasks)) throw new Exception('Scheduler: No task was added to be modified');
@@ -415,6 +639,10 @@ class Scheduler
         return $this->cron($new);
     }
 
+    /**
+     * Sets the last added task to run only on thursdays.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function thursdays()
     {
         if (empty(self::$tasks)) throw new Exception('Scheduler: No task was added to be modified');
@@ -423,6 +651,10 @@ class Scheduler
         return $this->cron($new);
     }
 
+    /**
+     * Sets the last added task to run only on fridays.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function fridays()
     {
         if (empty(self::$tasks)) throw new Exception('Scheduler: No task was added to be modified');
@@ -431,6 +663,10 @@ class Scheduler
         return $this->cron($new);
     }
 
+    /**
+     * Sets the last added task to run only on saturdays.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function saturdays()
     {
         if (empty(self::$tasks)) throw new Exception('Scheduler: No task was added to be modified');
@@ -439,6 +675,11 @@ class Scheduler
         return $this->cron($new);
     }
 
+    /**
+     * Sets the last added task to run only on specified days of the week.
+     * @param string|array $days Days when to run the task. Can be a single or an array of days. **From 0 (sunday) to 6 (saturday)**.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function days($days)
     {
         if (empty(self::$tasks)) throw new Exception('Scheduler: No task was added to be modified');
@@ -449,6 +690,12 @@ class Scheduler
         return $this->cron($new);
     }
 
+    /**
+     * Sets the last added task to run only between a specified time range.
+     * @param string $startTime Start time of the range on format `H:i`.
+     * @param string $endTime End time of the range on format `H:i`.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function between(string $startTime, string $endTime)
     {
         if (empty(self::$tasks)) throw new Exception('Scheduler: No task was added to be modified');
@@ -457,6 +704,12 @@ class Scheduler
         return $this;
     }
 
+    /**
+     * Sets the last added task to run only if NOT between a specified time range.
+     * @param string $startTime Start time of the range on format `H:i`.
+     * @param string $endTime End time of the range on format `H:i`.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function unlessBetween(string $startTime, string $endTime)
     {
         if (empty(self::$tasks)) throw new Exception('Scheduler: No task was added to be modified');
@@ -465,6 +718,11 @@ class Scheduler
         return $this;
     }
 
+    /**
+     * Sets the last added task to run only in a specified app environment.
+     * @param string|array $env Environment name or an array of environments.
+     * @return Scheduler Returns the current Scheduler instance for nested calls.
+     */
     public function environments($env)
     {
         if (empty(self::$tasks)) throw new Exception('Scheduler: No task was added to be modified');
@@ -497,9 +755,9 @@ class Scheduler
 
     /**
      * Checks if the time is between a range.
-     * @param string $now Current time in format `H:i`.
-     * @param string $start Start time in format `H:i`.
-     * @param string $end End time in format in format `H:i`.
+     * @param string $now Current time on format `H:i`.
+     * @param string $start Start time on format `H:i`.
+     * @param string $end End time on format on format `H:i`.
      * @return bool Returns true if the time is between the range.
      */
     private static function isBetween(string $now, string $start, string $end)
