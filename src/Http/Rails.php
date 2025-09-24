@@ -278,7 +278,9 @@ class Rails
     {
         if (empty(self::$routes)) throw new RoutingException('Rails: No route was added to be modified');
         $i = array_key_last(self::$routes);
-        self::$routes[$i]['name'] = $name;
+        self::$routes[$name] = self::$routes[$i];
+        self::$routes[$name]['name'] = $name;
+        unset(self::$routes[$i]);
         return $this;
     }
 
