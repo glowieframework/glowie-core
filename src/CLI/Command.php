@@ -106,17 +106,19 @@ abstract class Command
      */
     public function success(string $text, bool $break = true)
     {
-        $this->print(Firefly::color($text, 'green'), $break);
+        $this->print(self::color($text, 'green'), $break);
     }
 
     /**
-     * Prints a fail text in the console.
+     * Prints a fail text in the console. It will also end the script execution with an error code.
      * @param string $text Text to print.
+     * @param int|null $code (Optional) Error code to return, leave empty to keep the script running.
      * @param bool $break (Optional) Break line at the end.
      */
-    public function fail(string $text, bool $break = true)
+    public function fail(string $text, ?int $code = 127, bool $break = true)
     {
-        $this->print(Firefly::color($text, 'red'), $break);
+        $this->print(self::color($text, 'red'), $break);
+        if ($code) exit($code);
     }
 
     /**
@@ -126,7 +128,7 @@ abstract class Command
      */
     public function warning(string $text, bool $break = true)
     {
-        $this->print(Firefly::color($text, 'yellow'), $break);
+        $this->print(self::color($text, 'yellow'), $break);
     }
 
     /**
@@ -136,17 +138,19 @@ abstract class Command
      */
     public function info(string $text, bool $break = true)
     {
-        $this->print(Firefly::color($text, 'cyan'), $break);
+        $this->print(self::color($text, 'cyan'), $break);
     }
 
     /**
-     * Prints an error text in the console.
+     * Prints an error text in the console. It will also end the script execution with an error code.
      * @param string $text Text to print.
+     * @param int|null $code (Optional) Error code to return, leave empty to keep the script running.
      * @param bool $break (Optional) Break line at the end.
      */
-    public function error(string $text, bool $break = true)
+    public function error(string $text, ?int $code = 127, bool $break = true)
     {
-        $this->print(Firefly::bg(Firefly::color($text, 'black'), 'red'), $break);
+        $this->print(self::bg(self::color($text, 'black'), 'red'), $break);
+        if ($code) exit($code);
     }
 
     /**
@@ -195,7 +199,7 @@ abstract class Command
         $this->print('<color="magenta">', false);
         foreach ($values as $key => $item) $this->print('  ' . ($key + 1) . ': ' . $item);
         $this->print('</color>', false);
-        $response = (int)$this->input(Firefly::color('[1-' . count($values) . '] ', 'yellow'), $default);
+        $response = (int)$this->input(self::color('[1-' . count($values) . '] ', 'yellow'), $default);
 
         // Return response
         $i = $response - 1;
@@ -212,7 +216,7 @@ abstract class Command
      */
     public function confirm(string $message = '', bool $default = false)
     {
-        $message .= Firefly::color(' [y/n] ', 'yellow');
+        $message .= self::color(' [y/n] ', 'yellow');
         $response = $this->input($message, $default ? 'y' : 'n');
 
         switch (trim(mb_strtolower($response))) {
@@ -328,5 +332,57 @@ abstract class Command
     public function call(string $command, array $args = [], bool $silent = false)
     {
         Firefly::call($command, $args, $silent);
+    }
+
+    /**
+     * Returns a text formatted with a foreground color.
+     * @param string $text Text to be formatted
+     * @param string $color (Optional) Color name.
+     * @return string Returns the formatted text.
+     */
+    public static function color(string $text, string $color = 'default')
+    {
+        return '<color="' . $color . '">' . $text . '</color>';
+    }
+
+    /**
+     * Returns a text formatted with a background color.
+     * @param string $text Text to be formatted
+     * @param string $color (Optional) Color name.
+     * @return string Returns the formatted text.
+     */
+    public static function bg(string $text, string $bg = 'default')
+    {
+        return '<bg="' . $bg . '">' . $text . '</bg>';
+    }
+
+    /**
+     * Returns a text formatted with bold.
+     * @param string $text Text to be formatted
+     * @return string Returns the formatted text.
+     */
+    public static function bold(string $text)
+    {
+        return '<b>' . $text . '</b>';
+    }
+
+    /**
+     * Returns a text formatted with underline.
+     * @param string $text Text to be formatted
+     * @return string Returns the formatted text.
+     */
+    public static function underline(string $text)
+    {
+        return '<u>' . $text . '</u>';
+    }
+
+    /**
+     * Returns a hidden text.
+     * @param string $text Text to be hidden
+     * @return string Returns the hidden text.
+     */
+    public static function hidden(string $text)
+    {
+        return '<hidden>' . $text . '</hidden>';
     }
 }
