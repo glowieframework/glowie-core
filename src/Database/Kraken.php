@@ -1861,8 +1861,10 @@ class Kraken
      */
     public function exists()
     {
-        $result = $this->count();
-        return (is_int($result) && $result >= 1);
+        $query = $this->getQuery();
+        $this->clearQuery();
+        $result = $this->rawSelect('1')->whereExistsSub($query)->limit(1)->fetchRow();
+        return !is_null($result);
     }
 
     /**

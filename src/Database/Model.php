@@ -619,8 +619,7 @@ class Model extends Kraken implements JsonSerializable
     public function exists(bool $deleted = false)
     {
         if ($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
-        $result = $this->count();
-        return (is_int($result) && $result >= 1);
+        return Kraken::exists();
     }
 
     /**
