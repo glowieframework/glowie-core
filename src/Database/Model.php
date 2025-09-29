@@ -215,7 +215,7 @@ class Model extends Kraken implements JsonSerializable
 
             // Magic dropBy()
         } else if (Util::startsWith($name, 'dropBy')) {
-            $field = Util::snakeCase(Util::replaceFirst($name, 'allBy', ''));
+            $field = Util::snakeCase(Util::replaceFirst($name, 'dropBy', ''));
             return $this->dropBy($field, $args[0] ?? null, $args[1] ?? false);
 
             // Method not found
@@ -380,7 +380,7 @@ class Model extends Kraken implements JsonSerializable
     {
         if (!is_null($primary)) $this->whereIn($this->_table . '.' . $this->_primaryKey, is_array($primary) ? $primary : [$primary]);
         if ($this->_softDeletes && !$force) {
-            return $this->update([$this->_table . '.' . $this->_deletedField => self::raw('CURRENT_TIMESTAMP')]);
+            return $this->update([$this->_table . '.' . $this->_deletedField => date($this->_dateFormat)]);
         } else {
             return $this->delete($this->_table);
         }
@@ -397,7 +397,7 @@ class Model extends Kraken implements JsonSerializable
     {
         $this->filterFields($field, $value);
         if ($this->_softDeletes && !$force) {
-            return $this->update([$this->_table . '.' . $this->_deletedField => self::raw('CURRENT_TIMESTAMP')]);
+            return $this->update([$this->_table . '.' . $this->_deletedField => date($this->_dateFormat)]);
         } else {
             return $this->delete($this->_table);
         }
@@ -425,6 +425,18 @@ class Model extends Kraken implements JsonSerializable
         if (!$this->_softDeletes) throw new Exception('getDeleted(): Model "' . get_class($this) . '" soft deletes are not enabled');
         $this->whereNotNull($this->_table . '.' . $this->_deletedField);
         return $this->all(true);
+    }
+
+    /**
+     * Restores a soft deleted row.
+     * @param mixed $primary (Optional) Primary key value to search for. You can also use an array of values.
+     * @return bool Returns true on success or false on failure.
+     */
+    public function restore($primary = null)
+    {
+        if (!$this->_softDeletes) throw new Exception('restore(): Model "' . get_class($this) . '" soft deletes are not enabled');
+        if (!is_null($primary)) $this->whereIn($this->_table . '.' . $this->_primaryKey, is_array($primary) ? $primary : [$primary]);
+        return $this->update([$this->_deletedField => null], true);
     }
 
     /**
@@ -483,45 +495,47 @@ class Model extends Kraken implements JsonSerializable
     }
 
     /**
-     * Checks if a row matches the primary key value in the data. If so, updates the row. Otherwise,\
-     * inserts a new record in the model table.
+     * Checks if a row matches the primary key value in the data. If so, updates the row. Otherwise, inserts a new record in the model table.
      * @param mixed $data An Element or associative array relating fields and values to upsert. **Must include the primary key field to update.**
+     * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
      * @return mixed Returns the last inserted `AUTO_INCREMENT` value (or true) if the row is created, otherwise returns true on success or false on failure.
      */
-    public function updateOrCreate($data)
+    public function updateOrCreate($data, bool $deleted = false)
     {
         // Clears the current built query
         $this->clearQuery();
 
         // Checks if the primary key was passed and matches an existing row
         if ($data instanceof Element || $data instanceof Collection) $data = $data->toArray();
-        if (isset($data[$this->_primaryKey]) && $this->find($data[$this->_primaryKey])) {
-            return $this->where($this->_primaryKey, $data[$this->_primaryKey])->update($data);
+        if (isset($data[$this->_primaryKey]) && $this->find($data[$this->_primaryKey], $deleted)) {
+            $updateData = $data;
+            unset($updateData[$this->_primaryKey]);
+            return $this->where($this->_primaryKey, $data[$this->_primaryKey])->update($updateData, $deleted);
         } else {
             return $this->create($data);
         }
     }
 
     /**
-     * Checks if a row matches a set of fields and values. If so, updates the row. Otherwise,\
-     * inserts a new record in the model table.
+     * Checks if a row matches a set of fields and values. If so, updates the row. Otherwise, inserts a new record in the model table.
      * @param mixed $find An Element or associative array of fields and values to search.
      * @param mixed $data (Optional) An Element or associative array of data to merge into the `$find` fields to update/create a new row.
+     * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
      * @return mixed Returns the last inserted `AUTO_INCREMENT` value (or true) if the row is created, otherwise returns true on success or false on failure.
      */
-    public function updateOrCreateBy($find, $data = [])
+    public function updateOrCreateBy($find, $data = [], bool $deleted = false)
     {
         // Convert data to arrays
         if ($find instanceof Element || $find instanceof Collection) $find = $find->toArray();
         if ($data instanceof Element || $data instanceof Collection) $data = $data->toArray();
 
         // Checks if row exists
-        $row = $this->findBy($find);
+        $row = $this->findBy($find, null, $deleted);
 
         // If row exists, update or create it
         if ($row) {
             $row = $row->toArray();
-            return $this->where($this->_primaryKey, $row[$this->_primaryKey])->update($data);
+            return $this->where($this->_primaryKey, $row[$this->_primaryKey])->update($data, $deleted);
         } else {
             return $this->create(array_merge($find, $data));
         }
@@ -708,7 +722,7 @@ class Model extends Kraken implements JsonSerializable
 
     /**
      * Saves the model entity data to the database.
-     * @return bool Returns the last inserted `AUTO_INCREMENT` value (or true) if the row is created, otherwise returns true on success or false on failure.
+     * @return mixed Returns the last inserted `AUTO_INCREMENT` value (or true) if the row is created, otherwise returns true on success or false on failure.
      */
     public function save()
     {
@@ -724,14 +738,15 @@ class Model extends Kraken implements JsonSerializable
 
     /**
      * Deletes the database row matching the model entity primary key value.
+     * @param bool $force (Optional) Bypass soft deletes (if enabled) and permanently delete the row.
      * @return bool Returns true on success or false on failure.
      * @throws Exception Throws an exception if the model entity primary key is not filled.
      */
-    public function destroy()
+    public function destroy(bool $force = false)
     {
         $primary = $this->getPrimary();
         if (is_null($primary)) throw new Exception('destroy(): Model "' . get_class($this) . '" entity primary key was not filled');
-        return $this->drop($primary);
+        return $this->drop($primary, $force);
     }
 
     /**

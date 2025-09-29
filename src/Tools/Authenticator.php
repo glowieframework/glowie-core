@@ -151,7 +151,12 @@ class Authenticator
             $this->error = self::ERR_AUTH_SUCCESS;
 
             // Save credentials in session
-            if (!$once) Session::make()->setEncrypted(self::$appName . '.auth.' . $this->guard, $user->getPrimary());
+            if (!$once) {
+                $session = new Session();
+                $session->regenerateId();
+                $session->setEncrypted(self::$appName . '.auth.' . $this->guard, $user->getPrimary());
+            }
+
             return true;
         } else {
             $this->error = self::ERR_WRONG_PASSWORD;
@@ -250,7 +255,12 @@ class Authenticator
         $this->error = self::ERR_AUTH_SUCCESS;
 
         // Save credentials in session
-        if (!$once) Session::make()->setEncrypted(self::$appName . '.auth.' . $this->guard, $user->getPrimary());
+        if (!$once) {
+            $session = new Session();
+            $session->regenerateId();
+            $session->setEncrypted(self::$appName . '.auth.' . $this->guard, $user->getPrimary());
+        }
+
         return true;
     }
 
@@ -333,6 +343,7 @@ class Authenticator
     {
         $session = new Session();
         if (!$session->has(self::$appName . '.auth.' . $this->guard)) return false;
+        $session->regenerateId();
         $session->persist($expires);
         return true;
     }
@@ -346,6 +357,7 @@ class Authenticator
         $session = new Session();
         if (!$session->has(self::$appName . '.auth.' . $this->guard)) return false;
         $session->remove(self::$appName . '.auth.' . $this->guard);
+        $session->regenerateId();
         self::setUser($this->guard, null);
         return true;
     }

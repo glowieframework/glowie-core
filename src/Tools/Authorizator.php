@@ -364,6 +364,11 @@ class Authorizator
         if (is_callable([$payload, 'toArray'])) $payload = $payload->toArray();
         if (!empty($expires)) $payload['exp'] = time() + $expires;
 
+        // Sets default parts of the payload
+        $payload['iat'] = time();
+        $payload['jti'] = Util::uuid();
+        $payload['iss'] = self::$appName;
+
         // Generate token
         $alg = mb_strtoupper($alg);
         if (!isset(self::METHODS[$alg])) throw new Exception('generateJwt(): Unsupported hashing algorithm');

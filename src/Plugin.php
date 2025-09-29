@@ -29,9 +29,11 @@ abstract class Plugin
      */
     final public function publish(bool $force = false)
     {
+        if (empty($this->files)) return;
         foreach ($this->files as $origin => $target) {
             if (is_dir($origin)) {
                 $files = Util::getFiles($origin . '/*');
+                if (empty($files)) continue;
                 foreach ($files as $file) {
                     if (!is_file($file)) continue;
                     $fileTarget = $target . Util::replaceFirst($file, $origin, '');
@@ -57,10 +59,16 @@ abstract class Plugin
         // Check if base folder exists
         $dir = pathinfo($target, PATHINFO_DIRNAME);
         if (!is_dir($dir)) mkdir($dir, 0755, true);
-        if (!is_writable($dir)) throw new FileException('Directory ' . $dir . ' is not writable, please check your chmod settings');
+        if (!is_writable($dir)) {
+            $e = new FileException('Directory "' . $dir . '" is not writable, please check your chmod settings');
+            $e->setSuggestion('Check if the directory exists and has writing permissions for the web server user (chmod 0755)');
+            throw $e;
+        }
 
         // Copy the file
-        if ($force || !is_file($target)) copy($origin, $target);
+        if ($force || !is_file($target)) {
+            if (!copy($origin, $target)) throw new FileException('Failed to copy plugin file "' . $origin . '"');
+        }
     }
 
     /**
