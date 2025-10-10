@@ -181,6 +181,17 @@ class Model extends Kraken implements JsonSerializable
     }
 
     /**
+     * Creates a new instance of the model and calls a magic static method.
+     * @param string $name Method name.
+     * @param array $args Method arguments.
+     * @return $this New instance of the model.
+     */
+    public static function __callStatic(string $name, array $args)
+    {
+        return static::make()->{$name}(...$args);
+    }
+
+    /**
      * Calls a magic method.
      * @param string $name Method name.
      * @param array $args Method arguments.
@@ -191,31 +202,37 @@ class Model extends Kraken implements JsonSerializable
         // Magic where()
         if (Util::startsWith($name, 'where')) {
             $field = Util::snakeCase(Util::replaceFirst($name, 'where', ''));
+            $field = $this->_table . '.' . $field;
             return $this->where($field, $args[0] ?? null, $args[1] ?? null, $args[2] ?? 'AND');
 
             // Magic orWhere()
         } else if (Util::startsWith($name, 'orWhere')) {
             $field = Util::snakeCase(Util::replaceFirst($name, 'orWhere', ''));
+            $field = $this->_table . '.' . $field;
             return $this->orWhere($field, $args[0] ?? null, $args[1] ?? null);
 
             // Magic findBy()
         } else if (Util::startsWith($name, 'findBy')) {
             $field = Util::snakeCase(Util::replaceFirst($name, 'findBy', ''));
+            $field = $this->_table . '.' . $field;
             return $this->findBy($field, $args[0] ?? null, $args[1] ?? false);
 
             // Magic findAndFillBy()
         } else if (Util::startsWith($name, 'findAndFillBy')) {
             $field = Util::snakeCase(Util::replaceFirst($name, 'findAndFillBy', ''));
+            $field = $this->_table . '.' . $field;
             return $this->findAndFillBy($field, $args[0] ?? null, $args[1] ?? false, $args[2] ?? false);
 
             // Magic allBy()
         } else if (Util::startsWith($name, 'allBy')) {
             $field = Util::snakeCase(Util::replaceFirst($name, 'allBy', ''));
+            $field = $this->_table . '.' . $field;
             return $this->allBy($field, $args[0] ?? null, $args[1] ?? false);
 
             // Magic dropBy()
         } else if (Util::startsWith($name, 'dropBy')) {
             $field = Util::snakeCase(Util::replaceFirst($name, 'dropBy', ''));
+            $field = $this->_table . '.' . $field;
             return $this->dropBy($field, $args[0] ?? null, $args[1] ?? false);
 
             // Method not found
@@ -380,7 +397,8 @@ class Model extends Kraken implements JsonSerializable
     {
         if (!is_null($primary)) $this->whereIn($this->_table . '.' . $this->_primaryKey, is_array($primary) ? $primary : [$primary]);
         if ($this->_softDeletes && !$force) {
-            return $this->update([$this->_table . '.' . $this->_deletedField => date($this->_dateFormat)]);
+            $field = $this->_table . '.' . $this->_deletedField;
+            return $this->update([$field => date($this->_dateFormat)]);
         } else {
             return $this->delete($this->_table);
         }
@@ -397,7 +415,8 @@ class Model extends Kraken implements JsonSerializable
     {
         $this->filterFields($field, $value);
         if ($this->_softDeletes && !$force) {
-            return $this->update([$this->_table . '.' . $this->_deletedField => date($this->_dateFormat)]);
+            $field = $this->_table . '.' . $this->_deletedField;
+            return $this->update([$field => date($this->_dateFormat)]);
         } else {
             return $this->delete($this->_table);
         }
@@ -436,7 +455,8 @@ class Model extends Kraken implements JsonSerializable
     {
         if (!$this->_softDeletes) throw new Exception('restore(): Model "' . get_class($this) . '" soft deletes are not enabled');
         if (!is_null($primary)) $this->whereIn($this->_table . '.' . $this->_primaryKey, is_array($primary) ? $primary : [$primary]);
-        return $this->update([$this->_deletedField => null], true);
+        $field = $this->_table . '.' . $this->_deletedField;
+        return $this->update([$field => null], true);
     }
 
     /**
@@ -457,6 +477,9 @@ class Model extends Kraken implements JsonSerializable
             $data[$this->_createdField] = date($this->_dateFormat);
             $data[$this->_updatedField] = date($this->_dateFormat);
         }
+
+        // Clear soft deletes field, if exists
+        if ($this->_softDeletes) unset($data[$this->_deletedField]);
 
         // Generate UUID if in use
         if ($this->_uuid) $data[$this->_primaryKey] = $data[$this->_primaryKey] ?? Util::orderedUuid();
@@ -551,9 +574,20 @@ class Model extends Kraken implements JsonSerializable
      */
     public function update($data, bool $deleted = false)
     {
+        // Parses data to array
         if ($data instanceof Element || $data instanceof Collection) $data = $data->toArray();
+
+        // Mutates and filters fields
         $data = $this->mutateData($this->filterData($data));
-        if ($this->_timestamps) $data[$this->_updatedField] = date($this->_dateFormat);
+
+        // If timestamps, clear created_at field and set updated_at field
+        if ($this->_timestamps) {
+            unset($data[$this->_createdField]);
+            $data[$this->_updatedField] = date($this->_dateFormat);
+        }
+
+        // If soft deletes, clear deleted_at field and filter not deleted rows
+        if ($this->_softDeletes) unset($data[$this->_deletedField]);
         if ($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
         return Kraken::update($data);
     }
