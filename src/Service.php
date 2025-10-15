@@ -4,6 +4,7 @@ namespace Glowie\Core;
 
 use Glowie\Core\Http\Rails;
 use Glowie\Core\Http\Session;
+use Util;
 
 /**
  * Service core for Glowie application.
@@ -57,12 +58,12 @@ class Service
      */
     public function __construct()
     {
-        $this->get = Rails::getRequest()->fromGet();
+        $this->get = !Util::isCLI() ? Rails::getRequest()->fromGet() : new Element();
         $this->params = Rails::getParams();
-        $this->post = Rails::getRequest()->fromPost();
-        $this->request = Rails::getRequest();
+        $this->post = !Util::isCLI() ? Rails::getRequest()->fromPost() : new Element();
+        $this->request = !Util::isCLI() ? Rails::getRequest() : new Element();
         $this->route = Rails::getCurrentRoute();
-        $this->session = new Session();
+        $this->session = !Util::isCLI() ? new Session() : new Element();
     }
 
     /**
