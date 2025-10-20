@@ -91,13 +91,13 @@ class View implements JsonSerializable
      * @param string $view View filename to instantiate.
      * @param array $params (Optional) View parameters to parse.
      * @param bool $partial (Optional) Restrict view partial scope.
+     * @param bool $absolute (Optional) Use an absolute path for the view file.
      */
     public function __construct(string $view, array $params = [], bool $partial = false, bool $absolute = false)
     {
         // Validate file
         $this->_filename = $view;
-        $view = $absolute ? $view : Util::location('views/' . $view);
-        if (!Util::endsWith($view, '.phtml')) $view .= '.phtml';
+        if (!$absolute) $view = Util::location('views/' . Util::undotFilename($view));
         if (!is_file($view)) throw new FileException(sprintf('View file "%s" not found', $this->_filename));
 
         // Instantiate helpers

@@ -59,13 +59,13 @@ class Layout implements JsonSerializable
      * @param string $layout Layout filename to instantiate.
      * @param string|null $view (Optional) View filename to parse inside the layout.
      * @param array $params (Optional) View parameters to parse.
+     * @param bool $absolute (Optional) Use an absolute path for the view file.
      */
     public function __construct(string $layout, ?string $view = null, array $params = [], bool $absolute = false)
     {
         // Save original filename
         $this->_filename = $layout;
-        $layout = $absolute ? $layout : Util::location('views/layouts/' . $layout);
-        if (!Util::endsWith(mb_strtolower($layout), '.phtml')) $layout .= '.phtml';
+        if (!$absolute) $layout = Util::location('views/layouts/' . Util::undotFilename($layout));
         if (!is_file($layout)) throw new FileException(sprintf('Layout file "%s" not found', $this->_filename));
 
         // Instantiate helpers

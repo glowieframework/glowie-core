@@ -801,7 +801,7 @@ class Util
 
     /**
      * Generates a random hash token.
-     * @param int $length (Optional) Lenght of the token to generate.
+     * @param int $length (Optional) Length of the token to generate.
      * @return string Returns the resulting token.
      */
     public static function randomToken(int $length = 32)
@@ -1154,5 +1154,17 @@ class Util
         }
         $content = preg_replace('/\s+/', ' ', $content);
         return trim($content);
+    }
+
+    /**
+     * Parses a filename from dot notation.
+     * @param string $filename Filename to parse.
+     * @param string $extension (Optional) Extension to be added.
+     * @return string Returns the parsed filename.
+     */
+    public static function undotFilename(string $filename, string $extension = '.phtml')
+    {
+        if (self::endsWith($filename, $extension)) $filename = self::replaceLast($filename, $extension, '');
+        return str_replace('.', '/', $filename) . $extension;
     }
 }

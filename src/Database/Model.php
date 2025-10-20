@@ -181,17 +181,6 @@ class Model extends Kraken implements JsonSerializable
     }
 
     /**
-     * Creates a new instance of the model and calls a magic static method.
-     * @param string $name Method name.
-     * @param array $args Method arguments.
-     * @return $this New instance of the model.
-     */
-    public static function __callStatic(string $name, array $args)
-    {
-        return static::make()->{$name}(...$args);
-    }
-
-    /**
      * Calls a magic method.
      * @param string $name Method name.
      * @param array $args Method arguments.
