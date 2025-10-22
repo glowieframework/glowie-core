@@ -3,8 +3,8 @@
 namespace Glowie\Core\Queue;
 
 use Config;
+use DateTime;
 use Glowie\Core\Database\Kraken;
-use Glowie\Core\Database\Skeleton;
 use Glowie\Core\Exception\QueueException;
 use Glowie\Core\CLI\Firefly;
 use Glowie\Core\Error\Handler;
@@ -40,32 +40,88 @@ class Queue
     public const DELAY_DAY = 86400;
 
     /**
-     * Queue table name.
-     * @var string
+     * Current database instance.
+     * @var Kraken
      */
-    private static $table;
+    private static $db;
+
+    /**
+     * Last inserted job ID.
+     * @var int|null
+     */
+    private static $lastJobId = null;
 
     /**
      * Adds a job to the queue.
      * @param string $job A job classname with namespace. You can use `JobName::class` to get this property correctly.
      * @param mixed $data (Optional) Data to pass to the job.
      * @param string $queue (Optional) Queue name to add this job to.
-     * @param int $delay (Optional) Delay in seconds to run this job.
+     * @param mixed $delay Delay in seconds to run this job. You can also use a DateTime instance.
+     * @return Queue Returns the current instance for nested Calls.
      */
-    public static function add(string $job, $data = null, string $queue = 'default', int $delay = 0)
+    public static function add(string $job, $data = null, string $queue = 'default', $delay = null)
     {
-        // Stores the table name
-        self::$table = Config::get('queue.table', 'queue');
+        // Parses the delay time
+        if ($delay instanceof DateTime) {
+            $delay = $delay->format('Y-m-d H:i:s');
+        } else if (!is_null($delay)) {
+            $delay = date('Y-m-d H:i:s', time() + $delay);
+        }
 
-        // Add to queue
-        $db = new Kraken(self::$table, Config::get('queue.connection', 'default'));
-        $db->insert([
+        // Adds the job to to queue
+        $db = self::getConnection();
+        $result = $db->insert([
             'job' => $job,
             'queue' => $queue,
             'data' => is_null($data) ? null : serialize($data),
             'added_at' => date('Y-m-d H:i:s'),
-            'delayed_to' => $delay !== 0 ? date('Y-m-d H:i:s', time() + $delay) : null
+            'delayed_to' => $delay
         ]);
+
+        // Gets the last inserted job id
+        if (!$result) throw new QueueException('Failed to add job "' . $job . '" to the queue "' . $queue . '"');
+        self::$lastJobId = $db->lastInsertId();
+        return new static;
+    }
+
+    /**
+     * Sets the queue of the last added job.
+     * @param string $name Queue name to set the job to.
+     * @return Queue Returns the current instance for nested Calls.
+     */
+    public function on(string $name)
+    {
+        if (!self::$lastJobId) throw new QueueException('There is no job to be modified');
+        $db = self::getConnection();
+        $db->where('id', self::$lastJobId)->update([
+            'queue' => $name
+        ]);
+        return $this;
+    }
+
+    /**
+     * Sets the delay of the last added job.
+     * @param mixed $delay Delay in seconds to run this job. You can also use a DateTime instance.
+     * @return Queue Returns the current instance for nested Calls.
+     */
+    public function delay($delay)
+    {
+        // Parses the delay time
+        if (!self::$lastJobId) throw new QueueException('There is no job to be modified');
+
+        if ($delay instanceof DateTime) {
+            $delay = $delay->format('Y-m-d H:i:s');
+        } else if (!is_null($delay)) {
+            $delay = date('Y-m-d H:i:s', time() + $delay);
+        }
+
+        // Updates the job
+        $db = self::getConnection();
+        $db->where('id', self::$lastJobId)->update([
+            'delayed_to' => $delay
+        ]);
+
+        return $this;
     }
 
     /**
@@ -77,15 +133,18 @@ class Queue
      */
     public static function process(string $queue = 'default', bool $bail = false, bool $verbose = false, bool $watcher = false)
     {
-        // Stores the table name and delete expired jobs
-        self::$table = Config::get('queue.table', 'queue');
+        // Delete expired jobs
         self::prune();
 
         // Get pending jobs from the queue
-        $db = new Kraken(self::$table, Config::get('queue.connection', 'default'));
+        $db = self::getConnection();
         $jobs = $db->where('queue', $queue)
             ->whereNull('ran_at')
             ->where('attempts', '<', Config::get('queue.max_attempts', 3))
+            ->where(function (Kraken $query) {
+                $query->whereNull('delayed_to');
+                $query->orWhere('delayed_to', '<=', date('Y-m-d H:i:s'));
+            })
             ->orderBy('id')
             ->fetchAll();
 
@@ -100,9 +159,6 @@ class Queue
 
         foreach ($jobs as $jobRow) {
             try {
-                // Checks if job is delayed
-                if ($jobRow->delayed_to && time() < strtotime($jobRow->delayed_to)) continue;
-
                 // Stores start time
                 $time = microtime(true);
                 if ($verbose) Firefly::print(Firefly::color('[' . date('Y-m-d H:i:s') . '] Running ' . $jobRow->job . ' job...', 'blue'));
@@ -169,11 +225,8 @@ class Queue
      */
     public static function clear(string $queue = 'default', bool $success = true, bool $pending = true, bool $failed = false)
     {
-        // Stores the table name
-        self::$table = Config::get('queue.table', 'queue');
-
         // Connects to the database
-        $db = new Kraken(self::$table, Config::get('queue.connection', 'default'));
+        $db = self::getConnection();
 
         // Sets the queue name
         $db->where('queue', $queue);
@@ -194,11 +247,21 @@ class Queue
     }
 
     /**
+     * Gets the database connection.
+     * @return Kraken Current database connection.
+     */
+    private static function getConnection()
+    {
+        if (!self::$db) self::$db = new Kraken(Config::get('queue.table', 'queue'), Config::get('queue.connection', 'default'));
+        return self::$db;
+    }
+
+    /**
      * Deletes from the queue expired successful jobs.
      */
     private static function prune()
     {
-        $db = new Kraken(self::$table, Config::get('queue.connection', 'default'));
+        $db = self::getConnection();
         $db->whereNotNull('ran_at')
             ->where('ran_at', '<=', date('Y-m-d H:i:s', time() - Config::get('queue.keep_log', self::DELAY_DAY)))
             ->delete();

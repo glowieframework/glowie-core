@@ -42,11 +42,12 @@ abstract class Job
     /**
      * Adds this job to the queue.
      * @param string $queue (Optional) Queue name to add this job to.
-     * @param int $delay (Optional) Delay in seconds to run this job.
+     * @param mixed $delay Delay in seconds to run this job. You can also use a DateTime instance.
+     * @return Queue Returns the Queue instance for nested Calls.
      */
-    final public function dispatch(string $queue = 'default', int $delay = 0)
+    final public function dispatch(string $queue = 'default', $delay = null)
     {
-        Queue::add(get_class($this), $this->data, $queue, $delay);
+        return Queue::add(get_class($this), $this->data, $queue, $delay);
     }
 
     /**
