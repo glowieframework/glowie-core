@@ -136,7 +136,7 @@ class Rails
     {
         // Generates an unique route name
         if (Util::isEmpty($name)) {
-            $name = Util::slug($route, '.');
+            $name = Util::slug($route, '-', true);
             if (!empty(self::$routes[$name])) $name .=  '.' . uniqid();
         }
 
@@ -175,7 +175,7 @@ class Rails
     {
         // Generates an unique route name
         if (Util::isEmpty($name)) {
-            $name = Util::slug($route, '.');
+            $name = Util::slug($route, '-', true);
             if (!empty(self::$routes[$name])) $name .=  '.' . uniqid();
         }
 
@@ -215,7 +215,7 @@ class Rails
     {
         // Generates an unique route name
         if (Util::isEmpty($name)) {
-            $name = Util::slug($route, '.');
+            $name = Util::slug($route, '-', true);
             if (!empty(self::$routes[$name])) $name .=  '.' . uniqid();
         }
 
@@ -257,7 +257,7 @@ class Rails
     {
         // Generates an unique route name
         if (Util::isEmpty($name)) {
-            $name = Util::slug($route, '.');
+            $name = Util::slug($route, '-', true);
             if (!empty(self::$routes[$name])) $name .=  '.' . uniqid();
         }
 
@@ -295,7 +295,7 @@ class Rails
     {
         // Generates an unique route name
         if (Util::isEmpty($name)) {
-            $name = Util::slug($route, '.');
+            $name = Util::slug($route, '-', true);
             if (!empty(self::$routes[$name])) $name .=  '.' . uniqid();
         }
 
