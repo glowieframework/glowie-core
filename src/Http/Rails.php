@@ -134,10 +134,20 @@ class Rails
      */
     public static function addRoute(string $route, string $controller = '', ?string $action = null, $methods = [], string $name = '')
     {
-        if (Util::isEmpty($name)) $name = Util::slug($route, '-', true);
-        if (Util::isEmpty($action)) $action = Util::camelCase($name);
-        if (Util::isEmpty($controller)) $controller = self::$defaultController;
+        // Generates an unique route name
+        if (Util::isEmpty($name)) {
+            $name = Util::slug($route, '.');
+            if (!empty(self::$routes[$name])) $name .=  '.' . uniqid();
+        }
+
+        // Checks for duplicate route names
         if (!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
+
+        // Gets the action and controller
+        if (Util::isEmpty($action)) $action = Util::camelCase($route);
+        if (Util::isEmpty($controller)) $controller = self::$defaultController;
+
+        // Adds the route
         self::$routes[$name] = [
             'name' => $name,
             'uri' => trim(self::$prefix . $route, '/'),
@@ -148,6 +158,7 @@ class Rails
             'middleware' => self::$middlewares,
             'domain' => self::$domain
         ];
+
         return new static;
     }
 
@@ -162,8 +173,16 @@ class Rails
      */
     public static function addAnonymous(string $route, callable $callback, $methods = [], string $name = '')
     {
-        if (Util::isEmpty($name)) $name = Util::slug($route, '-', true);
+        // Generates an unique route name
+        if (Util::isEmpty($name)) {
+            $name = Util::slug($route, '.');
+            if (!empty(self::$routes[$name])) $name .=  '.' . uniqid();
+        }
+
+        // Checks for duplicate route names
         if (!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
+
+        // Adds the route
         self::$routes[$name] = [
             'name' => $name,
             'uri' => trim(self::$prefix . $route, '/'),
@@ -175,6 +194,7 @@ class Rails
             'middleware' => self::$middlewares,
             'domain' => self::$domain
         ];
+
         return new static;
     }
 
@@ -193,11 +213,21 @@ class Rails
      */
     public static function addProtectedRoute(string $route, $middleware = 'Glowie\Middlewares\Authenticate', string $controller = '', ?string $action = null, $methods = [], string $name = '')
     {
-        if (Util::isEmpty($name)) $name = Util::slug($route, '-', true);
-        if (Util::isEmpty($action)) $action = Util::camelCase($name);
+        // Generates an unique route name
+        if (Util::isEmpty($name)) {
+            $name = Util::slug($route, '.');
+            if (!empty(self::$routes[$name])) $name .=  '.' . uniqid();
+        }
+
+        // Checks for duplicate route names
+        if (!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
+
+        // Gets the action, controller and middleware
+        if (Util::isEmpty($action)) $action = Util::camelCase($route);
         if (Util::isEmpty($controller)) $controller = self::$defaultController;
         if (Util::isEmpty($middleware)) throw new RoutingException('Middleware cannot be empty for route "' . $name . '"');
-        if (!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
+
+        // Adds the route
         self::$routes[$name] = [
             'name' => $name,
             'uri' => trim(self::$prefix . $route, '/'),
@@ -208,6 +238,7 @@ class Rails
             'group' => self::$group,
             'domain' => self::$domain
         ];
+
         return new static;
     }
 
@@ -224,9 +255,17 @@ class Rails
      */
     public static function addProtectedAnonymous(string $route, callable $callback, $middleware = 'Glowie\Middlewares\Authenticate', $methods = [], string $name = '')
     {
-        if (Util::isEmpty($name)) $name = Util::slug($route, '-', true);
-        if (Util::isEmpty($middleware)) throw new RoutingException('Middleware cannot be empty for route "' . $name . '"');
+        // Generates an unique route name
+        if (Util::isEmpty($name)) {
+            $name = Util::slug($route, '.');
+            if (!empty(self::$routes[$name])) $name .=  '.' . uniqid();
+        }
+
+        // Checks for duplicate route names and empty middleware
         if (!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
+        if (Util::isEmpty($middleware)) throw new RoutingException('Middleware cannot be empty for route "' . $name . '"');
+
+        // Adds the route
         self::$routes[$name] = [
             'name' => $name,
             'uri' => trim(self::$prefix . $route, '/'),
@@ -238,6 +277,7 @@ class Rails
             'group' => self::$group,
             'domain' => self::$domain
         ];
+
         return new static;
     }
 
@@ -253,9 +293,17 @@ class Rails
      */
     public static function addRedirect(string $route, string $target, int $code = Response::HTTP_FOUND, $methods = [], string $name = '')
     {
-        if (Util::isEmpty($name)) $name = Util::slug($route, '-', true);
-        if (Util::isEmpty($target)) throw new RoutingException('Redirect target cannot be empty for route "' . $name . '"');
+        // Generates an unique route name
+        if (Util::isEmpty($name)) {
+            $name = Util::slug($route, '.');
+            if (!empty(self::$routes[$name])) $name .=  '.' . uniqid();
+        }
+
+        // Checks for duplicate route names and target
         if (!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
+        if (Util::isEmpty($target)) throw new RoutingException('Redirect target cannot be empty for route "' . $name . '"');
+
+        // Adds the route
         self::$routes[$name] = [
             'name' => $name,
             'uri' => trim(self::$prefix . $route, '/'),
@@ -266,6 +314,7 @@ class Rails
             'middleware' => self::$middlewares,
             'domain' => self::$domain
         ];
+
         return new static;
     }
 
@@ -276,7 +325,8 @@ class Rails
      */
     public function name(string $name)
     {
-        if (empty(self::$routes)) throw new RoutingException('Rails: No route was added to be modified');
+        if (empty(self::$routes)) throw new RoutingException('No route was added to be modified');
+        if (!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
         $i = array_key_last(self::$routes);
         self::$routes[$name] = self::$routes[$i];
         self::$routes[$name]['name'] = $name;
@@ -291,7 +341,7 @@ class Rails
      */
     public function methods($methods)
     {
-        if (empty(self::$routes)) throw new RoutingException('Rails: No route was added to be modified');
+        if (empty(self::$routes)) throw new RoutingException('No route was added to be modified');
         $i = array_key_last(self::$routes);
         self::$routes[$i]['methods'] = (array)$methods;
         return $this;
@@ -305,7 +355,7 @@ class Rails
      */
     public function middleware($middleware)
     {
-        if (empty(self::$routes)) throw new RoutingException('Rails: No route was added to be modified');
+        if (empty(self::$routes)) throw new RoutingException('No route was added to be modified');
         $i = array_key_last(self::$routes);
         self::$routes[$i]['middleware'] = array_merge(self::$routes[$i]['middleware'], (array)$middleware);
         return $this;
@@ -318,7 +368,7 @@ class Rails
      */
     public function setDomain(string $domain)
     {
-        if (empty(self::$routes)) throw new RoutingException('Rails: No route was added to be modified');
+        if (empty(self::$routes)) throw new RoutingException('No route was added to be modified');
         $i = array_key_last(self::$routes);
         self::$routes[$i]['domain'] = $domain;
         return $this;
@@ -330,7 +380,7 @@ class Rails
      */
     public function setGroup(string $group)
     {
-        if (empty(self::$routes)) throw new RoutingException('Rails: No route was added to be modified');
+        if (empty(self::$routes)) throw new RoutingException('No route was added to be modified');
         $i = array_key_last(self::$routes);
         self::$routes[$i]['group'] = $group;
         return $this;
