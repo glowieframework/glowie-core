@@ -326,7 +326,6 @@ class Rails
     public function name(string $name)
     {
         if (empty(self::$routes)) throw new RoutingException('No route was added to be modified');
-        if (!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
         $i = array_key_last(self::$routes);
         self::$routes[$name] = self::$routes[$i];
         self::$routes[$name]['name'] = $name;
