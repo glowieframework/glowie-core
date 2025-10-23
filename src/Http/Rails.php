@@ -329,7 +329,7 @@ class Rails
         $i = array_key_last(self::$routes);
         self::$routes[$name] = self::$routes[$i];
         self::$routes[$name]['name'] = $name;
-        unset(self::$routes[$i]);
+        if ($i !== $name) unset(self::$routes[$i]);
         return $this;
     }
 
