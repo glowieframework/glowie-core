@@ -2,6 +2,7 @@
 
 namespace Glowie\Core\Database;
 
+use Config;
 use Exception;
 use PDO;
 use Throwable;
@@ -40,7 +41,25 @@ class Factory
      */
     public static function getHandler(string $name)
     {
-        return self::$handlers[$name] ?? null;
+        // Checks if the connection exists
+        $pdo = self::$handlers[$name] ?? null;
+        if (!$pdo) return null;
+
+        // Checks if the connection is active
+        try {
+            $pdo->query('SELECT 1');
+        } catch (Throwable $th) {
+            // Gets the database configuration again
+            $database = Config::get("database.{$name}");
+            if (empty($database)) throw new DatabaseException([], "Database connection setting \"$name\" not found in your app configuration");
+
+            // If the connection is not active, reconnect
+            self::createConnection($name, $database);
+            $pdo = self::$handlers[$name];
+        }
+
+        // Returns the connection handler
+        return $pdo;
     }
 
     /**
