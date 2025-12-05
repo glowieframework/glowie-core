@@ -8,6 +8,8 @@ use Glowie\Core\Exception\RequestException;
 use Exception;
 use Glowie\Core\Collection;
 use Glowie\Core\Exception\FileException;
+use Throwable;
+use Util;
 
 /**
  * HTTP client for Glowie application.
@@ -107,6 +109,24 @@ class Crawler
     private $uploadProgress = null;
 
     /**
+     * Base URL for the requests
+     * @var string
+     */
+    private $baseUrl = '';
+
+    /**
+     * Number of maximum attempts.
+     * @var int
+     */
+    private $maxAttempts = 1;
+
+    /**
+     * Retry sleep delay.
+     * @var int
+     */
+    private $retryDelay = 100;
+
+    /**
      * Creates a new HTTP client instance.
      * @param array $headers (Optional) Custom headers to send in the request. Must be an associative array with the key being the name of the header\
      * and the value the header value (can be a string or an array of strings).
@@ -124,6 +144,31 @@ class Crawler
     public static function make()
     {
         return new static;
+    }
+
+    /**
+     * Sets the base URL for the next HTTP requests. A slash will be appended to the end of the URL.
+     * @param string $url Base URL to be set.
+     * @return Crawler Current Crawler instance for nested calls.
+     */
+    public function baseUrl(string $url)
+    {
+        if (!Util::endsWith($url, '/')) $url .= '/';
+        $this->baseUrl = $url;
+        return $this;
+    }
+
+    /**
+     * Tries to run the request successfully until the number of attempts is reached.
+     * @param int $attempts Maximum number of attempts.
+     * @param int $sleep (Optional) Delay between each try (in milliseconds).
+     * @return Crawler Current Crawler instance for nested calls.
+     */
+    public function retry(int $attempts, int $sleep = 100)
+    {
+        $this->maxAttempts = $attempts;
+        $this->retryDelay = $sleep;
+        return $this;
     }
 
     /**
@@ -462,6 +507,7 @@ class Crawler
             CURLOPT_FOLLOWLOCATION => $this->redirect,
             CURLOPT_SSL_VERIFYPEER => $this->verify,
             CURLOPT_SSL_VERIFYSTATUS => $this->verify,
+            CURLOPT_SSL_VERIFYHOST => $this->verify,
             CURLOPT_CONNECTTIMEOUT => $this->timeout,
         ]);
 
@@ -507,6 +553,9 @@ class Crawler
                 }
             }
         }
+
+        // Sets the base URL
+        $url = $this->baseUrl . $url;
 
         // Sets the data
         if (!empty($data)) {
@@ -564,37 +613,54 @@ class Crawler
             });
         }
 
-        // Fetches the request
-        $response = curl_exec($curl);
+        // Initializes the result
+        $result = false;
 
-        // Gets the response info
-        $info = curl_getinfo($curl);
+        try {
+            $result = Util::retry($this->maxAttempts, function () use ($curl, $headers, $url) {
+                // Fetches the request
+                $response = curl_exec($curl);
 
-        // Gets the errors
-        $errNumber = curl_errno($curl);
-        $errMsg = curl_error($curl);
+                // Gets the response info
+                $info = curl_getinfo($curl);
 
-        // Checks for the result
-        if ($response === false) {
-            $result = false;
-        } else {
-            $result = new Element([
-                'status' => $info['http_code'],
-                'success' => (bool)($info['http_code'] >= 200 && $info['http_code'] < 300),
-                'failed' => (bool)($info['http_code'] >= 400),
-                'type' => $info['content_type'] ?? null,
-                'body' => $response,
-                'json' => new Element(json_decode($response, true) ?? []),
-                'redirects' => $info['redirect_count'],
-                'headers' => new Element($headers)
-            ]);
+                // Gets the errors
+                $errNumber = curl_errno($curl);
+                $errMsg = curl_error($curl);
+
+                // Checks for the result
+                if ($response === false) {
+                    $requestResult = false;
+                } else {
+                    $requestResult = new Element([
+                        'status' => $info['http_code'],
+                        'success' => (bool)($info['http_code'] >= 200 && $info['http_code'] < 300),
+                        'failed' => (bool)($info['http_code'] >= 400),
+                        'type' => $info['content_type'] ?? null,
+                        'body' => $response,
+                        'json' => new Element(json_decode($response, true) ?? []),
+                        'redirects' => $info['redirect_count'],
+                        'headers' => new Element($headers)
+                    ]);
+                }
+
+                // Error handling
+                if ($errNumber) throw new RequestException($url, $errMsg, $errNumber, $requestResult);
+
+                // Returns the result
+                return $requestResult;
+            }, $this->retryDelay);
+
+            // Closes the connection
+            if (is_resource($curl) || is_object($curl)) curl_close($curl);
+        } catch (Throwable $th) {
+            // Closes the connection
+            if (is_resource($curl) || is_object($curl)) curl_close($curl);
+
+            // Error handling
+            if ($this->throw) throw new RequestException($url, $th->getMessage(), $th->getCode(), $result);
+            return false;
         }
-
-        // Closes the connection
-        curl_close($curl);
-
-        // Error handling
-        if ($this->throw && $errNumber) throw new RequestException($url, $errMsg, $errNumber, $result);
 
         // Returns the result
         return $result;
