@@ -1241,6 +1241,35 @@ class Firefly
      */
     private static function __help()
     {
+        // App commands
+        $commands = glob(Util::location('commands/*.php'));
+
+        if (!empty($commands)) {
+            self::print(self::color('App commands:', 'magenta'));
+            self::print('');
+
+            foreach ($commands as $filename) {
+                // Gets the command classname
+                $name = pathinfo($filename, PATHINFO_FILENAME);
+                $classname = 'Glowie\Commands\\' . $name;
+                if (!class_exists($classname)) continue;
+
+                // Instantiates the command class
+                $command = new $classname;
+                $signature = $command->getSignature();
+
+                // Prints the command description with signature
+                if (!is_null($signature)) {
+                    self::print('  <color="yellow">' . Util::kebabCase($name)  . '</color> <color="blue">' . $signature . '</color> | ' . $command->getDescription());
+                } else {
+                    self::print('  <color="yellow">' . Util::kebabCase($name)  . '</color> | ' . $command->getDescription());
+                }
+            }
+
+            self::print('');
+        }
+
+        // Firefly commands
         self::print(self::color('Firefly commands:', 'magenta'));
         self::print('');
         self::print('  <color="yellow">init</color> | Initializes the project');

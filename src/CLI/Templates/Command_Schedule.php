@@ -19,6 +19,18 @@ class __FIREFLY_TEMPLATE_NAME__ extends Command
 {
 
     /**
+     * The command description (for help message).
+     * @var string
+     */
+    protected $description = 'Runs the scheduled tasks';
+
+    /**
+     * The command args signature (for help message).
+     * @var string|null
+     */
+    protected $signature = null;
+
+    /**
      * The command script.
      */
     public function run()

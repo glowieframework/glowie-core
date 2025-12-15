@@ -20,6 +20,18 @@ abstract class Command
 {
 
     /**
+     * The command description (for help message).
+     * @var string
+     */
+    protected $description = 'Description not provided';
+
+    /**
+     * The command args signature (for help message).
+     * @var string|null
+     */
+    protected $signature = null;
+
+    /**
      * The command handler.
      */
     public abstract function run();
@@ -384,5 +396,23 @@ abstract class Command
     public static function hidden(string $text)
     {
         return '<hidden>' . $text . '</hidden>';
+    }
+
+    /**
+     * Gets the command description.
+     * @return string Command description.
+     */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * Gets the command args signature.
+     * @return string|null Command args signature.
+     */
+    public function getSignature()
+    {
+        return $this->signature;
     }
 }
