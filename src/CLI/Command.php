@@ -349,10 +349,10 @@ abstract class Command
     /**
      * Returns a text formatted with a foreground color.
      * @param string $text Text to be formatted
-     * @param string $color (Optional) Color name.
+     * @param string|int $color (Optional) Color name or ANSI-256 code.
      * @return string Returns the formatted text.
      */
-    public static function color(string $text, string $color = 'default')
+    public static function color(string $text, $color = 'default')
     {
         return '<color="' . $color . '">' . $text . '</color>';
     }
@@ -360,10 +360,10 @@ abstract class Command
     /**
      * Returns a text formatted with a background color.
      * @param string $text Text to be formatted
-     * @param string $color (Optional) Color name.
+     * @param string|int $bg (Optional) Color name or ANSI-256 code.
      * @return string Returns the formatted text.
      */
-    public static function bg(string $text, string $bg = 'default')
+    public static function bg(string $text, $bg = 'default')
     {
         return '<bg="' . $bg . '">' . $text . '</bg>';
     }
@@ -376,6 +376,16 @@ abstract class Command
     public static function bold(string $text)
     {
         return '<b>' . $text . '</b>';
+    }
+
+    /**
+     * Returns a text formatted with italic.
+     * @param string $text Text to be formatted
+     * @return string Returns the formatted text.
+     */
+    public static function italic(string $text)
+    {
+        return '<i>' . $text . '</i>';
     }
 
     /**
@@ -396,6 +406,25 @@ abstract class Command
     public static function hidden(string $text)
     {
         return '<hidden>' . $text . '</hidden>';
+    }
+
+    /**
+     * Returns a text with horizontal and/or vertical padding.
+     * @param string $text Text to be formatted.
+     * @param int $sizeX (Optional) Size of the horizontal padding on each side.
+     * @param int|null $sizeY (Optional) Size of the vertical padding on each side. When null, uses the same as `$sizeX`.
+     * @return string Returns the formatted text.
+     */
+    public static function padding(string $text, int $sizeX = 1, ?int $sizeY = null)
+    {
+        if (is_null($sizeY)) $sizeY = $sizeX;
+        $length = mb_strlen($text);
+        $paddingX = str_repeat(' ', $sizeX);
+        $totalWidth = $length + ($sizeX * 2);
+        $verticalLine = str_repeat(' ', $totalWidth);
+        $top = str_repeat($verticalLine . PHP_EOL, $sizeY);
+        $bottom = str_repeat(PHP_EOL . $verticalLine, $sizeY);
+        return $top . $paddingX . $text . $paddingX . $bottom;
     }
 
     /**

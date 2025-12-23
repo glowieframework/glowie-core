@@ -42,6 +42,7 @@ class Firefly
         '/<color="cyan">/i'     => "\033[96m",
         '/<color="gray">/i'     => "\033[37m",
         '/<color="black">/i'    => "\033[30m",
+        '/<color="(\d+)">/i'    => "\033[38;5;$1m",
         '/<bg="default">/i'     => "\033[49m",
         '/<bg="red">/i'         => "\033[101m",
         '/<bg="green">/i'       => "\033[42m",
@@ -51,12 +52,14 @@ class Firefly
         '/<bg="cyan">/i'        => "\033[106m",
         '/<bg="gray">/i'        => "\033[47m",
         '/<bg="black">/i'       => "\033[40m",
+        '/<bg="(\d+)">/i'       => "\033[48;5;$1m",
         '/<b>/i'                => "\033[1m",
         '/<u>/i'                => "\033[4m",
         '/<dim>/i'              => "\033[2m",
         '/<blink>/i'            => "\033[5m",
         '/<hidden>/i'           => "\033[8m",
         '/<rev>/i'              => "\033[7m",
+        '/<i>/i'                => "\033[3m",
         '/<\/color>/i'          => "\033[39m",
         '/<\/bg>/i'             => "\033[49m",
         '/<\/b>/i'              => "\033[21m",
@@ -64,7 +67,8 @@ class Firefly
         '/<\/dim>/i'            => "\033[22m",
         '/<\/blink>/i'          => "\033[25m",
         '/<\/hidden>/i'         => "\033[28m",
-        '/<\/rev>/i'            => "\033[27m"
+        '/<\/rev>/i'            => "\033[27m",
+        '/<\/i>/i'              => "\033[23m",
     ];
 
     /**
@@ -146,7 +150,8 @@ class Firefly
         array_shift(self::$args);
         if (!isset(self::$args[0])) {
             self::printAscii();
-            self::print(self::bg(self::color('Welcome to Firefly!', 'black'), 'magenta'));
+            self::print(self::bg(self::color(self::padding('Welcome to Firefly!', 2, 1), 'black'), 'magenta'));
+            self::print('');
             self::print(self::color('To view the list of available commands, use: ', 'yellow') . self::color('php firefly help', 'cyan'));
             self::print('');
             return;
@@ -426,10 +431,10 @@ class Firefly
     /**
      * Returns a text formatted with a foreground color.
      * @param string $text Text to be formatted
-     * @param string $color (Optional) Color name.
+     * @param string|int $color (Optional) Color name or ANSI-256 code.
      * @return string Returns the formatted text.
      */
-    public static function color(string $text, string $color = 'default')
+    public static function color(string $text, $color = 'default')
     {
         return '<color="' . $color . '">' . $text . '</color>';
     }
@@ -437,10 +442,10 @@ class Firefly
     /**
      * Returns a text formatted with a background color.
      * @param string $text Text to be formatted
-     * @param string $color (Optional) Color name.
+     * @param string|int $bg (Optional) Color name or ANSI-256 code.
      * @return string Returns the formatted text.
      */
-    public static function bg(string $text, string $bg = 'default')
+    public static function bg(string $text, $bg = 'default')
     {
         return '<bg="' . $bg . '">' . $text . '</bg>';
     }
@@ -453,6 +458,16 @@ class Firefly
     public static function bold(string $text)
     {
         return '<b>' . $text . '</b>';
+    }
+
+    /**
+     * Returns a text formatted with italic.
+     * @param string $text Text to be formatted
+     * @return string Returns the formatted text.
+     */
+    public static function italic(string $text)
+    {
+        return '<i>' . $text . '</i>';
     }
 
     /**
@@ -473,6 +488,25 @@ class Firefly
     public static function hidden(string $text)
     {
         return '<hidden>' . $text . '</hidden>';
+    }
+
+    /**
+     * Returns a text with horizontal and/or vertical padding.
+     * @param string $text Text to be formatted.
+     * @param int $sizeX (Optional) Size of the horizontal padding on each side.
+     * @param int|null $sizeY (Optional) Size of the vertical padding on each side. When null, uses the same as `$sizeX`.
+     * @return string Returns the formatted text.
+     */
+    public static function padding(string $text, int $sizeX = 1, ?int $sizeY = null)
+    {
+        if (is_null($sizeY)) $sizeY = $sizeX;
+        $length = mb_strlen($text);
+        $paddingX = str_repeat(' ', $sizeX);
+        $totalWidth = $length + ($sizeX * 2);
+        $verticalLine = str_repeat(' ', $totalWidth);
+        $top = str_repeat($verticalLine . PHP_EOL, $sizeY);
+        $bottom = str_repeat(PHP_EOL . $verticalLine, $sizeY);
+        return $top . $paddingX . $text . $paddingX . $bottom;
     }
 
     /**
@@ -601,19 +635,18 @@ class Firefly
 
         // Prints welcome message
         self::$silent = false;
-        self::print(Firefly::color('
+        self::print(self::color('
         __           _
   ___ _/ /__ _    __(_)__
  / _ `/ / _ \ |/|/ / / -_)
  \_, /_/\___/__,__/_/\__/
 /___/', 'magenta'));
 
-        self::print(sprintf(
-            '%s %s',
-            Firefly::bg(Firefly::color('Welcome to Glowie!', 'black'), 'magenta'),
-            Firefly::color('v' . Util::getVersion(), 'magenta')
-        ));
-
+        self::print('');
+        self::print(self::bg(self::color(self::padding('Welcome to Glowie!', 2, 1), 'black'), 'magenta'));
+        self::print('');
+        self::print(self::color('v' . Util::getVersion(), 'magenta'));
+        self::print('');
         self::print(self::color('Your application is ready.', 'green'));
         self::print('');
     }
@@ -1214,8 +1247,8 @@ class Firefly
         $bail = self::hasOption('bail');
 
         // Print welcome message
-        Firefly::print(self::color('[' . date('Y-m-d H:i:s') . '] Queue Watcher has started!', 'green'));
-        Firefly::print(self::color('[' . date('Y-m-d H:i:s') . '] Use Ctrl/Command+C to stop the service', 'yellow'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Queue Watcher has started!', 'green'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Use Ctrl/Command+C to stop the service', 'yellow'));
 
         // Run watcher
         while (true) {
@@ -1241,11 +1274,13 @@ class Firefly
      */
     private static function __help()
     {
+        self::print('');
+
         // App commands
         $commands = glob(Util::location('commands/*.php'));
 
         if (!empty($commands)) {
-            self::print(self::color('App commands:', 'magenta'));
+            self::print(self::bg(self::color(self::padding('App commands:', 1, 0), 'black'), 'magenta'));
             self::print('');
 
             foreach ($commands as $filename) {
@@ -1270,7 +1305,7 @@ class Firefly
         }
 
         // Firefly commands
-        self::print(self::color('Firefly commands:', 'magenta'));
+        self::print(self::bg(self::color(self::padding('Firefly commands:', 1, 0), 'black'), 'magenta'));
         self::print('');
         self::print('  <color="yellow">init</color> | Initializes the project');
         self::print('  <color="yellow">shine</color> <color="blue">--host --port</color> | Starts the local development server');
@@ -1303,6 +1338,7 @@ class Firefly
         self::print('  <color="yellow">publish</color> <color="cyan">-force</color> | Publishes plugin files to the application folder');
         self::print('  <color="yellow">version</color> | Displays current Firefly version');
         self::print('  <color="yellow">help</color> | Displays this help message');
+        self::print('');
     }
 
     /**
