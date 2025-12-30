@@ -809,7 +809,7 @@ class Rails
         if (class_exists($controller)) {
             self::$controller = new $controller;
         } else if (class_exists($controllerAlt)) {
-            self::$controller = new $controller;
+            self::$controller = new $controllerAlt;
         }
 
         // Checks if method is implemented
