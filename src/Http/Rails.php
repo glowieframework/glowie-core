@@ -804,7 +804,13 @@ class Rails
     {
         // Checks if error controller exists
         $controller = 'Glowie\Controllers\Error';
-        if (class_exists($controller)) self::$controller = new $controller;
+        $controllerAlt = 'Glowie\Controllers\ErrorController';
+
+        if (class_exists($controller)) {
+            self::$controller = new $controller;
+        } else if (class_exists($controllerAlt)) {
+            self::$controller = new $controller;
+        }
 
         // Checks if method is implemented
         $method = Util::pascalCase($title);
@@ -828,15 +834,28 @@ class Rails
      */
     private static function callAutoRoute(string $controller, string $action, array $params = [])
     {
-        if (!class_exists($controller)) return self::callErrorMethod(Response::HTTP_NOT_FOUND, 'Not Found');
+        // Checks if the controller class exists
+        $controllerAlt = $controller . 'Controller';
+
+        if (class_exists($controller)) {
+            self::$controller = new $controller;
+        } else if (class_exists($controllerAlt)) {
+            self::$controller = new $controllerAlt;
+        } else {
+            return self::callErrorMethod(Response::HTTP_NOT_FOUND, 'Not Found');
+        }
+
+        // Parses the route params
         if (!empty($params)) {
             $keys = array_map(function ($key) {
                 return 'param' . ($key + 1);
             }, array_keys($params));
             $params = array_combine($keys, $params);
         }
+
         self::$currentParams = $params;
-        self::$controller = new $controller;
+
+        // Checks if the action exists
         if (is_callable([self::$controller, $action])) {
             if (is_callable([self::$controller, 'init'])) self::$controller->init();
             self::$controller->{$action}();
