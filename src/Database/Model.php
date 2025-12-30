@@ -471,7 +471,7 @@ class Model extends Kraken implements JsonSerializable
         if ($this->_softDeletes) unset($data[$this->_deletedField]);
 
         // Generate UUID if in use
-        if ($this->_uuid) $data[$this->_primaryKey] = $data[$this->_primaryKey] ?? Util::orderedUuid();
+        if ($this->_uuid) $data[$this->_primaryKey] = $data[$this->_primaryKey] ?? $this->generateId();
 
         // Inserts the element
         $result = $this->insert($data);
@@ -481,6 +481,15 @@ class Model extends Kraken implements JsonSerializable
         if (isset($data[$this->_primaryKey])) return $data[$this->_primaryKey];
         if ($this->lastInsertId()) return $this->lastInsertId();
         return $result;
+    }
+
+    /**
+     * Generates an unique ID for the model.
+     * @return string Returns the generated ID.
+     */
+    public function generateId()
+    {
+        return Util::orderedUuid();
     }
 
     /**

@@ -824,7 +824,10 @@ class Util
      */
     public static function uuid()
     {
-        return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x', mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0x0fff) | 0x4000, mt_rand(0, 0x3fff) | 0x8000, mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff));
+        $data = random_bytes(16);
+        $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
 
     /**
@@ -833,17 +836,10 @@ class Util
      */
     public static function orderedUuid()
     {
-        $timeHex = str_pad(dechex(floor(microtime(true) * 1000)), 12, "0", STR_PAD_LEFT);
-        return sprintf(
-            '%s-%s-%04x-%04x-%04x%04x%04x',
-            mb_substr($timeHex, 0, 8),
-            mb_substr($timeHex, 8, 4) . sprintf('%04x', mt_rand(0, 0xffff)),
-            mt_rand(0, 0xffff) . (mt_rand(0, 0x0fff) | 0x4000),
-            mt_rand(0, 0x3fff) | 0x8000,
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff)
-        );
+        $time = floor(microtime(true) * 1000);
+        $timeHex = str_pad(dechex($time), 12, "0", STR_PAD_LEFT);
+        $random = bin2hex(random_bytes(9));
+        return sprintf('%s-%s-%s-%s-%s', substr($timeHex, 0, 8), substr($timeHex, 8, 4), '7' . substr($random, 0, 3), dechex(hexdec(substr($random, 3, 1)) & 0x3 | 0x8) . substr($random, 4, 3), substr($random, 7, 12));
     }
 
     /**
@@ -1134,7 +1130,7 @@ class Util
      */
     public static function isCLI()
     {
-        return defined('STDIN') || (empty($_SERVER['REMOTE_ADDR']) && !isset($_SERVER['HTTP_USER_AGENT']) && count($_SERVER['argv']) > 0);
+        return php_sapi_name() === 'cli' || defined('STDIN') || (empty($_SERVER['REMOTE_ADDR']) && !isset($_SERVER['HTTP_USER_AGENT']) && count($_SERVER['argv']) > 0);
     }
 
     /**
