@@ -56,8 +56,8 @@ class Request implements JsonSerializable
     {
         // Parse headers and JSON data, if any
         self::$headers = array_change_key_case(getallheaders(), CASE_LOWER);
-        self::$json = new Element(json_decode($this->getBody(), true) ?? []);
-        self::$old = new Element(Session::make()->getFlash('input', []));
+        self::$json = new Element(json_decode($this->getBody(), true) ?? [], true);
+        self::$old = new Element(Session::make()->getFlash('input', []), true);
 
         // Parse request variables
         $vars = array_merge(Rails::getParams()->toArray(), $_GET, $_POST, $this->fromBody()->toArray());

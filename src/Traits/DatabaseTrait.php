@@ -10,9 +10,9 @@ use Config;
 use PDO;
 use PDOException;
 use Glowie\Core\Exception\QueryException;
-use Glowie\Core\Element;
 use Glowie\Core\Database\Factory;
 use Glowie\Core\Exception\DatabaseException;
+use Glowie\Core\Resources\DbRow;
 use Util;
 
 /**
@@ -378,11 +378,11 @@ trait DatabaseTrait
                     // Returns only first row
                     $result = null;
                     $row = $stmt->fetch();
-                    if ($row !== false) $result = $this->_returnAssoc ? $row : new Element($row);
+                    if ($row !== false) $result = $this->_returnAssoc ? $row : new DbRow($row);
                 } else {
                     // Returns all rows
                     $rows = $stmt->fetchAll();
-                    $result = $this->_returnAssoc ? $rows : array_map(fn($r) => new Element($r), $rows);
+                    $result = $this->_returnAssoc ? $rows : array_map(fn($r) => new DbRow($r), $rows);
                 }
             }
 

@@ -8,6 +8,7 @@ use Glowie\Core\Exception\RequestException;
 use Exception;
 use Glowie\Core\Collection;
 use Glowie\Core\Exception\FileException;
+use Glowie\Core\Resources\HttpResponse;
 use Throwable;
 use Util;
 
@@ -414,7 +415,7 @@ class Crawler
      * Performs a GET request.
      * @param string $url URL to perform request.
      * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
-     * @return Element|bool Returns the response as an Element on success or false on failure.
+     * @return HttpResponse|bool Returns the response as an object on success or false on failure.
      */
     public function get(string $url, $data = '')
     {
@@ -425,7 +426,7 @@ class Crawler
      * Performs a POST request.
      * @param string $url URL to perform request.
      * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
-     * @return Element|bool Returns the response as an Element on success or false on failure.
+     * @return HttpResponse|bool Returns the response as an object on success or false on failure.
      */
     public function post(string $url, $data = '')
     {
@@ -436,7 +437,7 @@ class Crawler
      * Performs a PUT request.
      * @param string $url URL to perform request.
      * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
-     * @return Element|bool Returns the response as an Element on success or false on failure.
+     * @return HttpResponse|bool Returns the response as an object on success or false on failure.
      */
     public function put(string $url, $data = '')
     {
@@ -447,7 +448,7 @@ class Crawler
      * Performs a PATCH request.
      * @param string $url URL to perform request.
      * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
-     * @return Element|bool Returns the response as an Element on success or false on failure.
+     * @return HttpResponse|bool Returns the response as an object on success or false on failure.
      */
     public function patch(string $url, $data = '')
     {
@@ -458,7 +459,7 @@ class Crawler
      * Performs a DELETE request.
      * @param string $url URL to perform request.
      * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
-     * @return Element|bool Returns the response as an Element on success or false on failure.
+     * @return HttpResponse|bool Returns the response as an object on success or false on failure.
      */
     public function delete(string $url, $data = '')
     {
@@ -469,7 +470,7 @@ class Crawler
      * Performs a HEAD request.
      * @param string $url URL to perform request.
      * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
-     * @return Element|bool Returns the response as an Element on success or false on failure.
+     * @return HttpResponse|bool Returns the response as an object on success or false on failure.
      */
     public function head(string $url, $data = '')
     {
@@ -480,7 +481,7 @@ class Crawler
      * Performs an OPTIONS request.
      * @param string $url URL to perform request.
      * @param string|array $data (Optional) Data to send in the request as plain text or an associative array.
-     * @return Element|bool Returns the response as an Element on success or false on failure.
+     * @return HttpResponse|bool Returns the response as an object on success or false on failure.
      */
     public function options(string $url, $data = '')
     {
@@ -492,7 +493,7 @@ class Crawler
      * @param string $url URL to perform request.
      * @param string $method (Optional) Method to use in the request. Default is `GET`.
      * @param mixed $data (Optional) Data to send in the request as plain text or an associative array.
-     * @return Element|bool Returns the response as an Element on success or false on failure.
+     * @return HttpResponse|bool Returns the response as an object on success or false on failure.
      * @throws RequestException Throws an exception if the status code is greater than 400 and `throwOnError()` is set to **true**.
      */
     public function request(string $url, string $method = 'GET', $data = '')
@@ -632,7 +633,7 @@ class Crawler
                 if ($response === false) {
                     $requestResult = false;
                 } else {
-                    $requestResult = new Element([
+                    $requestResult = new HttpResponse([
                         'status' => $info['http_code'],
                         'success' => (bool)($info['http_code'] >= 200 && $info['http_code'] < 300),
                         'failed' => (bool)($info['http_code'] >= 400),

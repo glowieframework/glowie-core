@@ -7,7 +7,7 @@ use JsonSerializable;
 
 /**
  * Generic safe object instance for Glowie application.
- * @category Object
+ * @category Resource
  * @package glowieframework/glowie-core
  * @author Glowie
  * @copyright Copyright (c) Glowie
@@ -22,10 +22,11 @@ class Element implements JsonSerializable
     /**
      * Creates a new Element.
      * @param array $data (Optional) An associative array with the initial data to parse.
+     * @param bool $recursive (Optional) True if the data must be parsed recursively.
      */
-    public function __construct(array $data = [])
+    public function __construct(array $data = [], bool $recursive = false)
     {
-        $this->__constructTrait($data);
+        $this->__constructTrait($data, $recursive);
     }
 
     /**

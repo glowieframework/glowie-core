@@ -4,8 +4,8 @@ namespace Glowie\Core\Tools;
 
 use Util;
 use Glowie\Core\Collection;
-use Glowie\Core\Element;
 use Glowie\Core\Exception\FileException;
+use Glowie\Core\Resources\UploadedFile;
 
 /**
  * File upload helper for Glowie application.
@@ -241,7 +241,7 @@ class Uploader
     /**
      * Performs a single file upload.
      * @param string $input Valid file input field name.
-     * @return Element|bool Returns an object with the uploaded file data on success or false on error.
+     * @return UploadedFile|bool Returns an object with the uploaded file data on success or false on error.
      */
     public function uploadSingle(string $input)
     {
@@ -258,7 +258,8 @@ class Uploader
     public function upload(string $input, bool $multiple = true, bool $deleteOnFail = false)
     {
         // Validate target directory
-        if (!is_dir($this->directory) || !is_writable($this->directory)) {
+        if (!is_dir($this->directory)) mkdir($this->directory, 0755, true);
+        if (!is_writable($this->directory)) {
             $e = new FileException('Directory "' . $this->directory . '" is invalid or not writable');
             $e->setSuggestion('Check if the directory exists and has writing permissions for the web server user (chmod 0755)');
             throw $e;
@@ -331,7 +332,7 @@ class Uploader
                     'size_string' => $this->parseSize($files['size'][$i]),
                     'extension' => $this->getExtension($files['name'][$i]),
                 ];
-                return new Element($item);
+                return new UploadedFile($item);
             }, array_keys($files['name']));
         }
 
@@ -340,14 +341,14 @@ class Uploader
         $files['type'] = mime_content_type($files['tmp_name']) || $files['type'];
         $files['extension'] = $this->getExtension($files['name']);
         $files['size_string'] = $this->parseSize($files['size']);
-        return [new Element($files)];
+        return [new UploadedFile($files)];
     }
 
     /**
      * Fetches a file upload.
-     * @param Element $file Uploaded file Element.
+     * @param UploadedFile $file Uploaded file object.
      * @param int $key (Optional) File key in multiple files.
-     * @return Element|false Returns an object with the uploaded file data on success or false on error.
+     * @return UploadedFile|false Returns an object with the uploaded file data on success or false on error.
      */
     private function processFile($file, int $key = 0)
     {
@@ -363,7 +364,7 @@ class Uploader
                 $target = $this->directory . '/' . $filename;
                 if (is_uploaded_file($file->tmp_name) && @move_uploaded_file($file->tmp_name, $target)) {
                     $this->errors = self::ERR_UPLOAD_SUCCESS;
-                    return new Element([
+                    return new UploadedFile([
                         'name' => $filename,
                         'url' => $target,
                         'full_url' => Util::baseUrl($target),

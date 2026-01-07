@@ -3,12 +3,13 @@
 namespace Glowie\Core\Traits;
 
 use Glowie\Core\Collection;
+use Glowie\Core\Element;
 use Glowie\Core\Tools\Validator;
 use Util;
 
 /**
  * Generic safe object trait for Glowie application.
- * @category Object
+ * @category Resource
  * @package glowieframework/glowie-core
  * @author Glowie
  * @copyright Copyright (c) Glowie
@@ -34,10 +35,27 @@ trait ElementTrait
     /**
      * Constructs the Element trait data.
      * @param array $data (Optional) An associative array with the initial data to parse.
+     * @param bool $recursive (Optional) True if the data must be parsed recursively.
      */
-    private function __constructTrait(array $data = [])
+    private function __constructTrait(array $data = [], bool $recursive = false)
     {
-        if (!empty($data)) $this->__data = $data;
+        // Checks if data is empty
+        if (empty($data)) return;
+
+        // Parses the data non-recursively
+        if (!$recursive) {
+            $this->__data = $data;
+            return;
+        }
+
+        // Parses the data recursively
+        foreach ($data as $key => $value) {
+            if (Util::isAssociativeArray($value)) {
+                $this->__data[$key] = new Element($value);
+            } else {
+                $this->__data[$key] = $value;
+            }
+        }
     }
 
     /**
