@@ -1690,14 +1690,27 @@ class Model extends Kraken implements JsonSerializable
     }
 
     /**
-     * Filters an array of data returning only the fields in the model updatable setting.
+     * Filters an array of data returning only the fields in the model updatable setting and removing relationships.
      * @param array $data An associative array of fields and values to filter.
      * @return array Returns the filtered array.
      */
     private function filterData(array $data)
     {
-        if (empty($data) || empty($this->_updatable)) return $data;
+        // Checks if the data is empty
+        if (empty($data)) return $data;
+
+        // Removes relationships from the data
+        if (!empty($this->_relationsEnabled)) {
+            $data = array_diff_key($data, array_flip($this->_relationsEnabled));
+        }
+
+        // Checks the updatable setting
+        if (empty($this->_updatable)) return $data;
+
+        // Gets the allowed fields names + table preffix
         $allowedFields = array_merge($this->_updatable, array_map(fn($k) => $this->_table . '.' . $k, $this->_updatable));
+
+        // Returns the filtered data
         return array_intersect_key($data, array_flip($allowedFields));
     }
 

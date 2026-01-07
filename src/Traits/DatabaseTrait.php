@@ -294,7 +294,7 @@ trait DatabaseTrait
     /**
      * Enclosures a set of operations in a transaction.
      * @param Closure $operations Set of operations to run inside the transaction.
-     * @return bool Returns true on success or false on failure.
+     * @return mixed Returns the result of the Closure or true.
      * @throws QueryException Throws an exception if the query fails.
      */
     public function transaction(Closure $operations)
@@ -304,14 +304,18 @@ trait DatabaseTrait
 
         try {
             // Run operations
-            call_user_func_array($operations, [$this]);
-        } catch (Throwable $e) {
-            // If something fails, rolls back the transaction
-            return $this->rollback();
-        }
+            $result = call_user_func_array($operations, [$this]);
 
-        // Commits the transaction if nothing failed
-        return $this->commit();
+            // Commits the transaction if nothing failed
+            $this->commit();
+
+            // Returns the callback result
+            return $result ?? true;
+        } catch (Throwable $e) {
+            // If something fails, rolls back the transaction and throws the error
+            $this->rollback();
+            throw $e;
+        }
     }
 
     /**
