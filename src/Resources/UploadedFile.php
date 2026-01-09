@@ -4,6 +4,7 @@ namespace Glowie\Core\Resources;
 
 use Glowie\Core\Element;
 use Glowie\Core\Exception\FileException;
+use Util;
 
 /**
  * Resource to abstract uploaded files.
@@ -16,6 +17,36 @@ use Glowie\Core\Exception\FileException;
  */
 class UploadedFile extends Element
 {
+
+    /**
+     * Checks if the file mimetype matches.
+     * @param string|array $mime Mimetype to check. You can also use an array of mimetypes.\
+     * This also accepts wildcard mimes, like `image/*`.
+     * @return bool Returns true if the mimetype matches or false otherwise.
+     */
+    public function isMime($mime)
+    {
+        // Checks if the file mimetype is set
+        $fileType = trim(mb_strtolower($this->type));
+        if (empty($fileType)) return false;
+
+        // Normalizes the mimetypes
+        $mime = is_array($mime) ? $mime : [$mime];
+        $mime = array_map(fn($m) => trim(mb_strtolower($m)), $mime);
+
+        // Checks if the mimetype matches exactly
+        if (in_array($fileType, $mime)) return true;
+
+        // Check for wildcard mimes
+        foreach ($mime as $item) {
+            if (!Util::stringContains($item, '*')) continue;
+            $regex = '/^' . str_replace('\*', '.*', preg_quote($item, '/')) . '$/i';
+            if (preg_match($regex, $fileType)) return true;
+        }
+
+        // Return false on unmatched mime
+        return false;
+    }
 
     /**
      * Gets the raw contents of the file.
@@ -34,7 +65,7 @@ class UploadedFile extends Element
      */
     public function preview()
     {
-        $content = file_get_contents($this->getLocation());
+        $content = $this->getContents();
         if ($content === false) return false;
         return 'data: ' . $this->type . ';base64,' . base64_encode($content);
     }

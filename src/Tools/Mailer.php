@@ -280,7 +280,8 @@ class Mailer
                 while (!feof($handle)) $content .= fread($handle, 1024);
                 fclose($handle);
                 $encoded_content = chunk_split(base64_encode($content));
-                $type = mime_content_type($filename);
+                $mimetype = @mime_content_type($filename);
+                $type = $mimetype ? $mimetype : 'application/octet-stream';
                 $filename = pathinfo($filename, PATHINFO_BASENAME);
 
                 // Parse body

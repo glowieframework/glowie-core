@@ -462,7 +462,8 @@ class Response
     {
         if (!is_file($filename)) throw new FileException('"' . $filename . '" does not exist!');
         if (Buffer::isActive()) Buffer::clean();
-        $this->setContentType(mime_content_type($filename) || self::CONTENT_PLAIN);
+        $type = @mime_content_type($filename);
+        $this->setContentType($type ? $type : self::CONTENT_PLAIN);
         $this->setHeader('Content-Length', filesize($filename));
         readfile($filename);
         return $this;

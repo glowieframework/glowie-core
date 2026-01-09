@@ -167,7 +167,7 @@ class Uploader
      */
     public function setExtensions(array $extensions)
     {
-        $this->extensions = $extensions;
+        $this->extensions = array_map(fn($m) => trim(mb_strtolower($m)), $extensions);
         return $this;
     }
 
@@ -178,7 +178,7 @@ class Uploader
      */
     public function setBlockedExtensions(array $extensions)
     {
-        $this->blockedExtensions = $extensions;
+        $this->blockedExtensions = array_map(fn($m) => trim(mb_strtolower($m)), $extensions);
         return $this;
     }
 
@@ -202,7 +202,7 @@ class Uploader
      */
     public function setMimes(array $mimes)
     {
-        $this->mimes = $mimes;
+        $this->mimes = array_map(fn($m) => trim(mb_strtolower($m)), $mimes);
         return $this;
     }
 
@@ -213,7 +213,7 @@ class Uploader
      */
     public function setBlockedMimes(array $mimes)
     {
-        $this->blockedMimes = $mimes;
+        $this->blockedMimes = array_map(fn($m) => trim(mb_strtolower($m)), $mimes);
         return $this;
     }
 
@@ -318,14 +318,15 @@ class Uploader
     public function arrangeFiles(array $files)
     {
         // Checks for empty uploads
-        if (Util::isEmpty($files['name'])) return [];
+        if (empty($files['name'])) return [];
 
         // Multiple files upload
         if (is_array($files['name'])) {
             return array_map(function ($i) use ($files) {
+                $type = @mime_content_type($files['tmp_name'][$i]);
                 $item = [
                     'name' => Util::sanitizeFilename($files['name'][$i]),
-                    'type' => mime_content_type($files['tmp_name'][$i]) || $files['type'][$i],
+                    'type' => $type ? $type : $files['type'][$i],
                     'tmp_name' => $files['tmp_name'][$i],
                     'error' => $files['error'][$i],
                     'size' => $files['size'][$i],
@@ -337,8 +338,9 @@ class Uploader
         }
 
         // Single file upload
+        $type = @mime_content_type($files['tmp_name']);
         $files['name'] = Util::sanitizeFilename($files['name']);
-        $files['type'] = mime_content_type($files['tmp_name']) || $files['type'];
+        $files['type'] = $type ? $type : $files['type'];
         $files['extension'] = $this->getExtension($files['name']);
         $files['size_string'] = $this->parseSize($files['size']);
         return [new UploadedFile($files)];
@@ -359,7 +361,7 @@ class Uploader
 
         // Perform upload
         if ($this->checkFileSize($file->size)) {
-            if ($this->checkExtension(mb_strtolower($file->extension)) && $this->checkMime($file->type)) {
+            if ($this->checkExtension($file->extension) && $this->checkMime($file->type)) {
                 $filename = $this->generateFilename($file->name, $key);
                 $target = $this->directory . '/' . $filename;
                 if (is_uploaded_file($file->tmp_name) && @move_uploaded_file($file->tmp_name, $target)) {
@@ -396,6 +398,7 @@ class Uploader
      */
     private function checkExtension(string $extension)
     {
+        $extension = trim(mb_strtolower($extension));
         return (empty($this->extensions) || in_array($extension, $this->extensions)) && !in_array($extension, $this->blockedExtensions);
     }
 
@@ -412,7 +415,7 @@ class Uploader
 
         // Check for wildcard mimes
         foreach ($this->mimes as $item) {
-            $item = trim(mb_strtolower($item));
+            if (!Util::stringContains($item, '*')) continue;
             $regex = '/^' . str_replace('\*', '.*', preg_quote($item, '/')) . '$/i';
             if (preg_match($regex, $mime)) return true;
         }

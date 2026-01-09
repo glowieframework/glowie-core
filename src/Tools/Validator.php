@@ -710,16 +710,17 @@ class Validator
     private function checkMimes(string $filename, array $mimes)
     {
         // Sanitize mime type
-        $mime = mime_content_type($filename);
+        $mime = @mime_content_type($filename);
         if (!$mime) return false;
         $mime = trim(mb_strtolower($mime));
 
         // Check for exact match
+        $mimes = array_map(fn($m) => trim(mb_strtolower($m)), $mimes);
         if (in_array($mime, $mimes)) return true;
 
         // Check for wildcard mimes
         foreach ($mimes as $item) {
-            $item = trim(mb_strtolower($item));
+            if (!Util::stringContains($item, '*')) continue;
             $regex = '/^' . str_replace('\*', '.*', preg_quote($item, '/')) . '$/i';
             if (preg_match($regex, $mime)) return true;
         }

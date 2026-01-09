@@ -295,9 +295,10 @@ class Crawler
         }
 
         // Adds the file
+        $type = @mime_content_type($path);
         $this->files[$name][] = [
             'path' => $path,
-            'mime' => $mime ?? (mime_content_type($path) || null),
+            'mime' => $mime ?? ($type ? $type : 'application/octet-stream'),
             'filename' => $filename ?? pathinfo($path, PATHINFO_BASENAME)
         ];
 
