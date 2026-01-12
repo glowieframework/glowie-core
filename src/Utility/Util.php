@@ -262,7 +262,7 @@ class Util
             foreach ($segments[1] as $item) {
                 if (isset($params[$item])) {
                     $result[$item] = $params[$item];
-                    $uri = preg_replace('~:' . preg_quote($item) . '~i', $params[$item], $uri);
+                    $uri = preg_replace('~:' . preg_quote($item) . '~i', preg_quote($params[$item], '/'), $uri);
                 } else {
                     $missing[] = $item;
                 }
@@ -894,7 +894,7 @@ class Util
     {
         $string = self::stripAccents(mb_strtolower($string));
         $string = str_replace(' ', $separator, $string);
-        $string = preg_replace('/[^a-zA-Z0-9' . preg_quote($separator) . ']/u', ($keepOther ? $separator : ''), $string);
+        $string = preg_replace('/[^a-zA-Z0-9' . preg_quote($separator) . ']/u', preg_quote($keepOther ? $separator : '', '/'), $string);
         return $string;
     }
 
