@@ -27,7 +27,8 @@
             "src/Utility/Babel.php",
             "src/Utility/Config.php",
             "src/Utility/Env.php",
-            "src/Utility/Util.php"
+            "src/Utility/Util.php",
+            "src/Utility/helpers.php"
         ]
     },
     "minimum-stability": "dev",
