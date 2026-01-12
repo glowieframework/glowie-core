@@ -80,9 +80,16 @@ class Babel
 
         // Parse parameters
         if (!empty($params) && !empty($result)) {
+            // Sorts the parameters by length
+            uksort($params, function ($a, $b) {
+                return mb_strlen($b) - mb_strlen($a);
+            });
+
+            // Replaces the parameters
             foreach ($params as $key => $value) {
-                $result = preg_replace('~(?<!\\\):' . preg_quote($key) . '~i', preg_quote($value, '/'), $result);
-                $result = preg_replace('~\\\:' . preg_quote($key) . '~i', ':' . preg_quote($key, '/'), $result);
+                $result = str_replace("\\:$key", "__#BABEL_IGNORE#__$key", $result);
+                $result = str_replace(":$key", $value, $result);
+                $result = str_replace("__#BABEL_IGNORE#__$key", ":$key", $result);
             }
         }
 
