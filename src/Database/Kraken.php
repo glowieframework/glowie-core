@@ -243,7 +243,7 @@ class Kraken
      */
     public function lockForUpdate()
     {
-        $this->_lock = 'FOR UPDATE';
+        $this->_lock = ' FOR UPDATE';
         return $this;
     }
 
@@ -253,7 +253,7 @@ class Kraken
      */
     public function sharedLock()
     {
-        $this->_lock = 'FOR SHARE';
+        $this->_lock = ' FOR SHARE';
         return $this;
     }
 
