@@ -222,11 +222,12 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
 
     /**
      * Transforms the Collection into an Element.
+     * @param bool $recursive (Optional) True if the data must be parsed recursively.
      * @return Element Element with the Collection data.
      */
-    public function toElement()
+    public function toElement(bool $recursive = false)
     {
-        return new Element($this->__data);
+        return new Element($this->__data, $recursive);
     }
 
     /**

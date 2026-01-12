@@ -1184,7 +1184,7 @@ class Model extends Kraken implements JsonSerializable
                         case 'json':
                         case 'element':
                             $json = json_decode($data[$field], true) ?? [];
-                            $data[$field] = new Element($json);
+                            $data[$field] = new Element($json, true);
                             break;
 
                         case 'encrypted':

@@ -117,6 +117,12 @@ class Kraken
     private $_union;
 
     /**
+     * LOCK statement.
+     * @var string
+     */
+    private $_lock;
+
+    /**
      * Creates a new Kraken database instance.
      * @param string $table (Optional) Table name to set as default.
      * @param string $database (Optional) Database connection name (from your app configuration).
@@ -228,6 +234,26 @@ class Kraken
     public function distinct()
     {
         $this->_instruction = 'SELECT DISTINCT';
+        return $this;
+    }
+
+    /**
+     * Sets a LOCK FOR UPDATE in a SELECT query.
+     * @return $this Current instance for nested calls.
+     */
+    public function lockForUpdate()
+    {
+        $this->_lock = 'FOR UPDATE';
+        return $this;
+    }
+
+    /**
+     * Sets a LOCK FOR SHARE in a SELECT query.
+     * @return $this Current instance for nested calls.
+     */
+    public function sharedLock()
+    {
+        $this->_lock = 'FOR SHARE';
         return $this;
     }
 
@@ -1501,6 +1527,7 @@ class Kraken
      */
     public function fetchRow()
     {
+        if (empty($this->_limit)) $this->limit(1);
         return $this->execute(true, true);
     }
 
@@ -2152,6 +2179,13 @@ class Kraken
         } else if ($this->_instruction === 'UPDATE' || $this->_instruction === 'DELETE') {
             if (isset($this->_limit[1])) {
                 $query .= " LIMIT {$this->_limit[1]}";
+            }
+        }
+
+        // Gets LOCK statement
+        if ($this->_instruction === 'SELECT' || $this->_instruction === 'SELECT DISTINCT') {
+            if (!empty($this->_lock)) {
+                $query .= $this->_lock;
             }
         }
 

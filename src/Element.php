@@ -32,10 +32,11 @@ class Element implements JsonSerializable
     /**
      * Creates a new Element in a static-binding.
      * @param array $data (Optional) An associative array with the initial data to parse.
+     * @param bool $recursive (Optional) True if the data must be parsed recursively.
      * @return $this Returns a new Element.
      */
-    public static function make(array $data = [])
+    public static function make(array $data = [], bool $recursive = false)
     {
-        return new static($data);
+        return new static($data, $recursive);
     }
 }

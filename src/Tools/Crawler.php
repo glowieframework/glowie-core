@@ -640,9 +640,9 @@ class Crawler
                         'failed' => (bool)($info['http_code'] >= 400),
                         'type' => $info['content_type'] ?? null,
                         'body' => $response,
-                        'json' => new Element(json_decode($response, true) ?? []),
+                        'json' => new Element(json_decode($response, true) ?? [], true),
                         'redirects' => $info['redirect_count'],
-                        'headers' => new Element($headers)
+                        'headers' => new Element($headers, true)
                     ]);
                 }
 
