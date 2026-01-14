@@ -263,7 +263,8 @@ class Util
             foreach ($segments[1] as $item) {
                 if (isset($params[$item])) {
                     $result[$item] = $params[$item];
-                    $uri = preg_replace('~:' . preg_quote($item) . '~i', preg_quote($params[$item], '/'), $uri);
+                    $quote = str_replace(['\\', '$'], ['\\\\', '\\$'], $params[$item]);
+                    $uri = preg_replace('~:' . preg_quote($item, '~') . '~i', $quote, $uri);
                 } else {
                     $missing[] = $item;
                 }
