@@ -1,6 +1,7 @@
 <?php
 
 use Glowie\Core\CLI\Firefly;
+use Glowie\Core\Collection;
 use Glowie\Core\Http\Rails;
 use Glowie\Core\Http\Session;
 use Glowie\Core\Http\Response;
@@ -533,25 +534,31 @@ class Util
     }
 
     /**
-     * Returns a value from a multi-dimensional array in dot notation.
-     * @param array $array Array to get the value.
+     * Returns a value from a recursive array or object in dot notation.
+     * @param mixed $target Array or object to get the value.
      * @param mixed $key Key to get in dot notation.
      * @param mixed $default (Optional) Default value to return if the key does not exist.
      * @return mixed Returns the value if exists or the default if not.
      */
-    public static function arrayGet(array $array, $key, $default = null)
+    public static function recursiveGet($target, $key, $default = null)
     {
-        // Checks if the key does not exist already
-        if (array_key_exists($key, $array)) return $array[$key];
+        // Checks if the key already exists without dot notation
+        if ((is_array($target) || $target instanceof Collection) && array_key_exists($key, $target)) return $target[$key];
+        if (is_object($target) && isset($target->{$key})) return $target->{$key};
 
-        // Loops through each key
+        // Loops through each segment of the key
         foreach (explode('.', $key) as $segment) {
-            if (!is_array($array) || !array_key_exists($segment, $array)) return $default;
-            $array = $array[$segment];
+            if ((is_array($target) || $target instanceof Collection) && array_key_exists($segment, $target)) {
+                $target = $target[$segment];
+            } else if (is_object($target) && isset($target->{$segment})) {
+                $target = $target->{$segment};
+            } else {
+                return $default;
+            }
         }
 
-        // Returns the value
-        return $array;
+        // Returns the matched value
+        return $target;
     }
 
     /**
@@ -585,28 +592,6 @@ class Util
             $item = &$item[$segment];
         }
         unset($item[$lastKey]);
-    }
-
-    /**
-     * Returns a value from a multi-dimensional object in dot notation.
-     * @param object $object Object to get the value.
-     * @param string $key Key to get in dot notation.
-     * @param mixed $default (Optional) Default value to return if the key does not exist.
-     * @return mixed Returns the value if exists or the default if not.
-     */
-    public static function objectGet(object $object, string $key, $default = null)
-    {
-        // Checks if the key does not exist already
-        if (isset($object->{$key})) return $object->{$key};
-
-        // Loops through each property
-        foreach (explode('.', $key) as $segment) {
-            if (!is_object($object) || !isset($object->{$segment})) return $default;
-            $object = $object->{$segment};
-        }
-
-        // Returns the value
-        return $object;
     }
 
     /**

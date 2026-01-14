@@ -76,7 +76,7 @@ class Babel
         if (empty(self::$languages[$lang])) throw new i18nException('Language "' . $lang . '" does not exist in "app/languages"');
 
         // Get string
-        $result = Util::arrayGet(self::$languages[$lang], $key, $default);
+        $result = Util::recursiveGet(self::$languages[$lang], $key, $default);
 
         // Parse parameters
         if (!empty($params) && !empty($result)) {

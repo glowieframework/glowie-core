@@ -108,7 +108,7 @@ class Session implements JsonSerializable
      */
     public function get(string $key, $default = null)
     {
-        return Util::arrayGet($_SESSION, $key, $default);
+        return Util::recursiveGet($_SESSION, $key, $default);
     }
 
     /**
@@ -228,7 +228,7 @@ class Session implements JsonSerializable
         $result = false;
         foreach ((array)$key as $item) {
             if ($result) break;
-            $result = Util::arrayGet($_SESSION, $item) !== null;
+            $result = Util::recursiveGet($_SESSION, $item) !== null;
         }
         return $result;
     }
@@ -243,7 +243,7 @@ class Session implements JsonSerializable
         $result = false;
         foreach ((array)$key as $item) {
             if ($result) break;
-            $result = Util::arrayGet($_SESSION, $item) === null;
+            $result = Util::recursiveGet($_SESSION, $item) === null;
         }
         return $result;
     }

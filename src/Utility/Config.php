@@ -48,7 +48,7 @@ class Config
      */
     public static function get(string $key, $default = null)
     {
-        return Util::arrayGet(self::$config, $key, $default);
+        return Util::recursiveGet(self::$config, $key, $default);
     }
 
     /**

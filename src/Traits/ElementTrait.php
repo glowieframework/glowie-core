@@ -51,7 +51,7 @@ trait ElementTrait
         // Parses the data recursively
         foreach ($data as $key => $value) {
             if (Util::isAssociativeArray($value)) {
-                $this->__data[$key] = new Element($value);
+                $this->__data[$key] = new Element($value, true);
             } else {
                 $this->__data[$key] = $value;
             }
@@ -76,7 +76,7 @@ trait ElementTrait
      */
     public function get(string $key, $default = null)
     {
-        return Util::arrayGet($this->__data, $key, $default);
+        return Util::recursiveGet($this->__data, $key, $default);
     }
 
     /**
@@ -171,7 +171,7 @@ trait ElementTrait
         $result = false;
         foreach ((array)$key as $item) {
             if ($result) break;
-            $result = Util::arrayGet($this->__data, $item) !== null;
+            $result = Util::recursiveGet($this->__data, $item) !== null;
         }
         return $result;
     }
@@ -186,7 +186,7 @@ trait ElementTrait
         $result = false;
         foreach ((array)$key as $item) {
             if ($result) break;
-            $result = Util::arrayGet($this->__data, $item) === null;
+            $result = Util::recursiveGet($this->__data, $item) === null;
         }
         return $result;
     }

@@ -60,7 +60,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function get($key, $default = null)
     {
-        return Util::arrayGet($this->__data, $key, $default);
+        return Util::recursiveGet($this->__data, $key, $default);
     }
 
     /**
@@ -150,7 +150,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
         $result = false;
         foreach ((array)$key as $item) {
             if (!$all && $result) break;
-            $result = Util::arrayGet($this->__data, $item) !== null;
+            $result = Util::recursiveGet($this->__data, $item) !== null;
         }
         return $result;
     }
@@ -166,7 +166,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
         $result = false;
         foreach ((array)$key as $item) {
             if (!$all && $result) break;
-            $result = Util::arrayGet($this->__data, $item) === null;
+            $result = Util::recursiveGet($this->__data, $item) === null;
         }
         return $result;
     }
