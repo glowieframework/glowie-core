@@ -32,7 +32,7 @@ class Firefly
      * Console regex replacements.
      * @var array
      */
-    private const STYLES_REGEX = [
+    private const ANSI_REGEX = [
         '/<color="default">/i'  => "\033[39m",
         '/<color="red">/i'      => "\033[91m",
         '/<color="green">/i'    => "\033[92m",
@@ -262,7 +262,7 @@ class Firefly
     public static function print(string $text, bool $break = true)
     {
         // If running in console, replace effects and closing tags
-        if (Util::isCLI()) $text = preg_replace(array_keys(self::STYLES_REGEX), array_values(self::STYLES_REGEX), $text);
+        if (Util::isCLI() && !self::hasOption('no-ansi')) $text = preg_replace(array_keys(self::ANSI_REGEX), array_values(self::ANSI_REGEX), $text);
 
         // Remove remaining effects
         $text = self::sanitize($text);
@@ -1348,8 +1348,8 @@ class Firefly
      */
     private static function sanitize(string $text)
     {
-        $text = preg_replace(array_slice(array_keys(self::STYLES_REGEX), 24), '', $text);
-        $text = preg_replace(['/<color="(.+)">/i', '/<bg="(.+)">/i', '/<b>/i', '/<u>/i', '/<dim>/i', '/<blink>/i', '/<hidden>/i', '/<rev>/i'], '', $text);
+        $text = preg_replace(array_keys(self::ANSI_REGEX), '', $text);
+        $text = preg_replace(['/<color="(.+)">/i', '/<bg="(.+)">/i'], '', $text);
         return $text;
     }
 
