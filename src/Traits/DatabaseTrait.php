@@ -128,12 +128,11 @@ trait DatabaseTrait
 
     /**
      * Returns the current database connection handler.
-     * @param bool $skipCheck (Optional) Skips the checking for the connection state.
      * @return PDO|null The connection instance or null on errors.
      */
-    public function getConnection(bool $skipCheck = false)
+    public function getConnection()
     {
-        return Factory::getHandler($this->_connection, $skipCheck);
+        return Factory::getHandler($this->_connection);
     }
 
     /**
@@ -352,21 +351,29 @@ trait DatabaseTrait
     private function execute(bool $returns = false, bool $returnsFirst = false)
     {
         try {
-            // Store query start time
+            // Store query start time and connection
             $queryStart = microtime(true);
+            $pdo = $this->getConnection();
 
             // Run query or prepared statement
             if (!empty($this->_prepared)) {
                 // Prepared query
                 [$sql, $params] = $this->_prepared;
-                $stmt = $this->getConnection()->prepare($sql);
+                $stmt = $pdo->prepare($sql);
                 $stmt->execute($params);
                 Factory::notifyListeners($this->_connection, $sql, $params, microtime(true) - $queryStart, true);
             } else {
                 // Raw query
                 $sql = $this->getQuery();
-                $stmt = $this->getConnection()->query($sql);
+                $stmt = $pdo->query($sql);
                 Factory::notifyListeners($this->_connection, $sql, [], microtime(true) - $queryStart, true);
+            }
+
+            // Stores the last insert ID, if any
+            if (Util::startsWith(trim(mb_strtoupper($sql)), 'INSERT')) {
+                $this->_lastInsertId = (int)$pdo->lastInsertId();
+            } else {
+                $this->_lastInsertId = null;
             }
 
             // Clear query data
@@ -387,17 +394,16 @@ trait DatabaseTrait
                 }
             }
 
-            // Stores the last insert ID
-            if (Util::startsWith(trim(mb_strtoupper($sql)), 'INSERT')) {
-                $this->_lastInsertId = (int)$this->getConnection(false)->lastInsertId();
-            } else {
-                $this->_lastInsertId = null;
-            }
-
             // Store affected rows and returns the result
             $this->_affectedRows = $stmt->rowCount();
             return $result;
         } catch (PDOException $e) {
+            // On connection timeout error, try to reconnect and query again
+            if ($e->getCode() == 2006) {
+                $this->reconnect();
+                return $this->execute($returns, $returnsFirst);
+            }
+
             // Notify listeners of failure
             Factory::notifyListeners($this->_connection, $sql, $params ?? [], microtime(true) - $queryStart, false);
 

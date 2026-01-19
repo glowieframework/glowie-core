@@ -2,7 +2,6 @@
 
 namespace Glowie\Core\Database;
 
-use Config;
 use Exception;
 use PDO;
 use Throwable;
@@ -37,33 +36,11 @@ class Factory
     /**
      * Gets a connection handler.
      * @param string $name Connection name.
-     * @param bool $skipCheck (Optional) Skips the checking for the connection state.
      * @return PDO|null The connection instance if exists or null if not.
      */
-    public static function getHandler(string $name, bool $skipCheck = false)
+    public static function getHandler(string $name)
     {
-        // Checks if the connection exists
-        $pdo = self::$handlers[$name] ?? null;
-        if (!$pdo) return null;
-
-        // On skip, return the current connection
-        if ($skipCheck) return $pdo;
-
-        // Checks if the connection is active
-        try {
-            $pdo->query('SELECT 1');
-        } catch (Throwable $th) {
-            // Gets the database configuration again
-            $database = Config::get("database.{$name}");
-            if (empty($database)) throw new DatabaseException([], "Database connection setting \"$name\" not found in your app configuration");
-
-            // If the connection is not active, reconnect
-            self::createConnection($name, $database);
-            $pdo = self::$handlers[$name];
-        }
-
-        // Returns the connection handler
-        return $pdo;
+        return self::$handlers[$name] ?? null;
     }
 
     /**
