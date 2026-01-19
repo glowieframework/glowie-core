@@ -18,6 +18,33 @@ class HttpResponse extends Element
 {
 
     /**
+     * Checks if the HTTP response return a status code between 200 and 300
+     * @return bool Returns true if the response was successful.
+     */
+    public function isSuccessful()
+    {
+        return $this->get('success', false);
+    }
+
+    /**
+     * Gets the HTTP response body.
+     * @return string Raw body content.
+     */
+    public function getBody()
+    {
+        return $this->body;
+    }
+
+    /**
+     * Gets the HTTP response status code.
+     * @return int Status code.
+     */
+    public function getStatusCode()
+    {
+        return $this->status;
+    }
+
+    /**
      * Checks if a header is present in the HTTP response.
      * @param string $name Header name to check.
      * @return bool Returns true if the header is present, false otherwise.
@@ -25,6 +52,15 @@ class HttpResponse extends Element
     public function hasHeader(string $name)
     {
         return $this->headers->has($name);
+    }
+
+    /**
+     * Returns a list of the HTTP response headers.
+     * @return Element Returns an Element with the headers.
+     */
+    public function getHeaders()
+    {
+        return $this->headers;
     }
 
     /**
