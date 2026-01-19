@@ -37,13 +37,17 @@ class Factory
     /**
      * Gets a connection handler.
      * @param string $name Connection name.
+     * @param bool $skipCheck (Optional) Skips the checking for the connection state.
      * @return PDO|null The connection instance if exists or null if not.
      */
-    public static function getHandler(string $name)
+    public static function getHandler(string $name, bool $skipCheck = false)
     {
         // Checks if the connection exists
         $pdo = self::$handlers[$name] ?? null;
         if (!$pdo) return null;
+
+        // On skip, return the current connection
+        if ($skipCheck) return $pdo;
 
         // Checks if the connection is active
         try {

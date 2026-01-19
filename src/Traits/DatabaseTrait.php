@@ -128,11 +128,12 @@ trait DatabaseTrait
 
     /**
      * Returns the current database connection handler.
+     * @param bool $skipCheck (Optional) Skips the checking for the connection state.
      * @return PDO|null The connection instance or null on errors.
      */
-    public function getConnection()
+    public function getConnection(bool $skipCheck = false)
     {
-        return Factory::getHandler($this->_connection);
+        return Factory::getHandler($this->_connection, $skipCheck);
     }
 
     /**
@@ -388,7 +389,7 @@ trait DatabaseTrait
 
             // Stores the last insert ID
             if (Util::startsWith(trim(mb_strtoupper($sql)), 'INSERT')) {
-                $this->_lastInsertId = (int)$this->getConnection()->lastInsertId();
+                $this->_lastInsertId = (int)$this->getConnection(false)->lastInsertId();
             } else {
                 $this->_lastInsertId = null;
             }
