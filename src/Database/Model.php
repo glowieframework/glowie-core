@@ -1295,7 +1295,6 @@ class Model extends Kraken implements JsonSerializable
                 case 'many':
                     // Gets the primary keys from the current model
                     $keys = $data->column($item['primary'])->unique();
-                    if ($keys->isEmpty()) break;
 
                     // Creates the related model and run the modifiers
                     $table = new $item['model'];
@@ -1309,8 +1308,7 @@ class Model extends Kraken implements JsonSerializable
                     if (!empty($item['select'])) $table->select($item['select']);
 
                     // Gets the relationships from the target model
-                    $relations = $table->allBy($item['column'], $keys);
-                    if ($relations->isEmpty()) break;
+                    $relations = $keys->isNotEmpty() ? $table->allBy($item['column'], $keys) : new Collection();
 
                     // Loops through the rows
                     foreach ($data as $idx => $row) {
@@ -1350,7 +1348,6 @@ class Model extends Kraken implements JsonSerializable
                 case 'belongs':
                     // Gets the foreign keys from the target model
                     $keys = $data->column($item['column'])->unique();
-                    if ($keys->isEmpty()) break;
 
                     // Creates the related model and run the modifiers
                     $table = new $item['model'];
@@ -1364,8 +1361,7 @@ class Model extends Kraken implements JsonSerializable
                     if (!empty($item['select'])) $table->select($item['select']);
 
                     // Gets the relationships from the target model
-                    $relations = $table->allBy($item['primary'], $keys);
-                    if ($relations->isEmpty()) break;
+                    $relations = $keys->isNotEmpty() ? $table->allBy($item['primary'], $keys) : new Collection();
 
                     // Loops through the rows
                     foreach ($data as $idx => $row) {
@@ -1403,7 +1399,6 @@ class Model extends Kraken implements JsonSerializable
                 case 'many-through':
                     // Gets the primary keys from the current model
                     $currentKeys = $data->column($item['primary-current'])->unique();
-                    if ($currentKeys->isEmpty()) break;
 
                     // Creates the related model and pivot and run the modifiers
                     $table = new $item['model'];
@@ -1418,19 +1413,20 @@ class Model extends Kraken implements JsonSerializable
                     if (!empty($item['select'])) $table->select($item['select']);
 
                     // Gets the foreign keys from the current model in the pivot
-                    $pivotRelations = $pivot->whereIn($item['current-foreign'], $currentKeys);
-                    $pivotRelations = $item['type'] === 'belongs-many' ? $pivotRelations->fetchAll() : $pivotRelations->all();
-                    if ($pivotRelations->isEmpty()) break;
+                    if ($currentKeys->isNotEmpty()) {
+                        $pivotRelations = $pivot->whereIn($item['current-foreign'], $currentKeys);
+                        $pivotRelations = $item['type'] === 'belongs-many' ? $pivotRelations->fetchAll() : $pivotRelations->all();
+                    } else {
+                        $pivotRelations = new Collection();
+                    }
 
                     // Gets the foreign keys from the target model in the pivot relations
                     $fk = $item['type'] === 'belongs-many' ? $item['target-foreign'] : $item['primary-intermediate'];
                     $targetKeys = $pivotRelations->column($fk)->unique();
-                    if ($targetKeys->isEmpty()) break;
 
                     // Gets the relations between the tables
                     $fk2 = $item['type'] === 'belongs-many' ? $item['primary-target'] : $item['target-foreign'];
-                    $relations = $table->allBy($fk2, $targetKeys);
-                    if ($relations->isEmpty()) break;
+                    $relations = $targetKeys->isNotEmpty() ? $table->allBy($fk2, $targetKeys) : new Collection();
 
                     // Loops through the rows
                     foreach ($data as $idx => $row) {
