@@ -63,7 +63,11 @@ class __FIREFLY_TEMPLATE_NAME__ extends Model
      * Table fields data types to cast.
      * @var array
      */
-    protected $_casts = [];
+    protected $_casts = [
+        'created_at' => 'date',
+        'updated_at' => 'date',
+        'deleted_at' => 'date'
+    ];
 
     /**
      * Table fields data types to mutate.

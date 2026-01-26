@@ -1021,6 +1021,13 @@ class Firefly
 
         // Creates the file
         $template = file_get_contents(self::TEMPLATES_FOLDER . 'Model.php');
+
+        // Sets the optional replacements
+        if (self::hasOption('uuid')) $template = str_replace('$_uuid = false', '$_uuid = true', $template);
+        if (self::hasOption('timestamps')) $template = str_replace('$_timestamps = false', '$_timestamps = true', $template);
+        if (self::hasOption('softdeletes')) $template = str_replace('$_softDeletes = false', '$_softDeletes = true', $template);
+
+        // Saves the file
         $template = str_replace(['__FIREFLY_TEMPLATE_NAME__', '__FIREFLY_TEMPLATE_TABLE__', '__FIREFLY_TEMPLATE_PRIMARY__'], [$name, $table, $primary], $template);
         file_put_contents($targetFile, $template);
 
@@ -1060,6 +1067,37 @@ class Firefly
 
         // Success message
         self::print(self::color('[' . date('Y-m-d H:i:s') . ']' . " Job {$name} created successfully!", 'green'));
+        self::print(self::color('File: ' . $targetFile, 'cyan'));
+        return true;
+    }
+
+    /**
+     * Creates a service.
+     */
+    private static function __createService()
+    {
+        // Checks permissions
+        if (!is_dir(Util::location('services'))) mkdir(Util::location('services'), 0755, true);
+        if (!is_writable(Util::location('services'))) throw new FileException('Directory "app/services" is not writable, please check your chmod settings');
+
+        // Checks if name was filled
+        $name = self::argOrInput('name', 'Service name: ');
+
+        // Validates the service name
+        if (Util::isEmpty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
+
+        // Checks if the file exists
+        $name = Util::pascalCase($name);
+        $targetFile = Util::location('services/' . $name . '.php');
+        if (is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Service {$name} already exists!");
+
+        // Creates the file
+        $template = file_get_contents(self::TEMPLATES_FOLDER . 'Service.php');
+        $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
+        file_put_contents($targetFile, $template);
+
+        // Success message
+        self::print(self::color('[' . date('Y-m-d H:i:s') . ']' . " Service {$name} created successfully!", 'green'));
         self::print(self::color('File: ' . $targetFile, 'cyan'));
         return true;
     }
@@ -1328,8 +1366,9 @@ class Firefly
         self::print('  <color="yellow">create-middleware</color> <color="blue">--name</color> | Creates a new middleware for your application');
         self::print('  <color="yellow">create-migration</color> <color="blue">--name</color> | Creates a new migration for your application');
         self::print('  <color="yellow">create-queue-migration</color> | Creates a migration for the queue table');
-        self::print('  <color="yellow">create-model</color> <color="blue">--name --table --primary</color> <color="cyan">-migration</color> | Creates a new model for your application');
+        self::print('  <color="yellow">create-model</color> <color="blue">--name --table --primary</color> <color="cyan">-migration -uuid -timestamps -softdeletes</color> | Creates a new model for your application');
         self::print('  <color="yellow">create-job</color> <color="blue">--name</color> | Creates a new job for your application');
+        self::print('  <color="yellow">create-service</color> <color="blue">--name</color> | Creates a new service for your application');
         self::print('  <color="yellow">migrate</color> <color="blue">--steps</color> | Applies pending migrations from your application');
         self::print('  <color="yellow">migrations</color> | Gets the status of the migrations');
         self::print('  <color="yellow">rollback</color> <color="blue">--steps</color> | Rolls back the last applied migration');
