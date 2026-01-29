@@ -53,7 +53,7 @@ class Env
     /**
      * Sanitizes a value and convert the type.
      * @param string $value Value to be sanitized.
-     * @return mixed Returns the sanitized value.
+     * @return string|bool|null Returns the sanitized value.
      */
     private static function sanitizeValue(string $value)
     {
@@ -78,7 +78,7 @@ class Env
      * Gets an environment configuration variable.
      * @param string $key Key to get value.
      * @param mixed $default (Optional) Default value to return if the key does not exist.
-     * @return mixed Returns the value if exists or the default if not.
+     * @return string|bool|null Returns the value if exists or the default if not.
      */
     public static function get(string $key, $default = null)
     {

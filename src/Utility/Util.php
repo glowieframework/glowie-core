@@ -202,7 +202,7 @@ class Util
         try {
             return call_user_func($callback);
         } catch (\Throwable $th) {
-            if ($attempts == 1) throw $th;
+            if ($attempts === 1) throw $th;
             usleep($sleep * 1000);
             return self::retry($attempts - 1, $callback, $sleep);
         }

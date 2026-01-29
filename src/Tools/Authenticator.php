@@ -314,7 +314,7 @@ class Authenticator
 
     /**
      * Gets the id (or other primary key value) from the authenticated user.
-     * @return mixed Returns the primary key value if authenticated, null otherwise.
+     * @return string|int|null Returns the primary key value if authenticated, null otherwise.
      */
     public function getUserId()
     {

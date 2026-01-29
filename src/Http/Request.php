@@ -417,13 +417,22 @@ class Request implements JsonSerializable
     }
 
     /**
+     * Checks if the request was made using AJAX or the `Accept` header is JSON.
+     * @return bool True if the request accepts JSON.
+     */
+    public function acceptsJson()
+    {
+        return $this->isAjax() || $this->getAccept() === 'application/json';
+    }
+
+    /**
      * Returns if the request was made using a mobile device.\
      * **Note:** This information relies in the `User-Agent` header.
      * @return bool True if a mobile device identifier is present in the header, false otherwise or header is not present.
      */
     public function isMobile()
     {
-        return (bool)preg_match("/(android|webos|avantgo|iphone|ipad|ipod|blackberry|iemobile|bolt|boost|cricket|docomo|fone|hiptop|mini|opera mini|kitkat|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $this->getHeader('User-Agent', ''));
+        return (bool)preg_match("/(android|webos|avantgo|iphone|ipad|ipod|blackberry|iemobile|bolt|boost|cricket|docomo|fone|hiptop|mini|opera mini|kitkat|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $this->getUserAgent() ?? '');
     }
 
     /**

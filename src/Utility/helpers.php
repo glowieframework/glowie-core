@@ -18,7 +18,7 @@ if (!function_exists('env')) {
      * Gets an environment configuration variable.
      * @param string $key Key to get value.
      * @param mixed $default (Optional) Default value to return if the key does not exist.
-     * @return mixed Returns the value if exists or the default if not.
+     * @return string|bool|null Returns the value if exists or the default if not.
      */
     function env(string $key, $default = null)
     {

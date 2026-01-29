@@ -10,6 +10,7 @@ use Util;
 use Exception;
 use JsonSerializable;
 use DateTime;
+use Glowie\Core\Resources\DbRow;
 
 /**
  * Model core for Glowie application.
@@ -232,7 +233,7 @@ class Model extends Kraken implements JsonSerializable
 
     /**
      * Fetches the first result from a SELECT query. Results will be casted, if available.
-     * @return mixed Returns the first resulting row on success or null if not found.
+     * @return DbRow|array|null Returns the first resulting row on success or null if not found.
      * @throws QueryException Throws an exception if the query fails.
      */
     public function fetchRow()
@@ -269,7 +270,7 @@ class Model extends Kraken implements JsonSerializable
      * Gets the first row that matches the model primary key value.
      * @param mixed $primary (Optional) Primary key value to search for.
      * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
-     * @return mixed Returns the row on success or null if not found.
+     * @return DbRow|array|null Returns the row on success or null if not found.
      */
     public function find($primary = null, bool $deleted = false)
     {
@@ -287,7 +288,7 @@ class Model extends Kraken implements JsonSerializable
      * @param string|array $field Field name to use while searching or an associative array relating fields and values to search.
      * @param mixed $value (Optional) Value to search for.
      * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
-     * @return mixed Returns the row on success or null if not found.
+     * @return DbRow|array|null Returns the row on success or null if not found.
      */
     public function findBy($field, $value = null, bool $deleted = false)
     {
@@ -300,7 +301,7 @@ class Model extends Kraken implements JsonSerializable
      * @param mixed $primary (Optional) Primary key value to search for.
      * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
      * @param bool $overwrite (Optional) Set to `true` to overwrite the existing model data instead of merging.
-     * @return mixed Returns the current Model instance if the row is found, false otherwise.
+     * @return $this|false Returns the current Model instance if the row is found, false otherwise.
      */
     public function findAndFill($primary = null, bool $deleted = false, bool $overwrite = false)
     {
@@ -315,7 +316,7 @@ class Model extends Kraken implements JsonSerializable
      * @param mixed $value (Optional) Value to search for.
      * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
      * @param bool $overwrite (Optional) Set to `true` to overwrite the existing model data instead of merging.
-     * @return mixed Returns the current Model instance if the row is found, false otherwise.
+     * @return $this|false Returns the current Model instance if the row is found, false otherwise.
      */
     public function findAndFillBy($field, $value = null, bool $deleted = false, bool $overwrite = false)
     {
@@ -451,8 +452,8 @@ class Model extends Kraken implements JsonSerializable
     /**
      * Inserts a new row in the model table.
      * @param mixed $data An Element or associative array/Collection relating fields and values to insert.
-     * @return mixed Returns the last inserted `AUTO_INCREMENT` value (or true) on success, false on failure.\
-     * If the model uses UUIDs, upon success the last generated UUID will be returned.
+     * @return string|int|bool Returns the last inserted `AUTO_INCREMENT` value (or true) on success, false on failure.\
+     * If the model uses UUIDs, on success the last generated UUID will be returned.
      */
     public function create($data)
     {
@@ -497,7 +498,7 @@ class Model extends Kraken implements JsonSerializable
      * @param mixed $find An Element or associative array of fields and values to search.
      * @param mixed $create (Optional) An Element or associative array of data to merge into the `$find` fields to create a new row.
      * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
-     * @return mixed Returns the existing or new row, false on error.
+     * @return DbRow|array|bool Returns the existing or new row, false on error.
      */
     public function findOrCreate($find, $create = [], bool $deleted = false)
     {
@@ -519,7 +520,7 @@ class Model extends Kraken implements JsonSerializable
      * Checks if a row matches the primary key value in the data. If so, updates the row. Otherwise, inserts a new record in the model table.
      * @param mixed $data An Element or associative array relating fields and values to upsert. **Must include the primary key field to update.**
      * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
-     * @return mixed Returns the last inserted `AUTO_INCREMENT` value (or true) if the row is created, otherwise returns true on success or false on failure.
+     * @return string|int|bool Returns the last inserted `AUTO_INCREMENT` value (or true) if the row is created, otherwise returns true on success or false on failure.
      */
     public function updateOrCreate($data, bool $deleted = false)
     {
@@ -542,7 +543,7 @@ class Model extends Kraken implements JsonSerializable
      * @param mixed $find An Element or associative array of fields and values to search.
      * @param mixed $data (Optional) An Element or associative array of data to merge into the `$find` fields to update/create a new row.
      * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
-     * @return mixed Returns the last inserted `AUTO_INCREMENT` value (or true) if the row is created, otherwise returns true on success or false on failure.
+     * @return string|int|bool Returns the last inserted `AUTO_INCREMENT` value (or true) if the row is created, otherwise returns true on success or false on failure.
      */
     public function updateOrCreateBy($find, $data = [], bool $deleted = false)
     {
@@ -737,7 +738,7 @@ class Model extends Kraken implements JsonSerializable
      * Refreshes and refills the model entity data back from the database using its primary key.\
      * **Note:** this will delete all modifications made to the model entity data.
      * @param bool $deleted (Optional) Include deleted rows (if soft deletes enabled).
-     * @return mixed Returns the current Model instance if the row is found, false otherwise.
+     * @return $this|false Returns the current Model instance if the row is found, false otherwise.
      */
     public function refresh(bool $deleted = false)
     {
@@ -754,7 +755,7 @@ class Model extends Kraken implements JsonSerializable
 
     /**
      * Saves the model entity data to the database.
-     * @return mixed Returns the last inserted `AUTO_INCREMENT` value (or true) if the row is created, otherwise returns true on success or false on failure.
+     * @return string|int|bool Returns the last inserted `AUTO_INCREMENT` value (or true) if the row is created, otherwise returns true on success or false on failure.
      */
     public function save()
     {
@@ -1058,7 +1059,7 @@ class Model extends Kraken implements JsonSerializable
 
     /**
      * Gets the primary key value from the model entity.
-     * @return mixed Returns the primary key value, null otherwise.
+     * @return string|int|null Returns the primary key value, null otherwise.
      */
     public function getPrimary()
     {
@@ -1126,7 +1127,7 @@ class Model extends Kraken implements JsonSerializable
     /**
      * Casts data types of fields from a row or an array of rows using model casts setting.
      * @param mixed $data A single row as an Element/associative array or a multi-dimensional of rows.
-     * @return mixed Returns the data with the casted fields.
+     * @return DbRow|Collection|array Returns the data with the casted fields.
      */
     private function castData($data)
     {
@@ -1242,13 +1243,13 @@ class Model extends Kraken implements JsonSerializable
         }
 
         // Returns the result
-        return $isElement ? new Element($data) : $data;
+        return $isElement ? new DbRow($data) : $data;
     }
 
     /**
      * Performs data relations with other models.
      * @param mixed $data An Element, Collection or array of data to relate.
-     * @return mixed Returns the data with all relations.
+     * @return Collection|DbRow|array Returns the data with all relations.
      */
     private function attachRelations($data)
     {
@@ -1682,7 +1683,7 @@ class Model extends Kraken implements JsonSerializable
         }
 
         // Returns the result
-        return $isElement ? new Element($data) : $data;
+        return $isElement ? new DbRow($data) : $data;
     }
 
     /**

@@ -382,7 +382,7 @@ class Firefly
      * Gets an argument value.
      * @param string $arg Argument key to get.
      * @param mixed $default (Optional) Default value to return if the key does not exist.
-     * @return mixed Returns the value if exists or the default if not.
+     * @return string|null Returns the value if exists or the default if not.
      */
     public static function getArg(string $arg, $default = null)
     {

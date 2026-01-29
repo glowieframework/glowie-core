@@ -648,20 +648,24 @@ class Crawler
 
                 // Error handling
                 if ($errNumber) throw new RequestException($url, $errMsg, $errNumber, $requestResult);
+                if (empty($requestResult)) throw new RequestException($url, 'CURL request failed', 0, $requestResult);
+                if (!$requestResult->isSuccessful()) throw new RequestException($url, 'Request returned status code ' . $requestResult->getStatusCode(), $requestResult->getStatusCode(), $requestResult);
 
                 // Returns the result
                 return $requestResult;
             }, $this->retryDelay);
-
-            // Closes the connection
-            if (is_resource($curl) || is_object($curl)) curl_close($curl);
         } catch (Throwable $th) {
+            // Error handling
+            if ($this->throw) throw $th;
+
+            if ($th instanceof RequestException && $th->getResponse()) {
+                return $th->getResponse();
+            } else {
+                return false;
+            }
+        } finally {
             // Closes the connection
             if (is_resource($curl) || is_object($curl)) curl_close($curl);
-
-            // Error handling
-            if ($this->throw) throw new RequestException($url, $th->getMessage(), $th->getCode(), $result);
-            return false;
         }
 
         // Returns the result

@@ -279,7 +279,7 @@ abstract class Command
      * Gets an argument value.
      * @param string $arg Argument key to get.
      * @param mixed $default (Optional) Default value to return if the key does not exist.
-     * @return mixed Returns the value if exists or the default if not.
+     * @return string|null Returns the value if exists or the default if not.
      */
     public function getArg(string $key, $default = null)
     {

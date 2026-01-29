@@ -67,7 +67,7 @@ class HttpResponse extends Element
      * Gets the value of a header from the HTTP response.
      * @param string $name Header name to get.
      * @param mixed $default (Optional) Default value to return if the header does not exist.
-     * @return mixed Returns the value if exists or the default if not.
+     * @return string|null Returns the value if exists or the default if not.
      */
     public function getHeader(string $name, $default = null)
     {

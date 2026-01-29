@@ -10,6 +10,7 @@ use Glowie\Core\Collection;
 use Closure;
 use stdClass;
 use Exception;
+use Glowie\Core\Resources\DbRow;
 use Util;
 
 /**
@@ -1522,7 +1523,7 @@ class Kraken
 
     /**
      * Fetches the first result from a SELECT query.
-     * @return mixed Returns the first resulting row on success or null if not found.
+     * @return DbRow|array|null Returns the first resulting row on success or null if not found.
      * @throws QueryException Throws an exception if the query fails.
      */
     public function fetchRow()

@@ -253,7 +253,7 @@ class Uploader
      * @param string $input Valid file input field name.
      * @param bool $multiple (Optional) Allow multiple uploads.
      * @param bool $deleteOnFail (Optional) Delete all uploaded files if an upload fails (only multiple uploads).
-     * @return mixed Returns an object with the uploaded file data (or a Collection of files on multiple uploads) on success or false on errors.
+     * @return UploadedFile|Collection|false Returns an object with the uploaded file data (or a Collection of files on multiple uploads) on success or false on errors.
      */
     public function upload(string $input, bool $multiple = true, bool $deleteOnFail = false)
     {
