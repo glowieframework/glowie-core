@@ -166,7 +166,7 @@ class Request implements JsonSerializable
      */
     public function fromGet()
     {
-        return new Element($_GET, true);
+        return new Element($_GET);
     }
 
     /**
@@ -175,7 +175,7 @@ class Request implements JsonSerializable
      */
     public function fromPost()
     {
-        return new Element($_POST, true);
+        return new Element($_POST);
     }
 
     /**
@@ -184,7 +184,7 @@ class Request implements JsonSerializable
      */
     public function fromServer()
     {
-        return new Element($_SERVER ?? [], true);
+        return new Element($_SERVER ?? []);
     }
 
     /**
@@ -204,7 +204,7 @@ class Request implements JsonSerializable
     {
         $params = [];
         parse_str($this->getBody(), $params);
-        return new Element($params, true);
+        return new Element($params);
     }
 
     /**
