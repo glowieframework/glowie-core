@@ -471,6 +471,24 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     }
 
     /**
+     * Keys the Collection using a specific column value.
+     * @param mixed $key The column name to use as the key (accepts dot notation keys).
+     * @return Collection Returns a new keyed Collection.
+     */
+    public function keyBy($key)
+    {
+        $result = [];
+
+        foreach ($this->__data as $item) {
+            $value = Util::recursiveGet($item, $key);
+            if (is_null($value)) continue;
+            $result[$value] = $item;
+        }
+
+        return new Collection($result);
+    }
+
+    /**
      * Returns the keys from the Collection.
      * @return Collection Returns a new Collection with the keys.
      */
