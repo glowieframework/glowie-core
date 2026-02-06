@@ -119,6 +119,18 @@ if (!function_exists('asset')) {
     }
 }
 
+if (!function_exists('config_path')) {
+    /**
+     * Returns the real application `config` folder location in the file system.
+     * @param string $path (Optional) Relative path to append to the location.
+     * @return string Full `config` location.
+     */
+    function config_path(string $path = '')
+    {
+        return \Util::location('config/' . $path);
+    }
+}
+
 if (!function_exists('app_path')) {
     /**
      * Returns the real application location in the file system.
@@ -313,6 +325,20 @@ if (!function_exists('redirect')) {
     function redirect(string $destination, int $code = 302)
     {
         return \Glowie\Core\Http\Rails::getResponse()->redirect($destination, $code);
+    }
+}
+
+if (!function_exists('to_route')) {
+    /**
+     * Redirects to a named route.
+     * @param string $route Route name.
+     * @param array $params (Optional) Route parameters to bind into the URL.
+     * @param int $code (Optional) HTTP status code to pass with the redirect.
+     * @return \Glowie\Core\Http\Response Current Response instance for nested calls.
+     */
+    function to_route(string $route, array $params = [], int $code = 302)
+    {
+        return \Glowie\Core\Http\Rails::getResponse()->redirectRoute($route, $params, $code);
     }
 }
 

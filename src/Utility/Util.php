@@ -85,7 +85,7 @@ class Util
         $class = null;
         if (is_object($var)) {
             $class = get_class($var);
-            $html .= $cli ? '<color="yellow">' . $class : '<a href="" class="toggle">{' . $class;
+            $html .= $cli ? '<color="yellow">' . $class : '<a href="javascript:void(0);" class="toggle">{' . $class;
 
             // Checks for Closure variable
             if ($var instanceof Closure) {
@@ -112,10 +112,10 @@ class Util
                 $wasArray = true;
                 $html .= '<color="magenta">array(' . count($var) . ')[</color>';
             } else {
-                $html .= '<a href="" class="toggle array">[array(' . count($var) . ')<span class="icon arrow-down"></span>]</a>';
+                $html .= '<a href="javascript:void(0);" class="toggle array">[array(' . count($var) . ')<span class="icon arrow-down"></span>]</a>';
             }
         } else if (is_resource($var)) {
-            $html .= $cli ? '<color="cyan">{' . get_resource_type($var) : '<a href="" class="toggle">{' . get_resource_type($var);
+            $html .= $cli ? '<color="cyan">{' . get_resource_type($var) : '<a href="javascript:void(0);" class="toggle">{' . get_resource_type($var);
             $var = stream_get_meta_data($var);
             if ($cli) {
                 $html .= '(' . count($var) . ')</color>';
@@ -258,13 +258,16 @@ class Util
         // Gets the route parameters
         $result = [];
         $missing = [];
-        if (preg_match_all('~:(\w+)~', $routeData['uri'], $segments) && !empty($segments[1])) {
+
+        if (preg_match_all('~:(\w+)~', $routeData['uri'], $segments)) {
             $uri = $routeData['uri'];
-            foreach ($segments[1] as $item) {
-                if (isset($params[$item])) {
-                    $result[$item] = $params[$item];
-                    $quote = str_replace(['\\', '$'], ['\\\\', '\\$'], $params[$item]);
+            foreach ($segments[1] as $i => $item) {
+                if (isset($params[$item]) || isset($params[$i])) {
+                    $value = $params[$item] ?? $params[$i];
+                    $result[$item] = $value;
+                    $quote = str_replace(['\\', '$'], ['\\\\', '\\$'], $value);
                     $uri = preg_replace('~:' . preg_quote($item, '~') . '~i', $quote, $uri);
+                    unset($params[$i]);
                 } else {
                     $missing[] = $item;
                 }
@@ -272,9 +275,9 @@ class Util
         }
 
         // Validates missing parameters
-        if (!empty($missing)) throw new Exception('route(): Missing parameter(s) "' . implode('", "', $missing) . '" for route "' . $route . '"');
+        if (!empty($missing)) throw new Exception('route(): Missing required parameter(s) "' . implode('", "', $missing) . '" for route "' . $route . '"');
 
-        // Checks if the route has any parameters
+        // Checks if the route has remaining parameters to bind into the query string
         if (!empty($result)) {
             $remaining = array_diff_key($params, $result);
             $url = $uri . (!empty($remaining) ? '?' . http_build_query($remaining) : '');
