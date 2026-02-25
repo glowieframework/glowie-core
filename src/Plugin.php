@@ -58,10 +58,10 @@ abstract class Plugin
 
         // Check if base folder exists
         $dir = pathinfo($target, PATHINFO_DIRNAME);
-        if (!is_dir($dir)) mkdir($dir, 0755, true);
+        if (!is_dir($dir)) mkdir($dir, 0775, true);
         if (!is_writable($dir)) {
             $e = new FileException('Directory "' . $dir . '" is not writable, please check your chmod settings');
-            $e->setSuggestion('Check if the directory exists and has writing permissions for the web server user (chmod 0755)');
+            $e->setSuggestion('Check if the directory exists and has writing permissions for the web server user (chmod 0775)');
             throw $e;
         }
 

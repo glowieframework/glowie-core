@@ -258,10 +258,10 @@ class Uploader
     public function upload(string $input, bool $multiple = true, bool $deleteOnFail = false)
     {
         // Validate target directory
-        if (!is_dir($this->directory)) mkdir($this->directory, 0755, true);
+        if (!is_dir($this->directory)) mkdir($this->directory, 0775, true);
         if (!is_writable($this->directory)) {
             $e = new FileException('Directory "' . $this->directory . '" is invalid or not writable');
-            $e->setSuggestion('Check if the directory exists and has writing permissions for the web server user (chmod 0755)');
+            $e->setSuggestion('Check if the directory exists and has writing permissions for the web server user (chmod 0775)');
             throw $e;
         }
 

@@ -106,10 +106,10 @@ class UploadedFile extends Element
         if (empty($filename)) $filename = pathinfo($path, PATHINFO_BASENAME);
 
         // Checks if the target directory exists and is writable
-        if (!is_dir($destination)) mkdir($destination, 0755, true);
+        if (!is_dir($destination)) mkdir($destination, 0775, true);
         if (!is_writable($destination)) {
             $e = new FileException('Directory "' . $destination . '" is not writable, please check your chmod settings');
-            $e->setSuggestion('Check if the directory exists and has writing permissions for the web server user (chmod 0755)');
+            $e->setSuggestion('Check if the directory exists and has writing permissions for the web server user (chmod 0775)');
             throw $e;
         }
 
@@ -138,10 +138,10 @@ class UploadedFile extends Element
         if (empty($filename)) $filename = pathinfo($path, PATHINFO_BASENAME);
 
         // Checks if the target directory exists and is writable
-        if (!is_dir($destination)) mkdir($destination, 0755, true);
+        if (!is_dir($destination)) mkdir($destination, 0775, true);
         if (!is_writable($destination)) {
             $e = new FileException('Directory "' . $destination . '" is not writable, please check your chmod settings');
-            $e->setSuggestion('Check if the directory exists and has writing permissions for the web server user (chmod 0755)');
+            $e->setSuggestion('Check if the directory exists and has writing permissions for the web server user (chmod 0775)');
             throw $e;
         }
 

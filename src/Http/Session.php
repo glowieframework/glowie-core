@@ -73,7 +73,7 @@ class Session implements JsonSerializable
         $sessdir = Config::get('session.path', Util::location('storage/session'));
         if (!is_dir($sessdir) || !is_writable($sessdir)) {
             $e = new FileException('Session path "' . $sessdir . '" is invalid or not writable');
-            $e->setSuggestion('Check if the directory exists and has writing permissions for the web server user (chmod 0755)');
+            $e->setSuggestion('Check if the directory exists and has writing permissions for the web server user (chmod 0775)');
             throw $e;
         }
         session_save_path($sessdir);

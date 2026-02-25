@@ -131,7 +131,7 @@ class Scheduler
             if (!empty($task['conditions']['withoutOverlapping'])) {
                 // Checks if the tmp path exists
                 $tmpPath = Util::location('storage/tmp');
-                if (!is_dir($tmpPath)) mkdir($tmpPath, 0755, true);
+                if (!is_dir($tmpPath)) mkdir($tmpPath, 0775, true);
                 if (!is_writable($tmpPath)) throw new FileException('Directory "app/storage/tmp" is not writable, please check your chmod settings');
 
                 // Checks if the lock file exists or creates it

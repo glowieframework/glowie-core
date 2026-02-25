@@ -662,7 +662,7 @@ class Firefly
         // Grants permissions to the storage and upload folders, if they exist
         $paths = ['storage', 'storage/cache', 'storage/session', 'storage/tmp', 'public/uploads'];
         foreach ($paths as $path) {
-            if (is_dir(Util::location($path))) chmod(Util::location($path), 0755);
+            if (is_dir(Util::location($path))) chmod(Util::location($path), 0775);
         }
 
         // Prints welcome message
@@ -854,7 +854,7 @@ class Firefly
     private static function doCommandCreate(string $name, string $template = 'Command.php')
     {
         // Checks permissions
-        if (!is_dir(Util::location('commands'))) mkdir(Util::location('commands'), 0755, true);
+        if (!is_dir(Util::location('commands'))) mkdir(Util::location('commands'), 0775, true);
         if (!is_writable(Util::location('commands'))) throw new FileException('Directory "app/commands" is not writable, please check your chmod settings');
 
         // Validates the command name
@@ -882,7 +882,7 @@ class Firefly
     private static function __createController()
     {
         // Checks permissions
-        if (!is_dir(Util::location('controllers'))) mkdir(Util::location('controllers'), 0755, true);
+        if (!is_dir(Util::location('controllers'))) mkdir(Util::location('controllers'), 0775, true);
         if (!is_writable(Util::location('controllers'))) throw new FileException('Directory "app/controllers" is not writable, please check your chmod settings');
 
         // Checks if name was filled
@@ -920,7 +920,7 @@ class Firefly
     private static function __createLanguage()
     {
         // Checks permissions
-        if (!is_dir(Util::location('languages'))) mkdir(Util::location('languages'), 0755, true);
+        if (!is_dir(Util::location('languages'))) mkdir(Util::location('languages'), 0775, true);
         if (!is_writable(Util::location('languages'))) throw new FileException('Directory "app/languages" is not writable, please check your chmod settings');
 
         // Checks if name was filled
@@ -949,7 +949,7 @@ class Firefly
     private static function __createMiddleware()
     {
         // Checks permissions
-        if (!is_dir(Util::location('middlewares'))) mkdir(Util::location('middlewares'), 0755, true);
+        if (!is_dir(Util::location('middlewares'))) mkdir(Util::location('middlewares'), 0775, true);
         if (!is_writable(Util::location('middlewares'))) throw new FileException('Directory "app/middlewares" is not writable, please check your chmod settings');
 
         // Checks if name was filled
@@ -999,7 +999,7 @@ class Firefly
     private static function doMigrationCreate(string $name, string $template = 'Migration.php')
     {
         // Checks permissions
-        if (!is_dir(Util::location('migrations'))) mkdir(Util::location('migrations'), 0755, true);
+        if (!is_dir(Util::location('migrations'))) mkdir(Util::location('migrations'), 0775, true);
         if (!is_writable(Util::location('migrations'))) throw new FileException('Directory "app/migrations" is not writable, please check your chmod settings');
 
         // Validates the migration name
@@ -1028,7 +1028,7 @@ class Firefly
     private static function __createModel()
     {
         // Checks permissions
-        if (!is_dir(Util::location('models'))) mkdir(Util::location('models'), 0755, true);
+        if (!is_dir(Util::location('models'))) mkdir(Util::location('models'), 0775, true);
         if (!is_writable(Util::location('models'))) throw new FileException('Directory "app/models" is not writable, please check your chmod settings');
 
         // Checks if name was filled
@@ -1078,7 +1078,7 @@ class Firefly
     private static function __createJob()
     {
         // Checks permissions
-        if (!is_dir(Util::location('jobs'))) mkdir(Util::location('jobs'), 0755, true);
+        if (!is_dir(Util::location('jobs'))) mkdir(Util::location('jobs'), 0775, true);
         if (!is_writable(Util::location('jobs'))) throw new FileException('Directory "app/jobs" is not writable, please check your chmod settings');
 
         // Checks if name was filled
@@ -1109,7 +1109,7 @@ class Firefly
     private static function __createService()
     {
         // Checks permissions
-        if (!is_dir(Util::location('services'))) mkdir(Util::location('services'), 0755, true);
+        if (!is_dir(Util::location('services'))) mkdir(Util::location('services'), 0775, true);
         if (!is_writable(Util::location('services'))) throw new FileException('Directory "app/services" is not writable, please check your chmod settings');
 
         // Checks if name was filled
