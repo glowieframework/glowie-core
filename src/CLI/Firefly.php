@@ -436,7 +436,11 @@ class Firefly
      */
     public static function color(string $text, $color = 'default')
     {
-        return '<color="' . $color . '">' . $text . '</color>';
+        $lines = explode(PHP_EOL, $text);
+        $formattedLines = array_map(function ($line) use ($color) {
+            return '<color="' . $color . '">' . $line . '</color>';
+        }, $lines);
+        return implode(PHP_EOL, $formattedLines);
     }
 
     /**
@@ -447,7 +451,11 @@ class Firefly
      */
     public static function bg(string $text, $bg = 'default')
     {
-        return '<bg="' . $bg . '">' . $text . '</bg>';
+        $lines = explode(PHP_EOL, $text);
+        $formattedLines = array_map(function ($line) use ($bg) {
+            return '<bg="' . $bg . '">' . $line . '</bg>';
+        }, $lines);
+        return implode(PHP_EOL, $formattedLines);
     }
 
     /**
@@ -457,7 +465,11 @@ class Firefly
      */
     public static function bold(string $text)
     {
-        return '<b>' . $text . '</b>';
+        $lines = explode(PHP_EOL, $text);
+        $formattedLines = array_map(function ($line) {
+            return '<b>' . $line . '</b>';
+        }, $lines);
+        return implode(PHP_EOL, $formattedLines);
     }
 
     /**
@@ -467,7 +479,11 @@ class Firefly
      */
     public static function italic(string $text)
     {
-        return '<i>' . $text . '</i>';
+        $lines = explode(PHP_EOL, $text);
+        $formattedLines = array_map(function ($line) {
+            return '<i>' . $line . '</i>';
+        }, $lines);
+        return implode(PHP_EOL, $formattedLines);
     }
 
     /**
@@ -477,7 +493,11 @@ class Firefly
      */
     public static function underline(string $text)
     {
-        return '<u>' . $text . '</u>';
+        $lines = explode(PHP_EOL, $text);
+        $formattedLines = array_map(function ($line) {
+            return '<u>' . $line . '</u>';
+        }, $lines);
+        return implode(PHP_EOL, $formattedLines);
     }
 
     /**
@@ -487,7 +507,11 @@ class Firefly
      */
     public static function hidden(string $text)
     {
-        return '<hidden>' . $text . '</hidden>';
+        $lines = explode(PHP_EOL, $text);
+        $formattedLines = array_map(function ($line) {
+            return '<hidden>' . $line . '</hidden>';
+        }, $lines);
+        return implode(PHP_EOL, $formattedLines);
     }
 
     /**
@@ -503,10 +527,12 @@ class Firefly
         $length = mb_strlen($text);
         $paddingX = str_repeat(' ', $sizeX);
         $totalWidth = $length + ($sizeX * 2);
-        $verticalLine = str_repeat(' ', $totalWidth);
-        $top = str_repeat($verticalLine . PHP_EOL, $sizeY);
-        $bottom = str_repeat(PHP_EOL . $verticalLine, $sizeY);
-        return $top . $paddingX . $text . $paddingX . $bottom;
+        $emptyLine = str_repeat(' ', $totalWidth);
+        $lines = [];
+        for ($i = 0; $i < $sizeY; $i++) $lines[] = $emptyLine;
+        $lines[] = $paddingX . $text . $paddingX;
+        for ($i = 0; $i < $sizeY; $i++) $lines[] = $emptyLine;
+        return implode(PHP_EOL, $lines);
     }
 
     /**
@@ -631,6 +657,12 @@ class Firefly
             copy(Util::location('../.env.example'), $file);
             self::$silent = true;
             self::__generateKeys();
+        }
+
+        // Grants permissions to the storage and upload folders, if they exist
+        $paths = ['storage', 'storage/cache', 'storage/session', 'storage/tmp', 'public/uploads'];
+        foreach ($paths as $path) {
+            if (is_dir(Util::location($path))) chmod(Util::location($path), 0755);
         }
 
         // Prints welcome message
@@ -1281,6 +1313,9 @@ class Firefly
      */
     private static function __queueWatch()
     {
+        // Removes the time limit
+        set_time_limit(0);
+
         // Get bail arg
         $bail = self::hasOption('bail');
 
@@ -1289,9 +1324,39 @@ class Firefly
         self::print(self::color('[' . date('Y-m-d H:i:s') . '] Use Ctrl/Command+C to stop the service', 'yellow'));
 
         // Run watcher
+        $interval = (int)self::getArg('interval', 60);
         while (true) {
             Queue::process(self::getArg('name', 'default'), $bail, true, true);
-            sleep((int)self::getArg('interval', 60));
+            sleep($interval);
+        }
+    }
+
+    /**
+     * Run schedule worker.
+     */
+    private static function __scheduleWork()
+    {
+        // Removes the time limit
+        set_time_limit(0);
+
+        // Print welcome message
+        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Schedule Worker has started!', 'green'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Use Ctrl/Command+C to stop the service', 'yellow'));
+
+        // Run worker
+        while (true) {
+            // Saves the start time
+            $startTime = time();
+
+            // Calls the schedule command
+            self::triggerCommand('schedule');
+
+            // Calculates the wait time
+            $endTime = time() - $startTime;
+            $wait = 60 - $endTime;
+
+            // Waits for the next minute
+            if ($wait > 0) sleep($wait);
         }
     }
 
@@ -1374,6 +1439,7 @@ class Firefly
         self::print('  <color="yellow">rollback</color> <color="blue">--steps</color> | Rolls back the last applied migration');
         self::print('  <color="yellow">queue</color> <color="blue">--name</color> <color="cyan">-bail</color> | Runs the queue');
         self::print('  <color="yellow">queue-watch</color> <color="blue">--name --interval</color> <color="cyan">-bail</color> | Runs the queue watcher');
+        self::print('  <color="yellow">schedule-work</color> | Runs the schedule worker');
         self::print('  <color="yellow">publish</color> <color="cyan">-force</color> | Publishes plugin files to the application folder');
         self::print('  <color="yellow">version</color> | Displays current Firefly version');
         self::print('  <color="yellow">help</color> | Displays this help message');

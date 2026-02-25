@@ -407,13 +407,23 @@ class Request implements JsonSerializable
     }
 
     /**
-     * Return if the request body was made using JSON.\
+     * Returns if the request body was made using JSON.\
      * **Note:** This information relies in the `Content-Type` header, or the request body itself.
      * @return bool True if JSON request.
      */
     public function isJson()
     {
         return ($this->getContentType() === 'application/json' || Util::isJson($this->getBody()));
+    }
+
+    /**
+     * Returns if the request was made from localhost.
+     * @return bool True if local request.
+     */
+    public function isLocal()
+    {
+        $localAddresses = ['localhost', '127.0.0.1', '0.0.0.0', '::1'];
+        return in_array($this->getIPAddress(), $localAddresses) || in_array($this->getHostname(), $localAddresses);
     }
 
     /**

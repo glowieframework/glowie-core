@@ -18,6 +18,16 @@ use Util;
 class UploadedFile extends Element
 {
 
+    public function getName(bool $original = false)
+    {
+        return $original ? $this->get('original_name', $this->name) : $this->name;
+    }
+
+    public function getURL(bool $full = false)
+    {
+        return $full ? $this->full_url : $this->url;
+    }
+
     /**
      * Checks if the file mimetype matches.
      * @param string|array $mime Mimetype to check. You can also use an array of mimetypes.\
@@ -63,7 +73,7 @@ class UploadedFile extends Element
      * @return string|bool Returns the file preview as string on success or false on failure.
      * @throws FileException Throws an exception if the file does not exist.
      */
-    public function preview()
+    public function getPreview()
     {
         $content = $this->getContents();
         if ($content === false) return false;
@@ -75,7 +85,7 @@ class UploadedFile extends Element
      * @return array|bool Returns an array with the width and height of the image, false otherwise.
      * @throws FileException Throws an exception if the file does not exist.
      */
-    public function dimensions()
+    public function getDimensions()
     {
         $dimensions = @getimagesize($this->getLocation());
         if (!$dimensions) return false;

@@ -32,16 +32,16 @@ class ConsoleException extends SuggestionException
     /**
      * Creates a new instance of ConsoleException.
      * @param string $command Command that thrown the exception.
-     * @param Collection $args Array of arguments used in the command.
+     * @param Collection|array $args Arguments used in the command.
      * @param string $message (Optional) The exception message.
      * @param int $code (Optional) The exception code.
      * @param Throwable|null $previous (Optional) Previous throwable used for exception chaining.
      */
-    public function __construct(string $command, Collection $args, string $message = "", int $code = 0, ?Throwable $previous = null)
+    public function __construct(string $command, $args, string $message = "", int $code = 0, ?Throwable $previous = null)
     {
         parent::__construct('CLI: ' . $message, $code, $previous);
         $this->command = $command;
-        $this->args = $args;
+        $this->args = $args instanceof Collection ? $args : new Collection($args);
     }
 
     /**
