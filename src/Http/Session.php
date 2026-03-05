@@ -81,13 +81,14 @@ class Session implements JsonSerializable
         // INI settings
         ini_set('session.name', Config::get('session.name', 'app_session'));
         ini_set('session.gc_divisor', (string)Config::get('session.gc_cleaning', 50));
-        ini_set('session.gc_maxlifetime', (string)Config::get('session.lifetime', 120));
-        ini_set('session.cookie_httponly', (string)Config::get('session.restrict', true));
-        ini_set('session.cookie_secure', (string)Config::get('session.secure', false));
         ini_set('session.gc_probability', '1');
+        ini_set('session.gc_maxlifetime', (string)Config::get('session.lifetime', 120));
         ini_set('session.use_cookies', '1');
         ini_set('session.use_only_cookies', '1');
         ini_set('session.use_strict_mode', '1');
+        ini_set('session.cookie_httponly', Config::get('session.restrict', true) ? '1' : '0');
+        ini_set('session.cookie_samesite', Config::get('session.same_site', true) ? 'Strict' : 'Lax');
+        ini_set('session.cookie_secure', isset($_SERVER['HTTPS']) ? '1' : (Config::get('session.secure', false) ? '1' : '0'));
     }
 
     /**
