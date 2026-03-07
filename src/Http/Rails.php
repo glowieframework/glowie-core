@@ -108,6 +108,12 @@ class Rails
     private static $defaultController = 'Glowie\Controllers\Main';
 
     /**
+     * Class aliases.
+     * @var array
+     */
+    private static $aliases = [];
+
+    /**
      * Loads the route configuration file.
      */
     public static function load()
@@ -122,17 +128,34 @@ class Rails
     }
 
     /**
-     * Setup a new route for the application.
-     * @param string $route The route URI to setup.
-     * @param string $controller (Optional) The namespaced controller name that this route will instantiate.\
-     * You can use `ControllerName::class` to get this property correctly. Empty will use the default controller.
-     * @param string|null $action (Optional) The action name from the controller that this route will instantiate.
-     * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods.\
-     * Leave empty for all.
-     * @param string $name (Optional) Route name.
+     * Sets a named alias to a controller or middleware.
+     * @param string|array $alias Alias name or an associative array of aliases, where the key is the name and the value the target.
+     * @param string|null $target (Optional) The target namespaced class name of this alias. You can use `ClassName::class` to get this property correctly.
      * @return Rails Returns the current instance for nested calls.
      */
-    public static function addRoute(string $route, string $controller = '', ?string $action = null, $methods = [], string $name = '')
+    public static function alias($alias, ?string $target = null)
+    {
+        if (Util::isAssociativeArray($alias)) {
+            self::$aliases = array_merge(self::$aliases, $alias);
+            return new static;
+        }
+
+        if (Util::isEmpty($target)) throw new Exception('Alias target cannot be empty');
+        self::$aliases[$alias] = $target;
+        return new static;
+    }
+
+    /**
+     * Setup a new route for the application.
+     * @param string $route The route URI to setup.
+     * @param string|null $controller (Optional) The namespaced controller name or alias that this route will instantiate.\
+     * You can use `ControllerName::class` to get this property correctly. Empty will use the default controller.
+     * @param string|null $action (Optional) The action name from the controller that this route will instantiate. Empty will use a **camelCase** version of the route.
+     * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
+     * @param string|null $name (Optional) Route name. Empty will be generated automatically.
+     * @return Rails Returns the current instance for nested calls.
+     */
+    public static function addRoute(string $route, ?string $controller = null, ?string $action = null, $methods = [], ?string $name = null)
     {
         // Generates an unique route name
         if (Util::isEmpty($name)) {
@@ -166,12 +189,11 @@ class Rails
      * Setup an anonymous (controller-independent) route for the application.
      * @param string $route The route URI to setup.
      * @param callable $callback A function to run anonymously. A generic controller instance will be injected as the first param of this function.
-     * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods.\
-     * Leave empty for all.
-     * @param string $name (Optional) Route name.
+     * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
+     * @param string|null $name (Optional) Route name. Empty will be generated automatically.
      * @return Rails Returns the current instance for nested calls.
      */
-    public static function addAnonymous(string $route, callable $callback, $methods = [], string $name = '')
+    public static function addAnonymous(string $route, callable $callback, $methods = [], ?string $name = null)
     {
         // Generates an unique route name
         if (Util::isEmpty($name)) {
@@ -201,17 +223,16 @@ class Rails
     /**
      * Setup a new protected route for the application.
      * @param string $route The route URI to setup.
-     * @param string|array $middleware (Optional) The namespaced middleware name that this route will use to protect itself.\
+     * @param string|array $middleware (Optional) The namespaced middleware name or alias that this route will use to protect itself.\
      * You can use `MiddlewareName::class` to get this property correctly. You can also use an array of multiple middlewares.
-     * @param string $controller (Optional) The namespaced controller name that this route will instantiate.\
+     * @param string|null $controller (Optional) The namespaced controller name or alias that this route will instantiate.\
      * You can use `ControllerName::class` to get this property correctly. Empty will use the default controller.
      * @param string|null $action (Optional) The action name from the controller that this route will instantiate.
-     * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods.\
-     * Leave empty for all.
-     * @param string $name (Optional) Route name.
+     * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
+     * @param string|null $name (Optional) Route name. Empty will be generated automatically.
      * @return Rails Returns the current instance for nested calls.
      */
-    public static function addProtectedRoute(string $route, $middleware = 'Glowie\Middlewares\Authenticate', string $controller = '', ?string $action = null, $methods = [], string $name = '')
+    public static function addProtectedRoute(string $route, $middleware = 'Glowie\Middlewares\Authenticate', ?string $controller = null, ?string $action = null, $methods = [], ?string $name = null)
     {
         // Generates an unique route name
         if (Util::isEmpty($name)) {
@@ -246,14 +267,13 @@ class Rails
      * Setup an anonymous (controller-independent) protected route for the application.
      * @param string $route The route URI to setup.
      * @param callable $callback A function to run anonymously. A generic controller instance will be injected as the first param of this function.
-     * @param string|array $middleware (Optional) The namespaced middleware name that this route will use to protect itself.\
+     * @param string|array $middleware (Optional) The namespaced middleware name or alias that this route will use to protect itself.\
      * You can use `MiddlewareName::class` to get this property correctly. You can also use an array of multiple middlewares.
-     * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods.\
-     * Leave empty for all.
-     * @param string $name (Optional) Route name.
+     * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
+     * @param string|null $name (Optional) Route name. Empty will use a **camelCase** version of the route.
      * @return Rails Returns the current instance for nested calls.
      */
-    public static function addProtectedAnonymous(string $route, callable $callback, $middleware = 'Glowie\Middlewares\Authenticate', $methods = [], string $name = '')
+    public static function addProtectedAnonymous(string $route, callable $callback, $middleware = 'Glowie\Middlewares\Authenticate', $methods = [], ?string $name = null)
     {
         // Generates an unique route name
         if (Util::isEmpty($name)) {
@@ -286,12 +306,11 @@ class Rails
      * @param string $route The route URI to redirect.
      * @param string $target The target URl to redirect this route to.
      * @param int $code (Optional) HTTP status code to pass with the redirect.
-     * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods.\
-     * Leave empty for all.
-     * @param string $name (Optional) Route name.
+     * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
+     * @param string|null $name (Optional) Route name. Empty will use a **camelCase** version of the route.
      * @return Rails Returns the current instance for nested calls.
      */
-    public static function addRedirect(string $route, string $target, int $code = Response::HTTP_FOUND, $methods = [], string $name = '')
+    public static function addRedirect(string $route, string $target, int $code = Response::HTTP_FOUND, $methods = [], ?string $name = null)
     {
         // Generates an unique route name
         if (Util::isEmpty($name)) {
@@ -348,7 +367,7 @@ class Rails
 
     /**
      * Sets the middleware for the last added route.
-     * @param string|array $middleware The namespaced middleware name that this route will use to protect itself.\
+     * @param string|array $middleware The namespaced middleware name or alias that this route will use to protect itself.\
      * You can use `MiddlewareName::class` to get this property correctly. You can also use an array of multiple middlewares.
      * @return Rails Returns the current instance for nested calls.
      */
@@ -388,7 +407,7 @@ class Rails
     /**
      * Adds a new resource route.
      * @param string $name Name of the resource. It will be used to generate the URIs.
-     * @param string $controller (Optional) The namespaced controller name that this resource will instantiate.\
+     * @param string $controller (Optional) The namespaced controller name or alias that this resource will instantiate.\
      * You can use `ControllerName::class` to get this property correctly. Empty will use the default controller.
      * @param array $except (Optional) Array of ignored actions in the resource.
      */
@@ -407,8 +426,7 @@ class Rails
      * Maps multiple routes at once.
      * @param array $routes Associative array of routes to map. The key must be the route URI and the value must be an array\
      * with the **controller, action and name** (in this order). Parameters are optional.
-     * @param string|array $methods (Optional) HTTP methods that these routes accept. Can be a single method or an array of methods.\
-     * Leave empty for all.
+     * @param string|array $methods (Optional) HTTP methods that these routes accept. Can be a single method or an array of methods. Leave empty for all.
      */
     public static function mapRoutes(array $routes, $methods = [])
     {
@@ -422,10 +440,9 @@ class Rails
      * Maps multiple protected routes at once.
      * @param array $routes Associative array of routes to map. The key must be the route URI and the value must be an array\
      * with the **controller, action and name** (in this order). Parameters are optional.
-     * @param string|array $middleware (Optional) The namespaced middleware name that these routes will use to protect themself.\
+     * @param string|array $middleware (Optional) The namespaced middleware name or alias that these routes will use to protect themself.\
      * You can use `MiddlewareName::class` to get this property correctly. You can also use an array of multiple middlewares.
-     * @param string|array $methods (Optional) HTTP methods that these routes accept. Can be a single method or an array of methods.\
-     * Leave empty for all.
+     * @param string|array $methods (Optional) HTTP methods that these routes accept. Can be a single method or an array of methods. Leave empty for all.
      */
     public static function mapProtectedRoutes(array $routes, $middleware = 'Glowie\Middlewares\Authenticate', $methods = [])
     {
@@ -466,7 +483,7 @@ class Rails
 
     /**
      * Groups a collection of routes into a single or a group of middlewares.
-     * @param string|array $middleware (Optional) The namespaced middleware name that these routes will use to protect themself.\
+     * @param string|array $middleware (Optional) The namespaced middleware name or alias that these routes will use to protect themself.\
      * You can use `MiddlewareName::class` to get this property correctly. You can also use an array of multiple middlewares.
      * @param callable $callback A function with the grouped route definition methods.
      */
@@ -479,7 +496,7 @@ class Rails
 
     /**
      * Groups a collection of routes into a single controller.
-     * @param string $controller The namespaced controller name that this routes will instantiate.\
+     * @param string $controller The namespaced controller name or alias that this routes will instantiate.\
      * You can use `ControllerName::class` to get this property correctly.
      * @param callable $callback A function with the grouped route definition methods.
      */
@@ -493,7 +510,7 @@ class Rails
 
     /**
      * Sets a middleware to all application routes.
-     * @param string|array $middleware The namespaced middleware name that all routes will use to protect themself.\
+     * @param string|array $middleware The namespaced middleware name or alias that all routes will use to protect themself.\
      * You can use `MiddlewareName::class` to get this property correctly. You can also use an array of multiple middlewares.
      */
     public static function setGlobalMiddleware($middleware)
@@ -650,11 +667,15 @@ class Rails
             // Gets the controller
             $controller = isset($config['callback']) ? Generic::class : $config['controller'];
 
-            // If the controller class does not exist, trigger an error
+            // If the controller class does not exist, try to use an alias or trigger an error
             if (!class_exists($controller)) {
-                $e = new RoutingException("Controller \"{$controller}\" was not found");
-                $e->setSuggestion('Check if the controller class exists and it is in the correct namespace under Glowie\Controllers.');
-                throw $e;
+                if (!empty(self::$aliases[$controller])) {
+                    $controller = self::$aliases[$controller];
+                } else {
+                    $e = new RoutingException("Controller \"{$controller}\" was not found");
+                    $e->setSuggestion('Check if the controller class exists and it is in the correct namespace under Glowie\Controllers.');
+                    throw $e;
+                }
             }
 
             // Instantiates the controller
@@ -662,11 +683,18 @@ class Rails
 
             // Checks for the route middlewares
             $config['middleware'] = array_merge(self::$globalMiddlewares, $config['middleware'] ?? []);
+
             if (!empty($config['middleware'])) {
                 // Runs each middleware
                 foreach ($config['middleware'] as $middleware) {
-                    // If middleware class does not exist, trigger an error
-                    if (!class_exists($middleware)) throw new RoutingException("\"{$middleware}\" was not found");
+                    // If middleware class does not exist, try to use an alias or trigger an error
+                    if (!class_exists($middleware)) {
+                        if (!empty(self::$aliases[$middleware])) {
+                            $middleware = self::$aliases[$middleware];
+                        } else {
+                            throw new RoutingException("\"{$middleware}\" was not found");
+                        }
+                    }
 
                     // Instantiates the middleware
                     self::$middleware = new $middleware;
