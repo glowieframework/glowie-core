@@ -697,11 +697,11 @@ class Model extends Kraken implements JsonSerializable
 
     /**
      * Checks if the initial row data has been modified in the model entity.
-     * @param string $field (Optional) Field to check. Leave empty to compare everything.
+     * @param string|null $field (Optional) Field to check. Leave empty to compare everything.
      * @return bool Returns true if the row data has been modified or false otherwise.
      * @throws Exception Throws an exception if the model entity is not filled with a row data.
      */
-    public function isDirty(string $field = '')
+    public function isDirty(?string $field = null)
     {
         if (!$this->_initialData) throw new Exception('isDirty(): Model "' . get_class($this) . '" entity was not filled with a row data');
         if (!Util::isEmpty($field)) {
@@ -713,11 +713,11 @@ class Model extends Kraken implements JsonSerializable
 
     /**
      * Checks if the initial row data has not been modified in the model entity.
-     * @param string $field (Optional) Field to check. Leave empty to compare everything.
+     * @param string|null $field (Optional) Field to check. Leave empty to compare everything.
      * @return bool Returns true if the row data has not been modified or false otherwise.
      * @throws Exception Throws an exception if the model entity is not filled with a row data.
      */
-    public function isPristine(string $field = '')
+    public function isPristine(?string $field = null)
     {
         if (!$this->_initialData) throw new Exception('isPristine(): Model "' . get_class($this) . '" entity was not filled with a row data');
         return !$this->isDirty($field);
@@ -849,15 +849,28 @@ class Model extends Kraken implements JsonSerializable
     }
 
     /**
+     * Sets a pivot model to the last relation created in the Model.
+     * @param string $pivotClass Pivot model classname with namespace. You can use `ModelName::class` to get this property correctly.
+     * @return $this Current Model instance for nested calls.
+     */
+    public function withPivot(string $pivotClass)
+    {
+        if (empty($this->_relations)) throw new Exception('Model: No relation created to be modified');
+        $i = array_key_last($this->_relations);
+        $this->_relations[$i]['pivot-model'] = $pivotClass;
+        return $this;
+    }
+
+    /**
      * Setup a one to one relationship with another model.
      * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
-     * @param string $column (Optional) Foreign key column name of the current model in the related table. Leave empty for auto.
-     * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
+     * @param string|null $column (Optional) Foreign key column name of the current model in the related table. Leave empty for auto.
+     * @param string|null $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
      * @param callable|null $callback (Optional) A function to interact with the related model before querying the relationship.\
      * It receives the related Model instance as the first parameter, and the current row as an associative array.
      * @return $this Current Model instance for nested calls.
      */
-    public function hasOne(string $model, string $column = '', string $name = '', ?callable $callback = null)
+    public function hasOne(string $model, ?string $column = null, ?string $name = null, ?callable $callback = null)
     {
         // Get primary key and names
         $primary = $this->getPrimaryName();
@@ -880,13 +893,13 @@ class Model extends Kraken implements JsonSerializable
     /**
      * Setup a one to many relationship with another model.
      * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
-     * @param string $column (Optional) Foreign key column name of the current model in the related table. Leave empty for auto.
-     * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
+     * @param string|null $column (Optional) Foreign key column name of the current model in the related table. Leave empty for auto.
+     * @param string|null $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
      * @param callable|null $callback (Optional) A function to interact with the related model before querying the relationship.\
      * It receives the related Model instance as the first parameter, and the current row as an associative array.
      * @return $this Current Model instance for nested calls.
      */
-    public function hasMany(string $model, string $column = '', string $name = '', ?callable $callback = null)
+    public function hasMany(string $model, ?string $column = null, ?string $name = null, ?callable $callback = null)
     {
         // Get primary key and names
         $primary = $this->getPrimaryName();
@@ -909,13 +922,13 @@ class Model extends Kraken implements JsonSerializable
     /**
      * Setup a many to one relationship with another model.
      * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
-     * @param string $column (Optional) Foreign key column name of the related model in the current table. Leave empty for auto.
-     * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
+     * @param string|null $column (Optional) Foreign key column name of the related model in the current table. Leave empty for auto.
+     * @param string|null $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
      * @param callable|null $callback (Optional) A function to interact with the related model before querying the relationship.\
      * It receives the related Model instance as the first parameter, and the current row as an associative array.
      * @return $this Current Model instance for nested calls.
      */
-    public function belongsTo(string $model, string $column = '', string $name = '', ?callable $callback = null)
+    public function belongsTo(string $model, ?string $column = null, ?string $name = null, ?callable $callback = null)
     {
         // Get primary key and names
         $primary = (new $model([], false))->getPrimaryName();
@@ -938,16 +951,16 @@ class Model extends Kraken implements JsonSerializable
     /**
      * Setup a many to many relationship with another model. **This requires an intermediate (pivot) table.**
      * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
-     * @param string $pivot (Optional) Intermediate table name. Leave empty for auto.
-     * @param string $column (Optional) Foreign key column name of the current model in the pivot table. Leave empty for auto.
-     * @param string $foreign (Optional) Foreign key column name of the related model in the pivot table. Leave empty for auto.
-     * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
+     * @param string|null $pivot (Optional) Intermediate table name. Leave empty for auto.
+     * @param string|null $column (Optional) Foreign key column name of the current model in the pivot table. Leave empty for auto.
+     * @param string|null $foreign (Optional) Foreign key column name of the related model in the pivot table. Leave empty for auto.
+     * @param string|null $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
      * @param callable|null $callback (Optional) A function to interact with the related model before querying the relationship.\
      * It receives the related Model instance as the first parameter, the current row as an associative array and the pivot table instance.
      * @param string $pivotName (Optional) Name of the pivot attribute in the relationship rows.
      * @return $this Current Model instance for nested calls.
      */
-    public function belongsToMany(string $model, string $pivot = '', string $column = '', string $foreign = '', string $name = '', ?callable $callback = null, string $pivotName = 'pivot')
+    public function belongsToMany(string $model, ?string $pivot = null, ?string $column = null, ?string $foreign = null, ?string $name = null, ?callable $callback = null, string $pivotName = 'pivot')
     {
         // Get primary key and names
         $instance = new $model([], false);
@@ -981,14 +994,14 @@ class Model extends Kraken implements JsonSerializable
      * Setup a one to one relationship with another model using an intermediate model.
      * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
      * @param string $intermediate Intermediate model classname with namespace. You can use `ModelName::class` to get this property correctly.
-     * @param string $foreignCurrent (Optional) Foreign key column name of the current model in the intermediate table. Leave empty for auto.
-     * @param string $foreignTarget (Optional) Foreign key column name of the intermediate model in the related table. Leave empty for auto.
-     * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
+     * @param string|null $foreignCurrent (Optional) Foreign key column name of the current model in the intermediate table. Leave empty for auto.
+     * @param string|null $foreignTarget (Optional) Foreign key column name of the intermediate model in the related table. Leave empty for auto.
+     * @param string|null $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
      * @param callable|null $callback $callback (Optional) A function to interact with the related and intermediate models before querying the relationship.\
      * It receives the related Model instance as the first parameter, the current row as an associative array and the intermediate model instance.
      * @return $this Current Model instance for nested calls.
      */
-    public function hasOneThrough(string $model, string $intermediate, string $foreignCurrent = '', string $foreignTarget = '', string $name = '', ?callable $callback = null)
+    public function hasOneThrough(string $model, string $intermediate, ?string $foreignCurrent = null, ?string $foreignTarget = null, ?string $name = null, ?callable $callback = null)
     {
         // Get primary key and names
         $primary = $this->getPrimaryName();
@@ -1021,14 +1034,14 @@ class Model extends Kraken implements JsonSerializable
      * Setup a one to many relationship with another model using an intermediate model.
      * @param string $model Related model classname with namespace. You can use `ModelName::class` to get this property correctly.
      * @param string $intermediate Intermediate model classname with namespace. You can use `ModelName::class` to get this property correctly.
-     * @param string $foreignCurrent (Optional) Foreign key column name from the current model in the intermediate table. Leave empty for auto.
-     * @param string $foreignTarget (Optional) Foreign key column name from the intermediate model in the target table. Leave empty for auto.
-     * @param string $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
+     * @param string|null $foreignCurrent (Optional) Foreign key column name from the current model in the intermediate table. Leave empty for auto.
+     * @param string|null $foreignTarget (Optional) Foreign key column name from the intermediate model in the target table. Leave empty for auto.
+     * @param string|null $name (Optional) Name of this relation to add to the query results. Leave empty for auto.
      * @param callable|null $callback $callback (Optional) A function to interact with the related and intermediate models before querying the relationship.\
      * It receives the related Model instance as the first parameter, the current row as an associative array and the intermediate model instance.
      * @return $this Current Model instance for nested calls.
      */
-    public function hasManyThrough(string $model, string $intermediate, string $foreignCurrent = '', string $foreignTarget = '', string $name = '', ?callable $callback = null)
+    public function hasManyThrough(string $model, string $intermediate, ?string $foreignCurrent = null, ?string $foreignTarget = null, ?string $name = null, ?callable $callback = null)
     {
         // Get primary key and names
         $primary = $this->getPrimaryName();
@@ -1401,9 +1414,23 @@ class Model extends Kraken implements JsonSerializable
                     // Gets the primary keys from the current model
                     $currentKeys = $data->column($item['primary-current'])->unique();
 
-                    // Creates the related model and pivot and run the modifiers
+                    // Creates the related model and pivot
                     $table = new $item['model'];
-                    $pivot = $item['type'] === 'belongs-many' ? new Kraken($item['pivot'], $this->_database) : new $item['intermediate'];
+
+                    if ($item['type'] === 'belongs-many') {
+                        if (isset($item['pivot-model'])) {
+                            $pivot = new $item['pivot-model'];
+                            $isPivotModel = true;
+                        } else {
+                            $pivot = new Kraken($item['pivot'], $this->_database);
+                            $isPivotModel = false;
+                        }
+                    } else {
+                        $pivot = new $item['intermediate'];
+                        $isPivotModel = true;
+                    }
+
+                    // Run the modifiers and callbacks
                     if (!is_null($item['callback'])) call_user_func_array($item['callback'], [&$table, &$data, &$pivot]);
                     if (isset($item['modifier'])) call_user_func_array($item['modifier'], [&$table, &$data, &$pivot]);
 
@@ -1416,7 +1443,7 @@ class Model extends Kraken implements JsonSerializable
                     // Gets the foreign keys from the current model in the pivot
                     if ($currentKeys->isNotEmpty()) {
                         $pivotRelations = $pivot->whereIn($item['current-foreign'], $currentKeys);
-                        $pivotRelations = $item['type'] === 'belongs-many' ? $pivotRelations->fetchAll() : $pivotRelations->all();
+                        $pivotRelations = $isPivotModel ? $pivotRelations->all() : $pivotRelations->fetchAll();
                     } else {
                         $pivotRelations = new Collection();
                     }

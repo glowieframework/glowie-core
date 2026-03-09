@@ -42,13 +42,13 @@ class Rails
     private static $middleware;
 
     /**
-     * Request handler.
+     * Request instance.
      * @var Request
      */
     private static $request;
 
     /**
-     * Response handler.
+     * Response instance.
      * @var Response
      */
     private static $response;
@@ -129,7 +129,7 @@ class Rails
 
     /**
      * Sets a named alias to a controller or middleware.
-     * @param string|array $alias Alias name or an associative array of aliases, where the key is the name and the value the target.
+     * @param string|array $alias Alias name or an associative array of aliases, where the key is the name of the alias and the value is the target class.
      * @param string|null $target (Optional) The target namespaced class name of this alias. You can use `ClassName::class` to get this property correctly.
      * @return Rails Returns the current instance for nested calls.
      */
@@ -188,7 +188,7 @@ class Rails
     /**
      * Setup an anonymous (controller-independent) route for the application.
      * @param string $route The route URI to setup.
-     * @param callable $callback A function to run anonymously. A generic controller instance will be injected as the first param of this function.
+     * @param callable $callback A function to run anonymously. A generic controller instance will be passed as the first param of this function.
      * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
      * @param string|null $name (Optional) Route name. Empty will be generated automatically.
      * @return Rails Returns the current instance for nested calls.
@@ -266,11 +266,11 @@ class Rails
     /**
      * Setup an anonymous (controller-independent) protected route for the application.
      * @param string $route The route URI to setup.
-     * @param callable $callback A function to run anonymously. A generic controller instance will be injected as the first param of this function.
+     * @param callable $callback A function to run anonymously. A generic controller instance will be passed as the first param of this function.
      * @param string|array $middleware (Optional) The namespaced middleware name or alias that this route will use to protect itself.\
      * You can use `MiddlewareName::class` to get this property correctly. You can also use an array of multiple middlewares.
      * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
-     * @param string|null $name (Optional) Route name. Empty will use a **camelCase** version of the route.
+     * @param string|null $name (Optional) Route name. Empty will be generated automatically.
      * @return Rails Returns the current instance for nested calls.
      */
     public static function addProtectedAnonymous(string $route, callable $callback, $middleware = 'Glowie\Middlewares\Authenticate', $methods = [], ?string $name = null)
@@ -304,10 +304,10 @@ class Rails
     /**
      * Setup a new redirect route for the application.
      * @param string $route The route URI to redirect.
-     * @param string $target The target URl to redirect this route to.
+     * @param string $target The target URL to redirect this route to.
      * @param int $code (Optional) HTTP status code to pass with the redirect.
      * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
-     * @param string|null $name (Optional) Route name. Empty will use a **camelCase** version of the route.
+     * @param string|null $name (Optional) Route name. Empty will be generated automatically.
      * @return Rails Returns the current instance for nested calls.
      */
     public static function addRedirect(string $route, string $target, int $code = Response::HTTP_FOUND, $methods = [], ?string $name = null)
