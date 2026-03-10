@@ -1,5 +1,7 @@
 <?php
 
+use Glowie\Core\Http\Response;
+
 if (!function_exists('config')) {
     /**
      * Gets a configuration variable.
@@ -322,7 +324,7 @@ if (!function_exists('redirect')) {
      * @param int $code (Optional) HTTP status code to pass with the redirect.
      * @return \Glowie\Core\Http\Response Returns the Response instance.
      */
-    function redirect(string $destination, int $code = 302)
+    function redirect(string $destination, int $code = Response::HTTP_FOUND)
     {
         return \Glowie\Core\Http\Rails::getResponse()->redirect($destination, $code);
     }
@@ -336,7 +338,7 @@ if (!function_exists('to_route')) {
      * @param int $code (Optional) HTTP status code to pass with the redirect.
      * @return \Glowie\Core\Http\Response Current Response instance for nested calls.
      */
-    function to_route(string $route, array $params = [], int $code = 302)
+    function to_route(string $route, array $params = [], int $code = Response::HTTP_FOUND)
     {
         return \Glowie\Core\Http\Rails::getResponse()->redirectRoute($route, $params, $code);
     }
@@ -383,11 +385,12 @@ if (!function_exists('csrf_token')) {
 if (!function_exists('logger')) {
     /**
      * Writes an information to the app error log (if enabled).
-     * @param string $content Content to be written.
+     * @param Throwable|string $e An exception or error message to be logged.
+     * @return void
      */
-    function logger(string $content)
+    function logger($e)
     {
-        $e = new \Exception($content);
+        if (!$e instanceof \Throwable) $e = new \Exception($e);
         $date = date('Y-m-d H:i:s');
         return \Glowie\Core\Error\Handler::log("[{$date}] {$e->getMessage()}\n{$e->getTraceAsString()}\n\n");
     }
@@ -513,7 +516,7 @@ if (!function_exists('abort')) {
      * Sets the HTTP status code for the response.
      * @param int $code HTTP status code to set.
      * @param string $message (Optional) Custom reason phrase to set.
-     * @return Response Returns the Response instance.
+     * @return \Glowie\Core\Http\Response Returns the Response instance.
      */
     function abort(int $code, string $message = '')
     {
@@ -526,9 +529,9 @@ if (!function_exists('back')) {
      * Redirects the user to the previous URL.
      * @param int $code (Optional) HTTP status code to pass with the redirect.
      * @param string $fallback (Optional) Target URL to use if the previous URL is not available. Defaults to the app root URL.
-     * @return Response Returns the Response instance.
+     * @return \Glowie\Core\Http\Response Returns the Response instance.
      */
-    function back(int $code = 302, string $fallback = '')
+    function back(int $code = Response::HTTP_FOUND, string $fallback = '')
     {
         return \Glowie\Core\Http\Rails::getResponse()->redirectBack($code, $fallback);
     }

@@ -146,6 +146,7 @@ class Skeltch
     private static function compileFunctions(string $code)
     {
         $code = preg_replace('~(?<!@){\s*view\s*\((.+?)\)\s*}~is', '<?php $this->renderView($1); ?>', $code);
+        $code = preg_replace('~(?<!@){\s*include\s*\((.+?)\)\s*}~is', '<?php $this->renderView($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*layout\s*\((.+?)\)\s*}~is', '<?php $this->renderLayout($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*partial\s*\((.+?)\)\s*}~is', '<?php $this->renderPartial($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*inline\s*\((.+?)\)\s*}~is', '<?php $this->renderInline($1); ?>', $code);
@@ -154,6 +155,7 @@ class Skeltch
         $code = preg_replace('~(?<!@){\s*asset\s*\((.+?)\)\s*}~is', '<?php echo Util::asset($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*route\s*\((.+?)\)\s*}~is', '<?php echo Util::route($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*content\s*}~is', '<?php echo $this->getView(); ?>', $code);
+        $code = preg_replace('~(?<!@){\s*csrf_field\s*}~is', '<input type="hidden" name="_token" value="<?php echo Util::csrfToken(); ?>">', $code);
         $code = preg_replace('~(?<!@){\s*csrf\s*}~is', '<?php echo Util::csrfToken(); ?>', $code);
         $code = preg_replace('~(?<!@){\s*json\s*\((.+?)\)\s*}~is', '<?php echo Util::jsonEncode($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*class\s*\((.+?)\)\s*}~is', '<?php echo Util::cssArray($1); ?>', $code);

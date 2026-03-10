@@ -135,7 +135,9 @@ class Crawler
     public function __construct(array $headers = [])
     {
         if (!extension_loaded('curl')) throw new Exception('Crawler: Missing "curl" extension in your PHP installation');
-        foreach ($headers as $key => $value) $this->addHeader($key, $value);
+        if (!empty($headers)) {
+            foreach ($headers as $key => $value) $this->addHeader($key, $value);
+        }
     }
 
     /**
@@ -154,7 +156,7 @@ class Crawler
      */
     public function baseUrl(string $url)
     {
-        if (!Util::endsWith($url, '/')) $url .= '/';
+        $url = rtrim($url, '/') . '/';
         $this->baseUrl = $url;
         return $this;
     }
@@ -169,6 +171,18 @@ class Crawler
     {
         $this->maxAttempts = $attempts;
         $this->retryDelay = $sleep;
+        return $this;
+    }
+
+    /**
+     * Sets the request headers. This will replace the current headers.
+     * @param array $headers An associative array with the key being the name of the header\
+     * and the value the header value (can be a string or an array of strings).
+     * @return Crawler Current Crawler instance for nested calls.
+     */
+    public function setHeaders(array $headers)
+    {
+        $this->headers = $headers;
         return $this;
     }
 
