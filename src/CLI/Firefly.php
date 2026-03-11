@@ -146,6 +146,15 @@ class Firefly
             $plugin->register();
         }
 
+        // Initialize dev plugins
+        if (Config::get('env', 'development') === 'development') {
+            foreach (Config::get('dev_plugins', []) as $plugin) {
+                if (!class_exists($plugin)) throw new PluginException("\"{$plugin}\" was not found");
+                $plugin = new $plugin;
+                $plugin->register();
+            }
+        }
+
         // Gets the command
         array_shift(self::$args);
         if (!isset(self::$args[0])) {
@@ -1282,7 +1291,9 @@ class Firefly
 
         // Get plugins
         $plugins = Config::get('plugins', []);
-        if (empty($plugins)) {
+        $dev_plugins = Config::get('dev_plugins', []);
+
+        if (empty($plugins) && empty($dev_plugins)) {
             self::print(self::color('[' . date('Y-m-d H:i:s') . ']' . ' There are no plugin files to publish.', 'yellow'));
             return false;
         }
@@ -1292,6 +1303,15 @@ class Firefly
             if (!class_exists($plugin)) throw new PluginException("\"{$plugin}\" was not found");
             $plugin = new $plugin;
             $plugin->publish($force);
+        }
+
+        // Publish dev plugins files
+        if (Config::get('env', 'development') === 'development') {
+            foreach ($dev_plugins as $plugin) {
+                if (!class_exists($plugin)) throw new PluginException("\"{$plugin}\" was not found");
+                $plugin = new $plugin;
+                $plugin->publish($force);
+            }
         }
 
         // Print success message
