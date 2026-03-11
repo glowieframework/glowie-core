@@ -1368,7 +1368,7 @@ class Firefly
     {
         self::print(self::color('Firefly | Glowie Framework v' . Util::getVersion(), 'magenta'));
         self::print(self::color('Running in PHP CLI v' . phpversion(), 'blue'));
-        self::print(self::color('App environment: ' . Config::get('env'), 'yellow'));
+        self::print(self::color('App environment: ' . Config::get('env', 'development'), 'yellow'));
         return 'Firefly | Glowie ' . Util::getVersion();
     }
 

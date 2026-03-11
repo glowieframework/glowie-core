@@ -73,6 +73,15 @@ class Application
             $plugin->register();
         }
 
+        // Initialize dev plugins
+        if (Config::get('env', 'development') === 'development') {
+            foreach (Config::get('dev_plugins', []) as $plugin) {
+                if (!class_exists($plugin)) throw new PluginException("\"{$plugin}\" was not found");
+                $plugin = new $plugin;
+                $plugin->register();
+            }
+        }
+
         // Initialize router
         Rails::init();
 
