@@ -3,6 +3,7 @@
 namespace Glowie\Core\CLI;
 
 use Glowie\Core\Database\Kraken;
+use Glowie\Core\Database\Skeleton;
 use Glowie\Core\Exception\FileException;
 use Glowie\Core\Exception\ConsoleException;
 use Glowie\Core\Exception\PluginException;
@@ -823,18 +824,17 @@ class Firefly
      */
     private static function __testDatabase()
     {
-        // Checks if name was filled
-        $name = self::argOrInput('name', "Database connection (default): ", 'default');
-        $name = trim($name);
+        // Gets the connection name
+        $connection = self::getArg('connection', 'default');
 
         // Attempts to create the connection
-        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Connecting to "' . $name . '" database...', 'blue'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Connecting to "' . $connection . '" database...', 'blue'));
         $time = microtime(true);
-        new Kraken('glowie', $name);
+        new Kraken('glowie', $connection);
 
         // Prints the result
         $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
-        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Database "' . $name . '" connected successfully in ' . $time . '!', 'green'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Database "' . $connection . '" connected successfully in ' . $time . '!', 'green'));
         return true;
     }
 
@@ -1155,6 +1155,21 @@ class Firefly
         $migrateRun = false;
         $stepsDone = 0;
 
+        // Checks for schema files
+        foreach (glob(Util::location('migrations/*.sql')) as $filename) {
+            // Gets the connection name from the file
+            $connection = pathinfo($filename, PATHINFO_FILENAME);
+
+            // Checks if the migrations table already exists
+            $forge = new Skeleton('glowie', $connection);
+            if ($forge->tableExists(Config::get('migrations.table', 'migrations'))) continue;
+
+            // Runs the schema file
+            $db = new Kraken('glowie', $connection);
+            $sql = file_get_contents($filename);
+            $db->query($sql, false);
+        }
+
         // Loops through all the migration files
         foreach (glob(Util::location('migrations/*.php')) as $filename) {
             // Checks current state
@@ -1194,6 +1209,100 @@ class Firefly
             self::print(self::color('[' . date('Y-m-d H:i:s') . '] ' . $stepsDone . ' migrations were applied successfully.', 'yellow'));
             return true;
         }
+    }
+
+    /**
+     * Squashes the migrations into a schema file.
+     */
+    private static function __squash()
+    {
+        // Gets the connection name
+        $connection = self::getArg('connection', 'default');
+        $db = new Kraken('glowie', $connection);
+
+        // Gets the tables
+        $tables = $db->query('SHOW TABLES');
+        if (empty($tables)) throw new ConsoleException(self::getCommand(), self::getArgs(), "There are no tables on the database \"$connection\"");
+
+        // Maps the table names to the next query
+        $tables = collect($tables)->map(function ($row) {
+            return $row->toCollection()->values()->first();
+        });
+
+        // Prepares the result
+        $queries = [];
+
+        // Gets the CREATE script for each table
+        foreach ($tables as $table) {
+            $query = $db->query("SHOW CREATE TABLE `$table`");
+
+            if (!empty($query[0])) {
+                $queries[] = Util::replaceFirst($query[0]->get('Create Table'), 'CREATE TABLE', 'CREATE TABLE IF NOT EXISTS');
+            }
+        }
+
+        // Gets the data for the migrations table, if exists
+        $table = Config::get('migrations.table', 'migrations');
+
+        if ($tables->contains($table)) {
+            $data = $db->table($table)->fetchAll();
+
+            if (!empty($data)) {
+                $values = [];
+
+                foreach ($data as $row) {
+                    $name = $db->escape($row->name);
+                    $applied_at = $db->escape($row->applied_at);
+                    $values[] = "($name, $applied_at)";
+                }
+
+                $values = implode(', ', $values);
+                $queries[] = "INSERT IGNORE INTO `$table` (`name`, `applied_at`) VALUES $values";
+            }
+        }
+
+        // Gets the current charset
+        $charset = $db->query('SELECT @@character_set_client as `charset`')[0]->charset ?? 'utf8mb4';
+
+        // Prepares the dump header
+        $header = "/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;\n" .
+            "/*!40101 SET NAMES $charset */;\n" .
+            "/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;\n" .
+            "/*!40103 SET TIME_ZONE='+00:00' */;\n" .
+            "/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;\n" .
+            "/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;\n" .
+            "/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;\n\nSET AUTOCOMMIT = 0;\nSTART TRANSACTION;\n\n";
+
+        // Prepares the dump footer
+        $footer = ";\n\nCOMMIT;\n\n/*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;\n" .
+            "/*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;\n" .
+            "/*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;\n" .
+            "/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;\n" .
+            "/*!40111 SET SQL_NOTES=IFNULL(@OLD_SQL_NOTES, 1) */;";
+
+        // Join the queries
+        $result = $header . implode(";\n\n", $queries) . $footer;
+
+        // Writes the result to the schema file
+        $path = Util::location("migrations/$connection.sql");
+        if (!file_put_contents($path, $result)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Failed to write to file \"$path\"");
+
+        // Deletes the applied migrations
+        $appliedMigrations = $db->table($table)->fetchAll()->column('name');
+
+        foreach (glob(Util::location('migrations/*.php')) as $filename) {
+            $name = pathinfo($filename, PATHINFO_FILENAME);
+            if ($appliedMigrations->contains($name)) unlink($filename);
+        }
+
+        // Checks for pending migrations
+        if (count(glob(Util::location('migrations/*.php'))) > 0) {
+            self::print(self::color('Some migrations were not squashed because they were not applied yet.', 'yellow'));
+        }
+
+        // Prints the result
+        self::print(self::color('[' . date('Y-m-d H:i:s') . ']' . ' Migrations squashed successfully.', 'green'));
+        return true;
     }
 
     /**
@@ -1443,7 +1552,7 @@ class Firefly
         self::print('  <color="yellow">generate-keys</color> | Regenerates the application secret keys');
         self::print('  <color="yellow">encrypt-env</color> <color="blue">--key</color> | Encrypts the environment config file');
         self::print('  <color="yellow">decrypt-env</color> <color="blue">--key</color> | Decrypts the environment config file');
-        self::print('  <color="yellow">test-database</color> <color="blue">--name</color> | Tests a database connection');
+        self::print('  <color="yellow">test-database</color> <color="blue">--connection</color> | Tests a database connection');
         self::print('  <color="yellow">create-command</color> <color="blue">--name</color> | Creates a new command for your application');
         self::print('  <color="yellow">create-schedule-command</color> | Creates the command to run scheduled tasks');
         self::print('  <color="yellow">create-controller</color> <color="blue">--name</color> <color="cyan">-resource</color> | Creates a new controller for your application');
@@ -1457,6 +1566,7 @@ class Firefly
         self::print('  <color="yellow">migrate</color> <color="blue">--steps</color> | Applies pending migrations from your application');
         self::print('  <color="yellow">migrations</color> | Gets the status of the migrations');
         self::print('  <color="yellow">rollback</color> <color="blue">--steps</color> | Rolls back the last applied migration');
+        self::print('  <color="yellow">squash</color> <color="blue">--connection</color> | Squashes the migrations into a schema file');
         self::print('  <color="yellow">queue</color> <color="blue">--name</color> <color="cyan">-bail</color> | Runs the queue');
         self::print('  <color="yellow">queue-watch</color> <color="blue">--name --interval</color> <color="cyan">-bail</color> | Runs the queue watcher');
         self::print('  <color="yellow">schedule-work</color> | Runs the schedule worker');
