@@ -7,6 +7,7 @@ use Glowie\Core\Database\Skeleton;
 use Glowie\Core\Exception\FileException;
 use Glowie\Core\Exception\ConsoleException;
 use Glowie\Core\Exception\PluginException;
+use Glowie\Core\Exception\QueryException;
 use Glowie\Core\Error\HandlerCLI;
 use Glowie\Core\Http\Rails;
 use Glowie\Core\Collection;
@@ -1167,7 +1168,14 @@ class Firefly
             // Runs the schema file
             $db = new Kraken('glowie', $connection);
             $sql = file_get_contents($filename);
-            $db->query($sql, false);
+
+            try {
+                $db->query($sql, false);
+                $migrateRun = true;
+            } catch (QueryException $th) {
+                $db->getConnection()->rollback();
+                throw $th;
+            }
         }
 
         // Loops through all the migration files
@@ -1218,9 +1226,37 @@ class Firefly
     {
         // Gets the connection name
         $connection = self::getArg('connection', 'default');
-        $db = new Kraken('glowie', $connection);
 
-        // Gets the tables
+        // Gets the migrations for this connection
+        $pendingMigrations = [];
+        $appliedMigrations = [];
+
+        foreach (glob(Util::location('migrations/*.php')) as $filename) {
+            // Gets the migration class name
+            $name = pathinfo($filename, PATHINFO_FILENAME);
+            $classname = 'Glowie\Migrations\\' . $name;
+            if (!class_exists($classname)) continue;
+
+            // Instantiates the migration class
+            $migration = new $classname;
+            if ($migration->getDatabase() !== $connection) continue;
+
+            // Checks if the migration was applied
+            if ($migration->isApplied()) {
+                $appliedMigrations[] = $filename;
+            } else {
+                $pendingMigrations[] = $name;
+            }
+        }
+
+        // Checks for pending migrations
+        if (count($pendingMigrations)) {
+            self::print(self::color('[' . date('Y-m-d H:i:s') . ']' . ' Unable to squash, there are pending migrations to be applied.', 'yellow'));
+            return false;
+        }
+
+        // Gets the tables from the database
+        $db = new Kraken('glowie', $connection);
         $tables = $db->query('SHOW TABLES');
         if (empty($tables)) throw new ConsoleException(self::getCommand(), self::getArgs(), "There are no tables on the database \"$connection\"");
 
@@ -1229,10 +1265,8 @@ class Firefly
             return $row->toCollection()->values()->first();
         });
 
-        // Prepares the result
-        $queries = [];
-
         // Gets the CREATE script for each table
+        $queries = [];
         foreach ($tables as $table) {
             $query = $db->query("SHOW CREATE TABLE `$table`");
 
@@ -1243,10 +1277,10 @@ class Firefly
 
         // Gets the data for the migrations table, if exists
         $table = Config::get('migrations.table', 'migrations');
-
         if ($tables->contains($table)) {
             $data = $db->table($table)->fetchAll();
 
+            // Fetches the migrations table values
             if (!empty($data)) {
                 $values = [];
 
@@ -1261,10 +1295,8 @@ class Firefly
             }
         }
 
-        // Gets the current charset
-        $charset = $db->query('SELECT @@character_set_client as `charset`')[0]->charset ?? 'utf8mb4';
-
         // Prepares the dump header
+        $charset = $db->query('SELECT @@character_set_client as `charset`')[0]->charset ?? 'utf8mb4';
         $header = "/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;\n" .
             "/*!40101 SET NAMES $charset */;\n" .
             "/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;\n" .
@@ -1288,17 +1320,7 @@ class Firefly
         if (!file_put_contents($path, $result)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Failed to write to file \"$path\"");
 
         // Deletes the applied migrations
-        $appliedMigrations = $db->table($table)->fetchAll()->column('name');
-
-        foreach (glob(Util::location('migrations/*.php')) as $filename) {
-            $name = pathinfo($filename, PATHINFO_FILENAME);
-            if ($appliedMigrations->contains($name)) unlink($filename);
-        }
-
-        // Checks for pending migrations
-        if (count(glob(Util::location('migrations/*.php'))) > 0) {
-            self::print(self::color('Some migrations were not squashed because they were not applied yet.', 'yellow'));
-        }
+        foreach ($appliedMigrations as $filename) unlink($filename);
 
         // Prints the result
         self::print(self::color('[' . date('Y-m-d H:i:s') . ']' . ' Migrations squashed successfully.', 'green'));

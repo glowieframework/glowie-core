@@ -125,6 +125,15 @@ abstract class Migration
     }
 
     /**
+     * Gets the database name.
+     * @return string Database name for the current migration.
+     */
+    final public function getDatabase()
+    {
+        return $this->database;
+    }
+
+    /**
      * Runs the migration.
      * @return bool Returns true on success or false on errors.
      */

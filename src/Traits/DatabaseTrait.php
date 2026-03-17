@@ -344,10 +344,11 @@ trait DatabaseTrait
      * Runs the current built query.
      * @param bool $returns (Optional) If the query should return a result.
      * @param bool $returnsFirst (Optional) If the query should return a single result.
+     * @param bool $retryOnTimeout (Optional) Retry the query on timeout error.
      * @return DbRow|array|bool If the query is successful and should return any results, will return an Element/associative array with the first result or an array of results. Otherwise returns true on success or false on failure.
      * @throws QueryException Throws an exception if the query fails.
      */
-    private function execute(bool $returns = false, bool $returnsFirst = false)
+    private function execute(bool $returns = false, bool $returnsFirst = false, bool $retryOnTimeout = true)
     {
         try {
             // Store query start time and connection
@@ -398,9 +399,9 @@ trait DatabaseTrait
             return $result;
         } catch (PDOException $e) {
             // On connection timeout error, try to reconnect and query again
-            if ($e->getCode() == 2006) {
+            if ($e->getCode() == 2006 && $retryOnTimeout) {
                 $this->reconnect();
-                return $this->execute($returns, $returnsFirst);
+                return $this->execute($returns, $returnsFirst, false);
             }
 
             // Notify listeners of failure
