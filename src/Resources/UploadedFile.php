@@ -18,11 +18,21 @@ use Util;
 class UploadedFile extends Element
 {
 
+    /**
+     * Gets the basename of the file.
+     * @param bool $original (Optional) True to get the original (client) name of the file, instead of the generated one.
+     * @return string Returns the file name.
+     */
     public function getName(bool $original = false)
     {
         return $original ? $this->get('original_name', $this->name) : $this->name;
     }
 
+    /**
+     * Gets the file URL on the server.
+     * @param bool $full (Optional) True to get the absolute URL, instead of the relative.
+     * @return string Returns the file URL.
+     */
     public function getURL(bool $full = false)
     {
         return $full ? $this->full_url : $this->url;
