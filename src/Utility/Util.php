@@ -1060,7 +1060,7 @@ class Util
         if (!isset($variable)) return true;
         if (is_numeric($variable) || is_bool($variable)) return false;
         if (is_string($variable)) return trim($variable) === '';
-        if ($variable instanceof Countable) return count($variable) === 0;
+        if (is_array($variable) || $variable instanceof Countable) return count($variable) === 0;
         return empty($variable);
     }
 
@@ -1072,14 +1072,16 @@ class Util
      */
     public static function getSize($variable)
     {
-        if ($variable instanceof Countable) {
+        if (is_array($variable) || $variable instanceof Countable) {
             return count($variable);
+        } else if (is_numeric($variable)) {
+            return $variable + 0;
         } else if (is_string($variable) && is_file($variable)) {
             return (round(filesize($variable) / 1024, 2));
         } else if (is_string($variable)) {
             return mb_strlen($variable);
-        } else if (is_numeric($variable)) {
-            return $variable;
+        } else {
+            return 0;
         }
     }
 

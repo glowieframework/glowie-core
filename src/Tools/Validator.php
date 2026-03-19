@@ -34,6 +34,12 @@ class Validator
     private $context = [];
 
     /**
+     * Validation messages.
+     * @var array
+     */
+    private $messages = [];
+
+    /**
      * Custom validation rules.
      * @var array
      */
@@ -74,16 +80,37 @@ class Validator
      */
     public function getMessages(?string $lang = null)
     {
+        // Prepares the result
         $messages = [];
+
+        // Loops through the errors
         foreach ($this->errors as $field => $rule) {
+            // Initializes the field messages
+            if (!isset($messages[$field])) $messages[$field] = [];
+
+            // Checks for an array of rules
             if (is_array($rule)) {
                 foreach ($rule as $name) {
-                    $messages[$field] = Babel::get("validation.$name", ['field' => $field], $lang);
+                    // Checks for custom message
+                    $key = "$field.$name";
+                    if (!empty($this->messages[$key])) {
+                        $messages[$field][$name] = $this->messages[$key];
+                    } else {
+                        $messages[$field][$name] = Babel::get("validation.$name", ['field' => $field], $lang);
+                    }
                 }
             } else {
-                $messages[$field] = Babel::get("validation.$rule", ['field' => $field], $lang);
+                // Checks for custom message
+                $key = "$field.$rule";
+                if (!empty($this->messages[$key])) {
+                    $messages[$field][$rule] = $this->messages[$key];
+                } else {
+                    $messages[$field][$rule] = Babel::get("validation.$rule", ['field' => $field], $lang);
+                }
             }
         }
+
+        // Returns the messages
         return new Collection($messages);
     }
 
@@ -107,9 +134,10 @@ class Validator
      * @param array $rules Associative array with validation rules for each field.
      * @param bool $bail (Optional) Stop validation of each field after first failure found.
      * @param bool $bailAll (Optional) Stop validation of all fields after first failure found.
+     * @param array $customMessages (Optional) An associative array with the custom validation messages.
      * @return bool Returns true if all rules passed for all fields, false otherwise.
      */
-    public function validateFields($data, array $rules, bool $bail = false, bool $bailAll = false)
+    public function validateFields($data, array $rules, bool $bail = false, bool $bailAll = false, array $customMessages = [])
     {
         // Converts Element data to array
         if (is_callable([$data, 'toArray'])) $data = $data->toArray();
@@ -133,6 +161,7 @@ class Validator
                     $paths = array_keys($arrayValues);
                     for ($i = 0; $i < count($paths); $i++) {
                         if (!empty($this->errors[$i])) {
+                            $errors[$field] = $this->errors[$i];
                             $errors[$paths[$i]] = $this->errors[$i];
                             $result = false;
                         }
@@ -156,7 +185,21 @@ class Validator
             }
         }
 
-        // Stores errors and returns the result
+        // Gets the custom messages
+        $messages = [];
+        if (!empty($errors) && !empty($customMessages)) {
+            foreach ($errors as $field => $fieldErrors) {
+                foreach ($fieldErrors as $error) {
+                    $key = "$field.$error";
+                    if (isset($customMessages[$key])) {
+                        $messages[$key] = $customMessages[$key];
+                    }
+                }
+            }
+        }
+
+        // Stores data and returns the result
+        $this->messages = $messages;
         $this->errors = $errors;
         return $result;
     }
@@ -303,9 +346,15 @@ class Validator
                     if (!is_string($data) || !preg_match('/^[a-z]+$/i', $data)) $result[] = 'alpha';
                     break;
 
-                // [NUMERIC] - Checks if variable is a number
+                // [NUMERIC] - Checks if variable is a number (loose comparison)
                 case 'numeric':
                     if (!is_numeric($data)) $result[] = 'numeric';
+                    break;
+
+                // [NUMERIC_STRICT] - Checks if variable is a number (strict comparison)
+                case 'numericstrict':
+                case 'numeric_strict':
+                    if (!is_int($data) && !is_float($data)) $result[] = 'numeric_strict';
                     break;
 
                 // [ALPHA_NUMERIC] - Checks if variable is alphanumeric
@@ -322,7 +371,7 @@ class Validator
 
                 // [UUID] - Checks if variable is a valid universally unique identifier
                 case 'uuid':
-                    if (!is_string($data) || preg_match('/^\{?[0-9a-f]{8}\-?[0-9a-f]{4}\-?[0-9a-f]{4}\-?[0-9a-f]{4}\-?[0-9a-f]{12}\}?$/i', $data) !== 1) $result[] = 'uuid';
+                    if (!is_string($data) || preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $data) !== 1) $result[] = 'uuid';
                     break;
 
                 // [REGEX] - Checks if variable matches a regex pattern
@@ -348,7 +397,7 @@ class Validator
 
                 // [DATE] - Checks if variable is a valid date
                 case 'date':
-                    if (!is_string($data) || !strtotime($data)) $result[] = 'date';
+                    if (!is_string($data) || strtotime($data) === false) $result[] = 'date';
                     break;
 
                 // [BEFORE] - Checks if date is before a specific date
@@ -368,14 +417,26 @@ class Validator
                     if (!is_string($data)) $result[] = 'string';
                     break;
 
-                // [INTEGER] - Checks if variable is an integer
+                // [INTEGER] - Checks if variable is an integer (loose comparison)
                 case 'integer':
-                    if (!is_int($data)) $result[] = 'integer';
+                    if (filter_var($data, FILTER_VALIDATE_INT) === false) $result[] = 'integer';
                     break;
 
-                // [FLOAT] - Checks if variable is a float
+                // [INTEGER_STRICT] - Checks if variable is an integer (strict comparison)
+                case 'integerstrict':
+                case 'integer_strict':
+                    if (!is_int($data)) $result[] = 'integer_strict';
+                    break;
+
+                // [FLOAT] - Checks if variable is a float (loose comparison)
                 case 'float':
-                    if (!is_float($data)) $result[] = 'float';
+                    if (filter_var($data, FILTER_VALIDATE_FLOAT) === false) $result[] = 'float';
+                    break;
+
+                // [FLOAT_STRICT] - Checks if variable is a float (strict comparison)
+                case 'floatstrict':
+                case 'float_strict':
+                    if (!is_float($data)) $result[] = 'float_strict';
                     break;
 
                 // [FILE] - Checks if path is an existing file
@@ -421,28 +482,28 @@ class Validator
                 // [IN] - Checks if string matches a list of values (loose comparison)
                 case 'in':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "in" rule');
-                    if (!is_string($data) || !in_array(trim($data), explode(',', $rule[1]))) $result[] = 'in';
+                    if (!is_string($data) || !in_array($data, explode(',', $rule[1]))) $result[] = 'in';
                     break;
 
                 // [IN_STRICT] - Checks if string matches a list of values (strict comparison)
                 case 'instrict':
                 case 'in_strict':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "in_strict" rule');
-                    if (!is_string($data) || !in_array(trim($data), explode(',', $rule[1]), true)) $result[] = 'in_strict';
+                    if (!is_string($data) || !in_array($data, explode(',', $rule[1]), true)) $result[] = 'in_strict';
                     break;
 
                 // [NOT_IN] - Checks if string is not in a list of values (loose comparison)
                 case 'notin':
                 case 'not_in':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "not_in" rule');
-                    if (!is_string($data) || in_array(trim($data), explode(',', $rule[1]))) $result[] = 'not_in';
+                    if (!is_string($data) || in_array($data, explode(',', $rule[1]))) $result[] = 'not_in';
                     break;
 
                 // [NOT_IN_STRICT] - Checks if string is not in a list of values (strict comparison)
                 case 'notinstrict':
                 case 'not_in_strict':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "not_in_strict" rule');
-                    if (!is_string($data) || in_array(trim($data), explode(',', $rule[1]), true)) $result[] = 'not_in_strict';
+                    if (!is_string($data) || in_array($data, explode(',', $rule[1]), true)) $result[] = 'not_in_strict';
                     break;
 
                 // [WRITABLE] - Checks if path is a writable directory or file
@@ -455,19 +516,25 @@ class Validator
                     if (!is_object($data)) $result[] = 'object';
                     break;
 
-                // [BOOLEAN] - Checks if variable is a boolean
+                // [BOOLEAN] - Checks if variable is a boolean (loose comparison)
                 case 'boolean':
-                    if (!is_bool($data)) $result[] = 'boolean';
+                    if (filter_var($data, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) === null) $result[] = 'boolean';
+                    break;
+
+                // [BOOLEAN_STRICT] - Checks if variable is a boolean (strict comparison)
+                case 'booleanstrict':
+                case 'boolean_strict':
+                    if (!is_bool($data)) $result[] = 'boolean_strict';
                     break;
 
                 // [TRUE] - Checks if variable is a truthy value
                 case 'true':
-                    if (!filter_var($data, FILTER_VALIDATE_BOOLEAN)) $result[] = 'true';
+                    if (filter_var($data, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) !== true) $result[] = 'true';
                     break;
 
                 // [FALSE] - Checks if variable is a falsy value
                 case 'false':
-                    if (filter_var($data, FILTER_VALIDATE_BOOLEAN)) $result[] = 'true';
+                    if (filter_var($data, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) !== false) $result[] = 'false';
                     break;
 
                 // [JSON] - Checks if string is valid JSON format
@@ -503,21 +570,21 @@ class Validator
 
                 // [EMPTY] - Check if variable is empty
                 case 'empty':
-                    if (isset($data) || !Util::isEmpty($data)) $result[] = 'empty';
+                    if (!Util::isEmpty($data)) $result[] = 'empty';
                     break;
 
                 // [ENDS_WITH] - Check if variable ends with string
                 case 'endswith':
                 case 'ends_with':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "ends_with" rule');
-                    if (!is_string($data) || Util::endsWith($data, $rule[1])) $result[] = 'ends_with';
+                    if (!is_string($data) || !Util::endsWith($data, $rule[1])) $result[] = 'ends_with';
                     break;
 
                 // [STARTS_WITH] - Check if variable starts with string
                 case 'startswith':
                 case 'starts_with':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "starts_with" rule');
-                    if (!is_string($data) || Util::startsWith($data, $rule[1])) $result[] = 'starts_with';
+                    if (!is_string($data) || !Util::startsWith($data, $rule[1])) $result[] = 'starts_with';
                     break;
 
                 // [EXISTS] - Check if data exists in the database
