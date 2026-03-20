@@ -16,6 +16,12 @@ use Glowie\Core\Element;
 class DbRow extends Element
 {
 
-    //!
-
+    /**
+     * Gets the name of the columns available on the row.
+     * @return array Return an array with the columns.
+     */
+    public function getColumns()
+    {
+        return $this->keys();
+    }
 }

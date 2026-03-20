@@ -231,6 +231,28 @@ class Request implements JsonSerializable
     }
 
     /**
+     * Gets a value from the request body casted as an integer.
+     * @param string $key Key to get value.
+     * @param mixed $default (Optional) Default value to return if the key does not exist.
+     * @return mixed Returns the value (casted as an integer) if exists or the default if not.
+     */
+    public function getInt(string $key, $default = null)
+    {
+        return filter_var($this->get($key, $default), FILTER_VALIDATE_INT);
+    }
+
+    /**
+     * Gets a value from the request body casted as a float.
+     * @param string $key Key to get value.
+     * @param mixed $default (Optional) Default value to return if the key does not exist.
+     * @return mixed Returns the value (casted as a float) if exists or the default if not.
+     */
+    public function getFloat(string $key, $default = null)
+    {
+        return filter_var($this->get($key, $default), FILTER_VALIDATE_FLOAT);
+    }
+
+    /**
      * Returns the request method.
      * @return string Request method.
      */
@@ -505,10 +527,21 @@ class Request implements JsonSerializable
      */
     public function trackRequestUrls()
     {
+        // Capture only GET requests and ignore AJAX
         if (!$this->isGet() || $this->isAjax()) return;
+
+        // Gets the session
         $appName = Util::snakeCase(Config::get('app_name', 'Glowie'));
         $session = new Session();
-        $session->set("$appName.previous_url", $session->get("$appName.current_url"));
-        $session->set("$appName.current_url", $this->getURL());
+
+        // Gets the current and saved URLs
+        $currentUrl = $this->getURL();
+        $savedUrl = $session->get("$appName.current_url");
+
+        // Checks if URLs are different
+        if ($currentUrl !== $savedUrl) {
+            $session->set("$appName.previous_url", $savedUrl);
+            $session->set("$appName.current_url", $currentUrl);
+        }
     }
 }

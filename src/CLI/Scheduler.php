@@ -95,7 +95,8 @@ class Scheduler
             }
 
             // Sets the task timezone
-            $now = new DateTime('now', new DateTimeZone($task['conditions']['timezone'] ?? date_default_timezone_get()));
+            $time = Firefly::getArg('time', 'now');
+            $now = new DateTime($time, new DateTimeZone($task['conditions']['timezone'] ?? date_default_timezone_get()));
 
             // Checks for between conditions
             if (!empty($task['conditions']['between'])) {

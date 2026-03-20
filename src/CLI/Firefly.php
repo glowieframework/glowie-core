@@ -1293,6 +1293,28 @@ class Firefly
             self::print('');
         }
 
+        // Plugin commands
+        if (!empty(self::$custom)) {
+            $commands = Collection::make(self::$custom)->sortKeys();
+            self::print(self::bg(self::color(self::padding('Plugin commands:', 1, 0), 'black'), 'magenta'));
+            self::print('');
+
+            foreach (self::$custom as $name => $classname) {
+                // Instantiates the command class
+                $command = new $classname;
+                $signature = $command->getSignature();
+
+                // Prints the command description with signature
+                if (!is_null($signature)) {
+                    self::print('  <color="yellow">' . mb_strtolower($name)  . '</color> <color="blue">' . $signature . '</color> | ' . $command->getDescription());
+                } else {
+                    self::print('  <color="yellow">' . mb_strtolower($name)  . '</color> | ' . $command->getDescription());
+                }
+            }
+
+            self::print('');
+        }
+
         // Firefly commands
         self::print(self::bg(self::color(self::padding('Firefly commands:', 1, 0), 'black'), 'magenta'));
         self::print('');

@@ -177,6 +177,15 @@ trait ElementTrait
     }
 
     /**
+     * Gets the keys of the Element data.
+     * @return array Returns an array with the Element keys.
+     */
+    public function keys()
+    {
+        return array_keys($this->data);
+    }
+
+    /**
      * Checks if any key value is missing in the Element data.
      * @param string|array $key Key to check (accepts dot notation keys). You can also use an array of keys.
      * @return bool Returns true or false.

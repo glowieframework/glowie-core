@@ -28,7 +28,7 @@ class __FIREFLY_TEMPLATE_NAME__ extends Command
      * The command args signature (for help message).
      * @var string|null
      */
-    protected $signature = null;
+    protected $signature = '--time';
 
     /**
      * The command script.
