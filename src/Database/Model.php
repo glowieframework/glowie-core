@@ -1163,6 +1163,22 @@ class Model extends Kraken implements JsonSerializable
         $isElement = $data instanceof Element;
         if ($isElement) $data = $data->toArray();
 
+        // Casts date fields
+        $dates = [];
+        if ($this->_softDeletes) $dates[] = $this->_deletedField;
+
+        if ($this->_timestamps) {
+            $dates[] = $this->_createdField;
+            $dates[] = $this->_updatedField;
+        }
+
+        foreach ($dates as $field) {
+            if (!empty($data[$field]) && !isset($this->_casts[$field])) {
+                $date = DateTime::createFromFormat($this->_dateFormat, $data[$field]);
+                if ($date !== false) $data[$field] = $date;
+            }
+        }
+
         // Performs the castings
         foreach ($this->_casts as $field => $rule) {
             // Checks for the field
@@ -1634,6 +1650,25 @@ class Model extends Kraken implements JsonSerializable
         // Converts the element to an array
         $isElement = $data instanceof Element;
         if ($isElement) $data = $data->toArray();
+
+        // Mutates date fields
+        $dates = [];
+        if ($this->_softDeletes) $dates[] = $this->_deletedField;
+
+        if ($this->_timestamps) {
+            $dates[] = $this->_createdField;
+            $dates[] = $this->_updatedField;
+        }
+
+        foreach ($dates as $field) {
+            if (!empty($data[$field]) && !isset($this->_mutators[$field])) {
+                if ($data[$field] instanceof DateTime) {
+                    $data[$field] = $data[$field]->format($this->_dateFormat);
+                } else {
+                    $data[$field] = date($this->_dateFormat, strtotime($data[$field]));
+                }
+            }
+        }
 
         // Performs mutations
         foreach ($this->_mutators as $field => $rule) {
