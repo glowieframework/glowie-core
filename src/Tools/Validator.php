@@ -140,7 +140,7 @@ class Validator
     public function validateFields($data, array $rules, bool $bail = false, bool $bailAll = false, array $customMessages = [])
     {
         // Converts Element data to array
-        if (is_callable([$data, 'toArray'])) $data = $data->toArray();
+        if (is_object($data) && is_callable([$data, 'toArray'])) $data = $data->toArray();
         if (!Util::isAssociativeArray($rules)) throw new Exception('Validator: Rules must be an associative array for each field/ruleset pairs');
         $this->context = $data;
 
@@ -215,7 +215,7 @@ class Validator
     public function validateMultiple($data, $rules, bool $bail = false, bool $bailAll = false)
     {
         // Converts Element data to array
-        if (is_callable([$data, 'toArray'])) $data = $data->toArray();
+        if (is_object($data) && is_callable([$data, 'toArray'])) $data = $data->toArray();
 
         // Get array values only
         $data = array_values($data);
@@ -680,7 +680,7 @@ class Validator
     private function collectWildcardValues($data, array $segments, array &$results, array $currentPath = [])
     {
         // Converts Element data to array
-        if (is_callable([$data, 'toArray'])) $data = $data->toArray();
+        if (is_object($data) && is_callable([$data, 'toArray'])) $data = $data->toArray();
         if (!is_array($data)) return;
 
         // Gets the next segment

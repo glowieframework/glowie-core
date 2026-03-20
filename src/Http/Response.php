@@ -431,7 +431,7 @@ class Response
     {
         if (Buffer::isActive()) Buffer::clean();
         $this->setContentType(self::CONTENT_JSON);
-        if (is_callable([$data, 'toArray'])) $data = $data->toArray();
+        if (is_object($data) && is_callable([$data, 'toArray'])) $data = $data->toArray();
         echo json_encode($data, $flags, $depth);
         return $this;
     }
@@ -447,7 +447,7 @@ class Response
         if (Buffer::isActive()) Buffer::clean();
         $this->setContentType(self::CONTENT_XML);
         $xml = new SimpleXMLElement("<?xml version=\"1.0\"?><{$root}></{$root}>");
-        if (is_callable([$data, 'toArray'])) $data = $data->toArray();
+        if (is_object($data) && is_callable([$data, 'toArray'])) $data = $data->toArray();
         $this->arrayToXML($data, $xml);
         echo $xml->asXML();
         return $this;

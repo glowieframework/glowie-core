@@ -361,7 +361,7 @@ class Authorizator
         if (empty($key)) throw new Exception('generateJwt(): Application key was not defined');
 
         // Parse payload
-        if (is_callable([$payload, 'toArray'])) $payload = $payload->toArray();
+        if (is_object($payload) && is_callable([$payload, 'toArray'])) $payload = $payload->toArray();
         if (!empty($expires)) $payload['exp'] = time() + $expires;
 
         // Sets default parts of the payload

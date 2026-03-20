@@ -98,7 +98,7 @@ class Util
                 ];
             } else {
                 // Cast Element or object to array
-                $var = is_callable([$var, 'toArray']) ? $var->toArray() : (array)$var;
+                $var = is_object($var) && is_callable([$var, 'toArray']) ? $var->toArray() : (array)$var;
             }
 
             // Counts the properties

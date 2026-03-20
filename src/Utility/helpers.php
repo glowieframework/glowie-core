@@ -189,15 +189,19 @@ if (!function_exists('request')) {
 
 if (!function_exists('response')) {
     /**
-     * Sends a raw plain text body to the response.
-     * @param string|null $content (Optional) Content to set as the body. Use `null` to return the Response instance.
+     * Sends a response content.
+     * @param mixed $body (Optional) Content to set as the body. Use `null` to return the Response instance.\
+     * You can also pass an array or object to set the response as JSON.
+     * @param int $status (Optional) HTTP status code to send with the response.
      * @param string $type (Optional) Content type header to set, defaults to `text/plain`.
      * @return \Glowie\Core\Http\Response Returns the Response instance.
      */
-    function response(?string $body = null, string $type = 'text/plain')
+    function response($body = null, int $status = Response::HTTP_OK, string $type = 'text/plain')
     {
         $response = \Glowie\Core\Http\Rails::getResponse();
         if (is_null($body)) return $response;
+        $response->setStatusCode($status);
+        if (is_array($body) || is_object($body)) return $response->setJson($body);
         return $response->setBody($body, $type);
     }
 }
