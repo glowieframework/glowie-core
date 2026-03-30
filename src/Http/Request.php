@@ -331,8 +331,16 @@ class Request implements JsonSerializable
      */
     public function getPreviousUrl()
     {
+        // Checks if the Referer header is present
+        $referer = $this->getHeader('Referer');
+        if (!empty($referer)) return $referer;
+
+        // Fallback to the session tracked URLs
+        $session = Session::make();
         $appName = Util::snakeCase(Config::get('app_name', 'Glowie'));
-        return Session::make()->get("$appName.previous_url", $this->getHeader('Referer'));
+        $currentUrl = $session->get("$appName.current_url");
+        if (!$this->isGet() && !empty($currentUrl)) return $currentUrl;
+        return $session->get("$appName.previous_url");
     }
 
     /**
@@ -483,7 +491,7 @@ class Request implements JsonSerializable
      */
     public function checkCsrfToken(string $input)
     {
-        $session = new Session();
+        $session = Session::make();
         if (!$session->has('CSRF_TOKEN')) return false;
         return hash_equals($session->get('CSRF_TOKEN'), $input);
     }
@@ -532,7 +540,7 @@ class Request implements JsonSerializable
 
         // Gets the session
         $appName = Util::snakeCase(Config::get('app_name', 'Glowie'));
-        $session = new Session();
+        $session = Session::make();
 
         // Gets the current and saved URLs
         $currentUrl = $this->getURL();
@@ -540,7 +548,7 @@ class Request implements JsonSerializable
 
         // Checks if URLs are different
         if ($currentUrl !== $savedUrl) {
-            $session->set("$appName.previous_url", $savedUrl);
+            if (!is_null($savedUrl)) $session->set("$appName.previous_url", $savedUrl);
             $session->set("$appName.current_url", $currentUrl);
         }
     }

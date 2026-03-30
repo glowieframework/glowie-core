@@ -63,7 +63,7 @@ class Service
         $this->post = !Util::isCLI() ? Rails::getRequest()->fromPost() : new Element();
         $this->request = !Util::isCLI() ? Rails::getRequest() : new Element();
         $this->route = Rails::getCurrentRoute();
-        $this->session = !Util::isCLI() ? new Session() : new Element();
+        $this->session = !Util::isCLI() ? Session::make() : new Element();
     }
 
     /**

@@ -73,6 +73,12 @@ class Authenticator
     private static $appName;
 
     /**
+     * Authenticator instances.
+     * @var array
+     */
+    private static $instances = [];
+
+    /**
      * Creates an Authenticator instance.
      * @param string $guard (Optional) Authentication guard name (from your app configuration).
      */
@@ -83,13 +89,14 @@ class Authenticator
     }
 
     /**
-     * Creates an Authenticator instance in a static-binding.
+     * Creates an Authenticator instance in a static-binding or returns the existing one.
      * @param string $guard (Optional) Authentication guard name (from your app configuration).
-     * @return Authenticator New Authorization instance.
+     * @return Authenticator Returns the Authenticator instance.
      */
     public static function make(string $guard = 'default')
     {
-        return new static($guard);
+        if (!isset(self::$instances[$guard])) self::$instances[$guard] = new static($guard);
+        return self::$instances[$guard];
     }
 
     /**
@@ -152,7 +159,7 @@ class Authenticator
 
             // Save credentials in session
             if (!$once) {
-                $session = new Session();
+                $session = Session::make();
                 $session->regenerateId();
                 $session->setEncrypted(self::$appName . '.auth.' . $this->guard, $user->getPrimary());
             }
@@ -256,7 +263,7 @@ class Authenticator
 
         // Save credentials in session
         if (!$once) {
-            $session = new Session();
+            $session = Session::make();
             $session->regenerateId();
             $session->setEncrypted(self::$appName . '.auth.' . $this->guard, $user->getPrimary());
         }
@@ -341,7 +348,7 @@ class Authenticator
      */
     public function remember(int $expires = Cookies::EXPIRES_DAY)
     {
-        $session = new Session();
+        $session = Session::make();
         if (!$session->has(self::$appName . '.auth.' . $this->guard)) return false;
         $session->regenerateId();
         $session->persist($expires);
@@ -354,7 +361,7 @@ class Authenticator
      */
     public function logout()
     {
-        $session = new Session();
+        $session = Session::make();
         if (!$session->has(self::$appName . '.auth.' . $this->guard)) return false;
         $session->remove(self::$appName . '.auth.' . $this->guard);
         $session->regenerateId();

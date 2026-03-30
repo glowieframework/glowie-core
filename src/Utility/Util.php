@@ -781,7 +781,7 @@ class Util
      */
     public static function csrfToken()
     {
-        $session = new Session();
+        $session = Session::make();
         if ($session->has('CSRF_TOKEN')) return $session->get('CSRF_TOKEN');
         $token = self::randomToken();
         $session->set('CSRF_TOKEN', $token);

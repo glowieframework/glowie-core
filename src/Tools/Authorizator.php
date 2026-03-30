@@ -111,6 +111,12 @@ class Authorizator
     private static $appName;
 
     /**
+     * Authorizator instances.
+     * @var array
+     */
+    private static $instances = [];
+
+    /**
      * Creates an Authorizator instance.
      * @param string $guard (Optional) Authentication guard name (from your app configuration).
      */
@@ -121,13 +127,14 @@ class Authorizator
     }
 
     /**
-     * Creates an Authorizator instance in a static-binding.
+     * Creates an Authorizator instance in a static-binding or returns the existing one.
      * @param string $guard (Optional) Authentication guard name (from your app configuration).
-     * @return Authorizator New Authorization instance.
+     * @return Authorizator Returns the Authorizator instance.
      */
     public static function make(string $guard = 'default')
     {
-        return new static($guard);
+        if (!isset(self::$instances[$guard])) self::$instances[$guard] = new static($guard);
+        return self::$instances[$guard];
     }
 
     /**
@@ -476,7 +483,7 @@ class Authorizator
      */
     public function toAuthenticator()
     {
-        $session = new Session();
+        $session = Session::make();
         $user = $this->getUser();
         Authenticator::setUser($this->guard, $user);
 

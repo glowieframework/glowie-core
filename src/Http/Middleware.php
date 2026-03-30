@@ -81,7 +81,7 @@ abstract class Middleware
         $this->request = Rails::getRequest();
         $this->response = Rails::getResponse();
         $this->route = Rails::getCurrentRoute();
-        $this->session = new Session();
+        $this->session = Session::make();
     }
 
     /**

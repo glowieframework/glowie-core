@@ -35,6 +35,12 @@ class Session implements JsonSerializable
     private static $appName;
 
     /**
+     * Session instance.
+     * @var Session|null
+     */
+    private static $instance;
+
+    /**
      * Validator instance.
      * @var Validator
      */
@@ -54,14 +60,15 @@ class Session implements JsonSerializable
     }
 
     /**
-     * Creates a new Session handler in a static-binding.
+     * Creates a new Session handler in a static-binding or returns the existing one.
      * @param array $data (Optional) An associative array with the initial data to store in the session.\
      * **This replaces the existing session data!**
-     * @return Session New Session instance.
+     * @return Session Returns the Session instance.
      */
     public static function make(array $data = [])
     {
-        return new static($data);
+        if (!self::$instance) self::$instance = new static($data);
+        return self::$instance;
     }
 
     /**
@@ -365,7 +372,7 @@ class Session implements JsonSerializable
      */
     public function persist(int $expires = Cookies::EXPIRES_DAY)
     {
-        $cookies = new Cookies();
+        $cookies = Cookies::make();
         $cookies->set(session_name(), session_id(), $expires);
     }
 
@@ -375,7 +382,7 @@ class Session implements JsonSerializable
      */
     public function flushPersistent()
     {
-        $cookies = new Cookies();
+        $cookies = Cookies::make();
         $cookies->remove(session_name());
         $this->flush();
     }

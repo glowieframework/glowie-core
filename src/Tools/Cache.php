@@ -58,6 +58,12 @@ class Cache implements JsonSerializable
     private $__validator;
 
     /**
+     * Cache instance.
+     * @var Cache|null
+     */
+    private static $instance;
+
+    /**
      * Creates a new Cache handler instance.
      * @param array $data (Optional) Initial data to fill into the cache.
      */
@@ -81,13 +87,14 @@ class Cache implements JsonSerializable
     }
 
     /**
-     * Creates a new Cache handler instance in a static-binding.
+     * Creates a new Cache handler instance in a static-binding or returns the existing one.
      * @param array $data (Optional) Initial data to fill the cache.
-     * @return Cache New Cache instance.
+     * @return Cache Returns the Cache instance.
      */
     public static function make(array $data = [])
     {
-        return new static($data);
+        if (!self::$instance) self::$instance = new static($data);
+        return self::$instance;
     }
 
     /**

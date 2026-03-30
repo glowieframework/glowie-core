@@ -630,7 +630,7 @@ class Rails
         // Checks for maintenance mode
         if (Config::get('maintenance.enabled', false)) {
             // Validates secret bypass route
-            $cookies = new Cookies();
+            $cookies = Cookies::make();
             $key = Config::get('maintenance.bypass_key');
             if (Util::isEmpty($key)) throw new Exception('Application maintenance bypass key was not defined');
 

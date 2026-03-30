@@ -52,6 +52,12 @@ class Cookies implements JsonSerializable
     private $__validator;
 
     /**
+     * Cookies instance.
+     * @var Cookies|null
+     */
+    private static $instance;
+
+    /**
      * Creates a new instance of the cookie manager.
      * @param array $data (Optional) An associative array with the initial data to store in the cookies.
      */
@@ -61,13 +67,14 @@ class Cookies implements JsonSerializable
     }
 
     /**
-     * Creates a new cookies instance in a static-binding.
+     * Creates a new Cookies instance in a static-binding or returns the existing one.
      * @param array $data (Optional) An associative array with the initial data to store in the cookies.
-     * @return Cookies New Cookies instance.
+     * @return Cookies Returns the Cookies instance.
      */
     public static function make(array $data = [])
     {
-        return new static($data);
+        if (!self::$instance) self::$instance = new static($data);
+        return self::$instance;
     }
 
     /**
