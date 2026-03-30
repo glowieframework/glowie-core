@@ -102,8 +102,8 @@ abstract class Command
         if ($step === false) return $this->clear();
 
         // Calculate the progress
-        $progress = (int)(($step / $total) * 100);
-        $step = (int)(($progress * $size) / 100);
+        $progress = round(($step / $total) * 100);
+        $step = floor(($progress * $size) / 100);
 
         // Print the bar
         $bar = '[' . str_pad(str_repeat('=', $step), $size, ' ') . '] ' . $progress . '%';

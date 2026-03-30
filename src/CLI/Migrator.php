@@ -61,7 +61,7 @@ class Migrator
     public static function migrate()
     {
         // Gets the args
-        $steps = (int)Firefly::getArg('steps', 'all');
+        $steps = Firefly::getArg('steps', 'all');
         $path = Firefly::getArg('path');
 
         // Stores current state
@@ -93,7 +93,7 @@ class Migrator
         // Loops through all the migration files
         foreach (glob(Util::location('migrations/*.php')) as $filename) {
             // Checks current state
-            if ($steps !== 'all' && $stepsDone === $steps) break;
+            if ($steps !== 'all' && $stepsDone === (int)$steps) break;
 
             // Checks the path
             $name = pathinfo($filename, PATHINFO_FILENAME);
@@ -141,7 +141,7 @@ class Migrator
     public static function rollback()
     {
         // Gets the args
-        $steps = (int)Firefly::getArg('steps', 1);
+        $steps = Firefly::getArg('steps', 1);
         $path = Firefly::getArg('path');
 
         // Stores current state
@@ -151,7 +151,7 @@ class Migrator
         // Loops through all the migration files
         foreach (array_reverse(glob(Util::location('migrations/*.php'))) as $filename) {
             // Checks current state
-            if ($steps !== 'all' && $stepsDone === $steps) break;
+            if ($steps !== 'all' && $stepsDone === (int)$steps) break;
 
             // Checks the path
             $name = pathinfo($filename, PATHINFO_FILENAME);
