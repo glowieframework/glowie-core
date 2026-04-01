@@ -87,6 +87,24 @@ class HttpResponse extends Element
     }
 
     /**
+     * Gets the body data used to perform the request.
+     * @return mixed Returns the request body.
+     */
+    public function getRequestBody()
+    {
+        return $this->request_body;
+    }
+
+    /**
+     * Gets the request URL.
+     * @return string Returns the request URL.
+     */
+    public function getRequestUrl()
+    {
+        return $this->request_url;
+    }
+
+    /**
      * Gets a resource parameter using a magic method.
      * @param string $method Parameter name to get.
      * @param array $args Unused.

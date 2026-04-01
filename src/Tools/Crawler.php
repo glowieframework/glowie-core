@@ -633,7 +633,7 @@ class Crawler
         $result = false;
 
         try {
-            $result = Util::retry($this->maxAttempts, function () use ($curl, $headers, $url) {
+            $result = Util::retry($this->maxAttempts, function () use ($curl, $headers, $url, $data) {
                 // Fetches the request
                 $response = curl_exec($curl);
 
@@ -656,7 +656,9 @@ class Crawler
                         'body' => $response,
                         'json' => new Element(json_decode($response, true) ?? [], true),
                         'redirects' => $info['redirect_count'],
-                        'headers' => new Element($headers, true)
+                        'headers' => new Element($headers, true),
+                        'request_url' => $url,
+                        'request_body' => $data ?? null,
                     ]);
                 }
 
