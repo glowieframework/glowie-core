@@ -182,7 +182,8 @@ class Crawler
      */
     public function setHeaders(array $headers)
     {
-        $this->headers = $headers;
+        $this->headers = [];
+        foreach ($headers as $key => $value) $this->addHeader($key, $value);
         return $this;
     }
 
