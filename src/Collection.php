@@ -25,7 +25,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      * Collection data.
      * @var array
      */
-    private $__data = [];
+    protected $__data = [];
 
     /**
      * Validator instance.
@@ -36,20 +36,38 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     /**
      * Creates a new collection.
      * @param array $data (Optional) Initial data to parse into the Collection.
+     * @param bool $recursive (Optional) True if the data must be parsed recursively.
      */
-    public function __construct(array $data = [])
+    public function __construct(array $data = [], bool $recursive = false)
     {
-        if (!empty($data)) $this->__data = $data;
+        // Checks if data is empty
+        if (empty($data)) return;
+
+        // Parses the data non-recursively
+        if (!$recursive) {
+            $this->__data = $data;
+            return;
+        }
+
+        // Parses the data recursively
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $this->__data[$key] = new Collection($value, true);
+            } else {
+                $this->__data[$key] = $value;
+            }
+        }
     }
 
     /**
      * Creates a new Collection in a static-binding.
      * @param array $data (Optional) Initial data to parse into the Collection.
+     * @param bool $recursive (Optional) True if the data must be parsed recursively.
      * @return Collection New Collection instance.
      */
-    public static function make(array $data = [])
+    public static function make(array $data = [], bool $recursive = false)
     {
-        return new static($data);
+        return new static($data, $recursive);
     }
 
     /**
@@ -986,11 +1004,12 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      * @param array $rules Associative array with validation rules for each field.
      * @param bool $bail (Optional) Stop validation of each field after first failure found.
      * @param bool $bailAll (Optional) Stop validation of all fields after first failure found.
+     * @param array $customMessages (Optional) An associative array with the custom validation error messages.
      * @return bool Returns true if all rules passed for all fields, false otherwise.
      */
-    public function validate(array $rules, bool $bail = false, bool $bailAll = false)
+    public function validate(array $rules, bool $bail = false, bool $bailAll = false, array $customMessages = [])
     {
-        return $this->getValidator()->validateFields($this->toArray(), $rules, $bail, $bailAll);
+        return $this->getValidator()->validateFields($this->toArray(), $rules, $bail, $bailAll, $customMessages);
     }
 
     /**

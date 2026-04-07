@@ -7,6 +7,7 @@ use Util;
 use Exception;
 use Glowie\Core\Collection;
 use Glowie\Core\Database\Kraken;
+use Glowie\Core\Resources\ValidationMessages;
 
 /**
  * Data validator for Glowie application.
@@ -70,13 +71,13 @@ class Validator
      */
     public function getErrors()
     {
-        return new Collection($this->errors);
+        return new Collection($this->errors, true);
     }
 
     /**
      * Gets the validation error messages.
      * @param string|null $lang (Optional) Language name to get the messages from. Leave empty to use the current active language.
-     * @return Collection Returns a Collection with the error messages.
+     * @return ValidationMessages Returns an object with the validation error messages.
      */
     public function getMessages(?string $lang = null)
     {
@@ -94,24 +95,24 @@ class Validator
                     // Checks for custom message
                     $key = "$field.$name";
                     if (!empty($this->messages[$key])) {
-                        $messages[$field][$name] = $this->messages[$key];
+                        $messages[$field][] = $this->messages[$key];
                     } else {
-                        $messages[$field][$name] = Babel::get("validation.$name", ['field' => $field], $lang);
+                        $messages[$field][] = Babel::get("validation.$name", ['field' => $field], $lang);
                     }
                 }
             } else {
                 // Checks for custom message
                 $key = "$field.$rule";
                 if (!empty($this->messages[$key])) {
-                    $messages[$field][$rule] = $this->messages[$key];
+                    $messages[$field][] = $this->messages[$key];
                 } else {
-                    $messages[$field][$rule] = Babel::get("validation.$rule", ['field' => $field], $lang);
+                    $messages[$field][] = Babel::get("validation.$rule", ['field' => $field], $lang);
                 }
             }
         }
 
         // Returns the messages
-        return new Collection($messages);
+        return new ValidationMessages($messages);
     }
 
     /**
@@ -134,7 +135,7 @@ class Validator
      * @param array $rules Associative array with validation rules for each field.
      * @param bool $bail (Optional) Stop validation of each field after first failure found.
      * @param bool $bailAll (Optional) Stop validation of all fields after first failure found.
-     * @param array $customMessages (Optional) An associative array with the custom validation messages.
+     * @param array $customMessages (Optional) An associative array with the custom validation error messages.
      * @return bool Returns true if all rules passed for all fields, false otherwise.
      */
     public function validateFields($data, array $rules, bool $bail = false, bool $bailAll = false, array $customMessages = [])
@@ -281,7 +282,8 @@ class Validator
 
                 // [CUSTOM] - Checks for custom rule
                 case 'custom':
-                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "custom" rule');
+                case 'callback':
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing function for "custom" rule');
                     if (!self::callCustomRule($rule[1], $data)) $result[] = $rule[1];
                     break;
 

@@ -382,11 +382,12 @@ class Cache implements JsonSerializable
      * @param array $rules Associative array with validation rules for each field.
      * @param bool $bail (Optional) Stop validation of each field after first failure found.
      * @param bool $bailAll (Optional) Stop validation of all fields after first failure found.
+     * @param array $customMessages (Optional) An associative array with the custom validation error messages.
      * @return bool Returns true if all rules passed for all fields, false otherwise.
      */
-    public function validate(array $rules, bool $bail = false, bool $bailAll = false)
+    public function validate(array $rules, bool $bail = false, bool $bailAll = false, array $customMessages = [])
     {
-        return $this->getValidator()->validateFields($this->toArray(), $rules, $bail, $bailAll);
+        return $this->getValidator()->validateFields($this->toArray(), $rules, $bail, $bailAll, $customMessages);
     }
 
     /**

@@ -1200,7 +1200,7 @@ class Model extends Kraken implements JsonSerializable
 
                         case 'collection':
                             $json = json_decode($data[$field], true) ?? [];
-                            $data[$field] = new Collection($json);
+                            $data[$field] = new Collection($json, true);
                             break;
 
                         case 'set':
