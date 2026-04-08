@@ -228,28 +228,7 @@ abstract class Command
      */
     public function confirm(string $message = '', bool $default = false)
     {
-        $message .= self::color(' [y/n] ', 'yellow');
-        $response = $this->input($message, $default ? 'y' : 'n');
-
-        switch (trim(mb_strtolower($response))) {
-            case 'y':
-            case 'yes':
-            case 'true':
-            case '1':
-                return true;
-                break;
-
-            case 'n':
-            case 'no':
-            case 'false':
-            case '0':
-                return false;
-                break;
-
-            default:
-                return $default;
-                break;
-        }
+        return Firefly::confirm($message, $default);
     }
 
     /**

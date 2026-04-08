@@ -108,7 +108,10 @@ abstract class Migration
         return $this->db->clearQuery()
             ->database($this->database)
             ->table($this->table)
-            ->insert(['name' => $this->name]);
+            ->insert([
+                'name' => $this->name,
+                'applied_at' => date('Y-m-d H:i:s')
+            ]);
     }
 
     /**

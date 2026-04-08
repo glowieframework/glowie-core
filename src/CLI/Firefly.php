@@ -281,6 +281,38 @@ class Firefly
     }
 
     /**
+     * Prompts the user to confirm an action with yes or no.
+     * @param string $message (Optional) Message to prompt to the user.
+     * @param bool $default (Optional) Default response to return if empty.
+     * @return bool Returns true or false, depending on the user answer, or the default value if invalid answer.
+     */
+    public static function confirm(string $message = '', bool $default = false)
+    {
+        $message .= self::color(' [y/n] ', 'yellow');
+        $response = self::input($message, $default ? 'y' : 'n');
+
+        switch (trim(mb_strtolower($response))) {
+            case 'y':
+            case 'yes':
+            case 'true':
+            case '1':
+                return true;
+                break;
+
+            case 'n':
+            case 'no':
+            case 'false':
+            case '0':
+                return false;
+                break;
+
+            default:
+                return $default;
+                break;
+        }
+    }
+
+    /**
      * Clears the whole console screen.
      */
     public static function clearScreen()
@@ -1121,6 +1153,15 @@ class Firefly
     }
 
     /**
+     * Drops all tables from the database and migrate from scratch.
+     * @return bool True on success, false on failure.
+     */
+    private static function __migrateFresh()
+    {
+        return Migrator::migrateFresh();
+    }
+
+    /**
      * Squashes the migrations into a schema file.
      * @return bool True on success, false on failure.
      */
@@ -1343,6 +1384,7 @@ class Firefly
         self::print('  <color="yellow">create-job</color> <color="blue">--name</color> | Creates a new job for your application');
         self::print('  <color="yellow">create-service</color> <color="blue">--name</color> | Creates a new service for your application');
         self::print('  <color="yellow">migrate</color> <color="blue">--steps --path</color> | Applies pending migrations from your application');
+        self::print('  <color="yellow">migrate-fresh</color> <color="blue">--connection --steps --path</color> | Drops all tables from the database and migrate from scratch');
         self::print('  <color="yellow">migrations</color> | Gets the status of the migrations');
         self::print('  <color="yellow">rollback</color> <color="blue">--steps --path</color> | Rolls back the last applied migration');
         self::print('  <color="yellow">squash</color> <color="blue">--connection</color> | Squashes the migrations into a schema file');

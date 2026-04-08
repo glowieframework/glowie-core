@@ -5,6 +5,7 @@ namespace Glowie\Core\Database;
 use Exception;
 use stdClass;
 use Util;
+use Glowie\Core\Collection;
 use Glowie\Core\Traits\DatabaseTrait;
 use Glowie\Core\Exception\QueryException;
 
@@ -1158,9 +1159,86 @@ class Skeleton
         }
 
         // Returns the query result
-        $result = $this->execute(true, false);
+        $result = $this->asArray()->execute(true, false);
         if ($driver === 'sqlite') $result = array_filter($result, fn($col) => $col['name'] === $column);
         return !empty($result);
+    }
+
+    /**
+     * Gets a list of all the columns from the current table.
+     * @return Collection Returns a Collection with the column names.
+     */
+    public function getColumns()
+    {
+        // Builds the query to the database driver
+        $driver = $this->getDriver();
+        switch ($driver) {
+            case 'sqlite':
+                $this->_raw = "PRAGMA table_info({$this->_table})";
+                break;
+            case 'pgsql':
+                $this->_raw = "SELECT column_name FROM information_schema.columns WHERE table_name = '{$this->_table}'";
+                break;
+            case 'sqlsrv':
+                $this->_raw = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{$this->_table}'";
+                break;
+            default:
+                $table = $this->escapeIdentifier($this->_table);
+                $this->_raw = "SHOW COLUMNS FROM {$table}";
+                break;
+        }
+
+        // Runs the query
+        $result = $this->asArray()->execute(true, false);
+
+        // Maps the result to the driver
+        if ($driver === 'sqlite') {
+            return new Collection(array_map(fn($col) => $col['name'], $result));
+        } else if ($driver === 'pgsql') {
+            return new Collection(array_map(fn($col) => $col['column_name'], $result));
+        } else if ($driver === 'sqlsrv') {
+            return new Collection(array_map(fn($col) => $col['COLUMN_NAME'], $result));
+        } else {
+            return new Collection(array_map(fn($col) => $col['Field'], $result));
+        }
+    }
+
+    /**
+     * Gets a list of all the tables from the database.
+     * @return Collection Returns a Collection with the table names.
+     */
+    public function getTables()
+    {
+        // Builds the query to the database driver
+        $driver = $this->getDriver();
+        switch ($driver) {
+            case 'sqlite':
+                $this->_raw = "SELECT name FROM sqlite_master WHERE type='table'";
+                break;
+            case 'pgsql':
+                $this->_raw = "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public'";
+                break;
+            case 'sqlsrv':
+                $this->_raw = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'";
+                break;
+            default:
+                $this->_raw = "SHOW TABLES";
+                break;
+        }
+
+        // Runs the query
+        $result = $this->asArray()->execute(true, false);
+
+        // Maps the result to the driver
+        if ($driver === 'sqlite') {
+            return new Collection(array_map(fn($row) => $row['name'], $result));
+        } else if ($driver === 'pgsql') {
+            return new Collection(array_map(fn($row) => $row['tablename'], $result));
+        } else if ($driver === 'sqlsrv') {
+            return new Collection(array_map(fn($row) => $row['TABLE_NAME'], $result));
+        } else {
+            return new Collection(array_map(fn($row) => array_values($row)[0], $result));
+        }
     }
 
     /**

@@ -337,4 +337,33 @@ class Migrator
         Firefly::print(Firefly::color('[' . date('Y-m-d H:i:s') . ']' . ' Migrations squashed successfully.', 'green'));
         return true;
     }
+
+    /**
+     * Runs a fresh migration.
+     * @return bool True on success, false on failure.
+     */
+    public static function migrateFresh()
+    {
+        // Gets the connection name
+        $connection = Firefly::getArg('connection', 'default');
+
+        // Confirms the action
+        Firefly::print(Firefly::bg('WARNING! READ CAREFULLY', 'red'));
+        $confirm = Firefly::confirm(Firefly::color('This is a destructive command! It will drop all tables in the database connection "' . $connection . '". Are you sure you want to continue?', 'red'));
+
+        // Cancels the operation if not confirmed
+        if (!$confirm) return false;
+
+        // Creates the connection and disables foreign key checks
+        $db = new Skeleton('glowie', $connection);
+        $db->disableFkChecks();
+
+        // Drops the tables
+        $tables = $db->getTables();
+        foreach ($tables as $table) $db->table($table)->drop();
+
+        // Re-enables foreign key checks and runs the migrations
+        $db->enableFkChecks();
+        return self::migrate();
+    }
 }
