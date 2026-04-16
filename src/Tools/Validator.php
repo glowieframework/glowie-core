@@ -603,6 +603,62 @@ class Validator
                     if ($exists) $result[] = 'unique';
                     break;
 
+                // [REQUIRED_WITH] - Checks if variable is present and not empty only if any of the other specified fields are present and not empty
+                case 'required_with':
+                case 'requiredwith':
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "required_with" rule');
+                    $required = false;
+                    foreach (explode(',', $rule[1]) as $field) {
+                        if (isset($this->context[$field]) && !Util::isEmpty($this->context[$field])) {
+                            $required = true;
+                            break;
+                        }
+                    }
+                    if ($required && Util::isEmpty($data)) $result[] = 'required_with';
+                    break;
+
+                // [REQUIRED_WITH_ALL] - Checks if variable is present and not empty only if all of the other specified fields are present and not empty
+                case 'required_with_all':
+                case 'requiredwithall':
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "required_with_all" rule');
+                    $required = true;
+                    foreach (explode(',', $rule[1]) as $field) {
+                        if (!isset($this->context[$field]) || Util::isEmpty($this->context[$field])) {
+                            $required = false;
+                            break;
+                        }
+                    }
+                    if ($required && Util::isEmpty($data)) $result[] = 'required_with_all';
+                    break;
+
+                // [REQUIRED_WITHOUT] - Checks if variable is present and not empty only if any of the other specified fields are not present or empty
+                case 'required_without':
+                case 'requiredwithout':
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "required_without" rule');
+                    $required = true;
+                    foreach (explode(',', $rule[1]) as $field) {
+                        if (isset($this->context[$field]) && !Util::isEmpty($this->context[$field])) {
+                            $required = false;
+                            break;
+                        }
+                    }
+                    if ($required && Util::isEmpty($data)) $result[] = 'required_without';
+                    break;
+
+                // [REQUIRED_WITHOUT_ALL] - Checks if variable is present and not empty only if all of the other specified fields are not present or empty
+                case 'required_without_all':
+                case 'requiredwithoutall':
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "required_without_all" rule');
+                    $required = true;
+                    foreach (explode(',', $rule[1]) as $field) {
+                        if (!isset($this->context[$field]) || !Util::isEmpty($this->context[$field])) {
+                            $required = false;
+                            break;
+                        }
+                    }
+                    if ($required && Util::isEmpty($data)) $result[] = 'required_without_all';
+                    break;
+
                 // [SAME] - Checks if a field matches another field value (loose comparison)
                 case 'same':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "same" rule');
