@@ -70,9 +70,15 @@ abstract class Middleware
     protected $session;
 
     /**
+     * Alias parameters.
+     * @var string|null
+     */
+    protected $alias;
+
+    /**
      * Creates a new instance of the middleware.
      */
-    public function __construct()
+    public function __construct($alias = null)
     {
         $this->controller = Rails::getController();
         $this->get = Rails::getRequest()->fromGet();
@@ -82,6 +88,7 @@ abstract class Middleware
         $this->response = Rails::getResponse();
         $this->route = Rails::getCurrentRoute();
         $this->session = Session::make();
+        $this->alias = $alias;
     }
 
     /**

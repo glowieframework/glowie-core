@@ -667,10 +667,11 @@ class Rails
             // Gets the controller
             $controller = isset($config['callback']) ? Generic::class : $config['controller'];
 
-            // If the controller class does not exist, try to use an alias or trigger an error
+            // If the controller class does not exist, try to use an alias or throw an error
             if (!class_exists($controller)) {
-                if (!empty(self::$aliases[$controller])) {
-                    $controller = self::$aliases[$controller];
+                $alias = explode(':', $controller, 2);
+                if (!empty(self::$aliases[$alias[0]])) {
+                    $controller = self::$aliases[$alias[0]];
                 } else {
                     $e = new RoutingException("Controller \"{$controller}\" was not found");
                     $e->setSuggestion('Check if the controller class exists and it is in the correct namespace under Glowie\Controllers.');
@@ -679,7 +680,7 @@ class Rails
             }
 
             // Instantiates the controller
-            self::$controller = new $controller;
+            self::$controller = new $controller($alias[1] ?? null);
 
             // Checks for the route middlewares
             $config['middleware'] = array_merge(self::$globalMiddlewares, $config['middleware'] ?? []);
@@ -687,17 +688,18 @@ class Rails
             if (!empty($config['middleware'])) {
                 // Runs each middleware
                 foreach ($config['middleware'] as $middleware) {
-                    // If middleware class does not exist, try to use an alias or trigger an error
+                    // If middleware class does not exist, try to use an alias or throw an error
                     if (!class_exists($middleware)) {
-                        if (!empty(self::$aliases[$middleware])) {
-                            $middleware = self::$aliases[$middleware];
+                        $alias = explode(':', $middleware, 2);
+                        if (!empty(self::$aliases[$alias[0]])) {
+                            $middleware = self::$aliases[$alias[0]];
                         } else {
                             throw new RoutingException("\"{$middleware}\" was not found");
                         }
                     }
 
                     // Instantiates the middleware
-                    self::$middleware = new $middleware;
+                    self::$middleware = new $middleware($alias[1] ?? null);
                     if (is_callable([self::$middleware, 'init'])) self::$middleware->init();
 
                     // Calls middleware handle() method
@@ -724,7 +726,7 @@ class Rails
             // Gets the action
             $action = $config['action'];
 
-            // If action does not exist, trigger an error
+            // If action does not exist, throw an error
             if (is_callable([self::$controller, $action])) {
                 // Runs the controller init() method
                 if (is_callable([self::$controller, 'init'])) self::$controller->init();

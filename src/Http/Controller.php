@@ -70,6 +70,12 @@ class Controller
     protected $session;
 
     /**
+     * Alias parameters.
+     * @var string|null
+     */
+    protected $alias;
+
+    /**
      * Data to pass globally to views.
      * @var Element
      */
@@ -78,7 +84,7 @@ class Controller
     /**
      * Creates a new instance of the controller.
      */
-    public function __construct()
+    public function __construct($alias = null)
     {
         $this->get = Rails::getRequest()->fromGet();
         $this->params = Rails::getParams();
@@ -87,6 +93,7 @@ class Controller
         $this->response = Rails::getResponse();
         $this->route = Rails::getCurrentRoute();
         $this->session = Session::make();
+        $this->alias = $alias;
         $this->view = new Element();
     }
 
