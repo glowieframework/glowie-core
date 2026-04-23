@@ -614,7 +614,10 @@ class Validator
                             break;
                         }
                     }
-                    if ($required && Util::isEmpty($data)) $result[] = 'required_with';
+                    if (Util::isEmpty($data)) {
+                        if (!$required) break 2;
+                        $result[] = 'required_with';
+                    }
                     break;
 
                 // [REQUIRED_WITH_ALL] - Checks if variable is present and not empty only if all of the other specified fields are present and not empty
@@ -628,7 +631,10 @@ class Validator
                             break;
                         }
                     }
-                    if ($required && Util::isEmpty($data)) $result[] = 'required_with_all';
+                    if (Util::isEmpty($data)) {
+                        if (!$required) break 2;
+                        $result[] = 'required_with_all';
+                    }
                     break;
 
                 // [REQUIRED_WITHOUT] - Checks if variable is present and not empty only if any of the other specified fields are not present or empty
@@ -642,7 +648,10 @@ class Validator
                             break;
                         }
                     }
-                    if ($required && Util::isEmpty($data)) $result[] = 'required_without';
+                    if (Util::isEmpty($data)) {
+                        if (!$required) break 2;
+                        $result[] = 'required_without';
+                    }
                     break;
 
                 // [REQUIRED_WITHOUT_ALL] - Checks if variable is present and not empty only if all of the other specified fields are not present or empty
@@ -656,7 +665,10 @@ class Validator
                             break;
                         }
                     }
-                    if ($required && Util::isEmpty($data)) $result[] = 'required_without_all';
+                    if (Util::isEmpty($data)) {
+                        if (!$required) break 2;
+                        $result[] = 'required_without_all';
+                    }
                     break;
 
                 // [SAME] - Checks if a field matches another field value (loose comparison)
