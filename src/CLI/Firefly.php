@@ -592,7 +592,7 @@ class Firefly
 
         // Starts the server
         self::print(self::color('[' . date('Y-m-d H:i:s') . '] Local development server started!', 'green'));
-        self::print(self::color('[' . date('Y-m-d H:i:s') . '] To shutdown the server press Ctrl/Command+C', 'yellow'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . '] To shutdown the server press Ctrl+C', 'yellow'));
         passthru(sprintf('php -S %s:%s -t app/public %s/Server.php', $host, $port, __DIR__));
     }
 
@@ -1231,7 +1231,7 @@ class Firefly
      */
     private static function __queue()
     {
-        Queue::process(self::getArg('name', 'default'), self::hasOption('bail'), true);
+        Queue::process(self::getArg('name', 'all'), self::hasOption('bail'), true);
         return true;
     }
 
@@ -1243,17 +1243,18 @@ class Firefly
         // Removes the time limit
         set_time_limit(0);
 
-        // Get bail arg
+        // Get args
+        $name = self::getArg('name', 'all');
         $bail = self::hasOption('bail');
+        $interval = (int)self::getArg('interval', 60);
 
         // Print welcome message
         self::print(self::color('[' . date('Y-m-d H:i:s') . '] Queue Watcher has started!', 'green'));
-        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Use Ctrl/Command+C to stop the service', 'yellow'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Use Ctrl+C to stop the service', 'yellow'));
 
         // Run watcher
-        $interval = (int)self::getArg('interval', 60);
         while (true) {
-            Queue::process(self::getArg('name', 'default'), $bail, true, true);
+            Queue::process($name, $bail, true, true);
             sleep($interval);
         }
     }
@@ -1268,7 +1269,7 @@ class Firefly
 
         // Print welcome message
         self::print(self::color('[' . date('Y-m-d H:i:s') . '] Schedule Worker has started!', 'green'));
-        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Use Ctrl/Command+C to stop the service', 'yellow'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Use Ctrl+C to stop the service', 'yellow'));
 
         // Run worker
         while (true) {

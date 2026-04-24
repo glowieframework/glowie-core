@@ -46,7 +46,7 @@ class Queue
     private static $db;
 
     /**
-     * Last inserted job ID.
+     * Last dispatched job ID.
      * @var int|null
      */
     private static $lastJobId = null;
@@ -131,14 +131,14 @@ class Queue
      * @param bool $verbose (Optional) Print status messages during execution.
      * @param bool $watcher (Optional) Run queue in watcher mode (CLI only).
      */
-    public static function process(string $queue = 'default', bool $bail = false, bool $verbose = false, bool $watcher = false)
+    public static function process(string $queue = 'all', bool $bail = false, bool $verbose = false, bool $watcher = false)
     {
         // Delete expired jobs
         self::prune();
 
         // Get pending jobs from the queue
         $db = self::getConnection();
-        $jobs = $db->where('queue', $queue)
+        $jobs = $db->when($queue !== 'all', fn(Kraken $q) => $q->where('queue', $queue))
             ->whereNull('ran_at')
             ->where('attempts', '<', Config::get('queue.max_attempts', 3))
             ->where(function (Kraken $query) {
@@ -161,7 +161,7 @@ class Queue
             try {
                 // Stores start time
                 $time = microtime(true);
-                if ($verbose) Firefly::print(Firefly::color('[' . date('Y-m-d H:i:s') . '] Running ' . $jobRow->job . ' job...', 'blue'));
+                if ($verbose) Firefly::print(Firefly::color('[' . date('Y-m-d H:i:s') . '] Running ' . $jobRow->job . ' job from "' . $jobRow->queue . '" queue...', 'blue'));
 
                 // Create job instance and runs it
                 $job = $jobRow->job;
@@ -244,6 +244,42 @@ class Queue
         if ($pending) $db->whereNull('ran_at')->delete();
 
         return true;
+    }
+
+    /**
+     * Gets the last dispatched job ID in the current process.
+     * @return int|null Returns the last dispatched job ID, or null if there is none.
+     */
+    public static function getLastId()
+    {
+        return self::$lastJobId;
+    }
+
+    /**
+     * Moves an existing job to another queue.
+     * @param int $job Job ID from the database.
+     * @param string $queue Target queue name to move the job to.
+     * @return bool Returns true on success, false on fail.
+     */
+    public static function move(int $job, string $queue)
+    {
+        $db = self::getConnection();
+        $job = $db->where('id', $job)->fetchRow();
+        if (empty($job)) throw new QueueException('Job ID ' . $job . ' does not exist');
+        return $db->where('id', $job)->update(['queue' => $queue]);
+    }
+
+    /**
+     * Deletes an existing job from the queue.
+     * @param int $job Job ID from the database.
+     * @return bool Returns true on success, false on fail.
+     */
+    public static function delete(int $job)
+    {
+        $db = self::getConnection();
+        $job = $db->where('id', $job)->fetchRow();
+        if (empty($job)) throw new QueueException('Job ID ' . $job . ' does not exist');
+        return $db->where('id', $job)->delete();
     }
 
     /**
