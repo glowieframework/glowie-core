@@ -655,6 +655,15 @@ class Skeleton
     }
 
     /**
+     * Sets the default value of the last added/changed column to NULL.
+     * @return Skeleton Current Skeleton instance for nested calls.
+     */
+    public function defaultNull()
+    {
+        return $this->default(self::raw('NULL'));
+    }
+
+    /**
      * Sets the default value of the last added/changed column to the current datetime.
      * @return Skeleton Current Skeleton instance for nested calls.
      */

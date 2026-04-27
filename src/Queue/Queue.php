@@ -92,8 +92,7 @@ class Queue
     public function on(string $name)
     {
         if (!self::$lastJobId) throw new QueueException('There is no job to be modified');
-        $db = self::getConnection();
-        $db->where('id', self::$lastJobId)->update([
+        self::getConnection()->where('id', self::$lastJobId)->update([
             'queue' => $name
         ]);
         return $this;
@@ -116,8 +115,7 @@ class Queue
         }
 
         // Updates the job
-        $db = self::getConnection();
-        $db->where('id', self::$lastJobId)->update([
+        self::getConnection()->where('id', self::$lastJobId)->update([
             'delayed_to' => $delay
         ]);
 
@@ -140,6 +138,7 @@ class Queue
         $db = self::getConnection();
         $jobs = $db->when($queue !== 'all', fn(Kraken $q) => $q->where('queue', $queue))
             ->whereNull('ran_at')
+            ->whereNull('locked_at')
             ->where('attempts', '<', Config::get('queue.max_attempts', 3))
             ->where(function (Kraken $query) {
                 $query->whereNull('delayed_to');
@@ -159,6 +158,12 @@ class Queue
 
         foreach ($jobs as $jobRow) {
             try {
+                // Checks if the job is locked
+                if ($db->where('id', $jobRow->id)->whereNotNull('locked_at')->exists()) continue;
+
+                // Locks the job
+                $db->where('id', $jobRow->id)->update(['locked_at' => date('Y-m-d H:i:s')]);
+
                 // Stores start time
                 $time = microtime(true);
                 if ($verbose) Firefly::print(Firefly::color('[' . date('Y-m-d H:i:s') . '] Running ' . $jobRow->job . ' job from "' . $jobRow->queue . '" queue...', 'blue'));
@@ -171,7 +176,11 @@ class Queue
 
                 // Saves the state to the database on success
                 $date = date('Y-m-d H:i:s');
-                $db->where('id', $jobRow->id)->update(['ran_at' => $date, 'attempts' => $jobRow->attempts + 1]);
+                $db->where('id', $jobRow->id)->update([
+                    'ran_at' => $date,
+                    'attempts' => $jobRow->attempts + 1,
+                    'locked_at' => null
+                ]);
 
                 // Prints result if in verbose mode
                 $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
@@ -189,14 +198,15 @@ class Queue
                 $errorString = "#{$attempt} [{$date}] {$th->getMessage()} at file {$th->getFile()}:{$th->getLine()}\n{$th->getTraceAsString()}";
                 $errors[] = $errorString;
 
-                // Sets the attempts and errors
-                $db->where('id', $jobRow->id)->update([
-                    'attempts' => $attempt,
-                    'errors' => !empty($errors) ? implode("\n\n", $errors) : null
-                ]);
-
                 // Calls the job fail method if exists
                 if (is_callable([$job, 'fail'])) $job->fail($th);
+
+                // Sets the attempts and errors and remove lock
+                $db->where('id', $jobRow->id)->update([
+                    'attempts' => $attempt,
+                    'errors' => !empty($errors) ? implode("\n\n", $errors) : null,
+                    'locked_at' => null
+                ]);
 
                 // Checks to stop execution of queue on fail
                 if ($bail) throw new QueueException($th->getMessage(), $th->getCode(), $th);
@@ -229,7 +239,10 @@ class Queue
         $db = self::getConnection();
 
         // Sets the queue name
-        $db->where('queue', $queue);
+        if ($queue !== 'all') $db->where('queue', $queue);
+
+        // Ignore locked jobs
+        $db->whereNull('locked_at');
 
         // Clear the whole queue
         if ($success && $failed && $pending) return $db->whereNotNull('id')->delete();
@@ -256,29 +269,31 @@ class Queue
     }
 
     /**
-     * Moves an existing job to another queue.
+     * Moves a pending job to another queue.
      * @param int $job Job ID from the database.
      * @param string $queue Target queue name to move the job to.
      * @return bool Returns true on success, false on fail.
+     * @throws QueueException If the specified job ID does not exist.
      */
     public static function move(int $job, string $queue)
     {
         $db = self::getConnection();
-        $job = $db->where('id', $job)->fetchRow();
-        if (empty($job)) throw new QueueException('Job ID ' . $job . ' does not exist');
+        $exists = $db->where('id', $job)->whereNull('ran_at')->whereNull('locked_at')->exists();
+        if (!$exists) throw new QueueException('Job ID ' . $job . ' does not exist or is not pending');
         return $db->where('id', $job)->update(['queue' => $queue]);
     }
 
     /**
-     * Deletes an existing job from the queue.
+     * Deletes a pending job from the queue.
      * @param int $job Job ID from the database.
      * @return bool Returns true on success, false on fail.
+     * @throws QueueException If the specified job ID does not exist.
      */
     public static function delete(int $job)
     {
         $db = self::getConnection();
-        $job = $db->where('id', $job)->fetchRow();
-        if (empty($job)) throw new QueueException('Job ID ' . $job . ' does not exist');
+        $exists = $db->where('id', $job)->whereNull('ran_at')->whereNull('locked_at')->exists();
+        if (!$exists) throw new QueueException('Job ID ' . $job . ' does not exist or is not pending');
         return $db->where('id', $job)->delete();
     }
 

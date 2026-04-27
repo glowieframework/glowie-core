@@ -53,6 +53,7 @@ class __FIREFLY_TEMPLATE_NAME__ extends Migration
             ->createColumn('data')->type(Skeleton::TYPE_LONG_BLOB)->nullable()
             ->createColumn('added_at')->type(Skeleton::TYPE_DATETIME)->defaultNow()
             ->createColumn('delayed_to')->type(Skeleton::TYPE_DATETIME)->nullable()
+            ->createColumn('locked_at')->type(Skeleton::TYPE_DATETIME)->nullable()
             ->createColumn('ran_at')->type(Skeleton::TYPE_DATETIME)->nullable()
             ->createColumn('attempts')->type(Skeleton::TYPE_INTEGER)->unsigned()->default('0')
             ->createColumn('errors')->type(Skeleton::TYPE_LONG_TEXT)->nullable()
