@@ -118,6 +118,24 @@ class Cache implements JsonSerializable
     }
 
     /**
+     * Gets the expiration time of a cache variable.
+     * @param string $key Key to get expiration time.
+     * @return int|null Returns the expiration timestamp if exists or null if not.
+     */
+    public function getExpiration(string $key)
+    {
+        // Escape key
+        $key = self::$db->escapeString($key);
+
+        // Calculate expire date
+        $expires = time();
+
+        // Return result
+        $result = self::$db->querySingle("SELECT `expires` FROM `cache` WHERE `key` = '{$key}' AND (`expires` IS NULL OR `expires` >= {$expires})");
+        return !is_null($result) ? (int)$result : null;
+    }
+
+    /**
      * Gets a cache variable.
      * @param string $key Key to get value.
      * @return mixed Returns the unserialized value if exists or null if there is none.
