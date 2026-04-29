@@ -7,6 +7,7 @@ use Util;
 use Exception;
 use Glowie\Core\Collection;
 use Glowie\Core\Database\Kraken;
+use Glowie\Core\Exception\i18nException;
 use Glowie\Core\Resources\ValidationMessages;
 
 /**
@@ -97,7 +98,11 @@ class Validator
                     if (!empty($this->messages[$key])) {
                         $messages[$field][] = $this->messages[$key];
                     } else {
-                        $messages[$field][] = Babel::get("validation.$name", ['field' => $field], $lang);
+                        try {
+                            $messages[$field][] = Babel::get("validation.$name", ['field' => $field], $lang);
+                        } catch (i18nException $th) {
+                            $messages[$field][] = "The $field field failed the $name validation rule.";
+                        }
                     }
                 }
             } else {
@@ -106,7 +111,11 @@ class Validator
                 if (!empty($this->messages[$key])) {
                     $messages[$field][] = $this->messages[$key];
                 } else {
-                    $messages[$field][] = Babel::get("validation.$rule", ['field' => $field], $lang);
+                    try {
+                        $messages[$field][] = Babel::get("validation.$rule", ['field' => $field], $lang);
+                    } catch (i18nException $th) {
+                        $messages[$field][] = "The $field field failed the $rule validation rule.";
+                    }
                 }
             }
         }
@@ -138,7 +147,7 @@ class Validator
      * @param array $customMessages (Optional) An associative array with the custom validation error messages.
      * @return bool Returns true if all rules passed for all fields, false otherwise.
      */
-    public function validateFields($data, array $rules, bool $bail = false, bool $bailAll = false, array $customMessages = [])
+    public function validateFields($data, array $rules, bool $bail = true, bool $bailAll = true, array $customMessages = [])
     {
         // Converts Element data to array
         if (is_object($data) && is_callable([$data, 'toArray'])) $data = $data->toArray();
@@ -213,7 +222,7 @@ class Validator
      * @param bool $bailAll (Optional) Stop validation of all values after first failure found.
      * @return bool Returns true if all rules passed for all values, false otherwise.
      */
-    public function validateMultiple($data, $rules, bool $bail = false, bool $bailAll = false)
+    public function validateMultiple($data, $rules, bool $bail = true, bool $bailAll = true)
     {
         // Converts Element data to array
         if (is_object($data) && is_callable([$data, 'toArray'])) $data = $data->toArray();
@@ -249,7 +258,7 @@ class Validator
      * @param bool $bail (Optional) Stop validation after first failure found.
      * @return bool Returns true if all rules passed, false otherwise.
      */
-    public function validate($data, $rules, bool $bail = false)
+    public function validate($data, $rules, bool $bail = true)
     {
         // Stores result
         $result = [];

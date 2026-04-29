@@ -291,7 +291,7 @@ class Cookies implements JsonSerializable
      * @param array $customMessages (Optional) An associative array with the custom validation error messages.
      * @return bool Returns true if all rules passed for all fields, false otherwise.
      */
-    public function validate(array $rules, bool $bail = false, bool $bailAll = false, array $customMessages = [])
+    public function validate(array $rules, bool $bail = true, bool $bailAll = true, array $customMessages = [])
     {
         return $this->getValidator()->validateFields($this->toArray(), $rules, $bail, $bailAll, $customMessages);
     }
@@ -303,7 +303,7 @@ class Cookies implements JsonSerializable
      * @param bool $bailAll (Optional) Stop validation of all values after first failure found.
      * @return bool Returns true if all rules passed for all values, false otherwise.
      */
-    public function validateAll($rules, bool $bail = false, bool $bailAll = false)
+    public function validateAll($rules, bool $bail = true, bool $bailAll = true)
     {
         return $this->getValidator()->validateMultiple($this->toArray(), $rules, $bail, $bailAll);
     }
