@@ -69,11 +69,16 @@ class Sandbox
             $__e = self::$exception;
             $__ = self::$result;
 
-            // Starting tag
-            Firefly::print(Firefly::color(Util::isEmpty(self::$continuous) ? 'sandbox >> ' : '....... >> ', 'cyan'), false);
-
             // Gets the current command
-            $__command = trim(fgets(STDIN));
+            $__command = self::read(Util::isEmpty(self::$continuous) ? 'sandbox >> ' : '....... >> ');
+
+            // Handle exit command
+            if ($__command === null) {
+                Firefly::print(Firefly::color('Good bye!', 'green'));
+                exit;
+            }
+
+            // Handle empty command
             if (Util::isEmpty($__command)) continue;
 
             // Fill continuous command and add command to the history
@@ -81,6 +86,7 @@ class Sandbox
                 self::$continuous .= PHP_EOL . $__command;
             } else {
                 self::$history[] = $__command;
+                if (function_exists('readline_add_history')) readline_add_history($__command);
                 self::$continuous = $__command;
             }
 
@@ -92,9 +98,11 @@ class Sandbox
             self::$continuous = '';
 
             // Checks for predefined commands
-            switch ($__command) {
+            switch (explode(' ', $__command)[0]) {
                 case 'history':
-                    foreach (self::$history as $__key => $__value) {
+                    $__args = self::parseArgs($__command);
+                    foreach (array_slice(self::$history, 0, -1) as $__key => $__value) {
+                        if (!empty($__args['grep']) && !Util::stringContains($__value, $__args['grep'])) continue;
                         Firefly::print('<color="blue">', false);
                         Firefly::print('    ' . ($__key + 1) . ': </color><color="white">' . $__value, false);
                         Firefly::print('</color>');
@@ -115,8 +123,10 @@ class Sandbox
                     continue 2;
 
                 case 'ls':
+                    $__args = self::parseArgs($__command);
                     foreach (get_defined_vars() as $__key => $__value) {
-                        if (in_array($__key, ['__key', '__value', '__command', '__', '__e'])) continue;
+                        if (in_array($__key, ['__key', '__value', '__command', '__', '__e', '__args'])) continue;
+                        if (!empty($__args['grep']) && !Util::stringContains($__key, $__args['grep'])) continue;
                         Firefly::print('<color="magenta">', false);
                         Firefly::print('>> $' . $__key . ' = ', false);
 
@@ -161,7 +171,7 @@ class Sandbox
                 $__ = eval($__command);
 
                 // Flushes the buffer
-                if ($__) self::dump($__);
+                self::dump($__);
                 $__ = Buffer::get();
 
                 // Prints the result
@@ -193,5 +203,56 @@ class Sandbox
     {
         $dump = Util::parseDump($var, true);
         Firefly::print($dump . '</color>', false);
+    }
+
+    /**
+     * Parses the arguments from a predefined command.
+     * @param string $command Command string.
+     * @return array Returns the args as an associative array.
+     */
+    private static function parseArgs($command)
+    {
+        $parts = explode(' ', $command);
+
+        // Removes the command from the args
+        array_shift($parts);
+
+        // Parses the arguments as an associative array
+        $args = [];
+        foreach ($parts as $value) {
+            $match = [];
+
+            // Args with values
+            if (preg_match('/^--([^=]+)=(.+)$/', $value, $match)) {
+                $args[mb_strtolower($match[1])] = $match[2];
+            } else if (preg_match('/^-{1,2}([^=]+)$/', $value, $match)) {
+                // Args without values
+                $args[mb_strtolower($match[1])] = '';
+            }
+        }
+
+        // Returns the result
+        return $args;
+    }
+
+    /**
+     * Reads a command from the user input.
+     * @param string $prompt Prompt text.
+     * @return string|null Returns the command if available.
+     */
+    private static function read($prompt)
+    {
+        // Checks if readline is available
+        if (function_exists('readline')) {
+            $command = readline($prompt);
+        } else {
+            // Prints the prompt string
+            Firefly::print(Firefly::color($prompt, 'cyan'), false);
+            $command = fgets(STDIN);
+        }
+
+        // Returns the result
+        if ($command === false) return null;
+        return trim($command);
     }
 }
