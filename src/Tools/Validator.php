@@ -308,11 +308,27 @@ class Validator
                     if (Util::getSize($data) < $rule[1]) $result[] = 'min';
                     break;
 
+                // [MIN_LENGTH] - Checks if variable length is bigger or equal than min
+                case 'minlength':
+                case 'min_length':
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "min_length" rule');
+                    $rule[1] = (int)$rule[1];
+                    if (mb_strlen((string)$data) < $rule[1]) $result[] = 'min_length';
+                    break;
+
                 // [MAX] - Checks if variable is lower or equal than max
                 case 'max':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "max" rule');
                     $rule[1] = (int)$rule[1];
                     if (Util::getSize($data) > $rule[1]) $result[] = 'max';
+                    break;
+
+                // [MAX_LENGTH] - Checks if variable length is lower or equal than max
+                case 'maxlength':
+                case 'max_length':
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "max_length" rule');
+                    $rule[1] = (int)$rule[1];
+                    if (mb_strlen((string)$data) > $rule[1]) $result[] = 'max_length';
                     break;
 
                 // [SIZE] - Checks if variable size equals to size
@@ -322,6 +338,13 @@ class Validator
                     if (Util::getSize($data) != $rule[1]) $result[] = 'size';
                     break;
 
+                // [LENGTH] - Checks if variable length equals to length
+                case 'length':
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "length" rule');
+                    $rule[1] = (int)$rule[1];
+                    if (mb_strlen((string)$data) != $rule[1]) $result[] = 'length';
+                    break;
+
                 // [BETWEEN] - Checks if variable size is between the specified
                 case 'between':
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "between" rule');
@@ -329,6 +352,16 @@ class Validator
                     if (count($rule[1]) !== 2) throw new Exception('Validator: Between rule must have two values for min and max');
                     $size = Util::getSize($data);
                     if ($size < (int)$rule[1][0] || $size > (int)$rule[1][1]) $result[] = 'between';
+                    break;
+
+                // [BETWEEN_LENGTH] - Checks if variable length is between the specified
+                case 'betweenlength':
+                case 'between_length':
+                    if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "between_length" rule');
+                    $rule[1] = explode(',', $rule[1], 2);
+                    if (count($rule[1]) !== 2) throw new Exception('Validator: Between length rule must have two values for min and max');
+                    $length = mb_strlen((string)$data);
+                    if ($length < (int)$rule[1][0] || $length > (int)$rule[1][1]) $result[] = 'between_length';
                     break;
 
                 // [EMAIL] - Checks if variable is a valid email
