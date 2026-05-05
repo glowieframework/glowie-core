@@ -60,7 +60,7 @@ class Request implements JsonSerializable
         self::$old = new Element(Session::make()->getFlash('input', []), true);
 
         // Parse request variables
-        $vars = array_merge(Rails::getParams()->toArray(), $this->fromGet()->toArray(), $this->fromPost()->toArray(), $this->getJson()->toArray());
+        $vars = array_merge(Rails::getParams()->toArray(), $_GET, $_POST, $this->getJson()->toArray());
         $this->__constructTrait($vars);
     }
 
