@@ -30,6 +30,12 @@ class __FIREFLY_TEMPLATE_NAME__ extends Command
     protected $signature = null;
 
     /**
+     * Sets if this command cannot run more than once at the same time.
+     * @var bool
+     */
+    protected $locked = false;
+
+    /**
      * The command script.
      */
     public function run()

@@ -32,6 +32,12 @@ abstract class Command
     protected $signature = null;
 
     /**
+     * Sets if this command cannot run more than once at the same time.
+     * @var bool
+     */
+    protected $locked = false;
+
+    /**
      * The command handler.
      */
     public abstract function run();
@@ -422,5 +428,14 @@ abstract class Command
     public function getSignature()
     {
         return $this->signature;
+    }
+
+    /**
+     * Checks if the command is locked (cannot run more than once at the same time).
+     * @return bool Returns true if the command is locked, false otherwise.
+     */
+    public function isLocked()
+    {
+        return $this->locked;
     }
 }

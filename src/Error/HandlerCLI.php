@@ -5,6 +5,7 @@ namespace Glowie\Core\Error;
 use Glowie\Core\CLI\Firefly;
 use Config;
 use ErrorException;
+use Exception;
 use Util;
 
 /**
@@ -42,14 +43,14 @@ class HandlerCLI
     public static function errorHandler(int $level, string $message, ?string $file = null, ?int $line = 0)
     {
         throw new ErrorException($message, 0, $level, $file ?? '', $line);
-        return true;
     }
 
     /**
      * CLI exception handler.
      * @param Exception $e Thrown exception.
+     * @param bool $exit Whether to exit the script after handling the exception.
      */
-    public static function exceptionHandler($e)
+    public static function exceptionHandler($e, bool $exit = true)
     {
         // Error logging
         $date = date('Y-m-d H:i:s');
@@ -77,7 +78,7 @@ class HandlerCLI
         }
 
         // Exit with error status code
-        exit(127);
+        if ($exit) exit(127);
     }
 
     /**

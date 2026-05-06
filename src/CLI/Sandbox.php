@@ -111,7 +111,7 @@ class Sandbox
 
                 case 'exception':
                     if ($__e) {
-                        HandlerCLI::exceptionHandler($__e);
+                        HandlerCLI::exceptionHandler($__e, false);
                     } else {
                         Firefly::print(Firefly::color('No exception was thrown!', 'green'));
                     }

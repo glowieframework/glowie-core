@@ -6,6 +6,7 @@ use Config;
 use Util;
 use Glowie\Core\Http\Rails;
 use Glowie\Core\View\Buffer;
+use Glowie\Core\Collection;
 use Glowie\Core\Http\Response;
 use ErrorException;
 use Throwable;
@@ -54,14 +55,14 @@ class Handler
     public static function errorHandler(int $level, string $message, ?string $file = null, ?int $line = 0)
     {
         throw new ErrorException($message, 0, $level, $file ?? '', $line);
-        return true;
     }
 
     /**
      * Exception handler.
      * @param Throwable $e Thrown exception.
+     * @param bool $exit Whether to exit the script after handling the exception.
      */
-    public static function exceptionHandler(Throwable $e)
+    public static function exceptionHandler(Throwable $e, bool $exit = true)
     {
         // Error logging
         $date = date('Y-m-d H:i:s');
@@ -84,7 +85,7 @@ class Handler
         }
 
         // Exit with error status code
-        exit(500);
+        if ($exit) exit(500);
     }
 
     /**

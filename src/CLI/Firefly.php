@@ -246,21 +246,94 @@ class Firefly
         self::$command = (!Util::isEmpty($namespace) ? ($namespace . ':') : '') . $command;
 
         // Finds a valid command
+        $callback = null;
         $name = Util::pascalCase($command);
         $classname = 'Glowie\Commands\\' . (!Util::isEmpty($namespace) ? (Util::pascalCase($namespace) . '\\') : '') . $name;
+
         if (class_exists($classname)) {
+            // Instantiates the command class
             $class = new $classname;
-            $class->run();
+
+            // Checks if the command is locked
+            $needsLock = $class->isLocked() || self::hasOption('locked');
+            if (!$needsLock) return $class->run();
+
+            // Sets the callback for the lock
+            $callback = function () use ($class) {
+                $class->run();
+            };
         } else if (!empty(self::$custom[$namespace . ':' . $name]) && class_exists(self::$custom[$namespace . ':' . $name])) {
+            // Instantiates the command class
             $class = new static::$custom[$namespace . ':' . $name];
-            $class->run();
+
+            // Checks if the command is locked
+            $needsLock = $class->isLocked() || self::hasOption('locked');
+            if (!$needsLock) return $class->run();
+
+            // Sets the callback for the lock
+            $callback = function () use ($class) {
+                $class->run();
+            };
         } else if (is_callable([self::class, '__' . $name])) {
+            // Gets the method name
             $name = '__' . $name;
-            self::$name();
+
+            // Checks if the command is locked
+            if (!self::hasOption('locked')) return self::$name();
+
+            // Sets the callback for the lock
+            $callback = function () use ($name) {
+                self::$name();
+            };
         } else {
             $command = self::$command;
             throw new ConsoleException(self::getCommand(), self::getArgs(), "Unknown command \"{$command}\"");
         }
+
+        // Runs the command with lock
+        if (!is_null($callback)) {
+            if (!self::createLock()) {
+                self::print(self::color('Another instance of this command is already running.', 'red'));
+                exit(1);
+            }
+
+            try {
+                $callback();
+            } finally {
+                self::deleteLock();
+            }
+        }
+    }
+
+    /**
+     * Deletes the lock file for the current command, if exists.
+     * @return void
+     */
+    private static function deleteLock()
+    {
+        $tmpPath = Util::location('storage/tmp');
+        $lockFile = $tmpPath . '/' . md5('command_' . self::getCommand()) . '.lock';
+        if (is_file($lockFile)) unlink($lockFile);
+    }
+
+    /**
+     * Creates a lock file for the current command.
+     * @return void
+     */
+    private static function createLock()
+    {
+        // Checks if the tmp path exists
+        $tmpPath = Util::location('storage/tmp');
+        if (!is_dir($tmpPath)) mkdir($tmpPath, 0775, true);
+        if (!is_writable($tmpPath)) throw new FileException('Directory "app/storage/tmp" is not writable, please check your chmod settings');
+
+        // Checks if the lock file exists
+        $lockFile = $tmpPath . '/' . md5('command_' . self::getCommand()) . '.lock';
+        if (is_file($lockFile)) return false;
+
+        // Creates the lock file
+        file_put_contents($lockFile, time());
+        return true;
     }
 
     /**
