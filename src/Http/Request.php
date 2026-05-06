@@ -44,12 +44,6 @@ class Request implements JsonSerializable
     private static $old;
 
     /**
-     * Validator instance.
-     * @var Validator
-     */
-    private $__validator;
-
-    /**
      * Creates a new Request handler instance.
      */
     public function __construct()

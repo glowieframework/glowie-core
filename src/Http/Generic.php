@@ -2,6 +2,8 @@
 
 namespace Glowie\Core\Http;
 
+use Glowie\Core\Element;
+
 /**
  * Generic controller for Glowie application.
  * @category Controller
@@ -56,6 +58,12 @@ class Generic extends Controller
      * @var Session
      */
     public $session;
+
+    /**
+     * Alias parameters.
+     * @var string|null
+     */
+    public $alias;
 
     /**
      * Calls the action callback.

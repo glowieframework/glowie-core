@@ -5,6 +5,7 @@ namespace Glowie\Core\View;
 use Glowie\Core\Http\Rails;
 use Glowie\Core\Traits\ElementTrait;
 use Glowie\Core\Exception\FileException;
+use Glowie\Core\Element;
 use Config;
 use Util;
 use BadMethodCallException;
@@ -44,7 +45,7 @@ class Layout implements JsonSerializable
 
     /**
      * View helpers instance.
-     * @var Helpers
+     * @var mixed
      */
     private static $_helpers;
 
@@ -55,11 +56,11 @@ class Layout implements JsonSerializable
     private $_params;
 
     /**
-     * Instantiates a new Layout.
+     * Creates a new Layout.
      * @param string $layout Layout filename to instantiate.
      * @param string|null $view (Optional) View filename to parse inside the layout.
      * @param array $params (Optional) View parameters to parse.
-     * @param bool $absolute (Optional) Use an absolute path for the view file.
+     * @param bool $absolute (Optional) Use an absolute path for the layout and view files.
      */
     public function __construct(string $layout, ?string $view = null, array $params = [], bool $absolute = false)
     {
@@ -136,7 +137,7 @@ class Layout implements JsonSerializable
      * @param string|null $view (Optional) View filename to render within layout. You can place its content by using `$this->getView()`\
      * inside the layout file. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
      * @param array $params (Optional) Parameters to pass into the rendered view and layout. Should be an associative array with each variable name and value.
-     * @param bool $absolute (Optional) Use an absolute path for the view file.
+     * @param bool $absolute (Optional) Use an absolute path for the layout and view files.
      */
     public function renderLayout(string $layout, ?string $view = null, array $params = [], bool $absolute = false)
     {
@@ -156,7 +157,7 @@ class Layout implements JsonSerializable
 
     /**
      * Renders a raw view code using Skeltch engine.
-     * @param string $view View content in HTML.
+     * @param string $content View content in HTML.
      * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
      */
     final public function renderInline(string $content, array $params = [])
@@ -245,5 +246,23 @@ class Layout implements JsonSerializable
     public function getStack(string $name, string $default = '')
     {
         return View::getStack($name, $default);
+    }
+
+    /**
+     * Resets the loop pointer.
+     */
+    public static function resetLoop()
+    {
+        Skeltch::resetLoop();
+    }
+
+    /**
+     * Gets the loop info for the current foreach loop.
+     * @param mixed $variable The variable being iterated in the foreach loop.
+     * @return Element Returns an Element with the loop data.
+     */
+    public static function getLoop($variable)
+    {
+        return Skeltch::getLoop($variable);
     }
 }

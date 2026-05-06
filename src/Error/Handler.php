@@ -75,10 +75,11 @@ class Handler
         if (error_reporting()) {
             include(__DIR__ . '/Views/error.phtml');
         } else {
-            extract([
+            $vars = [
                 'title' => 'Server Error',
                 'text' => '500 | Server Error'
-            ]);
+            ];
+            extract($vars);
             include(__DIR__ . '/Views/default.phtml');
         }
 

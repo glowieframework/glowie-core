@@ -57,10 +57,11 @@ class Util
                 Rails::getResponse()->setContentType(Response::CONTENT_HTML);
                 include(__DIR__ . '/Views/dump.phtml');
             } else {
-                extract([
+                $vars = [
                     'title' => 'Server Error',
                     'text' => '500 | Server Error'
-                ]);
+                ];
+                extract($vars);
                 include(__DIR__ . '/../Error/Views/default.phtml');
             }
         }

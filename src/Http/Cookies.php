@@ -119,7 +119,7 @@ class Cookies implements JsonSerializable
     public function set($key, $value = null, int $expires = self::EXPIRES_DAY)
     {
         if (is_array($key)) {
-            foreach ($key as $field => $value) $this->set($field, $value, $expires);
+            foreach ($key as $field => $val) $this->set($field, $val, $expires);
         } else {
             $_COOKIE[$key] = $value;
             setcookie($key, $value, time() + $expires, '/', '', Config::get('cookies.secure', false), Config::get('cookies.restrict', false));

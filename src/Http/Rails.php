@@ -221,6 +221,44 @@ class Rails
     }
 
     /**
+     * Setup a route that renders a view file.
+     * @param string $route The route URI to setup.
+     * @param string $view View filename. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
+     * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
+     * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
+     * @param string|null $name (Optional) Route name. Empty will be generated automatically.
+     * @return Rails Returns the current instance for nested calls.
+     */
+    public static function addView(string $route, string $view, array $params = [], $methods = [], ?string $name = null)
+    {
+        $callback = function (Generic $controller) use ($view, $params) {
+            return $controller->renderView($view, $params);
+        };
+
+        return self::addAnonymous($route, $callback, $methods, $name);
+    }
+
+    /**
+     * Setup a route that renders a layout file.
+     * @param string $route The route URI to setup.
+     * @param string $layout Layout filename. Must be a **.phtml** file inside **app/views/layouts** folder, extension is not needed.
+     * @param string|null $view (Optional) View filename to render within layout. You can place its content by using `$this->getView()`\
+     * inside the layout file. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
+     * @param array $params (Optional) Parameters to pass into the rendered view and layout. Should be an associative array with each variable name and value.
+     * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
+     * @param string|null $name (Optional) Route name. Empty will be generated automatically.
+     * @return Rails Returns the current instance for nested calls.
+     */
+    public static function addLayout(string $route, string $layout, ?string $view = null, array $params = [], $methods = [], ?string $name = null)
+    {
+        $callback = function (Generic $controller) use ($layout, $view, $params) {
+            return $controller->renderLayout($layout, $view, $params);
+        };
+
+        return self::addAnonymous($route, $callback, $methods, $name);
+    }
+
+    /**
      * Setup a new protected route for the application.
      * @param string $route The route URI to setup.
      * @param string|array $middleware (Optional) The namespaced middleware name or alias that this route will use to protect itself.\

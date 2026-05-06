@@ -106,7 +106,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
 
     /**
      * Merges two Collections or arrays.
-     * @param Collection|array A Collection or array to merge with the current Collection.
+     * @param Collection|array $data A Collection or array to merge with the current Collection.
      * @return Collection Returns a new Collection with the merged data.
      */
     public function merge($data)

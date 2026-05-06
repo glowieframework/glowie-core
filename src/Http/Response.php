@@ -7,6 +7,7 @@ use Config;
 use SimpleXMLElement;
 use Glowie\Core\View\Buffer;
 use Glowie\Core\Collection;
+use Glowie\Core\Element;
 use Glowie\Core\Exception\FileException;
 
 /**

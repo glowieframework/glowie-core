@@ -101,6 +101,7 @@ class Controller
      * Renders a view file.
      * @param string $view View filename. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
      * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
+     * @param bool $absolute (Optional) Use an absolute path for the view file.
      * @see https://glowie.gabrielsilva.dev.br/docs/latest/basic-application-modules/views
      */
     final public function renderView(string $view, array $params = [], bool $absolute = false)
@@ -115,7 +116,7 @@ class Controller
      * @param string|null $view (Optional) View filename to render within layout. You can place its content by using `$this->getView()`\
      * inside the layout file. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
      * @param array $params (Optional) Parameters to pass into the rendered view and layout. Should be an associative array with each variable name and value.
-     * @param bool $absolute (Optional) Use an absolute path for the view file.
+     * @param bool $absolute (Optional) Use an absolute path for the layout and view files.
      * @see https://glowie.gabrielsilva.dev.br/docs/latest/basic-application-modules/layouts
      */
     final public function renderLayout(string $layout, ?string $view = null, array $params = [], bool $absolute = false)
@@ -139,7 +140,7 @@ class Controller
 
     /**
      * Renders a raw view code using Skeltch engine.
-     * @param string $view View content in HTML.
+     * @param string $content View content in HTML.
      * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
      * @see https://glowie.gabrielsilva.dev.br/docs/latest/basic-application-modules/views
      */

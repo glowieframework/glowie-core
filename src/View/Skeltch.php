@@ -105,16 +105,16 @@ class Skeltch
     {
         $code = preg_replace('~(?<!@){\s*if\s*\((.+?)\)\s*}~is', '<?php if($1): ?>', $code);
         $code = preg_replace('~(?<!@){\s*isset\s*\((.+?)\)\s*}~is', '<?php if(isset($1)): ?>', $code);
-        $code = preg_replace('~(?<!@){\s*empty\s*\((.+?)\)\s*}~is', '<?php if(!isset($1) || Util::isEmpty($1)): ?>', $code);
-        $code = preg_replace('~(?<!@){\s*notempty\s*\((.+?)\)\s*}~is', '<?php if(isset($1) && !Util::isEmpty($1)): ?>', $code);
+        $code = preg_replace('~(?<!@){\s*empty\s*\((.+?)\)\s*}~is', '<?php if(!isset($1) || is_empty($1)): ?>', $code);
+        $code = preg_replace('~(?<!@){\s*notempty\s*\((.+?)\)\s*}~is', '<?php if(isset($1) && !is_empty($1)): ?>', $code);
         $code = preg_replace('~(?<!@){\s*notset\s*\((.+?)\)\s*}~is', '<?php if(!isset($1)): ?>', $code);
-        $code = preg_replace('~(?<!@){\s*env\s*\((.+?)\)\s*}~is', '<?php if(Config::get(\'env\') === $1): ?>', $code);
+        $code = preg_replace('~(?<!@){\s*env\s*\((.+?)\)\s*}~is', '<?php if(config(\'env\') === $1): ?>', $code);
         $code = preg_replace('~(?<!@){\s*lang\s*\((.+?)\)\s*}~is', '<?php if(Babel::getActiveLanguage === $1): ?>', $code);
         $code = preg_replace('~(?<!@){\s*else\s*if\s*\((.+?)\)\s*}~is', '<?php elseif($1): ?>', $code);
         $code = preg_replace('~(?<!@){\s*else\s*}~is', '<?php else: ?>', $code);
-        $code = preg_replace('~(?<!@){\s*auth\s*(?:\((.+?)\))?\s*}~is', '<?php if(\Glowie\Core\Tools\Authenticator::make($1)->check()): ?>', $code);
-        $code = preg_replace('~(?<!@){\s*guest\s*(?:\((.+?)\))?\s*}~is', '<?php if(!\Glowie\Core\Tools\Authenticator::make($1)->check()): ?>', $code);
-        $code = preg_replace('~(?<!@){\s*session\s*\((.+?)\)\s*}~is', '<?php $__glSess = \Glowie\Core\Http\Session::make(); if($__glSess->has($1)): $value = $__glSess->get($1); ?>', $code);
+        $code = preg_replace('~(?<!@){\s*auth\s*(?:\((.+?)\))?\s*}~is', '<?php if(auth($1)->check()): ?>', $code);
+        $code = preg_replace('~(?<!@){\s*guest\s*(?:\((.+?)\))?\s*}~is', '<?php if(!auth($1)->check()): ?>', $code);
+        $code = preg_replace('~(?<!@){\s*session\s*\((.+?)\)\s*}~is', '<?php if(session()->has($1)): $value = session()->get($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*(/if|/isset|/empty|/notempty|/notset|/env|/lang|/auth|/guest|/session)\s*}~is', '<?php endif; ?>', $code);
         return $code;
     }
@@ -160,7 +160,7 @@ class Skeltch
         $code = preg_replace('~(?<!@){\s*json\s*\((.+?)\)\s*}~is', '<?php echo Util::jsonEncode($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*class\s*\((.+?)\)\s*}~is', '<?php echo Util::cssArray($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*dump\s*\((.+?)\)\s*}~is', '<?php echo Util::dump($1); ?>', $code);
-        $code = preg_replace('~(?<!@){\s*old\s*\((.+?)\)\s*}~is', '<?php echo \Glowie\Core\Http\Rails::getRequest()->old($1); ?>', $code);
+        $code = preg_replace('~(?<!@){\s*old\s*\((.+?)\)\s*}~is', '<?php echo request()->old($1); ?>', $code);
         return $code;
     }
 
@@ -223,9 +223,9 @@ class Skeltch
     {
         return preg_replace_callback('~(?<!@){\s*foreach\s*\((.+?)\s+as\s+(.+?)(\s+=>\s+(.*?))?\)\s*}~is', function ($matches) {
             if (isset($matches[4])) {
-                return sprintf('<?php \Glowie\Core\View\Skeltch::resetLoop(); foreach(%s as %s => %s): $loop = \Glowie\Core\View\Skeltch::getLoop(%s); ?>', $matches[1], $matches[2], $matches[4], $matches[1]);
+                return sprintf('<?php self::resetLoop(); foreach(%s as %s => %s): $loop = self::getLoop(%s); ?>', $matches[1], $matches[2], $matches[4], $matches[1]);
             } else {
-                return sprintf('<?php \Glowie\Core\View\Skeltch::resetLoop(); foreach(%s as %s): $loop = \Glowie\Core\View\Skeltch::getLoop(%s); ?>', $matches[1], $matches[2], $matches[1]);
+                return sprintf('<?php self::resetLoop(); foreach(%s as %s): $loop = self::getLoop(%s); ?>', $matches[1], $matches[2], $matches[1]);
             }
         }, $code, -1, $count, PREG_UNMATCHED_AS_NULL);
     }
@@ -240,6 +240,7 @@ class Skeltch
 
     /**
      * Gets the loop info for the current foreach loop.
+     * @param mixed $variable The variable being iterated in the foreach loop.
      * @return Element Returns an Element with the loop data.
      */
     public static function getLoop($variable)
