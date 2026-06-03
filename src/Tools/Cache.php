@@ -4,10 +4,10 @@ namespace Glowie\Core\Tools;
 
 use Config;
 use Util;
-use SQLite3;
 use Exception;
 use JsonSerializable;
 use Glowie\Core\Collection;
+use Glowie\Core\Database\Kraken;
 
 /**
  * Cache for Glowie application.
@@ -47,9 +47,15 @@ class Cache implements JsonSerializable
 
     /**
      * Current database instance.
-     * @var SQLite3
+     * @var Kraken|null
      */
     private static $db = null;
+
+    /**
+     * Cache table name.
+     * @var string
+     */
+    private static $table;
 
     /**
      * Validator instance.
@@ -71,19 +77,57 @@ class Cache implements JsonSerializable
     {
         // Checks if the cache database is already connected
         if (!self::$db) {
-            // Checks for sqlite3 extension
-            if (!extension_loaded('sqlite3')) throw new Exception('Cache: Missing "sqlite3" extension in your PHP installation');
+            // Sets the table name
+            self::$table = Config::get('cache.table', 'cache');
 
-            // Create the connection
-            self::$db = new SQLite3(Config::get('cache.path', Util::location('storage/cache/cache.db')));
+            // Checks for cache driver
+            $driver = Config::get('cache.driver', 'file');
 
-            // Creates the cache table if not exists yet
-            $tableExists = self::$db->querySingle("SELECT `name` FROM `sqlite_master` WHERE type='table' AND name='cache'");
-            if (!$tableExists) self::$db->exec("CREATE TABLE `cache`(`key` TEXT PRIMARY KEY, `value` BLOB, `expires` INTEGER)");
+            // Connects to the driver
+            if ($driver === 'file') {
+                self::$db = $this->createFileConnection();
+            } else if ($driver === 'database') {
+                $connection = Config::get('cache.connection', 'default');
+                self::$db = new Kraken(self::$table, $connection);
+            } else {
+                throw new Exception("Cache: Unsupported driver: \"$driver\"");
+            }
         }
 
         // Parse initial data, if any
         if (!empty($data)) $this->set($data);
+    }
+
+    /**
+     * Creates the SQLite connection for the cache file driver.
+     * @return Kraken Returns the database instance.
+     */
+    private function createFileConnection()
+    {
+        // Sets the connection info
+        $connection = 'sqlite_cache_driver';
+        Config::set("database.$connection", [
+            'driver' => 'sqlite',
+            'path' => Config::get('cache.path', Util::location('storage/cache/cache.db'))
+        ]);
+
+        // Creates the connection
+        $db = new Kraken(self::$table, $connection);
+
+        // Creates the cache table if not exists yet
+        $tableExists = $db->select('name')
+            ->from('sqlite_master')
+            ->where('type', 'table')
+            ->where('name', self::$table)
+            ->fetchRow();
+
+        if (empty($tableExists)) {
+            $table = $db->escapeIdentifier(self::$table);
+            $db->query("CREATE TABLE $table (`key` TEXT PRIMARY KEY, `value` BLOB, `expires` INTEGER)");
+        }
+
+        // Returns the connection
+        return $db;
     }
 
     /**
@@ -105,16 +149,20 @@ class Cache implements JsonSerializable
      */
     public function get(string $key, $default = null)
     {
-        // Escape key
-        $key = self::$db->escapeString($key);
-
-        // Calculate expire date
-        $expires = time();
+        // Gets the cache value
+        $result = self::$db->select('value')
+            ->from(self::$table)
+            ->where('key', $key)
+            ->where(function (Kraken $q) {
+                $q->whereNull('expires');
+                $q->orWhere('expires', '>=', time());
+            })
+            ->asElement()
+            ->fetchRow();
 
         // Return result
-        $result = self::$db->querySingle("SELECT `value` FROM `cache` WHERE `key` = '{$key}' AND (`expires` IS NULL OR `expires` >= {$expires})");
-        if (is_null($result)) return $default;
-        return unserialize($result);
+        if (empty($result) || is_null($result->value)) return $default;
+        return unserialize($result->value);
     }
 
     /**
@@ -124,15 +172,19 @@ class Cache implements JsonSerializable
      */
     public function getExpiration(string $key)
     {
-        // Escape key
-        $key = self::$db->escapeString($key);
-
-        // Calculate expire date
-        $expires = time();
+        // Gets the cache expiration
+        $result = self::$db->select('expires')
+            ->from(self::$table)
+            ->where('key', $key)
+            ->where(function (Kraken $q) {
+                $q->whereNull('expires');
+                $q->orWhere('expires', '>=', time());
+            })
+            ->asElement()
+            ->fetchRow();
 
         // Return result
-        $result = self::$db->querySingle("SELECT `expires` FROM `cache` WHERE `key` = '{$key}' AND (`expires` IS NULL OR `expires` >= {$expires})");
-        return !is_null($result) ? (int)$result : null;
+        return !empty($result) ? (int)$result->expires : null;
     }
 
     /**
@@ -156,25 +208,21 @@ class Cache implements JsonSerializable
     {
         // Sets an array of values
         if (is_array($key)) {
-            foreach ($key as $field => $value) {
-                $this->set($field, $value, $expires);
+            foreach ($key as $field => $val) {
+                $this->set($field, $val, $expires);
             }
             return true;
         }
 
-        // Escape key and serialized value
-        $key = self::$db->escapeString($key);
-        if (is_null($value)) {
-            $value = 'NULL';
-        } else {
-            $value = self::$db->escapeString(serialize($value));
-        }
-
         // Calculate expire date
-        $expires = $expires ? (time() + $expires) : 'NULL';
+        $expires = $expires ? (time() + $expires) : null;
 
         // Inserts the row
-        return self::$db->exec("REPLACE INTO cache(`key`, `value`, `expires`) VALUES('{$key}', '{$value}', {$expires})");
+        return self::$db->table(self::$table)->replace([
+            'key' => $key,
+            'value' => !is_null($value) ? serialize($value) : null,
+            'expires' => $expires
+        ]);
     }
 
     /**
@@ -189,14 +237,10 @@ class Cache implements JsonSerializable
         $value = $this->get($key);
         if (is_null($value) || !is_numeric($value)) return false;
 
-        // Escape key
-        $key = self::$db->escapeString($key);
-
-        // Escapes the new value
-        $value = self::$db->escapeString(serialize($value + $amount));
-
         // Updates the row
-        return self::$db->exec("UPDATE `cache` SET `value` = '{$value}' WHERE `key` = '{$key}'");
+        return self::$db->table(self::$table)->where('key', $key)->update([
+            'value' => serialize($value + $amount)
+        ]);
     }
 
     /**
@@ -211,14 +255,10 @@ class Cache implements JsonSerializable
         $value = $this->get($key);
         if (is_null($value) || !is_numeric($value)) return false;
 
-        // Escape key
-        $key = self::$db->escapeString($key);
-
-        // Escapes the new value
-        $value = self::$db->escapeString(serialize($value - $amount));
-
         // Updates the row
-        return self::$db->exec("UPDATE `cache` SET `value` = '{$value}' WHERE `key` = '{$key}'");
+        return self::$db->table(self::$table)->where('key', $key)->update([
+            'value' => serialize($value - $amount)
+        ]);
     }
 
     /**
@@ -268,14 +308,13 @@ class Cache implements JsonSerializable
      */
     public function __isset(string $key)
     {
-        // Escape key
-        $key = self::$db->escapeString($key);
-
-        // Calculate expire date
-        $expires = time();
-
-        // Returns result
-        return self::$db->querySingle("SELECT COUNT(`key`) FROM `cache` WHERE `key` = '{$key}' AND (`expires` IS NULL OR `expires` >= {$expires})") != 0;
+        return self::$db->table(self::$table)
+            ->where('key', $key)
+            ->where(function (Kraken $q) {
+                $q->whereNull('expires');
+                $q->orWhere('expires', '>=', time());
+            })
+            ->exists();
     }
 
     /**
@@ -285,13 +324,7 @@ class Cache implements JsonSerializable
      */
     public function remove($key)
     {
-        // Escape keys
-        $keys = [];
-        foreach ((array)$key as $item) $keys[] = "'" . self::$db->escapeString($item) . "'";
-        $keys = implode(', ', $keys);
-
-        // Remove rows
-        if (!Util::isEmpty($keys)) self::$db->exec("DELETE FROM `cache` WHERE `key` IN ({$keys})");
+        self::$db->table(self::$table)->whereIn('key', (array)$key)->delete();
         return $this;
     }
 
@@ -323,11 +356,7 @@ class Cache implements JsonSerializable
      */
     public function purge()
     {
-        // Calculate expire date
-        $expires = time();
-
-        // Purge data
-        return self::$db->exec("DELETE FROM `cache` WHERE `expires` < {$expires}");
+        return self::$db->table(self::$table)->where('expires', '<', time())->delete();
     }
 
     /**
@@ -336,7 +365,7 @@ class Cache implements JsonSerializable
      */
     public function flush()
     {
-        return self::$db->exec("DELETE FROM `cache`");
+        return self::$db->table(self::$table)->withoutSafeUpdateDeletes()->delete();
     }
 
     /**
@@ -345,16 +374,17 @@ class Cache implements JsonSerializable
      */
     public function toArray()
     {
-        // Calculate expire date
-        $expires = time();
-
-        // Get data
-        $result = self::$db->query("SELECT `key`, `value` FROM `cache` WHERE (`expires` IS NULL OR `expires` >= {$expires})");
-
-        // Parse resulting rows
-        $return = [];
-        while ($row = $result->fetchArray(SQLITE3_ASSOC)) $return[] = $row;
-        return array_combine(array_column($return, 'key'), array_column($return, 'value'));
+        return self::$db->table(self::$table)
+            ->where(function (Kraken $q) {
+                $q->whereNull('expires');
+                $q->orWhere('expires', '>=', time());
+            })
+            ->asArray()
+            ->fetchAll()
+            ->column('value', 'key')
+            ->map(function ($value) {
+                return !is_null($value) ? unserialize($value) : null;
+            });
     }
 
     /**

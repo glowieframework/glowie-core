@@ -28,7 +28,7 @@ class Util
      */
     public static function getVersion()
     {
-        $file = __DIR__ . '/../../version.txt';
+        $file = __DIR__ . '/../../VERSION';
         return file_get_contents($file);
     }
 

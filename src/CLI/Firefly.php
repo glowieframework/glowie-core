@@ -1105,6 +1105,14 @@ class Firefly
     }
 
     /**
+     * Creates a migration for the cache table.
+     */
+    private static function __createCacheMigration()
+    {
+        return Migrator::create('CreateCacheTable', 'Migration_Cache.php');
+    }
+
+    /**
      * Creates a new model.
      */
     private static function __createModel()
@@ -1453,6 +1461,7 @@ class Firefly
         self::print('  <color="yellow">create-language</color> <color="blue">--name</color> | Creates a new language file for your application');
         self::print('  <color="yellow">create-middleware</color> <color="blue">--name</color> | Creates a new middleware for your application');
         self::print('  <color="yellow">create-migration</color> <color="blue">--name</color> | Creates a new migration for your application');
+        self::print('  <color="yellow">create-cache-migration</color> | Creates a migration for the cache table');
         self::print('  <color="yellow">create-queue-migration</color> | Creates a migration for the queue table');
         self::print('  <color="yellow">create-model</color> <color="blue">--name --table --primary</color> <color="cyan">-migration -uuid -timestamps -softdeletes</color> | Creates a new model for your application');
         self::print('  <color="yellow">create-job</color> <color="blue">--name</color> | Creates a new job for your application');
