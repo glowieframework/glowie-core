@@ -517,14 +517,14 @@ if (!function_exists('app')) {
 
 if (!function_exists('abort')) {
     /**
-     * Sets the HTTP status code for the response.
+     * Aborts the current response and throws an HttpException with the specified status code.
      * @param int $code HTTP status code to set.
      * @param string $message (Optional) Custom reason phrase to set.
-     * @return \Glowie\Core\Http\Response Returns the Response instance.
+     * @throws \Glowie\Core\Exception\HttpException Throws an HttpException with the specified status code and message.
      */
     function abort(int $code, string $message = '')
     {
-        return \Glowie\Core\Http\Rails::getResponse()->setStatusCode($code, $message);
+        throw new \Glowie\Core\Exception\HttpException($code, $message);
     }
 }
 

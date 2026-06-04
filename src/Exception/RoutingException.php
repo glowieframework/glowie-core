@@ -3,6 +3,7 @@
 namespace Glowie\Core\Exception;
 
 use Glowie\Core\Http\Rails;
+use Glowie\Core\Http\Request;
 use Throwable;
 
 /**

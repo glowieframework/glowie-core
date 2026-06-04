@@ -2,6 +2,7 @@
 
 namespace Glowie\Core\Exception;
 
+use Glowie\Core\Element;
 use Throwable;
 
 /**
@@ -35,9 +36,9 @@ class RequestException extends SuggestionException
      * @param Element|bool $response (Optional) The response object, or false if failed.
      * @param Throwable|null $previous (Optional) Previous throwable used for exception chaining.
      */
-    public function __construct(string $url, string $message = "", int $code = 0, $response, ?Throwable $previous = null)
+    public function __construct(string $url, string $message = "", int $code = 0, $response = false, ?Throwable $previous = null)
     {
-        parent::__construct('HttpRequest: ' . $message, $code, $previous);
+        parent::__construct('HttpClient: ' . $message, $code, $previous);
         $this->url = $url;
         $this->response = $response;
     }

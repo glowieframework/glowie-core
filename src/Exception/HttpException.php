@@ -5,7 +5,7 @@ namespace Glowie\Core\Exception;
 use Throwable;
 
 /**
- * Internationalization exception handler for Glowie application.
+ * Http exception handler for Glowie application.
  * @category Exception
  * @package glowieframework/glowie-core
  * @author Glowie
@@ -13,17 +13,17 @@ use Throwable;
  * @license MIT
  * @link https://glowie.gabrielsilva.dev.br
  */
-class i18nException extends SuggestionException
+class HttpException extends SuggestionException
 {
 
     /**
-     * Creates a new instance of i18nException.
-     * @param string $message (Optional) The exception message.
+     * Creates a new instance of HttpException.
      * @param int $code (Optional) The exception code.
+     * @param string $message (Optional) The exception message.
      * @param Throwable|null $previous (Optional) Previous throwable used for exception chaining.
      */
-    public function __construct(string $message = "", int $code = 0, ?Throwable $previous = null)
+    public function __construct(int $code = 0, string $message = "", ?Throwable $previous = null)
     {
-        parent::__construct('i18n: ' . $message, $code, $previous);
+        parent::__construct($message, $code, $previous);
     }
 }

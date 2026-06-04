@@ -9,6 +9,7 @@ use Glowie\Core\Exception\RoutingException;
 use Glowie\Core\Exception\FileException;
 use Glowie\Core\Collection;
 use Glowie\Core\Element;
+use Glowie\Core\Exception\HttpException;
 
 /**
  * Router and starting point for Glowie application.
@@ -737,28 +738,37 @@ class Rails
                     }
 
                     // Instantiates the middleware
-                    self::$middleware = new $middleware($alias[1] ?? null);
-                    if (is_callable([self::$middleware, 'init'])) self::$middleware->init();
+                    try {
+                        self::$middleware = new $middleware($alias[1] ?? null);
+                        if (is_callable([self::$middleware, 'init'])) self::$middleware->init();
 
-                    // Calls middleware handle() method
-                    $response = self::$middleware->handle();
-                    if ($response) {
-                        // Middleware passed
-                        if (is_callable([self::$middleware, 'success'])) self::$middleware->success();
-                    } else {
-                        // Middleware blocked
-                        if (is_callable([self::$middleware, 'fail'])) {
-                            return self::$middleware->fail();
+                        // Calls middleware handle() method
+                        $response = self::$middleware->handle();
+
+                        // Checks for middleware response
+                        if ($response) {
+                            if (is_callable([self::$middleware, 'success'])) self::$middleware->success();
                         } else {
-                            return self::callErrorMethod(Response::HTTP_FORBIDDEN, 'Forbidden');
-                        };
+                            if (is_callable([self::$middleware, 'fail'])) {
+                                return self::$middleware->fail();
+                            } else {
+                                return self::callErrorMethod(Response::HTTP_FORBIDDEN, 'Forbidden');
+                            }
+                        }
+                    } catch (HttpException $e) {
+                        // Handles HTTP exceptions thrown in the middleware
+                        return self::callErrorMethod($e->getCode(), $e->getMessage());
                     }
                 }
             }
 
             // Checks for anonymous controller
             if (isset($config['callback'])) {
-                return self::$controller->action($config['callback']);
+                try {
+                    return self::$controller->action($config['callback']);
+                } catch (HttpException $e) {
+                    return self::callErrorMethod($e->getCode(), $e->getMessage());
+                }
             }
 
             // Gets the action
@@ -766,11 +776,15 @@ class Rails
 
             // If action does not exist, throw an error
             if (is_callable([self::$controller, $action])) {
-                // Runs the controller init() method
-                if (is_callable([self::$controller, 'init'])) self::$controller->init();
+                try {
+                    // Runs the controller init() method
+                    if (is_callable([self::$controller, 'init'])) self::$controller->init();
 
-                // Calls action
-                return self::$controller->{$action}();
+                    // Calls action
+                    return self::$controller->{$action}();
+                } catch (HttpException $e) {
+                    return self::callErrorMethod($e->getCode(), $e->getMessage());
+                }
             } else {
                 $e = new RoutingException("Action \"{$action}()\" not found in \"{$controller}\"");
                 $e->setSuggestion("Check if the controller implements a public function named \"{$action}()\".");
@@ -925,8 +939,12 @@ class Rails
 
         // Checks if the action exists
         if (is_callable([self::$controller, $action])) {
-            if (is_callable([self::$controller, 'init'])) self::$controller->init();
-            self::$controller->{$action}();
+            try {
+                if (is_callable([self::$controller, 'init'])) self::$controller->init();
+                self::$controller->{$action}();
+            } catch (HttpException $e) {
+                return self::callErrorMethod($e->getCode(), $e->getMessage());
+            }
         } else {
             self::callErrorMethod(Response::HTTP_NOT_FOUND, 'Not Found');
         };
