@@ -144,10 +144,16 @@ class Response
     public const HTTP_GONE = 410;
 
     /**
-     * HTTP 413 Payload Too Large status code.
+     * HTTP 413 Content Too Large status code.
      * @var int
      */
-    public const HTTP_PAYLOAD_TOO_LARGE = 413;
+    public const HTTP_CONTENT_TOO_LARGE = 413;
+
+    /**
+     * HTTP 419 Page Expired status code.
+     * @var int
+     */
+    public const HTTP_PAGE_EXPIRED = 419;
 
     /**
      * HTTP 422 Unprocessable Entity status code.
