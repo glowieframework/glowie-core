@@ -120,6 +120,12 @@ class Response
     public const HTTP_METHOD_NOT_ALLOWED = 405;
 
     /**
+     * HTTP 406 Not Acceptable status code.
+     * @var int
+     */
+    public const HTTP_NOT_ACCEPTABLE = 406;
+
+    /**
      * HTTP 408 Request Timeout status code.
      * @var int
      */
@@ -132,16 +138,52 @@ class Response
     public const HTTP_CONFLICT = 409;
 
     /**
+     * HTTP 410 Gone status code.
+     * @var int
+     */
+    public const HTTP_GONE = 410;
+
+    /**
+     * HTTP 413 Payload Too Large status code.
+     * @var int
+     */
+    public const HTTP_PAYLOAD_TOO_LARGE = 413;
+
+    /**
+     * HTTP 422 Unprocessable Entity status code.
+     * @var int
+     */
+    public const HTTP_UNPROCESSABLE_ENTITY = 422;
+
+    /**
      * HTTP 429 Too Many Requests status code.
      * @var int
      */
     public const HTTP_TOO_MANY_REQUESTS = 429;
 
     /**
+     * HTTP 431 Request Header Fields Too Large status code.
+     * @var int
+     */
+    public const HTTP_REQUEST_HEADER_FIELDS_TOO_LARGE = 431;
+
+    /**
+     * HTTP 451 Unavailable For Legal Reasons status code.
+     * @var int
+     */
+    public const HTTP_UNAVAILABLE_FOR_LEGAL_REASONS = 451;
+
+    /**
      * HTTP 500 Internal Server Error status code.
      * @var int
      */
     public const HTTP_INTERNAL_SERVER_ERROR = 500;
+
+    /**
+     * HTTP 501 Not Implemented status code.
+     * @var int
+     */
+    public const HTTP_NOT_IMPLEMENTED = 501;
 
     /**
      * HTTP 502 Bad Gateway status code.
@@ -154,6 +196,12 @@ class Response
      * @var int
      */
     public const HTTP_SERVICE_UNAVAILABLE = 503;
+
+    /**
+     * HTTP 504 Gateway Timeout status code.
+     * @var int
+     */
+    public const HTTP_GATEWAY_TIMEOUT = 504;
 
     /**
      * Content-Type header for HTML.

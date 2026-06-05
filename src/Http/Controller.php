@@ -165,7 +165,7 @@ class Controller
     final public function validate(array $rules, bool $bail = true, bool $bailAll = true, array $customMessages = [])
     {
         $response = $this->request->validate($rules, $bail, $bailAll, $customMessages);
-        if (!$response) throw new HttpException(400, 'Bad Request');
+        if (!$response) throw new HttpException(400);
         return $response;
     }
 }
