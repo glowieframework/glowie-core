@@ -42,6 +42,7 @@ class HandlerCLI
      */
     public static function errorHandler(int $level, string $message, ?string $file = null, ?int $line = 0)
     {
+        if ($level === E_DEPRECATED || $level === E_USER_DEPRECATED) return;
         throw new ErrorException($message, 0, $level, $file ?? '', $line);
     }
 
