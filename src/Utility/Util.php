@@ -870,7 +870,9 @@ class Util
     {
         $accents = 'àáâãäçèéêëìíîïñòóôõöùúûüýÿÀÁÂÃÄÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝ';
         $replace = 'aaaaaceeeeiiiinooooouuuuyyAAAAACEEEEIIIINOOOOOUUUUY';
-        return utf8_encode(strtr(utf8_decode($string), utf8_decode($accents), $replace));
+        $accentsArray = preg_split('//u', $accents, -1, PREG_SPLIT_NO_EMPTY);
+        $replaceArray = str_split($replace);
+        return str_replace($accentsArray, $replaceArray, $string);
     }
 
     /**
