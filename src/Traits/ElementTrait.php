@@ -232,7 +232,7 @@ trait ElementTrait
      * Returns the serializable JSON data for the Element.
      * @return array Element data as an associative array.
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->toArray();
     }
