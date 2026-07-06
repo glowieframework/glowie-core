@@ -1497,10 +1497,14 @@ class Model extends Kraken implements JsonSerializable
 
                                     // Filters the relationships in the target model
                                     $value = $relations->filter(fn($i) => in_array($i->get($item['primary-target']), $keys))
-                                        ->each(function ($m) use ($pivotValues, $item) {
+                                        ->map(function ($m) use ($pivotValues, $item) {
+                                            // Clones the model to avoid modifying the original instance
+                                            $model = clone $m;
+
                                             // Attaches the pivot object
-                                            $pv = $pivotValues->filter(fn($r) => $r->get($item['target-foreign']) == $m->get($item['primary-target']))->first();
-                                            $m->set($item['pivot-name'], $pv);
+                                            $pv = $pivotValues->filter(fn($r) => $r->get($item['target-foreign']) == $model->get($item['primary-target']))->first();
+                                            $model->set($item['pivot-name'], $pv);
+                                            return $model;
                                         })
                                         ->values();
                                 } else {
