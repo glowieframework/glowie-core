@@ -883,11 +883,13 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
 
     /**
      * Sums the values of the Collection.
+     * @param mixed $key (Optional) Key to sum values from. If not provided, sums all values.
      * @return int|float Returns the sum.
      */
-    public function sum()
+    public function sum($key = null)
     {
-        return array_sum($this->__data);
+        if (is_null($key)) return array_sum($this->__data);
+        return $this->column($key)->sum();
     }
 
     /**
