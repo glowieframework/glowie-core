@@ -152,7 +152,7 @@ class Rails
      * @param string|null $controller (Optional) The namespaced controller name or alias that this route will instantiate.\
      * You can use `ControllerName::class` to get this property correctly. Empty will use the default controller.
      * @param string|null $action (Optional) The action name from the controller that this route will instantiate. Empty will use a **camelCase** version of the route.
-     * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
+     * @param string|string[] $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
      * @param string|null $name (Optional) Route name. Empty will be generated automatically.
      * @return Rails Returns the current instance for nested calls.
      */
@@ -190,7 +190,7 @@ class Rails
      * Setup an anonymous (controller-independent) route for the application.
      * @param string $route The route URI to setup.
      * @param callable $callback A function to run anonymously. A generic controller instance will be passed as the first param of this function.
-     * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
+     * @param string|string[] $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
      * @param string|null $name (Optional) Route name. Empty will be generated automatically.
      * @return Rails Returns the current instance for nested calls.
      */
@@ -226,7 +226,7 @@ class Rails
      * @param string $route The route URI to setup.
      * @param string $view View filename. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
      * @param array $params (Optional) Parameters to pass into the view. Should be an associative array with each variable name and value.
-     * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
+     * @param string|string[] $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
      * @param string|null $name (Optional) Route name. Empty will be generated automatically.
      * @return Rails Returns the current instance for nested calls.
      */
@@ -246,7 +246,7 @@ class Rails
      * @param string|null $view (Optional) View filename to render within layout. You can place its content by using `$this->getView()`\
      * inside the layout file. Must be a **.phtml** file inside **app/views** folder, extension is not needed.
      * @param array $params (Optional) Parameters to pass into the rendered view and layout. Should be an associative array with each variable name and value.
-     * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
+     * @param string|string[] $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
      * @param string|null $name (Optional) Route name. Empty will be generated automatically.
      * @return Rails Returns the current instance for nested calls.
      */
@@ -267,7 +267,7 @@ class Rails
      * @param string|null $controller (Optional) The namespaced controller name or alias that this route will instantiate.\
      * You can use `ControllerName::class` to get this property correctly. Empty will use the default controller.
      * @param string|null $action (Optional) The action name from the controller that this route will instantiate.
-     * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
+     * @param string|string[] $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
      * @param string|null $name (Optional) Route name. Empty will be generated automatically.
      * @return Rails Returns the current instance for nested calls.
      */
@@ -308,7 +308,7 @@ class Rails
      * @param callable $callback A function to run anonymously. A generic controller instance will be passed as the first param of this function.
      * @param string|array $middleware (Optional) The namespaced middleware name or alias that this route will use to protect itself.\
      * You can use `MiddlewareName::class` to get this property correctly. You can also use an array of multiple middlewares.
-     * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
+     * @param string|string[] $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
      * @param string|null $name (Optional) Route name. Empty will be generated automatically.
      * @return Rails Returns the current instance for nested calls.
      */
@@ -345,7 +345,7 @@ class Rails
      * @param string $route The route URI to redirect.
      * @param string $target The target URL to redirect this route to.
      * @param int $code (Optional) HTTP status code to pass with the redirect.
-     * @param string|array $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
+     * @param string|string[] $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
      * @param string|null $name (Optional) Route name. Empty will be generated automatically.
      * @return Rails Returns the current instance for nested calls.
      */
@@ -393,7 +393,7 @@ class Rails
 
     /**
      * Sets the accepted HTTP methods for the last added route.
-     * @param string|array $methods Single method or an array of methods. Leave empty for all.
+     * @param string|string[] $methods Single method or an array of methods. Leave empty for all.
      * @return Rails Returns the current instance for nested calls.
      */
     public function methods($methods)
@@ -432,7 +432,7 @@ class Rails
     }
 
     /** Sets the group name for the last added route.
-     * @param string $name Group name.
+     * @param string $group Group name.
      * @return Rails Returns the current instance for nested calls.
      */
     public function setGroup(string $group)
@@ -448,7 +448,7 @@ class Rails
      * @param string $name Name of the resource. It will be used to generate the URIs.
      * @param string $controller (Optional) The namespaced controller name or alias that this resource will instantiate.\
      * You can use `ControllerName::class` to get this property correctly. Empty will use the default controller.
-     * @param array $except (Optional) Array of ignored actions in the resource.
+     * @param string[] $except (Optional) Array of ignored actions in the resource.
      */
     public static function addResource(string $name, string $controller = '', array $except = [])
     {
@@ -465,7 +465,7 @@ class Rails
      * Maps multiple routes at once.
      * @param array $routes Associative array of routes to map. The key must be the route URI and the value must be an array\
      * with the **controller, action and name** (in this order). Parameters are optional.
-     * @param string|array $methods (Optional) HTTP methods that these routes accept. Can be a single method or an array of methods. Leave empty for all.
+     * @param string|string[] $methods (Optional) HTTP methods that these routes accept. Can be a single method or an array of methods. Leave empty for all.
      */
     public static function mapRoutes(array $routes, $methods = [])
     {
@@ -481,7 +481,7 @@ class Rails
      * with the **controller, action and name** (in this order). Parameters are optional.
      * @param string|array $middleware (Optional) The namespaced middleware name or alias that these routes will use to protect themself.\
      * You can use `MiddlewareName::class` to get this property correctly. You can also use an array of multiple middlewares.
-     * @param string|array $methods (Optional) HTTP methods that these routes accept. Can be a single method or an array of methods. Leave empty for all.
+     * @param string|string[] $methods (Optional) HTTP methods that these routes accept. Can be a single method or an array of methods. Leave empty for all.
      */
     public static function mapProtectedRoutes(array $routes, $middleware = 'Glowie\Middlewares\Authenticate', $methods = [])
     {

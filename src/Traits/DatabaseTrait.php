@@ -350,9 +350,11 @@ trait DatabaseTrait
      */
     private function execute(bool $returns = false, bool $returnsFirst = false, bool $retryOnTimeout = true)
     {
+        // Store query start time
+        $queryStart = microtime(true);
+
         try {
-            // Store query start time and connection
-            $queryStart = microtime(true);
+            // Gets the connection handler
             $pdo = $this->getConnection();
 
             // Run query or prepared statement

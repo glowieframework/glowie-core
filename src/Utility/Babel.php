@@ -86,10 +86,10 @@ class Babel
             });
 
             // Replaces the parameters
-            foreach ($params as $key => $value) {
-                $result = str_replace("\\:$key", "__#BABEL_IGNORE#__$key", $result);
-                $result = str_replace(":$key", $value, $result);
-                $result = str_replace("__#BABEL_IGNORE#__$key", ":$key", $result);
+            foreach ($params as $name => $value) {
+                $result = str_replace("\\:$name", "__#BABEL_IGNORE#__$name", $result);
+                $result = str_replace(":$name", $value, $result);
+                $result = str_replace("__#BABEL_IGNORE#__$name", ":$name", $result);
             }
         }
 

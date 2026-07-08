@@ -40,7 +40,7 @@ class UploadedFile extends Element
 
     /**
      * Checks if the file mimetype matches.
-     * @param string|array $mime Mimetype to check. You can also use an array of mimetypes.\
+     * @param string|string[] $mime Mimetype to check. You can also use an array of mimetypes.\
      * This also accepts wildcard mimes, like `image/*`.
      * @return bool Returns true if the mimetype matches or false otherwise.
      */

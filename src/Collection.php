@@ -175,7 +175,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
 
     /**
      * Checks if any key value is missing in the Collection data.
-     * @param string|array $key Key to check (accepts dot notation keys). You can also use an array of keys.
+     * @param string|string[] $key Key to check (accepts dot notation keys). You can also use an array of keys.
      * @param bool $all (Optional) Checks the presence of all items, instead of any.
      * @return bool Returns true or false.
      */

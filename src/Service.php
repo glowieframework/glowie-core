@@ -3,6 +3,7 @@
 namespace Glowie\Core;
 
 use Glowie\Core\Http\Rails;
+use Glowie\Core\Http\Request;
 use Glowie\Core\Http\Session;
 use Util;
 

@@ -6,6 +6,7 @@ use Config;
 use Util;
 use Glowie\Core\Collection;
 use Glowie\Core\Element;
+use Glowie\Core\Resources\UploadedFile;
 use Glowie\Core\Tools\Uploader;
 use Glowie\Core\Tools\Validator;
 use Glowie\Core\Traits\ElementTrait;
@@ -61,7 +62,7 @@ class Request implements JsonSerializable
     /**
      * Returns the request uploaded files.
      * @param string $input Valid file input field name.
-     * @return array|null Returns an array of the files, each one as an Element, or null if no files were uploaded.
+     * @return UploadedFile[]|null Returns an array of the files or null if no files were uploaded.
      */
     public function getFiles(string $input)
     {
@@ -73,7 +74,7 @@ class Request implements JsonSerializable
     /**
      * Returns a single file from the request uploaded files.
      * @param string $input Valid file input field name.
-     * @return Element|null Returns the file as an Element, or null if no files were uploaded.
+     * @return UploadedFile|null Returns the file instance or null if no files were uploaded.
      */
     public function getFile(string $input)
     {
@@ -339,14 +340,14 @@ class Request implements JsonSerializable
 
     /**
      * Checks if the request URI matches a pattern.
-     * @param string|array Pattern to match or an array of patterns to search inside.
+     * @param string|string[] $pattern Pattern to match or an array of patterns to search inside.
      * @return bool Return true if the request URI matches one of the patterns, false otherwise.
      */
     public function match($pattern)
     {
         $path = $this->getURI();
-        foreach ((array)$pattern as $pattern) {
-            $regex = '#^' . str_replace('\*', '.*', preg_quote(trim($pattern, '/'), '#')) . '$#';
+        foreach ((array)$pattern as $i) {
+            $regex = '#^' . str_replace('\*', '.*', preg_quote(trim($i, '/'), '#')) . '$#';
             if (preg_match($regex, $path)) return true;
         }
         return false;

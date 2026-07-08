@@ -260,6 +260,18 @@ if (!function_exists('auth')) {
     }
 }
 
+if (!function_exists('auth_token')) {
+    /**
+     * Returns an Authorizator instance.
+     * @param string $guard (Optional) Authentication guard name (from your app configuration).
+     * @return \Glowie\Core\Tools\Authorizator Authorizator instance.
+     */
+    function auth_token(string $guard = 'default')
+    {
+        return new \Glowie\Core\Tools\Authorizator($guard);
+    }
+}
+
 if (!function_exists('validator')) {
     /**
      * Returns a Validator instance.
@@ -440,7 +452,7 @@ if (!function_exists('is_empty')) {
     /**
      * Checks if a variable is empty.\
      * A numeric/bool safe version of PHP `empty()` function.
-     * @var mixed $variable Variable to be checked.
+     * @param mixed $variable Variable to be checked.
      * @return bool Returns true if the variable is empty, false otherwise.
      */
     function is_empty($variable)
@@ -453,7 +465,7 @@ if (!function_exists('filled')) {
     /**
      * Checks if a variable is not empty.\
      * A numeric/bool safe version of PHP `empty()` function.
-     * @var mixed $variable Variable to be checked.
+     * @param mixed $variable Variable to be checked.
      * @return bool Returns true if the variable is empty, false otherwise.
      */
     function filled($variable)

@@ -163,7 +163,7 @@ class Cookies implements JsonSerializable
 
     /**
      * Removes the associated key value from the cookies data.
-     * @param string|array $key Key to delete value. You can also use an array of keys to remove.
+     * @param string|string[] $key Key to delete value. You can also use an array of keys to remove.
      * @return Cookies Current Cookies instance for nested calls.
      */
     public function remove($key)
@@ -179,7 +179,7 @@ class Cookies implements JsonSerializable
 
     /**
      * Removes all cookies data, except the one that matches the specified key.
-     * @param string|array $key Key to keep. You can also use an array of keys to keep.
+     * @param string|string[] $key Key to keep. You can also use an array of keys to keep.
      * @return Cookies Current Cookies instance for nested calls.
      */
     public function only($key)
@@ -200,7 +200,7 @@ class Cookies implements JsonSerializable
 
     /**
      * Checks if any value has been associated to a key in the cookies data.
-     * @param string|array $key Key to check. You can also use an array of keys.
+     * @param string|string[] $key Key to check. You can also use an array of keys.
      * @return bool Returns true or false.
      */
     public function has($key)
@@ -215,7 +215,7 @@ class Cookies implements JsonSerializable
 
     /**
      * Checks if any key value is missing in the cookies data.
-     * @param string|array $key Key to check. You can also use an array of keys.
+     * @param string|string[] $key Key to check. You can also use an array of keys.
      * @return bool Returns true or false.
      */
     public function missing($key)

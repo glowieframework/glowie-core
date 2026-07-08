@@ -88,31 +88,31 @@ class Uploader
 
     /**
      * Upload errors.
-     * @var int|array
+     * @var int|int[]
      */
     private $errors = 0;
 
     /**
      * Allowed extensions.
-     * @var array
+     * @var string[]
      */
     private $extensions = [];
 
     /**
      * Unallowed extensions.
-     * @var array
+     * @var string[]
      */
     private $blockedExtensions = ['php', '.phtml', 'html'];
 
     /**
      * Allowed mime types.
-     * @var array
+     * @var string[]
      */
     private $mimes = [];
 
     /**
      * Unallowed mime types.
-     * @var array
+     * @var string[]
      */
     private $blockedMimes = ['application/x-httpd-php', 'application/php', 'application/x-php', 'text/php', 'text/x-php', 'text/html'];
 
@@ -162,7 +162,7 @@ class Uploader
 
     /**
      * Sets the allowed extensions that the uploader will accept.
-     * @param array $extensions Array of allowed file extensions. Use an empty array to allow any extension.
+     * @param string[] $extensions Array of allowed file extensions. Use an empty array to allow any extension.
      * @return Uploader Current Uploader instance for nested calls.
      */
     public function setExtensions(array $extensions)
@@ -173,7 +173,7 @@ class Uploader
 
     /**
      * Sets the extensions that the uploader will NOT accept.
-     * @param array $extensions Array of blocked file extensions. Use an empty array to don't block any.
+     * @param string[] $extensions Array of blocked file extensions. Use an empty array to don't block any.
      * @return Uploader Current Uploader instance for nested calls.
      */
     public function setBlockedExtensions(array $extensions)
@@ -196,7 +196,7 @@ class Uploader
 
     /**
      * Sets the allowed mime types that the uploader will accept.
-     * @param array $mimes Array of allowed mime types. Use an empty array to allow any.\
+     * @param string[] $mimes Array of allowed mime types. Use an empty array to allow any.\
      * This also accepts wildcard mimes, like `image/*`.
      * @return Uploader Current Uploader instance for nested calls.
      */
@@ -208,7 +208,7 @@ class Uploader
 
     /**
      * Sets the mime types that the uploader will NOT accept.
-     * @param array $mimes Array of blocked mime types. Use an empty array to don't block any.
+     * @param string[] $mimes Array of blocked mime types. Use an empty array to don't block any.
      * @return Uploader Current Uploader instance for nested calls.
      */
     public function setBlockedMimes(array $mimes)
@@ -231,7 +231,7 @@ class Uploader
 
     /**
      * Returns the latest upload errors.
-     * @return int|array Upload errors.
+     * @return int|int[] Upload errors.
      */
     public function getErrors()
     {
@@ -253,7 +253,7 @@ class Uploader
      * @param string $input Valid file input field name.
      * @param bool $multiple (Optional) Allow multiple uploads.
      * @param bool $deleteOnFail (Optional) Delete all uploaded files if an upload fails (only multiple uploads).
-     * @return UploadedFile|Collection|false Returns an object with the uploaded file data (or a Collection of files on multiple uploads) on success or false on errors.
+     * @return UploadedFile|Collection<UploadedFile>|false Returns an object with the uploaded file data (or a Collection of files on multiple uploads) on success or false on errors.
      */
     public function upload(string $input, bool $multiple = true, bool $deleteOnFail = false)
     {
@@ -313,7 +313,7 @@ class Uploader
     /**
      * Rearrange the `$_FILES` input array.
      * @param array $files `$_FILES` input array to rearrange.
-     * @return array Returns the new array.
+     * @return UploadedFile[] Returns the new array.
      */
     public function arrangeFiles(array $files)
     {

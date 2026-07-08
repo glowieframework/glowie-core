@@ -234,6 +234,12 @@ class Response
     public const CONTENT_XML = 'text/xml';
 
     /**
+     * Content-Type header for binary stream.
+     * @var string
+     */
+    public const CONTENT_BINARY = 'application/octet-stream';
+
+    /**
      * Applies Cross-Origin Resource Sharing (CORS) headers from your app configuration.
      * @return Response Current Response instance for nested calls.
      */
@@ -351,6 +357,15 @@ class Response
     }
 
     /**
+     * Sets a **419 Page Expired** HTTP response code.
+     * @return Response Current Response instance for nested calls.
+     */
+    public function expired()
+    {
+        return $this->setStatusCode(self::HTTP_PAGE_EXPIRED);
+    }
+
+    /**
      * Sets a **429 Too Many Requests** HTTP response code.
      * @return Response Current Response instance for nested calls.
      */
@@ -362,7 +377,7 @@ class Response
     /**
      * Sets a new header value or replaces the existing one.
      * @param string $name Header name to set.
-     * @param string|array $value Header value to set. Can also be an array of values.
+     * @param string|string[] $value Header value to set. Can also be an array of values.
      * @param int $code (Optional) HTTP response code to force.
      * @return Response Current Response instance for nested calls.
      */
@@ -376,7 +391,7 @@ class Response
     /**
      * Sets a new header value or appends the value to the existing one.
      * @param string $name Header name to set.
-     * @param string|array $value Header value to set.
+     * @param string|string[] $value Header value to set. Can also be an array of values.
      * @param int $code (Optional) HTTP response code to force.
      * @return Response Current Response instance for nested calls.
      */
@@ -477,7 +492,7 @@ class Response
 
     /**
      * Sends a JSON output to the response.
-     * @param array|Element $data Associative array with data to encode to JSON. You can also use an Element.
+     * @param array|Element|Collection $data Data to encode to JSON.
      * @param int $flags (Optional) JSON encoding flags (same as in `json_encode()` function).
      * @param int $depth (Optional) JSON encoding maximum depth (same as in `json_encode()` function).
      * @return Response Current Response instance for nested calls.
@@ -493,7 +508,7 @@ class Response
 
     /**
      * Sends a XML output to the response.
-     * @param array|Element $data Associative array with data to encode to XML. You can also use an Element.
+     * @param array|Element|Collection $data Data to encode to XML.
      * @param string $root (Optional) Name of the XML root element.
      * @return Response Current Response instance for nested calls.
      */
@@ -518,7 +533,7 @@ class Response
         if (!is_file($filename)) throw new FileException('"' . $filename . '" does not exist!');
         if (Buffer::isActive()) Buffer::clean();
         $type = @mime_content_type($filename);
-        $this->setContentType($type ? $type : self::CONTENT_PLAIN);
+        $this->setContentType($type ? $type : self::CONTENT_BINARY);
         $this->setHeader('Content-Length', filesize($filename));
         readfile($filename);
         return $this;
@@ -537,8 +552,28 @@ class Response
     }
 
     /**
+     * Sets a flash message with the key `error` before redirecting.
+     * @param mixed $value Value to set.
+     * @return Response Current Response instance for nested calls.
+     */
+    public function withError($value)
+    {
+        return $this->withFlash('error', $value);
+    }
+
+    /**
+     * Sets a flash message with the key `message` before redirecting.
+     * @param mixed $value Value to set.
+     * @return Response Current Response instance for nested calls.
+     */
+    public function withMessage($value)
+    {
+        return $this->withFlash('message', $value);
+    }
+
+    /**
      * Flashes the current request data in the session before redirecting.
-     * @param array $name (Optional) Array of input names to include. Leave empty for all.
+     * @param string[] $name (Optional) Array of input names to include. Leave empty for all.
      * @return Response Current Response instance for nested calls.
      */
     public function withInputs(array $name = [])

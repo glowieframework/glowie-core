@@ -187,7 +187,7 @@ class Session implements JsonSerializable
 
     /**
      * Removes the associated key value from the session data.
-     * @param string|array $key Key to delete value (accepts dot notation keys). You can also use an array of keys to remove.
+     * @param string|string[] $key Key to delete value (accepts dot notation keys). You can also use an array of keys to remove.
      * @param bool $ignoreDot (Optional) Ignore dot notation keys.
      * @return Session Current Session instance for nested calls.
      */
@@ -207,7 +207,7 @@ class Session implements JsonSerializable
 
     /**
      * Removes all session data, except the one that matches the specified key.
-     * @param string|array $key Key to keep. You can also use an array of keys to keep.
+     * @param string|string[] $key Key to keep. You can also use an array of keys to keep.
      * @return Session Current Session instance for nested calls.
      */
     public function only($key)
@@ -228,7 +228,7 @@ class Session implements JsonSerializable
 
     /**
      * Checks if any value has been associated to a key in the session data.
-     * @param string|array $key Key to check (accepts dot notation keys). You can also use an array of keys.
+     * @param string|string[] $key Key to check (accepts dot notation keys). You can also use an array of keys.
      * @return bool Returns true or false.
      */
     public function has($key)
@@ -243,7 +243,7 @@ class Session implements JsonSerializable
 
     /**
      * Checks if any key value is missing in the session data.
-     * @param string|array $key Key to check (accepts dot notation keys). You can also use an array of keys.
+     * @param string|string[] $key Key to check (accepts dot notation keys). You can also use an array of keys.
      * @return bool Returns true or false.
      */
     public function missing($key)

@@ -122,7 +122,7 @@ trait ElementTrait
 
     /**
      * Removes the associated key value from the Element data.
-     * @param string|array $key Key to delete value (accepts dot notation keys). You can also use an array of keys to remove.
+     * @param string|string[] $key Key to delete value (accepts dot notation keys). You can also use an array of keys to remove.
      * @param bool $ignoreDot (Optional) Ignore dot notation keys.
      * @return Element Current Element instance for nested calls.
      */
@@ -142,7 +142,7 @@ trait ElementTrait
 
     /**
      * Removes all Element data, except the one that matches the specified key.
-     * @param string|array $key Key to keep. You can also use an array of keys to keep.
+     * @param string|string[] $key Key to keep. You can also use an array of keys to keep.
      * @return Element Current Element instance for nested calls.
      */
     public function only($key)
@@ -163,7 +163,7 @@ trait ElementTrait
 
     /**
      * Checks if any value has been associated to a key in the Element data.
-     * @param string|array $key Key to check (accepts dot notation keys). You can also use an array of keys.
+     * @param string|string[] $key Key to check (accepts dot notation keys). You can also use an array of keys.
      * @return bool Returns true or false.
      */
     public function has($key)
@@ -187,7 +187,7 @@ trait ElementTrait
 
     /**
      * Checks if any key value is missing in the Element data.
-     * @param string|array $key Key to check (accepts dot notation keys). You can also use an array of keys.
+     * @param string|string[] $key Key to check (accepts dot notation keys). You can also use an array of keys.
      * @return bool Returns true or false.
      */
     public function missing($key)

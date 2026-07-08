@@ -282,7 +282,10 @@ class Migrator
             $query = $db->query("SHOW CREATE TABLE `$table`");
 
             if (!empty($query[0])) {
-                $queries[] = Util::replaceFirst($query[0]->get('Create Table'), 'CREATE TABLE', 'CREATE TABLE IF NOT EXISTS');
+                $sql = $query[0]->get('Create Table');
+                $sql = Util::replaceFirst($sql, 'CREATE TABLE', 'CREATE TABLE IF NOT EXISTS');
+                $sql = preg_replace('/AUTO_INCREMENT=\d+ /', '', $sql);
+                $queries[] = $sql;
             }
         }
 
