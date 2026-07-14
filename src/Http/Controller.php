@@ -4,6 +4,7 @@ namespace Glowie\Core\Http;
 
 use Glowie\Core\Element;
 use Glowie\Core\Exception\HttpException;
+use Glowie\Core\Tools\Validator;
 use Glowie\Core\View\View;
 use Glowie\Core\View\Layout;
 use Util;
@@ -167,5 +168,14 @@ class Controller
         $response = $this->request->validate($rules, $bail, $bailAll, $customMessages);
         if (!$response) throw new HttpException(400);
         return $response;
+    }
+
+    /**
+     * Gets the Validator instance used to validate the request data.
+     * @return Validator The validator instance.
+     */
+    final public function getValidator()
+    {
+        return $this->request->getValidator();
     }
 }

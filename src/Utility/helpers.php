@@ -582,3 +582,22 @@ if (!function_exists('unless')) {
         return call_user_func_array($return, [$condition]);
     }
 }
+
+if (!function_exists('rescue')) {
+    /**
+     * Executes a callback and returns its result, or returns a default value if an exception is thrown.
+     * @param Closure $callback Callback function to be executed.
+     * @param mixed $default (Optional) Default value to return if an exception is thrown.
+     * @param Closure|null $handler (Optional) Callback function to handle the exception.
+     * @return mixed Returns the result of the callback or the default value.
+     */
+    function rescue(Closure $callback, $default = null, ?Closure $handler = null)
+    {
+        try {
+            return $callback();
+        } catch (\Throwable $e) {
+            if (!is_null($handler)) return $handler($e);
+            return $default;
+        }
+    }
+}
