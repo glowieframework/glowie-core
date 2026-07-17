@@ -697,6 +697,7 @@ class Rails
             // Parse parameters and route name
             self::$currentParams = $config['params'];
             self::$currentRoute = $config['name'];
+            $mergedParams = array_merge([self::$request], array_values(self::$currentParams));
 
             // Checks if there is a redirect configuration
             if (!empty($config['redirect'])) {
@@ -740,17 +741,17 @@ class Rails
                     // Instantiates the middleware
                     try {
                         self::$middleware = new $middleware($alias[1] ?? null);
-                        if (is_callable([self::$middleware, 'init'])) self::$middleware->init();
+                        if (is_callable([self::$middleware, 'init'])) call_user_func_array([self::$middleware, 'init'], $mergedParams);
 
                         // Calls middleware handle() method
-                        $response = self::$middleware->handle();
+                        $response = call_user_func_array([self::$middleware, 'handle'], $mergedParams);
 
                         // Checks for middleware response
                         if ($response) {
-                            if (is_callable([self::$middleware, 'success'])) self::$middleware->success();
+                            if (is_callable([self::$middleware, 'success'])) call_user_func_array([self::$middleware, 'success'], $mergedParams);
                         } else {
                             if (is_callable([self::$middleware, 'fail'])) {
-                                return self::$middleware->fail();
+                                return call_user_func_array([self::$middleware, 'fail'], $mergedParams);
                             } else {
                                 return self::callErrorMethod(Response::HTTP_FORBIDDEN, 'Forbidden');
                             }
@@ -765,7 +766,7 @@ class Rails
             // Checks for anonymous controller
             if (isset($config['callback'])) {
                 try {
-                    return self::$controller->action($config['callback']);
+                    return self::$controller->action($config['callback'], $mergedParams);
                 } catch (HttpException $e) {
                     return self::callErrorMethod($e->getCode(), $e->getMessage());
                 }
@@ -778,10 +779,10 @@ class Rails
             if (is_callable([self::$controller, $action])) {
                 try {
                     // Runs the controller init() method
-                    if (is_callable([self::$controller, 'init'])) self::$controller->init();
+                    if (is_callable([self::$controller, 'init'])) call_user_func_array([self::$controller, 'init'], $mergedParams);
 
                     // Calls action
-                    return self::$controller->{$action}();
+                    return call_user_func_array([self::$controller, $action], $mergedParams);
                 } catch (HttpException $e) {
                     return self::callErrorMethod($e->getCode(), $e->getMessage());
                 }
@@ -904,8 +905,9 @@ class Rails
         }
 
         // Dispatches the init and error methods
-        if (is_callable([self::$controller, 'init'])) self::$controller->init();
-        self::$controller->{$method}();
+        $mergedParams = array_merge([self::$request], array_values(self::$currentParams));
+        if (is_callable([self::$controller, 'init'])) call_user_func_array([self::$controller, 'init'], $mergedParams);
+        call_user_func_array([self::$controller, $method], $mergedParams);
     }
 
     /**
@@ -940,8 +942,9 @@ class Rails
         // Checks if the action exists
         if (is_callable([self::$controller, $action])) {
             try {
-                if (is_callable([self::$controller, 'init'])) self::$controller->init();
-                self::$controller->{$action}();
+                $mergedParams = array_merge([self::$request], array_values(self::$currentParams));
+                if (is_callable([self::$controller, 'init'])) call_user_func_array([self::$controller, 'init'], $mergedParams);
+                call_user_func_array([self::$controller, $action], $mergedParams);
             } catch (HttpException $e) {
                 return self::callErrorMethod($e->getCode(), $e->getMessage());
             }

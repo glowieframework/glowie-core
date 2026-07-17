@@ -69,8 +69,8 @@ class Generic extends Controller
      * Calls the action callback.
      * @param callable $callback Function to be called.
      */
-    final public function action(callable $callback)
+    final public function action(callable $callback, array $params = [])
     {
-        call_user_func_array($callback, [$this]);
+        call_user_func_array($callback, array_merge([$this], $params));
     }
 }
