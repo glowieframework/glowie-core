@@ -102,7 +102,7 @@ class Uploader
      * Unallowed extensions.
      * @var string[]
      */
-    private $blockedExtensions = ['php', '.phtml', 'html'];
+    private $blockedExtensions = ['php', 'phtml', 'html'];
 
     /**
      * Allowed mime types.
@@ -253,9 +253,10 @@ class Uploader
      * @param string $input Valid file input field name.
      * @param bool $multiple (Optional) Allow multiple uploads.
      * @param bool $deleteOnFail (Optional) Delete all uploaded files if an upload fails (only multiple uploads).
+     * @param bool $skipFailed (Optional) Skip failed uploads and return the successful ones (only multiple uploads).
      * @return UploadedFile|Collection<UploadedFile>|false Returns an object with the uploaded file data (or a Collection of files on multiple uploads) on success or false on errors.
      */
-    public function upload(string $input, bool $multiple = true, bool $deleteOnFail = false)
+    public function upload(string $input, bool $multiple = true, bool $deleteOnFail = false, bool $skipFailed = false)
     {
         // Validate target directory
         if (!is_dir($this->directory)) mkdir($this->directory, 0775, true);
@@ -283,6 +284,7 @@ class Uploader
                 // Multiple files upload
                 $result = [];
                 $errors = [];
+
                 foreach ($files as $key => $file) {
                     $process = $this->processFile($file, $key);
                     if ($process !== false) {
@@ -291,16 +293,26 @@ class Uploader
                         $errors[$key] = $this->errors;
                     }
                 }
+
+                // Parse errors
                 $this->errors = $errors;
                 if (empty($this->errors)) {
                     $this->errors = self::ERR_UPLOAD_SUCCESS;
                     return new Collection($result);
                 } else {
+                    // Skip failed uploads
+                    if ($skipFailed && !empty($result)) {
+                        return new Collection($result);
+                    }
+
+                    // Delete failed uploads
                     if ($deleteOnFail) {
                         foreach ($result as $file) {
                             if (is_file($file->path)) @unlink($file->path);
                         }
                     }
+
+                    // Return false on errors
                     return false;
                 }
             }
@@ -412,6 +424,9 @@ class Uploader
         // Check for exact match
         $mime = trim(mb_strtolower($mime));
         if ((empty($this->mimes) || in_array($mime, $this->mimes)) && !in_array($mime, $this->blockedMimes)) return true;
+
+        // Blocked mimes are always denied, even if a wildcard matches
+        if (in_array($mime, $this->blockedMimes)) return false;
 
         // Check for wildcard mimes
         foreach ($this->mimes as $item) {
