@@ -334,8 +334,21 @@ class Uploader
 
         // Multiple files upload
         if (is_array($files['name'])) {
+            $indexes = array_filter(array_keys($files['name']), function ($i) use ($files) {
+                return !empty($files['name'][$i] ?? '') && !empty($files['tmp_name'][$i] ?? '');
+            });
+
+            // Checks for empty filenames
+            if (empty($indexes)) return [];
+
+            // Parses each file
             return array_map(function ($i) use ($files) {
-                $type = @mime_content_type($files['tmp_name'][$i]);
+                try {
+                    $type = @mime_content_type($files['tmp_name'][$i]);
+                } catch (\Throwable $th) {
+                    $type = null;
+                }
+
                 $item = [
                     'name' => Util::sanitizeFilename($files['name'][$i]),
                     'type' => $type ? $type : $files['type'][$i],
@@ -346,7 +359,7 @@ class Uploader
                     'extension' => $this->getExtension($files['name'][$i]),
                 ];
                 return new UploadedFile($item);
-            }, array_keys($files['name']));
+            }, $indexes);
         }
 
         // Single file upload
