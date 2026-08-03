@@ -13,6 +13,8 @@ use Glowie\Core\Exception\FileException;
  * @copyright Copyright (c) Glowie
  * @license MIT
  * @link https://glowie.gabrielsilva.dev.br
+ *
+ * @method void onPublish() This method will be called after the plugin files are published.
  */
 abstract class Plugin
 {
@@ -43,6 +45,7 @@ abstract class Plugin
                 $this->copyFile($origin, $target, $force);
             }
         }
+        if (is_callable([$this, 'onPublish'])) $this->onPublish();
     }
 
     /**

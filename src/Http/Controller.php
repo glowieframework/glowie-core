@@ -21,10 +21,26 @@ use Util;
  *
  * @method void init() This method will be called before any other methods from this controller.
  * @method void action($callback, $params) Calls the action callback.
- * @method void notFound() Handler for 404 Not Found errors.
+ * @method void badRequest() Handler for 400 Bad Request errors.
+ * @method void unauthorized() Handler for 401 Unauthorized errors.
  * @method void forbidden() Handler for 403 Forbidden errors.
+ * @method void notFound() Handler for 404 Not Found errors.
  * @method void methodNotAllowed() Handler for 405 Method Not Allowed errors.
+ * @method void notAcceptable() Handler for 406 Not Acceptable errors.
+ * @method void requestTimeout() Handler for 408 Request Timeout errors.
+ * @method void conflict() Handler for 409 Conflict errors.
+ * @method void gone() Handler for 410 Gone errors.
+ * @method void contentTooLarge() Handler for 413 Content Too Large errors.
+ * @method void pageExpired() Handler for 419 Page Expired errors.
+ * @method void unprocessableEntity() Handler for 422 Unprocessable Entity errors.
+ * @method void tooManyRequests() Handler for 429 Too Many Requests errors.
+ * @method void requestHeaderFieldsTooLarge() Handler for 431 Request Header Fields Too Large errors.
+ * @method void unavailableForLegalReasons() Handler for 451 Unavailable For Legal Reasons errors.
+ * @method void internalServerError() Handler for 500 Internal Server Error errors.
+ * @method void notImplemented() Handler for 501 Not Implemented errors.
+ * @method void badGateway() Handler for 502 Bad Gateway errors.
  * @method void serviceUnavailable() Handler for 503 Service Unavailable errors.
+ * @method void gatewayTimeout() Handler for 504 Gateway Timeout errors.
  */
 class Controller
 {
@@ -88,10 +104,10 @@ class Controller
      */
     public function __construct($alias = null)
     {
-        $this->get = Rails::getRequest()->fromGet();
-        $this->params = Rails::getParams();
-        $this->post = Rails::getRequest()->fromPost();
         $this->request = Rails::getRequest();
+        $this->get = $this->request->fromGet();
+        $this->post = $this->request->fromPost();
+        $this->params = Rails::getParams();
         $this->response = Rails::getResponse();
         $this->route = Rails::getCurrentRoute();
         $this->session = Session::make();
