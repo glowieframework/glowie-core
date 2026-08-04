@@ -586,11 +586,12 @@ class Response
     /**
      * Redirects to a relative or full URL.
      * @param string $destination Target URL to redirect to.
-     * @param int $code (Optional) HTTP status code to pass with the redirect.
+     * @param int|null $code (Optional) HTTP status code to pass with the redirect.
      * @return Response Current Response instance for nested calls.
      */
-    public function redirect(string $destination, int $code = self::HTTP_FOUND)
+    public function redirect(string $destination, ?int $code = null)
     {
+        $code = $code ?? config('other.default_redirect_code', Response::HTTP_FOUND);
         if (Buffer::isActive()) Buffer::clean();
         $this->setStatusCode($code);
         $this->setHeader('Location', $destination, $code);
@@ -600,10 +601,10 @@ class Response
     /**
      * Redirects to an URL relative to the application path.
      * @param string $path (Optional) Path to append to the base URL.
-     * @param int $code (Optional) HTTP status code to pass with the redirect.
+     * @param int|null $code (Optional) HTTP status code to pass with the redirect.
      * @return Response Current Response instance for nested calls.
      */
-    public function redirectBase(string $path = '', int $code = self::HTTP_FOUND)
+    public function redirectBase(string $path = '', ?int $code = null)
     {
         return $this->redirect(Util::baseUrl($path), $code);
     }
@@ -612,21 +613,21 @@ class Response
      * Redirects to a named route.
      * @param string $route Route name.
      * @param array $params (Optional) Route parameters to bind into the URL.
-     * @param int $code (Optional) HTTP status code to pass with the redirect.
+     * @param int|null $code (Optional) HTTP status code to pass with the redirect.
      * @return Response Current Response instance for nested calls.
      */
-    public function redirectRoute(string $route, array $params = [], int $code = self::HTTP_FOUND)
+    public function redirectRoute(string $route, array $params = [], ?int $code = null)
     {
         return $this->redirect(Util::route($route, $params), $code);
     }
 
     /**
      * Redirects the user to the previous URL.
-     * @param int $code (Optional) HTTP status code to pass with the redirect.
+     * @param int|null $code (Optional) HTTP status code to pass with the redirect.
      * @param string $fallback (Optional) Target URL to use if the previous URL is not available. Defaults to the app root URL.
      * @return Response Current Response instance for nested calls.
      */
-    public function redirectBack(int $code = self::HTTP_FOUND, string $fallback = '')
+    public function redirectBack(?int $code = null, string $fallback = '')
     {
         $previousUrl = Rails::getRequest()->getPreviousUrl();
         if (Util::isEmpty($fallback)) $fallback = Util::baseUrl();

@@ -337,10 +337,10 @@ if (!function_exists('redirect')) {
     /**
      * Redirects to a relative or full URL.
      * @param string $destination Target URL to redirect to.
-     * @param int $code (Optional) HTTP status code to pass with the redirect.
+     * @param int|null $code (Optional) HTTP status code to pass with the redirect.
      * @return \Glowie\Core\Http\Response Returns the Response instance.
      */
-    function redirect(string $destination, int $code = Response::HTTP_FOUND)
+    function redirect(string $destination, ?int $code = null)
     {
         return \Glowie\Core\Http\Rails::getResponse()->redirect($destination, $code);
     }
@@ -351,10 +351,10 @@ if (!function_exists('to_route')) {
      * Redirects to a named route.
      * @param string $route Route name.
      * @param array $params (Optional) Route parameters to bind into the URL.
-     * @param int $code (Optional) HTTP status code to pass with the redirect.
+     * @param int|null $code (Optional) HTTP status code to pass with the redirect.
      * @return \Glowie\Core\Http\Response Current Response instance for nested calls.
      */
-    function to_route(string $route, array $params = [], int $code = Response::HTTP_FOUND)
+    function to_route(string $route, array $params = [], ?int $code = null)
     {
         return \Glowie\Core\Http\Rails::getResponse()->redirectRoute($route, $params, $code);
     }
@@ -543,11 +543,11 @@ if (!function_exists('abort')) {
 if (!function_exists('back')) {
     /**
      * Redirects the user to the previous URL.
-     * @param int $code (Optional) HTTP status code to pass with the redirect.
+     * @param int|null $code (Optional) HTTP status code to pass with the redirect.
      * @param string $fallback (Optional) Target URL to use if the previous URL is not available. Defaults to the app root URL.
      * @return \Glowie\Core\Http\Response Returns the Response instance.
      */
-    function back(int $code = Response::HTTP_FOUND, string $fallback = '')
+    function back(?int $code = null, string $fallback = '')
     {
         return \Glowie\Core\Http\Rails::getResponse()->redirectBack($code, $fallback);
     }

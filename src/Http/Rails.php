@@ -344,12 +344,12 @@ class Rails
      * Setup a new redirect route for the application.
      * @param string $route The route URI to redirect.
      * @param string $target The target URL to redirect this route to.
-     * @param int $code (Optional) HTTP status code to pass with the redirect.
+     * @param int|null $code (Optional) HTTP status code to pass with the redirect.
      * @param string|string[] $methods (Optional) HTTP methods that this route accepts. Can be a single method or an array of methods. Leave empty for all.
      * @param string|null $name (Optional) Route name. Empty will be generated automatically.
      * @return Rails Returns the current instance for nested calls.
      */
-    public static function addRedirect(string $route, string $target, int $code = Response::HTTP_FOUND, $methods = [], ?string $name = null)
+    public static function addRedirect(string $route, string $target, ?int $code = null, $methods = [], ?string $name = null)
     {
         // Generates an unique route name
         if (Util::isEmpty($name)) {
@@ -366,7 +366,7 @@ class Rails
             'name' => $name,
             'uri' => trim(self::$prefix . $route, '/'),
             'redirect' => $target,
-            'code' => $code,
+            'code' => $code ?? config('other.default_redirect_code', Response::HTTP_FOUND),
             'methods' => (array)$methods,
             'group' => self::$group,
             'middleware' => self::$middlewares,
