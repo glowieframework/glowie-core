@@ -125,7 +125,7 @@ class Firefly
         Config::load();
 
         // Store app base URL
-        define('APP_BASE_URL', Config::get('other.url', 'http://localhost'));
+        define('APP_BASE_URL', config('other.url', 'http://localhost'));
 
         // Register error handling
         HandlerCLI::register();
@@ -137,18 +137,18 @@ class Firefly
         Rails::load();
 
         // Timezone configuration
-        date_default_timezone_set(Config::get('other.timezone', 'America/Sao_Paulo'));
+        date_default_timezone_set(config('other.timezone', 'America/Sao_Paulo'));
 
         // Initialize plugins
-        foreach (Config::get('plugins', []) as $plugin) {
+        foreach (config('plugins', []) as $plugin) {
             if (!class_exists($plugin)) throw new PluginException("\"{$plugin}\" was not found");
             $plugin = new $plugin;
             $plugin->register();
         }
 
         // Initialize dev plugins
-        if (Config::get('env', 'development') === 'development') {
-            foreach (Config::get('dev_plugins', []) as $plugin) {
+        if (config('env', 'development') === 'development') {
+            foreach (config('dev_plugins', []) as $plugin) {
                 if (!class_exists($plugin)) throw new PluginException("\"{$plugin}\" was not found");
                 $plugin = new $plugin;
                 $plugin->register();
@@ -344,7 +344,7 @@ class Firefly
     public static function print(string $text, bool $break = true)
     {
         // If running in console, replace effects and closing tags
-        if (Util::isCLI() && !self::hasOption('no-ansi')) $text = preg_replace(array_keys(self::ANSI_REGEX), array_values(self::ANSI_REGEX), $text);
+        if (is_cli() && !self::hasOption('no-ansi')) $text = preg_replace(array_keys(self::ANSI_REGEX), array_values(self::ANSI_REGEX), $text);
 
         // Remove remaining effects
         $text = self::sanitize($text);
@@ -390,7 +390,7 @@ class Firefly
      */
     public static function clearScreen()
     {
-        if (!Util::isCLI()) return;
+        if (!is_cli()) return;
         PHP_OS_FAMILY === 'Windows' ? passthru('cls') : passthru('clear');
     }
 
@@ -461,7 +461,7 @@ class Firefly
      */
     public static function input(string $message = '', string $default = '')
     {
-        if (!Util::isCLI()) return $default;
+        if (!is_cli()) return $default;
         self::print($message, false);
         $value = trim(fgets(STDIN));
         if ($value === '') return $default;
@@ -655,7 +655,7 @@ class Firefly
     private static function __shine()
     {
         // Checks if CLI is running
-        if (!Util::isCLI()) throw new ConsoleException(self::getCommand(), self::getArgs(), 'This command cannot be used from outside the console');
+        if (!is_cli()) throw new ConsoleException(self::getCommand(), self::getArgs(), 'This command cannot be used from outside the console');
 
         // Checks if host was filled
         $host = self::getArg('host', 'localhost');
@@ -716,7 +716,7 @@ class Firefly
      */
     private static function __clearCache()
     {
-        $dir = Config::get('skeltch.path', Util::location('storage/cache'));
+        $dir = config('skeltch.path', Util::location('storage/cache'));
         if (!is_writable($dir)) throw new FileException('Directory "' . $dir . '" is not writable, please check your chmod settings');
         foreach (Util::getFiles($dir . '/*.*') as $filename) unlink($filename);
         self::print(self::color('[' . date('Y-m-d H:i:s') . '] Cache cleared successfully!', 'green'));
@@ -728,7 +728,7 @@ class Firefly
      */
     private static function __clearSession()
     {
-        $dir = Config::get('session.path', Util::location('storage/session'));
+        $dir = config('session.path', Util::location('storage/session'));
         if (!is_writable($dir)) throw new FileException('Directory "' . $dir . '" is not writable, please check your chmod settings');
         foreach (Util::getFiles($dir . '/*') as $filename) unlink($filename);
         self::print(self::color('[' . date('Y-m-d H:i:s') . '] Session data cleared successfully!', 'green'));
@@ -740,7 +740,7 @@ class Firefly
      */
     private static function __clearLog()
     {
-        $file = Config::get('error_reporting.file', Util::location('storage/error.log'));
+        $file = config('error_reporting.file', Util::location('storage/error.log'));
         file_put_contents($file, '');
         self::print(self::color('[' . date('Y-m-d H:i:s') . '] Error log cleared successfully!', 'green'));
         return true;
@@ -898,7 +898,7 @@ class Firefly
         // Saves the new content
         file_put_contents($file, $content);
         self::print(self::color('[' . date('Y-m-d H:i:s') . '] Application was put under maintenance.', 'red'));
-        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Bypass key: ' . Config::get('maintenance.bypass_key'), 'yellow'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . '] Bypass key: ' . config('maintenance.bypass_key'), 'yellow'));
         return true;
     }
 
@@ -1278,8 +1278,8 @@ class Firefly
         $force = self::hasOption('force');
 
         // Get plugins
-        $plugins = Config::get('plugins', []);
-        $dev_plugins = Config::get('dev_plugins', []);
+        $plugins = config('plugins', []);
+        $dev_plugins = config('dev_plugins', []);
 
         if (empty($plugins) && empty($dev_plugins)) {
             self::print(self::color('[' . date('Y-m-d H:i:s') . ']' . ' There are no plugin files to publish.', 'yellow'));
@@ -1294,7 +1294,7 @@ class Firefly
         }
 
         // Publish dev plugins files
-        if (Config::get('env', 'development') === 'development') {
+        if (config('env', 'development') === 'development') {
             foreach ($dev_plugins as $plugin) {
                 if (!class_exists($plugin)) throw new PluginException("\"{$plugin}\" was not found");
                 $plugin = new $plugin;
@@ -1377,7 +1377,7 @@ class Firefly
     {
         self::print(self::color('Firefly | Glowie Framework v' . Util::getVersion(), 'magenta'));
         self::print(self::color('Running in PHP CLI v' . phpversion(), 'blue'));
-        self::print(self::color('App environment: ' . Config::get('env', 'development'), 'yellow'));
+        self::print(self::color('App environment: ' . config('env', 'development'), 'yellow'));
         return 'Firefly | Glowie ' . Util::getVersion();
     }
 

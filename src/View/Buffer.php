@@ -20,7 +20,11 @@ class Buffer
      */
     public static function start()
     {
-        return ob_start();
+        try {
+            return ob_start();
+        } catch (\Throwable $th) {
+            return false;
+        }
     }
 
     /**
@@ -29,7 +33,11 @@ class Buffer
      */
     public static function flush()
     {
-        return ob_end_flush();
+        try {
+            return ob_end_flush();
+        } catch (\Throwable $th) {
+            return false;
+        }
     }
 
     /**
@@ -38,7 +46,11 @@ class Buffer
      */
     public static function clean()
     {
-        return ob_end_clean();
+        try {
+            return ob_end_clean();
+        } catch (\Throwable $th) {
+            return false;
+        }
     }
 
     /**
@@ -47,7 +59,11 @@ class Buffer
      */
     public static function get()
     {
-        return ob_get_clean();
+        try {
+            return ob_get_clean();
+        } catch (\Throwable $th) {
+            return false;
+        }
     }
 
     /**
@@ -56,6 +72,10 @@ class Buffer
      */
     public static function isActive()
     {
-        return ob_get_length() !== false;
+        try {
+            return ob_get_length() !== false;
+        } catch (\Throwable $th) {
+            return false;
+        }
     }
 }

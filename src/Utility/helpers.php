@@ -601,3 +601,14 @@ if (!function_exists('rescue')) {
         }
     }
 }
+
+if (!function_exists('is_cli')) {
+    /**
+     * Returns if the application is running through command-line console.
+     * @return bool Returns true if CLI, false otherwise.
+     */
+    function is_cli()
+    {
+        return \Util::isCLI();
+    }
+}

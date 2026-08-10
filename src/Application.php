@@ -58,7 +58,7 @@ class Application
         Session::register();
 
         // Timezone configuration
-        date_default_timezone_set(Config::get('other.timezone', 'America/Sao_Paulo'));
+        date_default_timezone_set(config('other.timezone', 'America/Sao_Paulo'));
 
         // Load route configuration file
         Rails::load();
@@ -67,15 +67,15 @@ class Application
         Buffer::start();
 
         // Initialize plugins
-        foreach (Config::get('plugins', []) as $plugin) {
+        foreach (config('plugins', []) as $plugin) {
             if (!class_exists($plugin)) throw new PluginException("\"{$plugin}\" was not found");
             $plugin = new $plugin;
             $plugin->register();
         }
 
         // Initialize dev plugins
-        if (Config::get('env', 'development') === 'development') {
-            foreach (Config::get('dev_plugins', []) as $plugin) {
+        if (config('env', 'development') === 'development') {
+            foreach (config('dev_plugins', []) as $plugin) {
                 if (!class_exists($plugin)) throw new PluginException("\"{$plugin}\" was not found");
                 $plugin = new $plugin;
                 $plugin->register();
