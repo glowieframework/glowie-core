@@ -90,7 +90,7 @@ class Layout implements JsonSerializable
         }
 
         // Render layout
-        if (Config::get('skeltch.enabled', true)) $layout = Skeltch::run($layout);
+        if (config('skeltch.enabled', true)) $layout = Skeltch::run($layout);
         $this->_content = $this->getBuffer($layout);
     }
 

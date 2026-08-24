@@ -246,20 +246,20 @@ class Response
     public function applyCors()
     {
         // Check if CORS is enabled
-        if (!Config::get('cors.enabled', true)) return $this;
+        if (!config('cors.enabled', true)) return $this;
 
         // Apply CORS headers
-        $this->setHeader('Access-Control-Allow-Methods', Config::get('cors.allowed_methods', ['*']));
-        $this->setHeader('Access-Control-Allow-Origin', Config::get('cors.allowed_origins', ['*']));
-        $this->setHeader('Access-Control-Allow-Headers', Config::get('cors.allowed_headers', ['*']));
-        $this->setHeader('Access-Control-Max-Age', Config::get('cors.max_age', 0));
+        $this->setHeader('Access-Control-Allow-Methods', config('cors.allowed_methods', ['*']));
+        $this->setHeader('Access-Control-Allow-Origin', config('cors.allowed_origins', ['*']));
+        $this->setHeader('Access-Control-Allow-Headers', config('cors.allowed_headers', ['*']));
+        $this->setHeader('Access-Control-Max-Age', config('cors.max_age', 0));
 
-        $exposedHeaders = Config::get('cors.exposed_headers', []);
+        $exposedHeaders = config('cors.exposed_headers', []);
         if (!empty($exposedHeaders)) {
             $this->setHeader('Access-Control-Expose-Headers', $exposedHeaders);
         }
 
-        if (Config::get('cors.allow_credentials', false)) {
+        if (config('cors.allow_credentials', false)) {
             $this->setHeader('Access-Control-Allow-Credentials', 'true');
         }
 
@@ -423,7 +423,7 @@ class Response
                 $list[$key] = $value;
             }
         }
-        return new Collection($list);
+        return collect($list);
     }
 
     /**
@@ -606,7 +606,7 @@ class Response
      */
     public function redirectBase(string $path = '', ?int $code = null)
     {
-        return $this->redirect(Util::baseUrl($path), $code);
+        return $this->redirect(url($path), $code);
     }
 
     /**
@@ -618,7 +618,7 @@ class Response
      */
     public function redirectRoute(string $route, array $params = [], ?int $code = null)
     {
-        return $this->redirect(Util::route($route, $params), $code);
+        return $this->redirect(route($route, $params), $code);
     }
 
     /**
@@ -630,7 +630,7 @@ class Response
     public function redirectBack(?int $code = null, string $fallback = '')
     {
         $previousUrl = Rails::getRequest()->getPreviousUrl();
-        if (Util::isEmpty($fallback)) $fallback = Util::baseUrl();
+        if (is_empty($fallback)) $fallback = url();
         return $this->redirect($previousUrl ?? $fallback, $code);
     }
 
@@ -669,7 +669,7 @@ class Response
         $origin = $request->getHeader('Origin');
 
         // Gets the allowed origins array
-        $allowedOrigins = (array)Config::get('cors.allowed_origins', ['*']);
+        $allowedOrigins = (array)config('cors.allowed_origins', ['*']);
         $originToSet = null;
 
         // Checks for wildcard or multiple origins

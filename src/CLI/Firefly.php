@@ -243,12 +243,12 @@ class Firefly
         // Parses the command and namespace properly
         $command = Util::kebabCase($command);
         $namespace = Util::kebabCase($namespace);
-        self::$command = (!Util::isEmpty($namespace) ? ($namespace . ':') : '') . $command;
+        self::$command = (!is_empty($namespace) ? ($namespace . ':') : '') . $command;
 
         // Finds a valid command
         $callback = null;
         $name = Util::pascalCase($command);
-        $classname = 'Glowie\Commands\\' . (!Util::isEmpty($namespace) ? (Util::pascalCase($namespace) . '\\') : '') . $name;
+        $classname = 'Glowie\Commands\\' . (!is_empty($namespace) ? (Util::pascalCase($namespace) . '\\') : '') . $name;
 
         if (class_exists($classname)) {
             // Instantiates the command class
@@ -520,7 +520,7 @@ class Firefly
      */
     public static function getArgs()
     {
-        return new Collection(self::$args);
+        return collect(self::$args);
     }
 
     /**
@@ -530,7 +530,7 @@ class Firefly
      */
     public static function hasOption(string $key)
     {
-        return self::getArg($key) === '';
+        return self::getArg($key) === '' || self::getArg($key) === 'true';
     }
 
     /**
@@ -689,7 +689,7 @@ class Firefly
         // Parse route listing
         foreach ($routes as $name => $item) {
             $methods = !empty($item['methods']) ? mb_strtoupper(implode(', ', $item['methods'])) : 'ALL';
-            $name = !Util::isEmpty($name) ? $name : '/';
+            $name = !is_empty($name) ? $name : '/';
             $uri = !empty($item['uri']) ? $item['uri'] : '/';
 
             $result[] = [
@@ -839,7 +839,7 @@ class Firefly
 
         // Generate key and hash it
         $key = self::getArg('key', Util::randomToken());
-        if (Util::isEmpty($key)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "key" for this command');
+        if (is_empty($key)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "key" for this command');
         $iv = mb_substr($key, 0, 16);
 
         // Encrypts the data
@@ -860,7 +860,7 @@ class Firefly
     {
         // Get key
         $key = self::argOrInput('key', 'Decryption key: ');
-        if (Util::isEmpty($key)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "key" for this command');
+        if (is_empty($key)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "key" for this command');
         $iv = mb_substr($key, 0, 16);
 
         // Reads the encrypted config file content
@@ -971,7 +971,7 @@ class Firefly
         if (!is_writable(Util::location('commands'))) throw new FileException('Directory "app/commands" is not writable, please check your chmod settings');
 
         // Validates the command name
-        if (Util::isEmpty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
+        if (is_empty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
 
         // Checks if the file exists
         $name = Util::pascalCase($name);
@@ -1002,7 +1002,7 @@ class Firefly
         $name = self::argOrInput('name', 'Controller name: ');
 
         // Validates the controller name
-        if (Util::isEmpty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
+        if (is_empty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
 
         // Checks if the file exists
         $name = Util::pascalCase($name);
@@ -1040,7 +1040,7 @@ class Firefly
         $name = self::argOrInput('name', 'Language name: ');
 
         // Validates the language id
-        if (Util::isEmpty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
+        if (is_empty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
 
         // Checks if the file exists
         $name = trim(mb_strtolower($name));
@@ -1069,7 +1069,7 @@ class Firefly
         $name = self::argOrInput('name', 'Middleware name: ');
 
         // Validates the middleware name
-        if (Util::isEmpty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
+        if (is_empty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
 
         // Checks if the file exists
         $name = Util::pascalCase($name);
@@ -1125,7 +1125,7 @@ class Firefly
         $name = self::argOrInput('name', 'Model name: ');
 
         // Validates the model name
-        if (Util::isEmpty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
+        if (is_empty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
 
         // Checks if table was filled
         $default_table = Util::snakeCase(Util::pluralize($name));
@@ -1147,7 +1147,7 @@ class Firefly
         // Sets the optional replacements
         if (self::hasOption('uuid')) $template = str_replace('$_uuid = false', '$_uuid = true', $template);
         if (self::hasOption('timestamps')) $template = str_replace('$_timestamps = false', '$_timestamps = true', $template);
-        if (self::hasOption('softdeletes')) $template = str_replace('$_softDeletes = false', '$_softDeletes = true', $template);
+        if (self::hasOption('softdeletes') || self::hasOption('soft_deletes')) $template = str_replace('$_softDeletes = false', '$_softDeletes = true', $template);
 
         // Saves the file
         $template = str_replace(['__FIREFLY_TEMPLATE_NAME__', '__FIREFLY_TEMPLATE_TABLE__', '__FIREFLY_TEMPLATE_PRIMARY__'], [$name, $table, $primary], $template);
@@ -1158,7 +1158,16 @@ class Firefly
         self::print(self::color('File: ' . $targetFile, 'cyan'));
 
         // Create migration if asked
-        if (self::hasOption('migration')) Migrator::create('Create' . Util::pascalCase($table) . 'Table');
+        if (self::hasOption('migration')) {
+            return Migrator::create('Create' . Util::pascalCase($table) . 'Table', 'Migration.php', [
+                'create_table' => $table,
+                'primary' => $primary,
+                'uuid' => self::hasOption('uuid'),
+                'timestamps' => self::hasOption('timestamps'),
+                'soft_deletes' => self::hasOption('softdeletes') || self::hasOption('soft_deletes')
+            ]);
+        }
+
         return true;
     }
 
@@ -1175,7 +1184,7 @@ class Firefly
         $name = self::argOrInput('name', 'Job name: ');
 
         // Validates the job name
-        if (Util::isEmpty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
+        if (is_empty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
 
         // Checks if the file exists
         $name = Util::pascalCase($name);
@@ -1206,7 +1215,7 @@ class Firefly
         $name = self::argOrInput('name', 'Service name: ');
 
         // Validates the service name
-        if (Util::isEmpty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
+        if (is_empty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
 
         // Checks if the file exists
         $name = Util::pascalCase($name);

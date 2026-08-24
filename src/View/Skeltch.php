@@ -40,12 +40,12 @@ class Skeltch
     public static function run(string $filename)
     {
         // Checks for file and cache folder permissions
-        $tmpdir = Config::get('skeltch.path', Util::location('storage/cache'));
+        $tmpdir = config('skeltch.path', Util::location('storage/cache'));
         if (!is_writable($tmpdir)) throw new FileException(sprintf('Directory "%s" is not writable, please check your chmod settings', $tmpdir));
 
         // Checks if cache is enabled or should be recompiled
         $tmpfile = $tmpdir . '/' . md5($filename) . '.php';
-        if (!Config::get('skeltch.cache', true) || !is_file($tmpfile) || filemtime($tmpfile) < filemtime($filename)) self::compile($filename, $tmpfile);
+        if (!config('skeltch.cache', true) || !is_file($tmpfile) || filemtime($tmpfile) < filemtime($filename)) self::compile($filename, $tmpfile);
 
         // Returns the processed file location
         return $tmpfile;
@@ -150,16 +150,16 @@ class Skeltch
         $code = preg_replace('~(?<!@){\s*layout\s*\((.+?)\)\s*}~is', '<?php $this->renderLayout($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*partial\s*\((.+?)\)\s*}~is', '<?php $this->renderPartial($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*inline\s*\((.+?)\)\s*}~is', '<?php $this->renderInline($1); ?>', $code);
-        $code = preg_replace('~(?<!@){\s*translate\s*\((.+?)\)\s*}~is', '<?php echo Babel::get($1); ?>', $code);
-        $code = preg_replace('~(?<!@){\s*url\s*\((.+?)\)\s*}~is', '<?php echo Util::baseUrl($1); ?>', $code);
-        $code = preg_replace('~(?<!@){\s*asset\s*\((.+?)\)\s*}~is', '<?php echo Util::asset($1); ?>', $code);
-        $code = preg_replace('~(?<!@){\s*route\s*\((.+?)\)\s*}~is', '<?php echo Util::route($1); ?>', $code);
+        $code = preg_replace('~(?<!@){\s*translate\s*\((.+?)\)\s*}~is', '<?php echo __($1); ?>', $code);
+        $code = preg_replace('~(?<!@){\s*url\s*\((.+?)\)\s*}~is', '<?php echo url($1); ?>', $code);
+        $code = preg_replace('~(?<!@){\s*asset\s*\((.+?)\)\s*}~is', '<?php echo asset($1); ?>', $code);
+        $code = preg_replace('~(?<!@){\s*route\s*\((.+?)\)\s*}~is', '<?php echo route($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*content\s*}~is', '<?php echo $this->getView(); ?>', $code);
         $code = preg_replace('~(?<!@){\s*csrf_field\s*}~is', '<input type="hidden" name="_token" value="<?php echo Util::csrfToken(); ?>">', $code);
         $code = preg_replace('~(?<!@){\s*csrf\s*}~is', '<?php echo Util::csrfToken(); ?>', $code);
         $code = preg_replace('~(?<!@){\s*json\s*\((.+?)\)\s*}~is', '<?php echo Util::jsonEncode($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*class\s*\((.+?)\)\s*}~is', '<?php echo Util::cssArray($1); ?>', $code);
-        $code = preg_replace('~(?<!@){\s*dump\s*\((.+?)\)\s*}~is', '<?php echo Util::dump($1); ?>', $code);
+        $code = preg_replace('~(?<!@){\s*dump\s*\((.+?)\)\s*}~is', '<?php dd($1); ?>', $code);
         $code = preg_replace('~(?<!@){\s*old\s*\((.+?)\)\s*}~is', '<?php echo request()->old($1); ?>', $code);
         return $code;
     }
@@ -246,7 +246,7 @@ class Skeltch
     public static function getLoop($variable)
     {
         self::$loop++;
-        return new Element([
+        return element([
             'index' => self::$loop,
             'iteration' => self::$loop + 1,
             'remaining' => count($variable) - self::$loop - 1,

@@ -428,7 +428,7 @@ class Skeleton
         $reference = (new $model([], false));
         $primary = $reference->getPrimaryName();
         $table = $reference->getTable();
-        if (Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primary;
+        if (is_empty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primary;
 
         // Create column
         if ($nullable) {
@@ -460,7 +460,7 @@ class Skeleton
         $reference = (new $model([], false));
         $primary = $reference->getPrimaryName();
         $table = $reference->getTable();
-        if (Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primary;
+        if (is_empty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primary;
 
         // Create column
         if ($nullable) {
@@ -869,7 +869,7 @@ class Skeleton
         $column = is_array($column) ? $column : [$column];
         foreach ($column as $item) {
             $key = $name;
-            if (Util::isEmpty($name)) $key = $item;
+            if (is_empty($name)) $key = $item;
             $item = $this->escapeIdentifier($item);
             $key = $this->escapeIdentifier($key);
             if ($unique) {
@@ -906,7 +906,7 @@ class Skeleton
      */
     public function foreignKey($column, string $table, $reference, ?string $name = null, string $update = 'RESTRICT', string $delete = 'RESTRICT')
     {
-        $name = !Util::isEmpty($name) ? "CONSTRAINT {$this->escapeIdentifier($name)} " : '';
+        $name = !is_empty($name) ? "CONSTRAINT {$this->escapeIdentifier($name)} " : '';
         $column = implode(', ', array_map([$this, 'escapeIdentifier'], is_array($column) ? $column : [$column]));
         $reference = implode(', ', array_map([$this, 'escapeIdentifier'], is_array($reference) ? $reference : [$reference]));
         $table = $this->escapeIdentifier($table);
@@ -1202,13 +1202,13 @@ class Skeleton
 
         // Maps the result to the driver
         if ($driver === 'sqlite') {
-            return new Collection(array_map(fn($col) => $col['name'], $result));
+            return collect(array_map(fn($col) => $col['name'], $result));
         } else if ($driver === 'pgsql') {
-            return new Collection(array_map(fn($col) => $col['column_name'], $result));
+            return collect(array_map(fn($col) => $col['column_name'], $result));
         } else if ($driver === 'sqlsrv') {
-            return new Collection(array_map(fn($col) => $col['COLUMN_NAME'], $result));
+            return collect(array_map(fn($col) => $col['COLUMN_NAME'], $result));
         } else {
-            return new Collection(array_map(fn($col) => $col['Field'], $result));
+            return collect(array_map(fn($col) => $col['Field'], $result));
         }
     }
 
@@ -1240,13 +1240,13 @@ class Skeleton
 
         // Maps the result to the driver
         if ($driver === 'sqlite') {
-            return new Collection(array_map(fn($row) => $row['name'], $result));
+            return collect(array_map(fn($row) => $row['name'], $result));
         } else if ($driver === 'pgsql') {
-            return new Collection(array_map(fn($row) => $row['tablename'], $result));
+            return collect(array_map(fn($row) => $row['tablename'], $result));
         } else if ($driver === 'sqlsrv') {
-            return new Collection(array_map(fn($row) => $row['TABLE_NAME'], $result));
+            return collect(array_map(fn($row) => $row['TABLE_NAME'], $result));
         } else {
-            return new Collection(array_map(fn($row) => array_values($row)[0], $result));
+            return collect(array_map(fn($row) => array_values($row)[0], $result));
         }
     }
 
@@ -1258,7 +1258,7 @@ class Skeleton
     public function tableExists(?string $table = null)
     {
         // Checks if the table name is empty
-        if (Util::isEmpty($table)) $table = $this->_table;
+        if (is_empty($table)) $table = $this->_table;
 
         // Builds the query to the database driver
         switch ($this->getDriver()) {
@@ -1313,7 +1313,7 @@ class Skeleton
     public function getQuery()
     {
         // Checks for raw query
-        if (!Util::isEmpty($this->_raw)) return $this->_raw;
+        if (!is_empty($this->_raw)) return $this->_raw;
 
         // Gets the instruction and database driver
         $driver = $this->getDriver();
@@ -1321,7 +1321,7 @@ class Skeleton
 
         // Gets EXISTS
         if (in_array($this->_instruction, ['CREATE TABLE', 'CREATE TEMPORARY TABLE', 'TRUNCATE TABLE', 'DROP TABLE', 'CREATE DATABASE', 'DROP DATABASE'])) {
-            if (!Util::isEmpty($this->_exists)) $query .= $this->_exists;
+            if (!is_empty($this->_exists)) $query .= $this->_exists;
         }
 
         // Gets DATABASE statements
@@ -1342,13 +1342,13 @@ class Skeleton
             $query .= ' (';
 
             // Like
-            if (!Util::isEmpty($this->_like)) {
+            if (!is_empty($this->_like)) {
                 $like = $this->escapeIdentifier($this->_like);
                 $instructions[] = "LIKE {$like}";
             }
 
             // Auto increment
-            if (!Util::isEmpty($this->_autoincrement)) $instructions[] = $this->_autoincrement;
+            if (!is_empty($this->_autoincrement)) $instructions[] = $this->_autoincrement;
 
             // Fields
             if (!empty($this->_fields)) $instructions = array_merge($instructions, $this->_fields);
@@ -1399,7 +1399,7 @@ class Skeleton
             $query .= ')';
 
             // Collate
-            if ($driver === 'mysql' && !Util::isEmpty($this->_collate)) {
+            if ($driver === 'mysql' && !is_empty($this->_collate)) {
                 $query .= " COLLATE=\"{$this->_collate}\"";
             }
         }
@@ -1410,7 +1410,7 @@ class Skeleton
             $query .= ' ';
 
             // Auto increment
-            if (!Util::isEmpty($this->_autoincrement)) $instructions[] = "ADD COLUMN {$this->_autoincrement}";
+            if (!is_empty($this->_autoincrement)) $instructions[] = "ADD COLUMN {$this->_autoincrement}";
 
             // Fields
             if (!empty($this->_fields)) $instructions = array_merge($instructions, $this->_fields);
@@ -1448,7 +1448,7 @@ class Skeleton
             }
 
             // Collate
-            if ($driver === 'mysql' && !Util::isEmpty($this->_collate)) {
+            if ($driver === 'mysql' && !is_empty($this->_collate)) {
                 $instructions[] = "COLLATE=\"{$this->_collate}\"";
             }
 

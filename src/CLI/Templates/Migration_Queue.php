@@ -36,8 +36,8 @@ class __FIREFLY_TEMPLATE_NAME__ extends Migration
      */
     public function init()
     {
-        $this->database = Config::get('queue.connection', 'default');
-        $this->table = Config::get('queue.table', 'queue');
+        $this->database = config('queue.connection', 'default');
+        $this->table = config('queue.table', 'queue');
     }
 
     /**

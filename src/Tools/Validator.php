@@ -72,7 +72,7 @@ class Validator
      */
     public function getErrors()
     {
-        return new Collection($this->errors, true);
+        return collect($this->errors, true);
     }
 
     /**
@@ -99,7 +99,7 @@ class Validator
                         $messages[$field][] = $this->messages[$key];
                     } else {
                         try {
-                            $messages[$field][] = Babel::get("validation.$name", ['field' => $field], $lang);
+                            $messages[$field][] = __("validation.$name", ['field' => $field], $lang);
                         } catch (i18nException $th) {
                             $messages[$field][] = "The $field field failed the $name validation rule.";
                         }
@@ -112,7 +112,7 @@ class Validator
                     $messages[$field][] = $this->messages[$key];
                 } else {
                     try {
-                        $messages[$field][] = Babel::get("validation.$rule", ['field' => $field], $lang);
+                        $messages[$field][] = __("validation.$rule", ['field' => $field], $lang);
                     } catch (i18nException $th) {
                         $messages[$field][] = "The $field field failed the $rule validation rule.";
                     }
@@ -286,7 +286,7 @@ class Validator
                 case 'nullable':
                 case 'optional':
                 case 'sometimes':
-                    if (!isset($data) || Util::isEmpty($data)) break 2;
+                    if (!isset($data) || is_empty($data)) break 2;
                     break;
 
                 // [CUSTOM] - Checks for custom rule
@@ -298,7 +298,7 @@ class Validator
 
                 // [REQUIRED] - Checks if variable is not empty or null
                 case 'required':
-                    if (!isset($data) || Util::isEmpty($data)) $result[] = 'required';
+                    if (!isset($data) || is_empty($data)) $result[] = 'required';
                     break;
 
                 // [MIN] - Checks if variable is bigger or equal than min
@@ -614,7 +614,7 @@ class Validator
 
                 // [EMPTY] - Check if variable is empty
                 case 'empty':
-                    if (!Util::isEmpty($data)) $result[] = 'empty';
+                    if (!is_empty($data)) $result[] = 'empty';
                     break;
 
                 // [ENDS_WITH] - Check if variable ends with string
@@ -651,12 +651,12 @@ class Validator
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "required_with" rule');
                     $required = false;
                     foreach (explode(',', $rule[1]) as $field) {
-                        if (isset($this->context[$field]) && !Util::isEmpty($this->context[$field])) {
+                        if (isset($this->context[$field]) && !is_empty($this->context[$field])) {
                             $required = true;
                             break;
                         }
                     }
-                    if (Util::isEmpty($data)) {
+                    if (is_empty($data)) {
                         if (!$required) break 2;
                         $result[] = 'required_with';
                     }
@@ -668,12 +668,12 @@ class Validator
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "required_with_all" rule');
                     $required = true;
                     foreach (explode(',', $rule[1]) as $field) {
-                        if (!isset($this->context[$field]) || Util::isEmpty($this->context[$field])) {
+                        if (!isset($this->context[$field]) || is_empty($this->context[$field])) {
                             $required = false;
                             break;
                         }
                     }
-                    if (Util::isEmpty($data)) {
+                    if (is_empty($data)) {
                         if (!$required) break 2;
                         $result[] = 'required_with_all';
                     }
@@ -685,12 +685,12 @@ class Validator
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "required_without" rule');
                     $required = true;
                     foreach (explode(',', $rule[1]) as $field) {
-                        if (isset($this->context[$field]) && !Util::isEmpty($this->context[$field])) {
+                        if (isset($this->context[$field]) && !is_empty($this->context[$field])) {
                             $required = false;
                             break;
                         }
                     }
-                    if (Util::isEmpty($data)) {
+                    if (is_empty($data)) {
                         if (!$required) break 2;
                         $result[] = 'required_without';
                     }
@@ -702,12 +702,12 @@ class Validator
                     if (!isset($rule[1])) throw new Exception('Validator: Missing parameter for "required_without_all" rule');
                     $required = true;
                     foreach (explode(',', $rule[1]) as $field) {
-                        if (!isset($this->context[$field]) || !Util::isEmpty($this->context[$field])) {
+                        if (!isset($this->context[$field]) || !is_empty($this->context[$field])) {
                             $required = false;
                             break;
                         }
                     }
-                    if (Util::isEmpty($data)) {
+                    if (is_empty($data)) {
                         if (!$required) break 2;
                         $result[] = 'required_without_all';
                     }

@@ -2,12 +2,12 @@
 
 namespace Glowie\Migrations;
 
-use Config;
 use Glowie\Core\Database\Migration;
 use Glowie\Core\Database\Skeleton;
+use Glowie\Core\Database\Kraken;
 
 /**
- * Cache table migration for Glowie application.
+ * __FIREFLY_TEMPLATE_NAME__ migration for Glowie application.
  * @category Migration
  * @package glowieframework/glowie
  * @author Glowie
@@ -20,24 +20,17 @@ class __FIREFLY_TEMPLATE_NAME__ extends Migration
 {
 
     /**
-     * Cache database connection name (from your app configuration).
+     * Migration database connection name (from your app configuration).
      * @var string
      */
     protected $database = 'default';
-
-    /**
-     * Cache table name (from your app configuration).
-     * @var string
-     */
-    private $table = 'cache';
 
     /**
      * This method will be called before any other methods from this migration.
      */
     public function init()
     {
-        $this->database = config('cache.connection', 'default');
-        $this->table = config('cache.table', 'cache');
+        //
     }
 
     /**
@@ -46,11 +39,10 @@ class __FIREFLY_TEMPLATE_NAME__ extends Migration
      */
     public function run()
     {
-        $this->forge->table($this->table)
-            ->createColumn('key', Skeleton::TYPE_STRING, 255)
-            ->createColumn('value', Skeleton::TYPE_BLOB)->nullable()
-            ->createColumn('expires', Skeleton::TYPE_BIG_INTEGER_UNSIGNED)->nullable()
-            ->primaryKey('key')
+        return $this->forge->table('__FIREFLY_TEMPLATE_TABLE__')
+            ->id('__FIREFLY_TEMPLATE_PRIMARY__')
+            ->createTimestamps()
+            ->createSoftDeletes()
             ->ifNotExists()
             ->create();
     }
@@ -61,7 +53,7 @@ class __FIREFLY_TEMPLATE_NAME__ extends Migration
      */
     public function rollback()
     {
-        $this->forge->table($this->table)
+        return $this->forge->table('__FIREFLY_TEMPLATE_TABLE__')
             ->ifExists()
             ->drop();
     }

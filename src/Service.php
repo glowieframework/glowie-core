@@ -59,12 +59,12 @@ class Service
      */
     public function __construct()
     {
-        $this->get = !Util::isCLI() ? Rails::getRequest()->fromGet() : new Element();
+        $this->get = !Util::isCLI() ? Rails::getRequest()->fromGet() : element();
         $this->params = Rails::getParams();
-        $this->post = !Util::isCLI() ? Rails::getRequest()->fromPost() : new Element();
-        $this->request = !Util::isCLI() ? Rails::getRequest() : new Element();
+        $this->post = !Util::isCLI() ? Rails::getRequest()->fromPost() : element();
+        $this->request = !Util::isCLI() ? Rails::getRequest() : element();
         $this->route = Rails::getCurrentRoute();
-        $this->session = !Util::isCLI() ? Session::make() : new Element();
+        $this->session = !Util::isCLI() ? Session::make() : element();
     }
 
     /**

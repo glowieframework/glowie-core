@@ -35,7 +35,7 @@ class Handler
     public static function register()
     {
         // Registers error handling functions
-        $level = Config::get('error_reporting.level', E_ALL);
+        $level = config('error_reporting.level', E_ALL);
         error_reporting($level);
         set_exception_handler([self::class, 'exceptionHandler']);
         set_error_handler([self::class, 'errorHandler'], $level);
@@ -249,7 +249,7 @@ class Handler
      */
     protected static function parseSuggestion(Throwable $e)
     {
-        if (!is_callable([$e, 'getSuggestion']) || Util::isEmpty($e->getSuggestion())) return '';
+        if (!is_callable([$e, 'getSuggestion']) || is_empty($e->getSuggestion())) return '';
         return '<div class="suggestion">' . $e->getSuggestion() . '</div>';
     }
 
@@ -291,8 +291,8 @@ class Handler
      */
     public static function log(string $content)
     {
-        if (!Config::get('error_reporting.logging', true)) return;
-        $file = Config::get('error_reporting.file', Util::location('storage/error.log'));
+        if (!config('error_reporting.logging', true)) return;
+        $file = config('error_reporting.file', Util::location('storage/error.log'));
         if (!is_writable(dirname($file))) return;
         @file_put_contents($file, $content, FILE_APPEND);
     }

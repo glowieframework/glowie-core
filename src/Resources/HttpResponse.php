@@ -82,7 +82,7 @@ class HttpResponse extends Element
      */
     public function getJson(?string $key = null, $default = null)
     {
-        if (Util::isEmpty($key)) return $this->json;
+        if (is_empty($key)) return $this->json;
         return $this->json->get($key, $default);
     }
 

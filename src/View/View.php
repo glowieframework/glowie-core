@@ -116,7 +116,7 @@ class View implements JsonSerializable
         self::addRendered($this->_filename, $this->toArray());
 
         // Render view
-        if (Config::get('skeltch.enabled', true)) $view = Skeltch::run($view);
+        if (config('skeltch.enabled', true)) $view = Skeltch::run($view);
         $this->_content = $this->getBuffer($view);
     }
 

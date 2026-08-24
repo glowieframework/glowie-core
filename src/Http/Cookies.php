@@ -122,7 +122,7 @@ class Cookies implements JsonSerializable
             foreach ($key as $field => $val) $this->set($field, $val, $expires);
         } else {
             $_COOKIE[$key] = $value;
-            setcookie($key, $value, time() + $expires, '/', '', Config::get('cookies.secure', false), Config::get('cookies.restrict', false));
+            setcookie($key, $value, time() + $expires, '/', '', config('cookies.secure', false), config('cookies.restrict', false));
         }
         return $this;
     }
@@ -136,7 +136,7 @@ class Cookies implements JsonSerializable
      */
     public function setEncrypted(string $key, string $value, int $expires = self::EXPIRES_DAY)
     {
-        return $this->set($key, Util::encryptString($value), $expires);
+        return $this->set($key, encrypt($value), $expires);
     }
 
     /**
@@ -149,7 +149,7 @@ class Cookies implements JsonSerializable
     {
         $value = $this->get($key);
         if (!$value) return $default;
-        return Util::decryptString($value);
+        return decrypt($value);
     }
 
     /**
@@ -252,7 +252,7 @@ class Cookies implements JsonSerializable
      */
     public function toCollection()
     {
-        return new Collection($_COOKIE);
+        return collect($_COOKIE);
     }
 
     /**
@@ -280,7 +280,7 @@ class Cookies implements JsonSerializable
      */
     public function dump()
     {
-        Util::dump($this);
+        dd($this);
     }
 
     /**

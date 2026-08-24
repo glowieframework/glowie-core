@@ -51,8 +51,8 @@ class Request implements JsonSerializable
     {
         // Parse headers and JSON data, if any
         self::$headers = array_change_key_case(getallheaders(), CASE_LOWER);
-        self::$json = new Element(json_decode($this->getBody(), true) ?? [], true);
-        self::$old = new Element(Session::make()->getFlash('input', []), true);
+        self::$json = element(json_decode($this->getBody(), true) ?? [], true);
+        self::$old = element(Session::make()->getFlash('input', []), true);
 
         // Parse request variables
         $vars = array_merge(Rails::getParams()->toArray(), $_GET, $_POST, $this->getJson()->toArray());
@@ -97,7 +97,7 @@ class Request implements JsonSerializable
     public function getURI()
     {
         $result = trim(mb_substr(trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/'), mb_strlen(APP_FOLDER)), '/');
-        return !Util::isEmpty($result) ? $result : '/';
+        return !is_empty($result) ? $result : '/';
     }
 
     /**
@@ -161,7 +161,7 @@ class Request implements JsonSerializable
      */
     public function fromGet()
     {
-        return new Element($_GET);
+        return element($_GET);
     }
 
     /**
@@ -170,7 +170,7 @@ class Request implements JsonSerializable
      */
     public function fromPost()
     {
-        return new Element($_POST);
+        return element($_POST);
     }
 
     /**
@@ -179,7 +179,7 @@ class Request implements JsonSerializable
      */
     public function fromServer()
     {
-        return new Element($_SERVER ?? []);
+        return element($_SERVER ?? []);
     }
 
     /**
@@ -199,7 +199,7 @@ class Request implements JsonSerializable
     {
         $params = [];
         parse_str($this->getBody(), $params);
-        return new Element($params);
+        return element($params);
     }
 
     /**
@@ -210,7 +210,7 @@ class Request implements JsonSerializable
      */
     public function getJson(?string $key = null, $default = null)
     {
-        if (Util::isEmpty($key)) return self::$json;
+        if (is_empty($key)) return self::$json;
         return self::$json->get($key, $default);
     }
 
@@ -332,7 +332,7 @@ class Request implements JsonSerializable
 
         // Fallback to the session tracked URLs
         $session = Session::make();
-        $appName = Util::snakeCase(Config::get('app_name', 'Glowie'));
+        $appName = Util::snakeCase(config('app_name', 'Glowie'));
         $currentUrl = $session->get("$appName.current_url");
         if (!$this->isGet() && !empty($currentUrl)) return $currentUrl;
         return $session->get("$appName.previous_url");
@@ -370,7 +370,7 @@ class Request implements JsonSerializable
      */
     public function getHeaders()
     {
-        return new Collection(getallheaders());
+        return collect(getallheaders());
     }
 
     /**
@@ -535,7 +535,7 @@ class Request implements JsonSerializable
         if (!$this->isGet() || $this->isAjax()) return;
 
         // Gets the session
-        $appName = Util::snakeCase(Config::get('app_name', 'Glowie'));
+        $appName = Util::snakeCase(config('app_name', 'Glowie'));
         $session = Session::make();
 
         // Gets the current and saved URLs

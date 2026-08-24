@@ -507,14 +507,14 @@ class Util
             $rangeEnd = min($totalPages, max($rangeEnd, $range));
 
             for ($i = $rangeStart; $i <= $rangeEnd; $i++) {
-                $pages[] = new Element([
+                $pages[] = element([
                     'label' => $i,
                     'active' => $currentPage == $i
                 ]);
             }
         } else {
             for ($i = 1; $i <= $totalPages; $i++) {
-                $pages[] = new Element([
+                $pages[] = element([
                     'label' => $i,
                     'active' => $currentPage == $i
                 ]);
@@ -522,7 +522,7 @@ class Util
         }
 
         // Parse results
-        return new Element([
+        return element([
             'page' => $currentPage,
             'is_valid' => !empty($results),
             'data' => $results,
@@ -735,12 +735,12 @@ class Util
         if (!in_array($method, hash_algos())) throw new Exception('encryptString(): Invalid hashing algorithm');
 
         // Get app key and hash it
-        $key = Config::get('secret.app_key');
+        $key = config('secret.app_key');
         if (empty($key)) throw new Exception('encryptString(): Application key was not defined');
         $key = hash($method, $key);
 
         // Get token and hash it
-        $token = $token ?? Config::get('secret.app_token');
+        $token = $token ?? config('secret.app_token');
         if (empty($token)) throw new Exception('encryptString(): Application token was not defined');
         $token = hash($method, $token);
 
@@ -762,12 +762,12 @@ class Util
         if (!in_array($method, hash_algos())) throw new Exception('decryptString(): Invalid hashing algorithm');
 
         // Get app key and hash it
-        $key = Config::get('secret.app_key');
+        $key = config('secret.app_key');
         if (empty($key)) throw new Exception('decryptString(): Application key was not defined');
         $key = hash($method, $key);
 
         // Get token and hash it
-        $token = $token ?? Config::get('secret.app_token');
+        $token = $token ?? config('secret.app_token');
         if (empty($token)) throw new Exception('decryptString(): Application token was not defined');
         $token = hash($method, $token);
 

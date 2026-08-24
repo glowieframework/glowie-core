@@ -78,16 +78,16 @@ class Cache implements JsonSerializable
         // Checks if the cache database is already connected
         if (!self::$db) {
             // Sets the table name
-            self::$table = Config::get('cache.table', 'cache');
+            self::$table = config('cache.table', 'cache');
 
             // Checks for cache driver
-            $driver = Config::get('cache.driver', 'file');
+            $driver = config('cache.driver', 'file');
 
             // Connects to the driver
             if ($driver === 'file') {
                 self::$db = $this->createFileConnection();
             } else if ($driver === 'database') {
-                $connection = Config::get('cache.connection', 'default');
+                $connection = config('cache.connection', 'default');
                 self::$db = new Kraken(self::$table, $connection);
             } else {
                 throw new Exception("Cache: Unsupported driver: \"$driver\"");
@@ -108,7 +108,7 @@ class Cache implements JsonSerializable
         $connection = 'sqlite_cache_driver';
         Config::set("database.$connection", [
             'driver' => 'sqlite',
-            'path' => Config::get('cache.path', Util::location('storage/cache/cache.db'))
+            'path' => config('cache.path', Util::location('storage/cache/cache.db'))
         ]);
 
         // Creates the connection
@@ -393,7 +393,7 @@ class Cache implements JsonSerializable
      */
     public function toCollection()
     {
-        return new Collection($this->toArray());
+        return collect($this->toArray());
     }
 
     /**
@@ -422,7 +422,7 @@ class Cache implements JsonSerializable
      */
     public function dump()
     {
-        Util::dump($this);
+        dd($this);
     }
 
     /**

@@ -58,7 +58,7 @@ abstract class Command
      */
     public function dump(...$vars)
     {
-        Util::dump(...$vars);
+        dd(...$vars);
     }
 
     /**

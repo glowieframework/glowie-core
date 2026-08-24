@@ -53,7 +53,7 @@ class Session implements JsonSerializable
      */
     public function __construct(array $data = [])
     {
-        if (!self::$appName) self::$appName = Util::snakeCase(Config::get('app_name', 'Glowie'));
+        if (!self::$appName) self::$appName = Util::snakeCase(config('app_name', 'Glowie'));
         if (!isset($_SESSION)) session_start();
         if (!empty($data)) $_SESSION = $data;
         self::$flash = $this->get(self::$appName . '.flash') ?? [];
@@ -77,7 +77,7 @@ class Session implements JsonSerializable
     public static function register()
     {
         // Save path
-        $sessdir = Config::get('session.path', Util::location('storage/session'));
+        $sessdir = config('session.path', Util::location('storage/session'));
         if (!is_dir($sessdir) || !is_writable($sessdir)) {
             $e = new FileException('Session path "' . $sessdir . '" is invalid or not writable');
             $e->setSuggestion('Check if the directory exists and has writing permissions for the web server user (chmod 0775)');
@@ -86,16 +86,16 @@ class Session implements JsonSerializable
         session_save_path($sessdir);
 
         // INI settings
-        ini_set('session.name', Config::get('session.name', 'app_session'));
-        ini_set('session.gc_divisor', (string)Config::get('session.gc_cleaning', 50));
+        ini_set('session.name', config('session.name', 'app_session'));
+        ini_set('session.gc_divisor', (string)config('session.gc_cleaning', 50));
         ini_set('session.gc_probability', '1');
-        ini_set('session.gc_maxlifetime', (string)Config::get('session.lifetime', 120));
+        ini_set('session.gc_maxlifetime', (string)config('session.lifetime', 120));
         ini_set('session.use_cookies', '1');
         ini_set('session.use_only_cookies', '1');
         ini_set('session.use_strict_mode', '1');
-        ini_set('session.cookie_httponly', Config::get('session.restrict', true) ? '1' : '0');
-        ini_set('session.cookie_samesite', Config::get('session.same_site', true) ? 'Strict' : 'Lax');
-        ini_set('session.cookie_secure', isset($_SERVER['HTTPS']) ? '1' : (Config::get('session.secure', false) ? '1' : '0'));
+        ini_set('session.cookie_httponly', config('session.restrict', true) ? '1' : '0');
+        ini_set('session.cookie_samesite', config('session.same_site', true) ? 'Strict' : 'Lax');
+        ini_set('session.cookie_secure', isset($_SERVER['HTTPS']) ? '1' : (config('session.secure', false) ? '1' : '0'));
     }
 
     /**
@@ -160,7 +160,7 @@ class Session implements JsonSerializable
      */
     public function setEncrypted(string $key, string $value, bool $ignoreDot = false)
     {
-        return $this->set($key, Util::encryptString($value), $ignoreDot);
+        return $this->set($key, encrypt($value), $ignoreDot);
     }
 
     /**
@@ -173,7 +173,7 @@ class Session implements JsonSerializable
     {
         $value = $this->get($key);
         if (!$value) return $default;
-        return Util::decryptString($value);
+        return decrypt($value);
     }
 
     /**
@@ -282,7 +282,7 @@ class Session implements JsonSerializable
      */
     public function toCollection()
     {
-        return new Collection($_SESSION);
+        return collect($_SESSION);
     }
 
     /**
@@ -310,7 +310,7 @@ class Session implements JsonSerializable
      */
     public function dump()
     {
-        Util::dump($this);
+        dd($this);
     }
 
     /**

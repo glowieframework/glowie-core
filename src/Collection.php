@@ -52,7 +52,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
         // Parses the data recursively
         foreach ($data as $key => $value) {
             if (is_array($value)) {
-                $this->__data[$key] = new Collection($value, true);
+                $this->__data[$key] = collect($value, true);
             } else {
                 $this->__data[$key] = $value;
             }
@@ -112,7 +112,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     public function merge($data)
     {
         if ($data instanceof Collection) $data = $data->toArray();
-        return new Collection(array_merge($this->__data, $data));
+        return collect(array_merge($this->__data, $data));
     }
 
     /**
@@ -123,7 +123,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     {
         $arr = $this->__data;
         shuffle($arr);
-        return new Collection($arr);
+        return collect($arr);
     }
 
     /**
@@ -245,7 +245,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function toElement(bool $recursive = false)
     {
-        return new Element($this->__data, $recursive);
+        return element($this->__data, $recursive);
     }
 
     /**
@@ -253,7 +253,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function dump()
     {
-        Util::dump($this);
+        dd($this);
     }
 
     /**
@@ -391,7 +391,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
             }
         }
 
-        return new Collection($arr);
+        return collect($arr);
     }
 
     /**
@@ -409,7 +409,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
             krsort($arr);
         }
 
-        return new Collection($arr);
+        return collect($arr);
     }
 
     /**
@@ -419,7 +419,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function reverse(bool $preserveKeys = false)
     {
-        return new Collection(array_reverse($this->__data, $preserveKeys));
+        return collect(array_reverse($this->__data, $preserveKeys));
     }
 
     /**
@@ -430,7 +430,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function orderBy($key, int $order = SORT_ASC)
     {
-        return new Collection(Util::orderArray($this->__data, $key, $order));
+        return collect(Util::orderArray($this->__data, $key, $order));
     }
 
     /**
@@ -440,7 +440,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function filter(callable $callback)
     {
-        return new Collection(array_filter($this->__data, $callback, ARRAY_FILTER_USE_BOTH));
+        return collect(array_filter($this->__data, $callback, ARRAY_FILTER_USE_BOTH));
     }
 
     /**
@@ -464,7 +464,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function filterBy($key, $value = null, bool $strict = false)
     {
-        return new Collection(Util::filterArray($this->__data, $key, $value, $strict));
+        return collect(Util::filterArray($this->__data, $key, $value, $strict));
     }
 
     /**
@@ -474,7 +474,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function changeKeyCase(int $case = CASE_LOWER)
     {
-        return new Collection(array_change_key_case($this->__data, $case));
+        return collect(array_change_key_case($this->__data, $case));
     }
 
     /**
@@ -485,7 +485,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function column($key, $index = null)
     {
-        return new Collection(array_column($this->__data, $key, $index));
+        return collect(array_column($this->__data, $key, $index));
     }
 
     /**
@@ -503,7 +503,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
             $result[$value] = $item;
         }
 
-        return new Collection($result);
+        return collect($result);
     }
 
     /**
@@ -512,7 +512,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function keys()
     {
-        return new Collection(array_keys($this->__data));
+        return collect(array_keys($this->__data));
     }
 
     /**
@@ -521,7 +521,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function values()
     {
-        return new Collection(array_values($this->__data));
+        return collect(array_values($this->__data));
     }
 
     /**
@@ -573,7 +573,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function flatten()
     {
-        return new Collection(Util::dotArray($this->__data));
+        return collect(Util::dotArray($this->__data));
     }
 
     /**
@@ -582,7 +582,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function unique()
     {
-        return new Collection(array_unique($this->__data));
+        return collect(array_unique($this->__data));
     }
 
     /**
@@ -602,7 +602,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
             }
             $i++;
         }
-        return new Collection($result);
+        return collect($result);
     }
 
     /**
@@ -620,7 +620,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
                 $result[$val->{$key}][] = $val;
             }
         }
-        return new Collection($result);
+        return collect($result);
     }
 
     /**
@@ -631,7 +631,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     public function combine(Collection $values)
     {
         $values = $values->toArray();
-        return new Collection(array_combine($this->__data, $values));
+        return collect(array_combine($this->__data, $values));
     }
 
     /**
@@ -644,9 +644,9 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     {
         $compare = $compare->toArray();
         if (!is_null($callback)) {
-            return new Collection(array_udiff($this->__data, $compare, $callback));
+            return collect(array_udiff($this->__data, $compare, $callback));
         } else {
-            return new Collection(array_diff($this->__data, $compare));
+            return collect(array_diff($this->__data, $compare));
         }
     }
 
@@ -660,9 +660,9 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     {
         $compare = $compare->toArray();
         if (!is_null($callback)) {
-            return new Collection(array_diff_uassoc($this->__data, $compare, $callback));
+            return collect(array_diff_uassoc($this->__data, $compare, $callback));
         } else {
-            return new Collection(array_diff_assoc($this->__data, $compare));
+            return collect(array_diff_assoc($this->__data, $compare));
         }
     }
 
@@ -676,9 +676,9 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     {
         $compare = $compare->toArray();
         if (!is_null($callback)) {
-            return new Collection(array_diff_ukey($this->__data, $compare, $callback));
+            return collect(array_diff_ukey($this->__data, $compare, $callback));
         } else {
-            return new Collection(array_diff_key($this->__data, $compare));
+            return collect(array_diff_key($this->__data, $compare));
         }
     }
 
@@ -691,7 +691,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function slice(int $offset, ?int $length, bool $preserveKeys = false)
     {
-        return new Collection(array_slice($this->__data, $offset, $length, $preserveKeys));
+        return collect(array_slice($this->__data, $offset, $length, $preserveKeys));
     }
 
     /**
@@ -712,7 +712,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
      */
     public function unflatten()
     {
-        return new Collection(Util::undotArray($this->__data));
+        return collect(Util::undotArray($this->__data));
     }
 
     /**
@@ -752,8 +752,8 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     public function paginate(int $currentPage = 1, int $resultsPerPage = 25, ?int $range = null)
     {
         $result = Util::paginateArray($this->__data, $currentPage, $resultsPerPage, $range);
-        $result->data = new Collection($result->data);
-        $result->pages = new Collection($result->pages);
+        $result->data = collect($result->data);
+        $result->pages = collect($result->pages);
         return $result;
     }
 
@@ -766,8 +766,8 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     public function chunk(int $length, bool $preserveKeys = false)
     {
         $result = array_chunk($this->__data, $length, $preserveKeys);
-        $result = array_map(fn($arr) => new Collection($arr), $result);
-        return new Collection($result);
+        $result = array_map(fn($arr) => collect($arr), $result);
+        return collect($result);
     }
 
     /**
@@ -792,7 +792,7 @@ class Collection implements ArrayAccess, JsonSerializable, Iterator, Countable
     public function map(callable $callback)
     {
         $data = array_map($callback, $this->__data);
-        return new Collection($data);
+        return collect($data);
     }
 
     /**

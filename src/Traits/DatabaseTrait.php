@@ -141,7 +141,7 @@ trait DatabaseTrait
     public function reconnect()
     {
         // Gets connection configuration
-        $database = Config::get("database.{$this->_connection}");
+        $database = config("database.{$this->_connection}");
         if (empty($database)) throw new DatabaseException([], 'Database connection setting "' . $this->_connection . '" not found in your app configuration');
 
         // Creates the database connection

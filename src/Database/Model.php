@@ -155,7 +155,7 @@ class Model extends Kraken implements JsonSerializable
     public function __construct($data = [], bool $init = true)
     {
         // Gets the table name
-        if (Util::isEmpty($this->_table)) $this->_table = Util::snakeCase(Util::pluralize(Util::classname($this)));
+        if (is_empty($this->_table)) $this->_table = Util::snakeCase(Util::pluralize(Util::classname($this)));
 
         // Constructs the query builder
         Kraken::__construct($this->_table, $this->_database);
@@ -274,8 +274,8 @@ class Model extends Kraken implements JsonSerializable
      */
     public function find($primary = null, bool $deleted = false)
     {
-        if (Util::isEmpty($this->getSelect())) {
-            $fields = !Util::isEmpty($this->_fields) ? $this->_fields : '*';
+        if (is_empty($this->getSelect())) {
+            $fields = !is_empty($this->_fields) ? $this->_fields : '*';
             $this->select($fields);
         }
         if (!is_null($primary)) $this->where($this->_table . '.' . $this->_primaryKey, $primary);
@@ -332,8 +332,8 @@ class Model extends Kraken implements JsonSerializable
      */
     public function all(bool $deleted = false)
     {
-        if (Util::isEmpty($this->getSelect())) {
-            $fields = !Util::isEmpty($this->_fields) ? $this->_fields : '*';
+        if (is_empty($this->getSelect())) {
+            $fields = !is_empty($this->_fields) ? $this->_fields : '*';
             $this->select($fields);
         }
         if ($this->_softDeletes && !$deleted) $this->whereNull($this->_table . '.' . $this->_deletedField);
@@ -690,7 +690,7 @@ class Model extends Kraken implements JsonSerializable
     {
         if ($row instanceof Element || $row instanceof Collection) $row = $row->toArray();
         if (!$overwrite) $row = array_merge($this->toArray(), $row);
-        $this->_initialData = new Element($row);
+        $this->_initialData = element($row);
         $this->__constructTrait($row);
         return $this;
     }
@@ -704,7 +704,7 @@ class Model extends Kraken implements JsonSerializable
     public function isDirty(?string $field = null)
     {
         if (!$this->_initialData) throw new Exception('isDirty(): Model "' . get_class($this) . '" entity was not filled with a row data');
-        if (!Util::isEmpty($field)) {
+        if (!is_empty($field)) {
             return ($this->_initialData->get($field) !== $this->get($field));
         } else {
             return ($this->_initialData->toArray() !== $this->toArray());
@@ -874,8 +874,8 @@ class Model extends Kraken implements JsonSerializable
     {
         // Get primary key and names
         $primary = $this->getPrimaryName();
-        if (Util::isEmpty($name)) $name = Util::snakeCase(Util::singularize(Util::classname($model)));
-        if (Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $primary;
+        if (is_empty($name)) $name = Util::snakeCase(Util::singularize(Util::classname($model)));
+        if (is_empty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $primary;
 
         // Set to relations array
         $this->_relations[$name] = [
@@ -903,8 +903,8 @@ class Model extends Kraken implements JsonSerializable
     {
         // Get primary key and names
         $primary = $this->getPrimaryName();
-        if (Util::isEmpty($name)) $name = Util::snakeCase(Util::pluralize(Util::classname($model)));
-        if (Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $primary;
+        if (is_empty($name)) $name = Util::snakeCase(Util::pluralize(Util::classname($model)));
+        if (is_empty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $primary;
 
         // Set to relations array
         $this->_relations[$name] = [
@@ -932,8 +932,8 @@ class Model extends Kraken implements JsonSerializable
     {
         // Get primary key and names
         $primary = (new $model([], false))->getPrimaryName();
-        if (Util::isEmpty($name)) $name = Util::snakeCase(Util::singularize(Util::classname($model)));
-        if (Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primary;
+        if (is_empty($name)) $name = Util::snakeCase(Util::singularize(Util::classname($model)));
+        if (is_empty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primary;
 
         // Set to relations array
         $this->_relations[$name] = [
@@ -966,12 +966,12 @@ class Model extends Kraken implements JsonSerializable
         $instance = new $model([], false);
         $primary = $this->getPrimaryName();
         $primaryTarget = $instance->getPrimaryName();
-        if (Util::isEmpty($name)) $name = Util::snakeCase(Util::pluralize(Util::classname($model)));
-        if (Util::isEmpty($pivot)) $pivot = $this->getTable() . '_' . $instance->getTable();
+        if (is_empty($name)) $name = Util::snakeCase(Util::pluralize(Util::classname($model)));
+        if (is_empty($pivot)) $pivot = $this->getTable() . '_' . $instance->getTable();
 
         // Get foreign keys
-        if (Util::isEmpty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $primary;
-        if (Util::isEmpty($foreign)) $foreign = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primaryTarget;
+        if (is_empty($column)) $column = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $primary;
+        if (is_empty($foreign)) $foreign = Util::snakeCase(Util::singularize(Util::classname($model))) . '_' . $primaryTarget;
 
         // Set to relations array
         $this->_relations[$name] = [
@@ -1007,11 +1007,11 @@ class Model extends Kraken implements JsonSerializable
         $primary = $this->getPrimaryName();
         $primaryIntermediate = (new $intermediate([], false))->getPrimaryName();
         $primaryTarget = (new $model([], false))->getPrimaryName();
-        if (Util::isEmpty($name)) $name = Util::snakeCase(Util::singularize(Util::classname($model)));
+        if (is_empty($name)) $name = Util::snakeCase(Util::singularize(Util::classname($model)));
 
         // Get foreign keys
-        if (Util::isEmpty($foreignCurrent)) $foreignCurrent = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $primary;
-        if (Util::isEmpty($foreignTarget)) $foreignTarget = Util::snakeCase(Util::singularize(Util::classname($intermediate))) . '_' . $primaryIntermediate;
+        if (is_empty($foreignCurrent)) $foreignCurrent = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $primary;
+        if (is_empty($foreignTarget)) $foreignTarget = Util::snakeCase(Util::singularize(Util::classname($intermediate))) . '_' . $primaryIntermediate;
 
         // Set to relations array
         $this->_relations[$name] = [
@@ -1047,11 +1047,11 @@ class Model extends Kraken implements JsonSerializable
         $primary = $this->getPrimaryName();
         $primaryIntermediate = (new $intermediate([], false))->getPrimaryName();
         $primaryTarget = (new $model([], false))->getPrimaryName();
-        if (Util::isEmpty($name)) $name = Util::snakeCase(Util::pluralize(Util::classname($model)));
+        if (is_empty($name)) $name = Util::snakeCase(Util::pluralize(Util::classname($model)));
 
         // Get foreign keys
-        if (Util::isEmpty($foreignCurrent)) $foreignCurrent = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $primary;
-        if (Util::isEmpty($foreignTarget)) $foreignTarget = Util::snakeCase(Util::singularize(Util::classname($intermediate))) . '_' . $primaryIntermediate;
+        if (is_empty($foreignCurrent)) $foreignCurrent = Util::snakeCase(Util::singularize(Util::classname($this))) . '_' . $primary;
+        if (is_empty($foreignTarget)) $foreignTarget = Util::snakeCase(Util::singularize(Util::classname($intermediate))) . '_' . $primaryIntermediate;
 
         // Set to relations array
         $this->_relations[$name] = [
@@ -1155,7 +1155,7 @@ class Model extends Kraken implements JsonSerializable
         if (is_array($data) && !Util::isAssociativeArray($data)) {
             $result = [];
             foreach ($data as $item) $result[] = $this->castData($item);
-            if ($isCollection) $result = new Collection($result);
+            if ($isCollection) $result = collect($result);
             return $result;
         }
 
@@ -1200,7 +1200,7 @@ class Model extends Kraken implements JsonSerializable
 
                         case 'collection':
                             $json = json_decode($data[$field], true) ?? [];
-                            $data[$field] = new Collection($json, true);
+                            $data[$field] = collect($json, true);
                             break;
 
                         case 'set':
@@ -1214,11 +1214,11 @@ class Model extends Kraken implements JsonSerializable
                         case 'json':
                         case 'element':
                             $json = json_decode($data[$field], true) ?? [];
-                            $data[$field] = new Element($json, true);
+                            $data[$field] = element($json, true);
                             break;
 
                         case 'encrypted':
-                            $data[$field] = Util::decryptString($data[$field], 'sha256', $params[1] ?? null);
+                            $data[$field] = decrypt($data[$field], 'sha256', $params[1] ?? null);
                             break;
 
                         case 'serialized':
@@ -1260,7 +1260,7 @@ class Model extends Kraken implements JsonSerializable
                             break;
 
                         case 'nullable':
-                            if (Util::isEmpty($data[$field])) $data[$field] = null;
+                            if (is_empty($data[$field])) $data[$field] = null;
                             break;
 
                         default:
@@ -1301,7 +1301,7 @@ class Model extends Kraken implements JsonSerializable
 
         // Returns an array or Collection of rows
         $data = $this->attachMultipleRelations($data);
-        return $isCollection ? new Collection($data) : $data;
+        return $isCollection ? collect($data) : $data;
     }
 
     /**
@@ -1312,7 +1312,7 @@ class Model extends Kraken implements JsonSerializable
     private function attachMultipleRelations(array $data)
     {
         // Converts data to a Collection
-        $data = new Collection($data);
+        $data = collect($data);
 
         // Gets the enabled relations
         $relationsEnabled = $this->getNestedRelationships();
@@ -1338,7 +1338,7 @@ class Model extends Kraken implements JsonSerializable
                     if (!empty($item['select'])) $table->select($item['select']);
 
                     // Gets the relationships from the target model
-                    $relations = $keys->isNotEmpty() ? $table->allBy($item['column'], $keys) : new Collection();
+                    $relations = $keys->isNotEmpty() ? $table->allBy($item['column'], $keys) : collect();
 
                     // Loops through the rows
                     foreach ($data as $idx => $row) {
@@ -1391,7 +1391,7 @@ class Model extends Kraken implements JsonSerializable
                     if (!empty($item['select'])) $table->select($item['select']);
 
                     // Gets the relationships from the target model
-                    $relations = $keys->isNotEmpty() ? $table->allBy($item['primary'], $keys) : new Collection();
+                    $relations = $keys->isNotEmpty() ? $table->allBy($item['primary'], $keys) : collect();
 
                     // Loops through the rows
                     foreach ($data as $idx => $row) {
@@ -1407,7 +1407,7 @@ class Model extends Kraken implements JsonSerializable
                         // Gets the relationship value
                         if (!is_null($value)) {
                             $rel = $relations->search($item['primary'], $value);
-                            $value = !Util::isEmpty($rel) ? $rel : null;
+                            $value = !is_empty($rel) ? $rel : null;
                         }
 
                         // Sets the value back to the row
@@ -1461,7 +1461,7 @@ class Model extends Kraken implements JsonSerializable
                         $pivotRelations = $pivot->whereIn($item['current-foreign'], $currentKeys);
                         $pivotRelations = $isPivotModel ? $pivotRelations->all() : $pivotRelations->fetchAll();
                     } else {
-                        $pivotRelations = new Collection();
+                        $pivotRelations = collect();
                     }
 
                     // Gets the foreign keys from the target model in the pivot relations
@@ -1470,7 +1470,7 @@ class Model extends Kraken implements JsonSerializable
 
                     // Gets the relations between the tables
                     $fk2 = $item['type'] === 'belongs-many' ? $item['primary-target'] : $item['target-foreign'];
-                    $relations = $targetKeys->isNotEmpty() ? $table->allBy($fk2, $targetKeys) : new Collection();
+                    $relations = $targetKeys->isNotEmpty() ? $table->allBy($fk2, $targetKeys) : collect();
 
                     // Loops through the rows
                     foreach ($data as $idx => $row) {
@@ -1515,7 +1515,7 @@ class Model extends Kraken implements JsonSerializable
                                 }
                             } else {
                                 // Values were not found
-                                $value = $item['type'] === 'one-through' ? null : new Collection();
+                                $value = $item['type'] === 'one-through' ? null : collect();
                             }
                         }
 
@@ -1694,7 +1694,7 @@ class Model extends Kraken implements JsonSerializable
                             break;
 
                         case 'encrypted':
-                            $data[$field] = Util::encryptString($data[$field], 'sha256', $params[1] ?? null);
+                            $data[$field] = encrypt($data[$field], 'sha256', $params[1] ?? null);
                             break;
 
                         case 'serialized':
@@ -1737,7 +1737,7 @@ class Model extends Kraken implements JsonSerializable
                             break;
 
                         case 'nullable':
-                            if (Util::isEmpty($data[$field])) $data[$field] = null;
+                            if (is_empty($data[$field])) $data[$field] = null;
                             break;
 
                         case 'base64':

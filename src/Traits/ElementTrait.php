@@ -51,7 +51,7 @@ trait ElementTrait
         // Parses the data recursively
         foreach ($data as $key => $value) {
             if (Util::isAssociativeArray($value)) {
-                $this->__data[$key] = new Element($value, true);
+                $this->__data[$key] = element($value, true);
             } else {
                 $this->__data[$key] = $value;
             }
@@ -225,7 +225,7 @@ trait ElementTrait
      */
     public function toCollection()
     {
-        return new Collection($this->__data);
+        return collect($this->__data);
     }
 
     /**
@@ -253,7 +253,7 @@ trait ElementTrait
      */
     public function dump()
     {
-        Util::dump($this);
+        dd($this);
     }
 
     /**

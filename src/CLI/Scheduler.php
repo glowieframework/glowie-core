@@ -91,7 +91,7 @@ class Scheduler
 
             // Checks the environments condition
             if (!empty($task['conditions']['env'])) {
-                if (!in_array(Config::get('env', 'development'), $task['conditions']['env'])) continue;
+                if (!in_array(config('env', 'development'), $task['conditions']['env'])) continue;
             }
 
             // Sets the task timezone

@@ -298,11 +298,11 @@ class Uploader
                 $this->errors = $errors;
                 if (empty($this->errors)) {
                     $this->errors = self::ERR_UPLOAD_SUCCESS;
-                    return new Collection($result);
+                    return collect($result);
                 } else {
                     // Skip failed uploads
                     if ($skipFailed && !empty($result)) {
-                        return new Collection($result);
+                        return collect($result);
                     }
 
                     // Delete failed uploads
@@ -394,7 +394,7 @@ class Uploader
                     return new UploadedFile([
                         'name' => $filename,
                         'url' => $target,
-                        'full_url' => Util::baseUrl($target),
+                        'full_url' => url($target),
                         'path' => realpath($target),
                         'original_name' => $file->name,
                         'type' => $file->type,
@@ -511,7 +511,7 @@ class Uploader
             $filename = call_user_func_array($this->namingHandler, [$filename, $ext, $key]);
         } else {
             $filename = Util::uniqueToken();
-            if (!Util::isEmpty($ext)) $filename .= ".$ext";
+            if (!is_empty($ext)) $filename .= ".$ext";
         }
         return $filename;
     }

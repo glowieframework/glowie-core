@@ -41,7 +41,7 @@ class ConsoleException extends SuggestionException
     {
         parent::__construct('CLI: ' . $message, $code, $previous);
         $this->command = $command;
-        $this->args = $args instanceof Collection ? $args : new Collection($args);
+        $this->args = $args instanceof Collection ? $args : collect($args);
     }
 
     /**

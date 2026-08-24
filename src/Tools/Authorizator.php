@@ -123,7 +123,7 @@ class Authorizator
     public function __construct(string $guard = 'default')
     {
         $this->setGuard($guard);
-        if (!self::$appName) self::$appName = Util::snakeCase(Config::get('app_name', 'Glowie'));
+        if (!self::$appName) self::$appName = Util::snakeCase(config('app_name', 'Glowie'));
     }
 
     /**
@@ -184,20 +184,20 @@ class Authorizator
     public function login(string $user, string $password, $conditions = [], ?int $expires = self::EXPIRES_DAY, array $headers = [])
     {
         // Check for empty login credentials
-        if (Util::isEmpty($user) || Util::isEmpty($password)) {
+        if (is_empty($user) || is_empty($password)) {
             $this->error = self::ERR_EMPTY_DATA;
             self::setUser($this->guard, null);
             return false;
         }
 
         // Create model instance
-        $model = Config::get('auth.' . $this->guard . '.model');
+        $model = config('auth.' . $this->guard . '.model');
         if (!$model || !class_exists($model)) throw new Exception("Authenticator: \"{$model}\" was not found");
         $model = new $model;
 
         // Get auth fields
-        $userField = Config::get('auth.' . $this->guard . '.user_field', 'email');
-        $passwordField = Config::get('auth.' . $this->guard . '.password_field', 'password');
+        $userField = config('auth.' . $this->guard . '.user_field', 'email');
+        $passwordField = config('auth.' . $this->guard . '.password_field', 'password');
 
         // Fetch user information
         if ($conditions instanceof Closure) {
@@ -218,7 +218,7 @@ class Authorizator
             $this->error = self::ERR_AUTH_SUCCESS;
             self::setUser($this->guard, $user);
             $headers = array_merge([self::$appName => 'auth'], $headers);
-            return $this->generateJwt(['user' => Util::encryptString($user->getPrimary())], $expires, $headers, 'HS256');
+            return $this->generateJwt(['user' => encrypt($user->getPrimary())], $expires, $headers, 'HS256');
         } else {
             $this->error = self::ERR_WRONG_PASSWORD;
             self::setUser($this->guard, null);
@@ -237,19 +237,19 @@ class Authorizator
         // Decode JWT token
         $headers = array_merge([self::$appName => 'auth'], $headers);
         $token = $this->decodeJwt($token, true, $headers);
-        if (!$token || Util::isEmpty($token->user ?? '')) {
+        if (!$token || is_empty($token->user ?? '')) {
             $this->error = self::ERR_INVALID_TOKEN;
             self::setUser($this->guard, null);
             return false;
         }
 
         // Create model instance
-        $model = Config::get('auth.' . $this->guard . '.model');
+        $model = config('auth.' . $this->guard . '.model');
         if (!$model || !class_exists($model)) throw new Exception("Authenticator: \"{$model}\" was not found");
         $model = new $model;
 
         // Find user from token
-        $user = $model->findAndFill(Util::decryptString($token->user));
+        $user = $model->findAndFill(decrypt($token->user));
         if (!$user) {
             $this->error = self::ERR_NO_USER;
             self::setUser($this->guard, null);
@@ -330,7 +330,7 @@ class Authorizator
         if (!$this->authorize($oldToken)) return false;
         $user = $this->getUser();
         $headers = $this->getJwtHeaders($oldToken);
-        return $this->generateJwt(['user' => Util::encryptString($user->getPrimary())], $expires, $headers);
+        return $this->generateJwt(['user' => encrypt($user->getPrimary())], $expires, $headers);
     }
 
     /**
@@ -364,7 +364,7 @@ class Authorizator
     public function generateJwt($payload, ?int $expires = self::EXPIRES_DAY, array $headers = [], string $alg = 'HS256')
     {
         // Get app key
-        $key = Config::get('secret.app_key');
+        $key = config('secret.app_key');
         if (empty($key)) throw new Exception('generateJwt(): Application key was not defined');
 
         // Parse payload
@@ -411,7 +411,7 @@ class Authorizator
         // Decode the payload
         $payload = json_decode($this->base64UrlDecode($parsed[1]), true);
         if (!$payload) return null;
-        return new Element($payload);
+        return element($payload);
     }
 
     /**
@@ -426,7 +426,7 @@ class Authorizator
         if (empty($token)) return false;
 
         // Get app key
-        $key = Config::get('secret.app_key');
+        $key = config('secret.app_key');
         if (empty($key)) throw new Exception('generateJwt(): Application key was not defined');
 
         // Split token into parts

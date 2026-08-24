@@ -25,7 +25,7 @@ class HandlerCLI
      */
     public static function register()
     {
-        $level = Config::get('error_reporting.level', E_ALL);
+        $level = config('error_reporting.level', E_ALL);
         error_reporting($level);
         set_exception_handler([self::class, 'exceptionHandler']);
         set_error_handler([self::class, 'errorHandler'], $level);
@@ -106,7 +106,7 @@ class HandlerCLI
      */
     private static function log(string $content)
     {
-        if (!Config::get('error_reporting.logging', true)) return;
-        file_put_contents(Config::get('error_reporting.file', Util::location('storage/error.log')), $content, FILE_APPEND);
+        if (!config('error_reporting.logging', true)) return;
+        file_put_contents(config('error_reporting.file', Util::location('storage/error.log')), $content, FILE_APPEND);
     }
 }

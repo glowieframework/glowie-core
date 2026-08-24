@@ -26,16 +26,17 @@ class Migrator
      * Creates a new migration file.
      * @param string $name Name of the migration.
      * @param string $template (Optional) Template filename.
+     * @param array $options (Optional) Options to pass to the template.
      * @return bool True on success, false on failure.
      */
-    public static function create(string $name, string $template = 'Migration.php')
+    public static function create(string $name, string $template = 'Migration.php', array $options = [])
     {
         // Checks permissions
         if (!is_dir(Util::location('migrations'))) mkdir(Util::location('migrations'), 0775, true);
         if (!is_writable(Util::location('migrations'))) throw new FileException('Directory "app/migrations" is not writable, please check your chmod settings');
 
         // Validates the migration name
-        if (Util::isEmpty($name)) throw new ConsoleException(Firefly::getCommand(), Firefly::getArgs(), 'Missing required argument "name" for this command');
+        if (is_empty($name)) throw new ConsoleException(Firefly::getCommand(), Firefly::getArgs(), 'Missing required argument "name" for this command');
 
         // Checks if the file exists
         $cleanName = Util::pascalCase($name);
@@ -44,8 +45,20 @@ class Migrator
         if (is_file($targetFile)) throw new ConsoleException(Firefly::getCommand(), Firefly::getArgs(), "Migration {$cleanName} already exists!");
 
         // Creates the file
+        $template = !empty($options['create_table']) ? 'Migration_Table.php' : $template;
         $template = file_get_contents(Firefly::TEMPLATES_FOLDER . $template);
         $template = str_replace('__FIREFLY_TEMPLATE_NAME__', $name, $template);
+
+        // Performs the replacements for the create table migration
+        if (!empty($options['create_table'])) {
+            $template = str_replace('__FIREFLY_TEMPLATE_TABLE__', $options['create_table'], $template);
+            $template = str_replace('__FIREFLY_TEMPLATE_PRIMARY__', $options['primary'] ?? 'id', $template);
+            if (!empty($options['uuid'])) $template = str_replace('->id(', '->uuid(', $template);
+            if (empty($options['timestamps'])) $template = str_replace('->createTimestamps()', '// ->createTimestamps()', $template);
+            if (empty($options['soft_deletes'])) $template = str_replace('->createSoftDeletes()', '// ->createSoftDeletes()', $template);
+        }
+
+        // Saves the file
         file_put_contents($targetFile, $template);
 
         // Success message
@@ -75,15 +88,24 @@ class Migrator
 
             // Checks if the migrations table already exists
             $forge = new Skeleton('glowie', $connection);
-            if ($forge->tableExists(Config::get('migrations.table', 'migrations'))) continue;
+            if ($forge->tableExists(config('migrations.table', 'migrations'))) continue;
 
-            // Runs the schema file
+            // Processes the schema file
+            $time = microtime(true);
+            $date = date('Y-m-d H:i:s');
+            Firefly::print(Firefly::color("[{$date}] Applying schema \"{$connection}\"...", 'blue'));
+
+            // Gets the schema file content and executes it
             $db = new Kraken('glowie', $connection);
             $sql = file_get_contents($filename);
 
             try {
                 $db->query($sql, false);
                 $migrateRun = true;
+
+                // Print info message
+                $time = round((microtime(true) - $time) * 1000, 2) . 'ms';
+                Firefly::print(Firefly::color("[{$date}] Schema \"{$connection}\" applied successfully in {$time}!", 'green'));
             } catch (QueryException $th) {
                 $db->getConnection()->rollback();
                 throw $th;
@@ -235,7 +257,7 @@ class Migrator
         $connection = Firefly::getArg('connection', 'default');
 
         // Gets the driver type
-        $driver = Config::get("database.$connection.driver", 'mysql');
+        $driver = config("database.$connection.driver", 'mysql');
         if ($driver !== 'mysql') throw new ConsoleException(Firefly::getCommand(), Firefly::getArgs(), 'Squashing is only available for mysql driver');
 
         // Gets the migrations for this connection
@@ -290,7 +312,7 @@ class Migrator
         }
 
         // Gets the data for the migrations table, if exists
-        $table = Config::get('migrations.table', 'migrations');
+        $table = config('migrations.table', 'migrations');
         if ($tables->contains($table)) {
             $data = $db->table($table)->fetchAll();
 

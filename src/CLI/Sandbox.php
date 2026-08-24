@@ -55,7 +55,7 @@ class Sandbox
         if (!Util::isCLI()) throw new ConsoleException(Firefly::getCommand(), Firefly::getArgs(), 'This command cannot be used from outside the console');
 
         // Register class alias
-        foreach (Config::get('sandbox.alias', []) as $__key => $__value) {
+        foreach (config('sandbox.alias', []) as $__key => $__value) {
             if (!class_exists($__key)) class_alias($__value, $__key);
         }
 
@@ -70,7 +70,7 @@ class Sandbox
             $__ = self::$result;
 
             // Gets the current command
-            $__command = self::read(Util::isEmpty(self::$continuous) ? 'sandbox >> ' : '....... >> ');
+            $__command = self::read(is_empty(self::$continuous) ? 'sandbox >> ' : '....... >> ');
 
             // Handle exit command
             if ($__command === null) {
@@ -79,10 +79,10 @@ class Sandbox
             }
 
             // Handle empty command
-            if (Util::isEmpty($__command)) continue;
+            if (is_empty($__command)) continue;
 
             // Fill continuous command and add command to the history
-            if (!Util::isEmpty(self::$continuous)) {
+            if (!is_empty(self::$continuous)) {
                 self::$continuous .= PHP_EOL . $__command;
             } else {
                 self::$history[] = $__command;

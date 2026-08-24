@@ -299,11 +299,12 @@ if (!function_exists('collect')) {
     /**
      * Creates a new Collection.
      * @param array $data (Optional) Initial data to parse into the Collection.
+     * @param bool $recursive (Optional) True if the data must be parsed recursively.
      * @return \Glowie\Core\Collection Collection instance.
      */
-    function collect(array $data = [])
+    function collect(array $data = [], bool $recursive = false)
     {
-        return new \Glowie\Core\Collection($data);
+        return new \Glowie\Core\Collection($data, $recursive);
     }
 }
 

@@ -112,7 +112,7 @@ class Controller
         $this->route = Rails::getCurrentRoute();
         $this->session = Session::make();
         $this->alias = $alias;
-        $this->view = new Element();
+        $this->view = element();
     }
 
     /**

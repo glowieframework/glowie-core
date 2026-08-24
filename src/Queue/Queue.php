@@ -139,7 +139,7 @@ class Queue
         $jobs = $db->when($queue !== 'all', fn(Kraken $q) => $q->where('queue', $queue))
             ->whereNull('ran_at')
             ->whereNull('locked_at')
-            ->where('attempts', '<', Config::get('queue.max_attempts', 3))
+            ->where('attempts', '<', config('queue.max_attempts', 3))
             ->where(function (Kraken $query) {
                 $query->whereNull('delayed_to');
                 $query->orWhere('delayed_to', '<=', date('Y-m-d H:i:s'));
@@ -251,7 +251,7 @@ class Queue
         if ($success) $db->whereNotNull('ran_at')->delete();
 
         // Clear failed jobs
-        if ($failed) $db->whereNull('ran_at')->where('attempts', '>=', Config::get('queue.max_attempts', 3))->delete();
+        if ($failed) $db->whereNull('ran_at')->where('attempts', '>=', config('queue.max_attempts', 3))->delete();
 
         // Clear pending jobs
         if ($pending) $db->whereNull('ran_at')->delete();
@@ -303,7 +303,7 @@ class Queue
      */
     private static function getConnection()
     {
-        if (!self::$db) self::$db = new Kraken(Config::get('queue.table', 'queue'), Config::get('queue.connection', 'default'));
+        if (!self::$db) self::$db = new Kraken(config('queue.table', 'queue'), config('queue.connection', 'default'));
         return self::$db;
     }
 
@@ -314,7 +314,7 @@ class Queue
     {
         $db = self::getConnection();
         $db->whereNotNull('ran_at')
-            ->where('ran_at', '<=', date('Y-m-d H:i:s', time() - Config::get('queue.keep_log', self::DELAY_DAY)))
+            ->where('ran_at', '<=', date('Y-m-d H:i:s', time() - config('queue.keep_log', self::DELAY_DAY)))
             ->delete();
     }
 }

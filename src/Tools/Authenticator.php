@@ -85,7 +85,7 @@ class Authenticator
     public function __construct(string $guard = 'default')
     {
         $this->setGuard($guard);
-        if (!self::$appName) self::$appName = Util::snakeCase(Config::get('app_name', 'Glowie'));
+        if (!self::$appName) self::$appName = Util::snakeCase(config('app_name', 'Glowie'));
     }
 
     /**
@@ -123,20 +123,20 @@ class Authenticator
     public function login(string $user, string $password, $conditions = [], bool $once = false)
     {
         // Check for empty login credentials
-        if (Util::isEmpty($user) || Util::isEmpty($password)) {
+        if (is_empty($user) || is_empty($password)) {
             $this->error = self::ERR_EMPTY_DATA;
             self::setUser($this->guard, null);
             return false;
         }
 
         // Create model instance
-        $model = Config::get('auth.' . $this->guard . '.model');
+        $model = config('auth.' . $this->guard . '.model');
         if (!$model || !class_exists($model)) throw new Exception("Authenticator: \"{$model}\" was not found");
         $model = new $model;
 
         // Get auth fields
-        $userField = Config::get('auth.' . $this->guard . '.user_field', 'email');
-        $passwordField = Config::get('auth.' . $this->guard . '.password_field', 'password');
+        $userField = config('auth.' . $this->guard . '.user_field', 'email');
+        $passwordField = config('auth.' . $this->guard . '.password_field', 'password');
 
         // Fetch user information
         if ($conditions instanceof Closure) {
@@ -215,7 +215,7 @@ class Authenticator
         if ($value === false) return null;
         $value = explode(':', $value, 2);
         if (count($value) !== 2) return null;
-        return new Element(['user' => $value[0], 'password' => $value[1]]);
+        return element(['user' => $value[0], 'password' => $value[1]]);
     }
 
     /**
@@ -229,19 +229,19 @@ class Authenticator
     public function impersonate(string $user, $conditions = [], bool $once = false)
     {
         // Check for empty login credentials
-        if (Util::isEmpty($user)) {
+        if (is_empty($user)) {
             $this->error = self::ERR_EMPTY_DATA;
             self::setUser($this->guard, null);
             return false;
         }
 
         // Create model instance
-        $model = Config::get('auth.' . $this->guard . '.model');
+        $model = config('auth.' . $this->guard . '.model');
         if (!$model || !class_exists($model)) throw new Exception("Authenticator: \"{$model}\" was not found");
         $model = new $model;
 
         // Get auth fields
-        $userField = Config::get('auth.' . $this->guard . '.user_field', 'email');
+        $userField = config('auth.' . $this->guard . '.user_field', 'email');
 
         // Fetch user information
         if ($conditions instanceof Closure) {
@@ -306,7 +306,7 @@ class Authenticator
 
         if (!is_null($user)) {
             // Create model instance
-            $model = Config::get('auth.' . $this->guard . '.model');
+            $model = config('auth.' . $this->guard . '.model');
             if (!$model || !class_exists($model)) throw new Exception("Authenticator: \"{$model}\" was not found");
             $model = new $model;
 

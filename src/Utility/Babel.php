@@ -38,7 +38,7 @@ class Babel
         }
 
         // Sets the default language
-        self::setActiveLanguage(Config::get('other.language', 'en'));
+        self::setActiveLanguage(config('other.language', 'en'));
     }
 
     /**

@@ -39,7 +39,7 @@ class ValidationMessages extends Collection
             }
         }
 
-        return new Collection($result);
+        return collect($result);
     }
 
     /**
@@ -50,6 +50,6 @@ class ValidationMessages extends Collection
      */
     public function get($key, $default = null)
     {
-        return parent::get($key, new Collection());
+        return parent::get($key, collect());
     }
 }

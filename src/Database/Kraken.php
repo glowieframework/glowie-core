@@ -186,7 +186,7 @@ class Kraken
     {
         if ($this->_instruction !== 'SELECT DISTINCT') $this->_instruction = 'SELECT';
         $columns = array_map([$this, 'escapeIdentifier'], is_array($columns) ? $columns : [$columns]);
-        $this->_select .= (!Util::isEmpty($this->_select) ? ', ' : '') . implode(', ', $columns);
+        $this->_select .= (!is_empty($this->_select) ? ', ' : '') . implode(', ', $columns);
         return $this;
     }
 
@@ -224,7 +224,7 @@ class Kraken
         if ($this->_instruction !== 'SELECT DISTINCT') $this->_instruction = 'SELECT';
         if ($query instanceof Kraken) $query = $query->getQuery();
         $value = '(' . $query . ') AS ' . $this->escapeIdentifier($name);
-        $this->_select .= (!Util::isEmpty($this->_select) ? ', ' : '') . $value;
+        $this->_select .= (!is_empty($this->_select) ? ', ' : '') . $value;
         return $this;
     }
 
@@ -1539,7 +1539,7 @@ class Kraken
      */
     public function fetchAll()
     {
-        return new Collection($this->execute(true, false));
+        return collect($this->execute(true, false));
     }
 
     /**
@@ -1732,7 +1732,7 @@ class Kraken
         $this->_instruction = 'DELETE';
 
         // Escape table names
-        if (!Util::isEmpty($table)) {
+        if (!is_empty($table)) {
             $table = array_map([$this, 'escapeIdentifier'], is_array($table) ? $table : [$table]);
             $this->_delete = implode(', ', $table);
         }
@@ -1944,14 +1944,14 @@ class Kraken
             $rangeEnd = min($totalPages, max($rangeEnd, $range));
 
             for ($i = $rangeStart; $i <= $rangeEnd; $i++) {
-                $pages[] = new Element([
+                $pages[] = element([
                     'label' => $i,
                     'active' => $currentPage == $i
                 ]);
             }
         } else {
             for ($i = 1; $i <= $totalPages; $i++) {
-                $pages[] = new Element([
+                $pages[] = element([
                     'label' => $i,
                     'active' => $currentPage == $i
                 ]);
@@ -1959,11 +1959,11 @@ class Kraken
         }
 
         // Parse results
-        return new Element([
+        return element([
             'page' => $currentPage,
             'is_valid' => !empty($results),
             'data' => $results,
-            'pages' => new Collection($pages),
+            'pages' => collect($pages),
             'from' => empty($results) ? 0 : $offset + 1,
             'to' => empty($results) ? 0 : count($results) + $offset,
             'total_pages' => (int)$totalPages,
@@ -2078,11 +2078,11 @@ class Kraken
     public function getQuery()
     {
         // Checks for raw query
-        if (!Util::isEmpty($this->_raw)) return $this->_raw;
+        if (!is_empty($this->_raw)) return $this->_raw;
 
         // Checks for empty query
-        if (Util::isEmpty($this->_instruction)) $this->_instruction = 'SELECT';
-        if (Util::isEmpty($this->_select)) $this->_select = '*';
+        if (is_empty($this->_instruction)) $this->_instruction = 'SELECT';
+        if (is_empty($this->_select)) $this->_select = '*';
 
         // Gets the instruction
         $query = $this->_instruction;
@@ -2093,13 +2093,13 @@ class Kraken
         }
 
         // Gets DELETE statement
-        if (!Util::isEmpty($this->_delete)) {
+        if (!is_empty($this->_delete)) {
             $query .= " {$this->_delete}";
         }
 
         // Gets FROM statement
         if ($this->_instruction === 'SELECT' || $this->_instruction === 'SELECT DISTINCT' || $this->_instruction === 'DELETE') {
-            if (!Util::isEmpty($this->_from)) {
+            if (!is_empty($this->_from)) {
                 $query .= " FROM {$this->_from}";
             } else {
                 $query .= " FROM {$this->_table}";
@@ -2124,14 +2124,14 @@ class Kraken
 
         // Gets INSERT statements
         if ($this->_instruction === 'INSERT' || $this->_instruction === 'INSERT IGNORE' || $this->_instruction === 'REPLACE') {
-            if (!Util::isEmpty($this->_insert) && !Util::isEmpty($this->_values)) {
+            if (!is_empty($this->_insert) && !is_empty($this->_values)) {
                 $query .= " INTO {$this->_table} ({$this->_insert}) VALUES $this->_values";
             }
         }
 
         // Gets ON DUPLICATE KEY statement
         if ($this->_instruction === 'INSERT') {
-            if (!Util::isEmpty($this->_duplicate)) {
+            if (!is_empty($this->_duplicate)) {
                 $query .= " {$this->_duplicate}";
             }
         }

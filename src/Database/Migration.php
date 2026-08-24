@@ -61,7 +61,7 @@ abstract class Migration
     {
         // Creates the connection and stores the migration name
         $this->name = Util::classname($this);
-        $this->table = Config::get('migrations.table', 'migrations');
+        $this->table = config('migrations.table', 'migrations');
         $this->db = new Kraken($this->table, $this->database);
         $this->forge = new Skeleton($this->table, $this->database);
 

@@ -141,7 +141,7 @@ class Rails
             return new static;
         }
 
-        if (Util::isEmpty($target)) throw new Exception('Alias target cannot be empty');
+        if (is_empty($target)) throw new Exception('Alias target cannot be empty');
         self::$aliases[$alias] = $target;
         return new static;
     }
@@ -159,7 +159,7 @@ class Rails
     public static function addRoute(string $route, ?string $controller = null, ?string $action = null, $methods = [], ?string $name = null)
     {
         // Generates an unique route name
-        if (Util::isEmpty($name)) {
+        if (is_empty($name)) {
             $name = Util::slug($route, '-', true);
             if (!empty(self::$routes[$name])) $name .=  '.' . uniqid();
         }
@@ -168,8 +168,8 @@ class Rails
         if (!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
 
         // Gets the action and controller
-        if (Util::isEmpty($action)) $action = Util::camelCase($route);
-        if (Util::isEmpty($controller)) $controller = self::$defaultController;
+        if (is_empty($action)) $action = Util::camelCase($route);
+        if (is_empty($controller)) $controller = self::$defaultController;
 
         // Adds the route
         self::$routes[$name] = [
@@ -197,7 +197,7 @@ class Rails
     public static function addAnonymous(string $route, callable $callback, $methods = [], ?string $name = null)
     {
         // Generates an unique route name
-        if (Util::isEmpty($name)) {
+        if (is_empty($name)) {
             $name = Util::slug($route, '-', true);
             if (!empty(self::$routes[$name])) $name .=  '.' . uniqid();
         }
@@ -274,7 +274,7 @@ class Rails
     public static function addProtectedRoute(string $route, $middleware = 'Glowie\Middlewares\Authenticate', ?string $controller = null, ?string $action = null, $methods = [], ?string $name = null)
     {
         // Generates an unique route name
-        if (Util::isEmpty($name)) {
+        if (is_empty($name)) {
             $name = Util::slug($route, '-', true);
             if (!empty(self::$routes[$name])) $name .=  '.' . uniqid();
         }
@@ -283,9 +283,9 @@ class Rails
         if (!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
 
         // Gets the action, controller and middleware
-        if (Util::isEmpty($action)) $action = Util::camelCase($route);
-        if (Util::isEmpty($controller)) $controller = self::$defaultController;
-        if (Util::isEmpty($middleware)) throw new RoutingException('Middleware cannot be empty for route "' . $name . '"');
+        if (is_empty($action)) $action = Util::camelCase($route);
+        if (is_empty($controller)) $controller = self::$defaultController;
+        if (is_empty($middleware)) throw new RoutingException('Middleware cannot be empty for route "' . $name . '"');
 
         // Adds the route
         self::$routes[$name] = [
@@ -315,14 +315,14 @@ class Rails
     public static function addProtectedAnonymous(string $route, callable $callback, $middleware = 'Glowie\Middlewares\Authenticate', $methods = [], ?string $name = null)
     {
         // Generates an unique route name
-        if (Util::isEmpty($name)) {
+        if (is_empty($name)) {
             $name = Util::slug($route, '-', true);
             if (!empty(self::$routes[$name])) $name .=  '.' . uniqid();
         }
 
         // Checks for duplicate route names and empty middleware
         if (!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
-        if (Util::isEmpty($middleware)) throw new RoutingException('Middleware cannot be empty for route "' . $name . '"');
+        if (is_empty($middleware)) throw new RoutingException('Middleware cannot be empty for route "' . $name . '"');
 
         // Adds the route
         self::$routes[$name] = [
@@ -352,14 +352,14 @@ class Rails
     public static function addRedirect(string $route, string $target, ?int $code = null, $methods = [], ?string $name = null)
     {
         // Generates an unique route name
-        if (Util::isEmpty($name)) {
+        if (is_empty($name)) {
             $name = Util::slug($route, '-', true);
             if (!empty(self::$routes[$name])) $name .=  '.' . uniqid();
         }
 
         // Checks for duplicate route names and target
         if (!empty(self::$routes[$name])) throw new RoutingException('Duplicate route name: "' . $name . '"');
-        if (Util::isEmpty($target)) throw new RoutingException('Redirect target cannot be empty for route "' . $name . '"');
+        if (is_empty($target)) throw new RoutingException('Redirect target cannot be empty for route "' . $name . '"');
 
         // Adds the route
         self::$routes[$name] = [
@@ -499,7 +499,7 @@ class Rails
      */
     public static function groupRoutes(string $name, callable $callback, bool $prefix = false)
     {
-        if (Util::isEmpty($name)) throw new RoutingException('Route group name cannot be empty');
+        if (is_empty($name)) throw new RoutingException('Route group name cannot be empty');
         self::$group = $name;
         if ($prefix) self::$prefix = rtrim($name, '/') . '/';
         call_user_func($callback);
@@ -514,7 +514,7 @@ class Rails
      */
     public static function domain(string $domain, callable $callback)
     {
-        if (Util::isEmpty($domain)) throw new RoutingException('Route domain name cannot be empty');
+        if (is_empty($domain)) throw new RoutingException('Route domain name cannot be empty');
         self::$domain = $domain;
         call_user_func($callback);
         self::$domain = null;
@@ -541,7 +541,7 @@ class Rails
      */
     public static function controller(string $controller, callable $callback)
     {
-        if (Util::isEmpty($controller)) throw new RoutingException('Controller name cannot be empty');
+        if (is_empty($controller)) throw new RoutingException('Controller name cannot be empty');
         self::$defaultController = $controller;
         call_user_func($callback);
         self::$defaultController = 'Glowie\Controllers\Main';
@@ -582,7 +582,7 @@ class Rails
      */
     public static function getAllRoutes()
     {
-        return new Collection(self::$routes);
+        return collect(self::$routes);
     }
 
     /**
@@ -609,7 +609,7 @@ class Rails
      */
     public static function getParams()
     {
-        return new Element(self::$currentParams);
+        return element(self::$currentParams);
     }
 
     /**
@@ -667,11 +667,11 @@ class Rails
         $route = self::$request->getURI();
 
         // Checks for maintenance mode
-        if (Config::get('maintenance.enabled', false)) {
+        if (config('maintenance.enabled', false)) {
             // Validates secret bypass route
             $cookies = Cookies::make();
-            $key = Config::get('maintenance.bypass_key');
-            if (Util::isEmpty($key)) throw new Exception('Application maintenance bypass key was not defined');
+            $key = config('maintenance.bypass_key');
+            if (is_empty($key)) throw new Exception('Application maintenance bypass key was not defined');
 
             // Saves the maintenance key in the cookies
             if ($route === $key) {
