@@ -2,6 +2,7 @@
 
 namespace Glowie\Core\Http;
 
+use Babel;
 use Util;
 use Config;
 use Exception;
@@ -10,6 +11,7 @@ use Glowie\Core\Exception\FileException;
 use Glowie\Core\Collection;
 use Glowie\Core\Element;
 use Glowie\Core\Exception\HttpException;
+use Glowie\Core\View\Buffer;
 
 /**
  * Router and starting point for Glowie application.
@@ -899,8 +901,11 @@ class Rails
         $method = Util::pascalCase($title);
         self::$response->setStatusCode($statusCode);
         if (!is_callable([self::$controller, $method])) {
+            $text = Babel::get('errors.' . Util::snakeCase($title), [], null, $title);
             return self::loadDefaultErrorView([
-                'title' => "{$statusCode} | {$title}"
+                'title' => "$statusCode | $text",
+                'code' => $statusCode,
+                'message' => $text
             ]);
         }
 
@@ -959,6 +964,22 @@ class Rails
      */
     private static function loadDefaultErrorView(array $params)
     {
+        // Clear output buffer
+        if (Buffer::isActive()) Buffer::clean();
+
+        // Checks if the request wants a JSON response
+        if (self::$request->acceptsJson()) {
+            self::$response->setStatusCode($params['code'])->setJson([
+                'status' => false,
+                'error' => [
+                    'code' => $params['code'],
+                    'message' => $params['message']
+                ]
+            ]);
+            return;
+        }
+
+        // Returns the default error view
         extract($params);
         include(__DIR__ . '/../Error/Views/default.phtml');
     }

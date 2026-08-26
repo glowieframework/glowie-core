@@ -930,6 +930,51 @@ class Skeleton
     }
 
     /**
+     * Sets the referential action on UPDATE `CASCADE` to the last foreign key added to the table.
+     * @return Skeleton Current Skeleton instance for nested calls.
+     */
+    public function onUpdateCascade()
+    {
+        return $this->onUpdate('CASCADE');
+    }
+
+    /**
+     * Sets the referential action on UPDATE `SET NULL` to the last foreign key added to the table.
+     * @return Skeleton Current Skeleton instance for nested calls.
+     */
+    public function onUpdateSetNull()
+    {
+        return $this->onUpdate('SET NULL');
+    }
+
+    /**
+     * Sets the referential action on UPDATE `RESTRICT` to the last foreign key added to the table.
+     * @return Skeleton Current Skeleton instance for nested calls.
+     */
+    public function onUpdateRestrict()
+    {
+        return $this->onUpdate('RESTRICT');
+    }
+
+    /**
+     * Sets the referential action on UPDATE `NO ACTION` to the last foreign key added to the table.
+     * @return Skeleton Current Skeleton instance for nested calls.
+     */
+    public function onUpdateNoAction()
+    {
+        return $this->onUpdate('NO ACTION');
+    }
+
+    /**
+     * Sets the referential action on UPDATE `SET DEFAULT` to the last foreign key added to the table.
+     * @return Skeleton Current Skeleton instance for nested calls.
+     */
+    public function onUpdateSetDefault()
+    {
+        return $this->onUpdate('SET DEFAULT');
+    }
+
+    /**
      * Sets the referential action on DELETE to the last foreign key added to the table.
      * @param string $rule Valid options are: `CASCADE`, `SET NULL`, `RESTRICT`, `NO ACTION` or `SET DEFAULT`.
      * @return Skeleton Current Skeleton instance for nested calls.
@@ -942,6 +987,51 @@ class Skeleton
             return 'ON UPDATE ' . $match[1] . ' ON DELETE ' . $rule;
         }, $this->_foreign[$i], 1);
         return $this;
+    }
+
+    /**
+     * Sets the referential action on DELETE `CASCADE` to the last foreign key added to the table.
+     * @return Skeleton Current Skeleton instance for nested calls.
+     */
+    public function onDeleteCascade()
+    {
+        return $this->onDelete('CASCADE');
+    }
+
+    /**
+     * Sets the referential action on DELETE `SET NULL` to the last foreign key added to the table.
+     * @return Skeleton Current Skeleton instance for nested calls.
+     */
+    public function onDeleteSetNull()
+    {
+        return $this->onDelete('SET NULL');
+    }
+
+    /**
+     * Sets the referential action on DELETE `RESTRICT` to the last foreign key added to the table.
+     * @return Skeleton Current Skeleton instance for nested calls.
+     */
+    public function onDeleteRestrict()
+    {
+        return $this->onDelete('RESTRICT');
+    }
+
+    /**
+     * Sets the referential action on DELETE `NO ACTION` to the last foreign key added to the table.
+     * @return Skeleton Current Skeleton instance for nested calls.
+     */
+    public function onDeleteNoAction()
+    {
+        return $this->onDelete('NO ACTION');
+    }
+
+    /**
+     * Sets the referential action on DELETE `SET DEFAULT` to the last foreign key added to the table.
+     * @return Skeleton Current Skeleton instance for nested calls.
+     */
+    public function onDeleteSetDefault()
+    {
+        return $this->onDelete('SET DEFAULT');
     }
 
     /**

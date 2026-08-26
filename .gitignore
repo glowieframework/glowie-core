@@ -1,3 +1,7 @@
 # Ignore Composer packages
 /vendor/
 composer.lock
+
+# PhpDocumentor
+.phpdoc
+build-docs.sh

@@ -311,7 +311,7 @@ class Firefly
      */
     private static function deleteLock()
     {
-        $tmpPath = Util::location('storage/tmp');
+        $tmpPath = storage_path('tmp');
         $lockFile = $tmpPath . '/' . md5('command_' . self::getCommand()) . '.lock';
         if (is_file($lockFile)) unlink($lockFile);
     }
@@ -323,7 +323,7 @@ class Firefly
     private static function createLock()
     {
         // Checks if the tmp path exists
-        $tmpPath = Util::location('storage/tmp');
+        $tmpPath = storage_path('tmp');
         if (!is_dir($tmpPath)) mkdir($tmpPath, 0775, true);
         if (!is_writable($tmpPath)) throw new FileException('Directory "app/storage/tmp" is not writable, please check your chmod settings');
 
@@ -716,7 +716,7 @@ class Firefly
      */
     private static function __clearCache()
     {
-        $dir = config('skeltch.path', Util::location('storage/cache'));
+        $dir = config('skeltch.path', storage_path('cache'));
         if (!is_writable($dir)) throw new FileException('Directory "' . $dir . '" is not writable, please check your chmod settings');
         foreach (Util::getFiles($dir . '/*.*') as $filename) unlink($filename);
         self::print(self::color('[' . date('Y-m-d H:i:s') . '] Cache cleared successfully!', 'green'));
@@ -728,7 +728,7 @@ class Firefly
      */
     private static function __clearSession()
     {
-        $dir = config('session.path', Util::location('storage/session'));
+        $dir = config('session.path', storage_path('session'));
         if (!is_writable($dir)) throw new FileException('Directory "' . $dir . '" is not writable, please check your chmod settings');
         foreach (Util::getFiles($dir . '/*') as $filename) unlink($filename);
         self::print(self::color('[' . date('Y-m-d H:i:s') . '] Session data cleared successfully!', 'green'));
@@ -740,7 +740,7 @@ class Firefly
      */
     private static function __clearLog()
     {
-        $file = config('error_reporting.file', Util::location('storage/error.log'));
+        $file = config('error_reporting.file', storage_path('error.log'));
         file_put_contents($file, '');
         self::print(self::color('[' . date('Y-m-d H:i:s') . '] Error log cleared successfully!', 'green'));
         return true;
@@ -766,9 +766,9 @@ class Firefly
     private static function __init()
     {
         // Creates .env file
-        $file = Util::location('../.env');
+        $file = app_path('../.env');
         if (!is_file($file)) {
-            copy(Util::location('../.env.example'), $file);
+            copy(app_path('../.env.example'), $file);
             self::$silent = true;
             self::__generateKeys();
         }
@@ -776,7 +776,7 @@ class Firefly
         // Grants permissions to the storage and upload folders, if they exist
         $paths = ['storage', 'storage/cache', 'storage/session', 'storage/tmp', 'public/uploads'];
         foreach ($paths as $path) {
-            if (is_dir(Util::location($path))) chmod(Util::location($path), 0775);
+            if (is_dir(app_path($path))) chmod(app_path($path), 0775);
         }
 
         // Prints welcome message
@@ -803,7 +803,7 @@ class Firefly
     private static function __generateKeys()
     {
         // Checks permissions
-        $file = Util::location('../.env');
+        $file = app_path('../.env');
         if (!is_writable($file)) throw new FileException('File ".env" is not writable, please check your chmod settings');
 
         // Reads the config file content
@@ -833,7 +833,7 @@ class Firefly
     private static function __encryptEnv()
     {
         // Reads the config file content
-        $file = Util::location('../.env');
+        $file = app_path('../.env');
         if (!is_readable($file)) throw new FileException('File ".env" is not readable, please check your chmod settings');
         $content = file_get_contents($file);
 
@@ -846,7 +846,7 @@ class Firefly
         $content = openssl_encrypt($content, 'AES-256-CBC', $key, 0, $iv);
 
         // Saves the new content
-        file_put_contents(Util::location('../.env.encrypted'), $content);
+        file_put_contents(app_path('../.env.encrypted'), $content);
         self::print(self::color('[' . date('Y-m-d H:i:s') . '] Environment config file encrypted successfully!', 'green'));
         self::print(self::color('Decryption key: ' . $key, 'yellow'));
         self::print(self::color('Store it with caution!', 'red'));
@@ -864,7 +864,7 @@ class Firefly
         $iv = mb_substr($key, 0, 16);
 
         // Reads the encrypted config file content
-        $file = Util::location('../.env.encrypted');
+        $file = app_path('../.env.encrypted');
         if (!is_readable($file)) throw new FileException('File ".env.encrypted" does not exist');
         $content = file_get_contents($file);
 
@@ -873,7 +873,7 @@ class Firefly
         if ($content === false) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Unable to decrypt or wrong key used');
 
         // Saves the new content
-        $targetFile = Util::location('../.env');
+        $targetFile = app_path('../.env');
         file_put_contents($targetFile, $content);
         self::print(self::color('[' . date('Y-m-d H:i:s') . '] Environment config file decrypted successfully!', 'green'));
         self::print(self::color('File: ' . $targetFile, 'cyan'));
@@ -886,7 +886,7 @@ class Firefly
     private static function __down()
     {
         // Checks permissions
-        $file = Util::location('../.env');
+        $file = app_path('../.env');
         if (!is_writable($file)) throw new FileException('File ".env" is not writable, please check your chmod settings');
 
         // Reads the config file content
@@ -908,7 +908,7 @@ class Firefly
     private static function __up()
     {
         // Checks permissions
-        $file = Util::location('../.env');
+        $file = app_path('../.env');
         if (!is_writable($file)) throw new FileException('File ".env" is not writable, please check your chmod settings');
 
         // Reads the config file content
@@ -967,16 +967,16 @@ class Firefly
     private static function doCommandCreate(string $name, string $template = 'Command.php')
     {
         // Checks permissions
-        if (!is_dir(Util::location('commands'))) mkdir(Util::location('commands'), 0775, true);
-        if (!is_writable(Util::location('commands'))) throw new FileException('Directory "app/commands" is not writable, please check your chmod settings');
+        if (!is_dir(app_path('commands'))) mkdir(app_path('commands'), 0775, true);
+        if (!is_writable(app_path('commands'))) throw new FileException('Directory "app/commands" is not writable, please check your chmod settings');
 
         // Validates the command name
         if (is_empty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
 
         // Checks if the file exists
         $name = Util::pascalCase($name);
-        $targetFile = Util::location('commands/' . $name . '.php');
-        if (is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Command {$name} already exists!");
+        $targetFile = app_path('commands/' . $name . '.php');
+        if (is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Command $name already exists!");
 
         // Creates the file
         $template = file_get_contents(self::TEMPLATES_FOLDER . $template);
@@ -995,8 +995,8 @@ class Firefly
     private static function __createController()
     {
         // Checks permissions
-        if (!is_dir(Util::location('controllers'))) mkdir(Util::location('controllers'), 0775, true);
-        if (!is_writable(Util::location('controllers'))) throw new FileException('Directory "app/controllers" is not writable, please check your chmod settings');
+        if (!is_dir(app_path('controllers'))) mkdir(app_path('controllers'), 0775, true);
+        if (!is_writable(app_path('controllers'))) throw new FileException('Directory "app/controllers" is not writable, please check your chmod settings');
 
         // Checks if name was filled
         $name = self::argOrInput('name', 'Controller name: ');
@@ -1006,12 +1006,12 @@ class Firefly
 
         // Checks if the file exists
         $name = Util::pascalCase($name);
-        $targetFile = Util::location('controllers/' . $name . '.php');
+        $targetFile = app_path('controllers/' . $name . '.php');
         if (is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Controller {$name} already exists!");
 
         // Checks if BaseController file exists
         $baseFile = 'Controller_Basic.php';
-        if (is_file(Util::location('controllers/BaseController.php'))) $baseFile = 'Controller.php';
+        if (is_file(app_path('controllers/BaseController.php'))) $baseFile = 'Controller.php';
 
         // Checks if it is a resource controller
         if (self::hasOption('resource')) $baseFile = 'Controller_Resource.php';
@@ -1033,8 +1033,8 @@ class Firefly
     private static function __createLanguage()
     {
         // Checks permissions
-        if (!is_dir(Util::location('languages'))) mkdir(Util::location('languages'), 0775, true);
-        if (!is_writable(Util::location('languages'))) throw new FileException('Directory "app/languages" is not writable, please check your chmod settings');
+        if (!is_dir(app_path('languages'))) mkdir(app_path('languages'), 0775, true);
+        if (!is_writable(app_path('languages'))) throw new FileException('Directory "app/languages" is not writable, please check your chmod settings');
 
         // Checks if name was filled
         $name = self::argOrInput('name', 'Language name: ');
@@ -1044,7 +1044,7 @@ class Firefly
 
         // Checks if the file exists
         $name = trim(mb_strtolower($name));
-        $targetFile = Util::location('languages/' . $name . '.php');
+        $targetFile = app_path('languages/' . $name . '.php');
         if (is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Language file {$name} already exists!");
 
         // Creates the file
@@ -1062,8 +1062,8 @@ class Firefly
     private static function __createMiddleware()
     {
         // Checks permissions
-        if (!is_dir(Util::location('middlewares'))) mkdir(Util::location('middlewares'), 0775, true);
-        if (!is_writable(Util::location('middlewares'))) throw new FileException('Directory "app/middlewares" is not writable, please check your chmod settings');
+        if (!is_dir(app_path('middlewares'))) mkdir(app_path('middlewares'), 0775, true);
+        if (!is_writable(app_path('middlewares'))) throw new FileException('Directory "app/middlewares" is not writable, please check your chmod settings');
 
         // Checks if name was filled
         $name = self::argOrInput('name', 'Middleware name: ');
@@ -1073,7 +1073,7 @@ class Firefly
 
         // Checks if the file exists
         $name = Util::pascalCase($name);
-        $targetFile = Util::location('middlewares/' . $name . '.php');
+        $targetFile = app_path('middlewares/' . $name . '.php');
         if (is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Middleware {$name} already exists!");
 
         // Creates the file
@@ -1118,8 +1118,8 @@ class Firefly
     private static function __createModel()
     {
         // Checks permissions
-        if (!is_dir(Util::location('models'))) mkdir(Util::location('models'), 0775, true);
-        if (!is_writable(Util::location('models'))) throw new FileException('Directory "app/models" is not writable, please check your chmod settings');
+        if (!is_dir(app_path('models'))) mkdir(app_path('models'), 0775, true);
+        if (!is_writable(app_path('models'))) throw new FileException('Directory "app/models" is not writable, please check your chmod settings');
 
         // Checks if name was filled
         $name = self::argOrInput('name', 'Model name: ');
@@ -1127,34 +1127,39 @@ class Firefly
         // Validates the model name
         if (is_empty($name)) throw new ConsoleException(self::getCommand(), self::getArgs(), 'Missing required argument "name" for this command');
 
+        // Checks if the file exists
+        $name = Util::pascalCase($name);
+        $targetFile = app_path("models/$name.php");
+        if (is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Model $name already exists!");
+
+        // Gets the template file
+        $template = file_get_contents(self::TEMPLATES_FOLDER . 'Model.php');
+
         // Checks if table was filled
         $default_table = Util::snakeCase(Util::pluralize($name));
-        $table = self::argOrInput('table', "Model table ({$default_table}): ", $default_table);
+        $table = self::argOrInput('table', "Model table ($default_table): ", $default_table);
         $table = trim($table);
 
         // Checks if primary key was filled
-        $primary = self::argOrInput('primary', 'Primary key name (id): ', 'id');
+        $primary = self::argOrInput('primary', 'Primary key (id): ', 'id');
         $primary = trim($primary);
 
-        // Checks if the file exists
-        $name = Util::pascalCase($name);
-        $targetFile = Util::location('models/' . $name . '.php');
-        if (is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Model {$name} already exists!");
-
-        // Creates the file
-        $template = file_get_contents(self::TEMPLATES_FOLDER . 'Model.php');
+        // Asks for the optional replacements
+        $uuid = self::hasOption('uuid') || self::confirm('Use UUID as primary key?', false);
+        $timestamps = self::hasOption('timestamps') || self::confirm('Use timestamps?', true);
+        $softDeletes = self::hasOption('softdeletes') || self::confirm('Use soft deletes?', false);
 
         // Sets the optional replacements
-        if (self::hasOption('uuid')) $template = str_replace('$_uuid = false', '$_uuid = true', $template);
-        if (self::hasOption('timestamps')) $template = str_replace('$_timestamps = false', '$_timestamps = true', $template);
-        if (self::hasOption('softdeletes') || self::hasOption('soft_deletes')) $template = str_replace('$_softDeletes = false', '$_softDeletes = true', $template);
+        if ($uuid) $template = str_replace('$_uuid = false', '$_uuid = true', $template);
+        if ($timestamps) $template = str_replace('$_timestamps = false', '$_timestamps = true', $template);
+        if ($softDeletes) $template = str_replace('$_softDeletes = false', '$_softDeletes = true', $template);
 
         // Saves the file
         $template = str_replace(['__FIREFLY_TEMPLATE_NAME__', '__FIREFLY_TEMPLATE_TABLE__', '__FIREFLY_TEMPLATE_PRIMARY__'], [$name, $table, $primary], $template);
         file_put_contents($targetFile, $template);
 
         // Success message
-        self::print(self::color('[' . date('Y-m-d H:i:s') . ']' . " Model {$name} created successfully!", 'green'));
+        self::print(self::color('[' . date('Y-m-d H:i:s') . ']' . " Model $name created successfully!", 'green'));
         self::print(self::color('File: ' . $targetFile, 'cyan'));
 
         // Create migration if asked
@@ -1162,9 +1167,9 @@ class Firefly
             return Migrator::create('Create' . Util::pascalCase($table) . 'Table', 'Migration.php', [
                 'create_table' => $table,
                 'primary' => $primary,
-                'uuid' => self::hasOption('uuid'),
-                'timestamps' => self::hasOption('timestamps'),
-                'soft_deletes' => self::hasOption('softdeletes') || self::hasOption('soft_deletes')
+                'uuid' => $uuid,
+                'timestamps' => $timestamps,
+                'soft_deletes' => $softDeletes
             ]);
         }
 
@@ -1177,8 +1182,8 @@ class Firefly
     private static function __createJob()
     {
         // Checks permissions
-        if (!is_dir(Util::location('jobs'))) mkdir(Util::location('jobs'), 0775, true);
-        if (!is_writable(Util::location('jobs'))) throw new FileException('Directory "app/jobs" is not writable, please check your chmod settings');
+        if (!is_dir(app_path('jobs'))) mkdir(app_path('jobs'), 0775, true);
+        if (!is_writable(app_path('jobs'))) throw new FileException('Directory "app/jobs" is not writable, please check your chmod settings');
 
         // Checks if name was filled
         $name = self::argOrInput('name', 'Job name: ');
@@ -1188,7 +1193,7 @@ class Firefly
 
         // Checks if the file exists
         $name = Util::pascalCase($name);
-        $targetFile = Util::location('jobs/' . $name . '.php');
+        $targetFile = app_path('jobs/' . $name . '.php');
         if (is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Job {$name} already exists!");
 
         // Creates the file
@@ -1208,8 +1213,8 @@ class Firefly
     private static function __createService()
     {
         // Checks permissions
-        if (!is_dir(Util::location('services'))) mkdir(Util::location('services'), 0775, true);
-        if (!is_writable(Util::location('services'))) throw new FileException('Directory "app/services" is not writable, please check your chmod settings');
+        if (!is_dir(app_path('services'))) mkdir(app_path('services'), 0775, true);
+        if (!is_writable(app_path('services'))) throw new FileException('Directory "app/services" is not writable, please check your chmod settings');
 
         // Checks if name was filled
         $name = self::argOrInput('name', 'Service name: ');
@@ -1219,7 +1224,7 @@ class Firefly
 
         // Checks if the file exists
         $name = Util::pascalCase($name);
-        $targetFile = Util::location('services/' . $name . '.php');
+        $targetFile = app_path('services/' . $name . '.php');
         if (is_file($targetFile)) throw new ConsoleException(self::getCommand(), self::getArgs(), "Service {$name} already exists!");
 
         // Creates the file
@@ -1398,7 +1403,7 @@ class Firefly
         self::print('');
 
         // App commands
-        $commands = glob(Util::location('commands/*.php'));
+        $commands = glob(app_path('commands/*.php'));
 
         if (!empty($commands)) {
             self::print(self::bg(self::color(self::padding('App commands:', 1, 0), 'black'), 'magenta'));
