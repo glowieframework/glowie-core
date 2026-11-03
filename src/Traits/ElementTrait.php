@@ -307,4 +307,95 @@ trait ElementTrait
     {
         return $this->__data;
     }
+
+    /**
+     * Returns the quantity of keys in the Element.
+     * @return int Element size.
+     */
+    public function count(): int
+    {
+        return count($this->__data);
+    }
+
+    /**
+     * Checks if any value has been associated to a key in the Element data.
+     * @param string|int $offset Key to check (accepts dot notation keys).
+     * @return bool Returns true or false.
+     */
+    public function offsetExists($offset): bool
+    {
+        return $this->has($offset);
+    }
+
+    /**
+     * Gets the value associated to a key in the Element data.
+     * @param string|int $offset Key to get value (accepts dot notation keys).
+     * @return mixed Returns the value if exists or null if not.
+     */
+    public function offsetGet($offset)
+    {
+        return $this->get($offset);
+    }
+
+    /**
+     * Sets the value for a key in the Element data.
+     * @param mixed $offset Key to set value (accepts dot notation keys).
+     * @param mixed $value (Optional) Value to set.
+     */
+    public function offsetSet($offset, $value): void
+    {
+        $this->set($offset, $value);
+    }
+
+    /**
+     * Removes the associated key value from the Element data.
+     * @param mixed $offset Key to delete value.
+     */
+    public function offsetUnset($offset): void
+    {
+        $this->remove($offset);
+    }
+
+    /**
+     * Returns the current property from the Element.
+     * @return mixed Current property.
+     */
+    public function current()
+    {
+        return current($this->__data);
+    }
+
+    /**
+     * Returns the key of the current property from the Element.
+     * @return mixed Current key.
+     */
+    public function key()
+    {
+        return key($this->__data);
+    }
+
+    /**
+     * Moves to the next property of the Element.
+     */
+    public function next(): void
+    {
+        next($this->__data);
+    }
+
+    /**
+     * Goes back to the previous property of the Element.
+     */
+    public function rewind(): void
+    {
+        reset($this->__data);
+    }
+
+    /**
+     * Checks if current property from the Element is valid.
+     * @return bool True or false.
+     */
+    public function valid(): bool
+    {
+        return $this->key() !== null;
+    }
 }

@@ -4,7 +4,6 @@ namespace Glowie\Core\Http;
 
 use Babel;
 use Util;
-use Config;
 use Exception;
 use Glowie\Core\Exception\RoutingException;
 use Glowie\Core\Exception\FileException;
@@ -743,6 +742,9 @@ class Rails
                     // Instantiates the middleware
                     try {
                         self::$middleware = new $middleware($alias[1] ?? null);
+                        if (self::$middleware->checkShouldIgnore()) continue;
+
+                        // Calls middleware init() method
                         if (is_callable([self::$middleware, 'init'])) call_user_func_array([self::$middleware, 'init'], $mergedParams);
 
                         // Calls middleware handle() method
@@ -752,6 +754,7 @@ class Rails
                         if ($response) {
                             if (is_callable([self::$middleware, 'success'])) call_user_func_array([self::$middleware, 'success'], $mergedParams);
                         } else {
+                            // Calls middleware fail() method or returns the default error response
                             if (is_callable([self::$middleware, 'fail'])) {
                                 return call_user_func_array([self::$middleware, 'fail'], $mergedParams);
                             } else {

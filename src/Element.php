@@ -3,6 +3,9 @@
 namespace Glowie\Core;
 
 use Glowie\Core\Traits\ElementTrait;
+use ArrayAccess;
+use Countable;
+use Iterator;
 use JsonSerializable;
 
 /**
@@ -15,7 +18,7 @@ use JsonSerializable;
  * @link https://glowie.gabrielsilva.dev.br
  * @see https://glowie.gabrielsilva.dev.br/docs/latest/forms-and-data/element
  */
-class Element implements JsonSerializable
+class Element implements ArrayAccess, JsonSerializable, Iterator, Countable
 {
     use ElementTrait;
 

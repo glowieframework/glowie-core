@@ -77,6 +77,12 @@ abstract class Middleware
     protected $alias;
 
     /**
+     * List of ignored URI patterns for this middleware.
+     * @var array
+     */
+    protected $ignore = [];
+
+    /**
      * Creates a new instance of the middleware.
      */
     public function __construct($alias = null)
@@ -106,6 +112,21 @@ abstract class Middleware
         $response = $this->request->validate($rules, $bail, $bailAll, $customMessages);
         if (!$response) throw new HttpException(400);
         return $response;
+    }
+
+    /**
+     * Checks if the current request URI should be ignored by the middleware.
+     * @return bool True if the request should be ignored, false otherwise.
+     */
+    final public function checkShouldIgnore()
+    {
+        if (empty($this->ignore)) return false;
+        foreach ($this->ignore as $pattern) {
+            if ($this->request->match($pattern)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
