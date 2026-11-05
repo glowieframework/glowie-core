@@ -400,8 +400,9 @@ trait DatabaseTrait
             $this->_affectedRows = $stmt->rowCount();
             return $result;
         } catch (PDOException $e) {
-            // On connection timeout error, try to reconnect and query again
-            if ($e->getCode() == 2006 && $retryOnTimeout) {
+            // On connection timeout error, wait 500ms and try to query again
+            if ($e->getCode() == 'HY000' && Util::stringContains($e->getMessage(), '2006') && $retryOnTimeout) {
+                usleep(500000);
                 $this->reconnect();
                 return $this->execute($returns, $returnsFirst, false);
             }
