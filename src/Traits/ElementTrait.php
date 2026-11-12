@@ -182,7 +182,7 @@ trait ElementTrait
      */
     public function keys()
     {
-        return array_keys($this->data);
+        return array_keys($this->__data);
     }
 
     /**
